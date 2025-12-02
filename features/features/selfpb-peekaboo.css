@@ -1,0 +1,137 @@
+/* Self-Playback “Peekaboo” Panel (top-left) — mirrors TTS behavior */
+
+:root {
+  --lux-sp-panel-w: 360px;
+  --lux-sp-panel-max-w: min(92vw, 380px);
+  --lux-sp-panel-max-h: min(520px, 70vh);
+
+  --lux-sp-radius: 14px;
+  --lux-sp-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  --lux-sp-border: 1px solid rgba(0, 0, 0, 0.06);
+
+  /* Tab visuals */
+  --lux-sp-tab-h: 34px;
+  --lux-sp-tab-protrude: 140px; /* how far the tab sticks out into the page */
+  --lux-sp-tab-peek: 44px; /* how much stays visible when the panel is closed */
+
+  --lux-sp-tab-bg: #2d6cdf;
+  --lux-sp-tab-bg-hover: #2457b1;
+  --lux-sp-tab-ink: #fff;
+}
+
+/* ───────────────── Panel ───────────────── */
+.lux-sp-panel {
+  position: fixed;
+  inset: env(safe-area-inset-top, 0) auto auto env(safe-area-inset-left, 0);
+  z-index: 9999;
+
+  width: var(--lux-sp-panel-w);
+  max-width: var(--lux-sp-panel-max-w);
+  height: auto;
+  max-height: var(--lux-sp-panel-max-h);
+
+  background: #0d1117;
+  color: #e9edf3;
+  border: var(--lux-sp-border);
+  border-left: 0;
+  border-top-right-radius: var(--lux-sp-radius);
+  border-bottom-right-radius: var(--lux-sp-radius);
+  box-shadow: var(--lux-sp-shadow);
+
+  /* IMPORTANT: allow the tab to extend outside the panel */
+  overflow: visible;
+
+  /* Closed = tuck off-screen to the LEFT, but keep a small “peek” visible */
+  transform: translate3d(calc(-100% + var(--lux-sp-tab-peek)), 0, 0);
+  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Open state toggled on <html> */
+.lux-sp-open .lux-sp-panel {
+  transform: translate3d(0, 0, 0);
+}
+
+/* Body wrapper (gives room under the tab) */
+.lux-sp-body {
+  padding: calc(var(--lux-sp-tab-h) + 10px) 6px 6px 6px; /* reserve space for the top tab */
+  box-sizing: border-box;
+}
+
+/* The inner host scrolls inside the panel */
+.lux-sp-panel #selfpb-lite {
+  position: static !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: calc(
+    var(--lux-sp-panel-max-h) - var(--lux-sp-tab-h) - 16px
+  ) !important;
+  overflow: auto !important;
+}
+
+/* ───────────────── Tab (full-width top bar with a right “tongue”) ───────────────── */
+.lux-sp-tab {
+  position: absolute;
+  top: 6px;
+  left: 6px; /* start inside the left edge */
+  width: calc(
+    100% + var(--lux-sp-tab-protrude)
+  ); /* span the panel and protrude to the right */
+  height: var(--lux-sp-tab-h);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--lux-sp-tab-bg);
+  color: var(--lux-sp-tab-ink);
+  font: 600 14px/1 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  box-shadow: 0 6px 18px rgba(13, 17, 23, 0.35);
+  cursor: pointer;
+  user-select: none;
+
+  /* keep it above panel contents */
+  z-index: 2;
+}
+
+.lux-sp-tab:hover {
+  background: var(--lux-sp-tab-bg-hover);
+}
+.lux-sp-tab:focus-visible {
+  outline: 2px solid #93c5fd;
+  outline-offset: 2px;
+}
+
+.lux-sp-tab-label {
+  pointer-events: none;
+}
+.lux-sp-tab-icon {
+  display: inline-block;
+  transition: transform 0.25s ease;
+}
+
+/* Arrow flips when open */
+.lux-sp-open .lux-sp-tab-icon {
+  transform: rotate(180deg);
+}
+
+/* ───────────────── Small screens ───────────────── */
+@media (max-width: 560px) {
+  :root {
+    --lux-sp-panel-w: 92vw;
+    --lux-sp-panel-max-w: 92vw;
+    --lux-sp-panel-max-h: min(82vh, 640px);
+    --lux-sp-tab-protrude: 88px; /* slightly shorter tongue on phones */
+  }
+}
+
+/* Keep out of print */
+@media print {
+  .lux-sp-panel,
+  .lux-sp-tab {
+    display: none !important;
+  }
+}

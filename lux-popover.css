@@ -1,0 +1,227 @@
+/* ==========================================================================
+   Lux DB tracking inline callout + popover (v3)
+   – no hover gap
+   – popover always above site tooltips
+   – high-contrast “Copy” button
+   – namespaced with .lux-* to avoid collisions
+   ========================================================================== */
+
+/* ── Trigger chip ───────────────────────────────────────────────────────── */
+.lux-cta {
+  position: relative; /* anchor for popover */
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 4px 2px; /* tiny bottom pad closes any gap */
+  border-radius: 6px;
+  cursor: help;
+  user-select: none;
+
+  /* subtle pulse ring */
+  box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.35);
+  animation: luxPulse 2.6s ease-in-out infinite;
+
+  transition: transform 0.12s ease, background-color 0.12s ease;
+
+  /* create own stacking context & sit above ordinary tips */
+  isolation: isolate;
+  z-index: 200001;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lux-cta {
+    animation: none;
+  }
+}
+.lux-cta:hover,
+.lux-cta:focus {
+  background: #eef3ff;
+  transform: translateY(-1px) scale(1.02);
+}
+.lux-cta:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+/* pulse keyframes */
+@keyframes luxPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.35);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(37, 99, 235, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0);
+  }
+}
+
+/* ── Popover panel ──────────────────────────────────────────────────────── */
+.lux-pop {
+  position: absolute;
+  /* eliminate the hover gap (touch the trigger) */
+  top: calc(100% - 2px);
+  left: -6px;
+
+  min-width: 280px;
+  max-width: 360px;
+  padding: 10px;
+
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  border-radius: 12px;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.08);
+
+  opacity: 0;
+  transform: translateY(6px) scale(0.98);
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  will-change: opacity, transform;
+
+  /* decisively above any tooltip bubbles elsewhere */
+  z-index: 200000;
+}
+.lux-cta:hover .lux-pop,
+.lux-cta:focus-within .lux-pop,
+.lux-cta[aria-expanded="true"] .lux-pop {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+/* caret */
+.lux-pop::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 16px;
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border-left: 1px solid #e6e6e6;
+  border-top: 1px solid #e6e6e6;
+  transform: rotate(45deg);
+}
+
+/* ── Content rows ──────────────────────────────────────────────────────── */
+.lux-uidrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0 10px 0;
+  font-size: 13px;
+}
+.lux-uidrow code {
+  background: #f6f7fb;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+/* High-contrast utility button (Copy) — override global button styles */
+button.lux-btn {
+  background: #e9f1ff;
+  color: #183b6b; /* dark ink for readability */
+  font-weight: 700;
+  border: 1px solid #b8c7ea;
+  border-radius: 8px;
+  padding: 5px 10px;
+  line-height: 1;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.12s ease, transform 0.12s ease,
+    box-shadow 0.12s ease;
+}
+button.lux-btn:hover {
+  background: #dbe8ff;
+  transform: translateY(-1px);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+button.lux-btn:active {
+  transform: translateY(0);
+}
+button.lux-btn:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+button.lux-btn:disabled {
+  background: #eef2f7;
+  color: #8aa0bb;
+  border-color: #d7deea;
+}
+
+.lux-copied {
+  margin-left: 4px;
+  color: #0a7;
+  font-size: 12px;
+}
+
+/* admin links cluster */
+.lux-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 2px 0 6px 0;
+}
+.lux-links a {
+  display: inline-block;
+  padding: 4px 8px;
+  border: 1px solid #dfe6f5;
+  border-radius: 999px;
+  background: #f8fbff;
+  font-size: 12px;
+  text-decoration: none;
+  color: inherit;
+  transition: background-color 0.12s ease, transform 0.12s ease;
+}
+.lux-links a:hover {
+  background: #eef4ff;
+  transform: translateY(-1px);
+}
+
+.lux-note {
+  display: block;
+  color: #666;
+  font-size: 11px;
+}
+
+/* ── Small-screen tweak ────────────────────────────────────────────────── */
+@media (max-width: 520px) {
+  .lux-pop {
+    min-width: 240px;
+    left: -2px;
+  }
+}
+
+/* Hover video preview for pills */
+#hoverPlayer {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  width: 320px;
+  aspect-ratio: 16/9;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  pointer-events: none; /* don't capture the mouse */
+  z-index: 9999;
+}
+
+/* ── NEW: Body-level tooltip used by prosody bars ──────────────────────── */
+.lux-tip {
+  position: fixed;
+  z-index: 200100; /* above .lux-cta and .lux-pop */
+  pointer-events: none; /* mouse goes through */
+  background: rgba(0, 0, 0, 0.88);
+  color: #fff;
+  font: 12px/1.3 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  padding: 6px 8px;
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  white-space: nowrap;
+  display: none; /* toggled by JS */
+}
+
+/* If any old in-cell pseudo-tooltips exist, suppress them */
+.prosody-bar[data-tip]::after {
+  display: none !important;
+}

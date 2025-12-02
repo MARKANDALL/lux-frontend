@@ -1,0 +1,379 @@
+/* ============================================================
+   Global utilities → link styles for results table
+   ============================================================ */
+#prettyResult a {
+  text-decoration: none !important;
+  font-weight: 700;
+}
+#prettyResult a:visited,
+#prettyResult a:active,
+#prettyResult a:focus {
+  text-decoration: none !important;
+  color: inherit !important;
+}
+#prettyResult a:hover {
+  text-decoration: underline dotted;
+  color: #0078d7;
+}
+
+/* ============================================================
+                           Spinner
+                           ============================================================ */
+@keyframes slowSpin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+.ai-spinner {
+  display: inline-block;
+  animation: slowSpin 2.4s linear infinite;
+}
+
+/* ============================================================
+                           Global interactive hover cues (feature elements)
+                           ============================================================ */
+/* 2) Word links & phoneme symbols */
+#prettyResult a,
+#prettyResult .tooltip {
+  display: inline-block;
+  transition: transform 0.18s ease, filter 0.18s ease;
+}
+#prettyResult a:hover,
+#prettyResult .tooltip:hover {
+  transform: scale(1.12);
+  filter: brightness(0.85);
+}
+
+/* 2a) Phoneme header pill hover effect (NEW) */
+#prettyResult th .phoneme-chip {
+  transition: transform 0.18s ease, filter 0.18s ease;
+}
+#prettyResult th .phoneme-chip:hover {
+  transform: scale(1.12);
+  filter: brightness(0.85);
+}
+
+/* 3) Input, dropdown, and (?) tip */
+#referenceText,
+#passageSelect,
+#partsInfoTip {
+  transition: transform 0.18s ease, filter 0.18s ease, box-shadow 0.18s ease;
+}
+#referenceText:hover,
+#passageSelect:hover,
+#partsInfoTip:hover {
+  transform: scale(1.04);
+  filter: brightness(0.95);
+  box-shadow: 0 0 0 2px rgba(0, 120, 215, 0.3);
+}
+
+/* 4) Any other tooltip trigger */
+.tooltip {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  margin-left: 3px;
+  border-bottom: none !important;
+  transition: transform 0.18s ease, filter 0.18s ease;
+}
+.tooltip:hover {
+  transform: scale(1.12);
+  filter: brightness(0.85);
+}
+.result-tip {
+  border-bottom: none !important;
+}
+
+/* ============================================================
+                           Status & result panels
+                           ============================================================ */
+#userMsg {
+  background: #e7f2fb;
+  color: #134e6f;
+  padding: 1em 0.7em;
+  border-radius: 0.7em;
+  opacity: 0;
+  transform: translateY(-40px);
+  transition: opacity 0.7s ease,
+    transform 0.7s cubic-bezier(0.47, 1.64, 0.41, 0.8);
+}
+#userMsg.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+#userMsg ol {
+  margin: 0;
+  padding-left: 1.2em;
+}
+#userMsg li {
+  margin-bottom: 0.5em;
+  font-size: 1.09em;
+  line-height: 1.5;
+}
+
+#suggested-section {
+  margin: 32px 0 18px;
+  padding: 12px 0;
+  font-size: 1.25em;
+  background: #f3faff;
+  border-radius: 0.8em;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(40, 120, 255, 0.09);
+}
+
+.raw-data-section {
+  background: #f3f3f3;
+  margin: 1em auto;
+  padding: 15px;
+  border-radius: 6px;
+  font-size: 1.16em;
+  max-width: 96vw;
+  max-height: 340px;
+  overflow: auto;
+  display: none;
+  text-align: left;
+}
+.show-raw-link {
+  cursor: pointer;
+  color: #0083ff;
+  text-decoration: underline;
+  font-size: 1.12em;
+  margin-left: 8px;
+}
+
+/* ============================================================
+                           Buttons → recording states & effects
+                           ============================================================ */
+#record.record-intro,
+#record.record-glow,
+#record.record-intro:disabled,
+#record.record-glow:disabled {
+  background: var(--rec-base);
+  color: var(--rec-ink);
+}
+#record {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Intro slashes (0.8s), green like Stop */
+#record.record-intro::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: repeating-linear-gradient(
+    135deg,
+    var(--stripe-green-1) 0 10px,
+    var(--stripe-green-2) 10px 20px
+  );
+  background-size: 220% 100%;
+  animation: recordSlashGreen 0.8s ease-out forwards;
+  pointer-events: none;
+}
+@keyframes recordSlashGreen {
+  from {
+    background-position: -220% 0;
+    opacity: 1;
+  }
+  90% {
+    background-position: 0 0;
+    opacity: 1;
+  }
+  to {
+    background-position: 0 0;
+    opacity: 0;
+  }
+}
+
+/* Sustained glow while recording */
+#record.record-glow,
+#record.record-glow:disabled {
+  animation: recordGlowAmber 1.6s ease-in-out infinite;
+  box-shadow: 0 0 0 0 var(--rec-glow-soft), 0 0 20px var(--rec-glow-soft);
+  filter: brightness(1);
+}
+@keyframes recordGlowAmber {
+  0% {
+    box-shadow: 0 0 0 0 var(--rec-glow-soft), 0 0 20px var(--rec-glow-soft);
+    filter: brightness(1);
+  }
+  50% {
+    box-shadow: 0 0 0 16px rgba(234, 179, 8, 0), 0 0 38px var(--rec-glow-strong);
+    filter: brightness(1.14);
+  }
+  100% {
+    box-shadow: 0 0 0 0 var(--rec-glow-soft), 0 0 20px var(--rec-glow-soft);
+    filter: brightness(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #record.record-glow {
+    animation: none;
+  }
+}
+
+/* Stop-button loading stripes */
+#stop.processing {
+  position: relative;
+  overflow: hidden;
+  color: transparent;
+}
+#stop.processing::after {
+  content: "Stopping…";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #fff;
+  border-radius: inherit;
+  white-space: nowrap;
+  background: repeating-linear-gradient(
+    135deg,
+    #34d399 0 10px,
+    #059669 10px 20px
+  );
+  background-size: 200% 100%;
+  animation: stripeMove 1s linear infinite;
+}
+@keyframes stripeMove {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 40px 0;
+  }
+}
+
+/* ============================================================
+                           Table & tooltip
+                           ============================================================ */
+.score-table {
+  border-collapse: collapse;
+  width: 95%;
+  margin: 1em auto;
+  font-size: 1.09rem;
+  table-layout: fixed; /* predictable widths */
+}
+.score-table th,
+.score-table td {
+  border: 1px solid #bbb;
+  padding: 10px;
+  white-space: nowrap;
+  text-align: center;
+  transition: width 0.35s cubic-bezier(0.45, 1.6, 0.4, 0.95),
+    min-width 0.35s cubic-bezier(0.45, 1.6, 0.4, 0.95),
+    max-width 0.35s cubic-bezier(0.45, 1.6, 0.4, 0.95), padding 0.35s,
+    opacity 0.25s;
+  overflow: hidden;
+  word-wrap: break-word;
+  white-space: normal;
+}
+.score-table th {
+  background: #f3f7fa;
+  font-weight: 700;
+}
+
+/* score chips */
+.score-good,
+.score-warn,
+.score-bad {
+  position: relative;
+  font-weight: 700;
+  padding: 2px 6px 2px 24px;
+  border-radius: 14px;
+}
+.score-good {
+  color: #0b8bdb;
+  background: #e8f5ff;
+}
+.score-warn {
+  color: #d07c00;
+  background: #fff6e0;
+}
+.score-bad {
+  color: #b90026;
+  background: #ffe7e7;
+}
+
+.score-good::before,
+.score-warn::before,
+.score-bad::before {
+  position: absolute;
+  left: 6px;
+  top: 1px;
+  font-size: 0.9em;
+}
+.score-good::before {
+  content: "✔";
+}
+.score-warn::before {
+  content: "⚠️";
+}
+.score-bad::before {
+  content: "✖";
+}
+
+.word-chip {
+  display: inline-block;
+  background: #eef7fb;
+  color: #205080;
+  font-weight: 700;
+  font-size: 1.12em;
+  padding: 4px 18px;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(40, 120, 255, 0.13);
+  transition: box-shadow 0.18s, transform 0.16s, filter 0.18s;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* tooltip */
+.tooltip .tooltiptext {
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.4s;
+  position: absolute;
+  left: 50%;
+  top: 99%;
+  transform: translateX(-50%);
+  background: #444;
+  color: #fff;
+  padding: 10px;
+  border-radius: 5px;
+  min-width: 240px;
+  max-width: 520px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  white-space: normal;
+  word-wrap: break-word;
+  overflow: hidden;
+  z-index: 99999; /* above everything */
+}
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}
+.tooltip:hover,
+.tooltip:focus-within {
+  z-index: 9999;
+}
+
+/* Allow phoneme tooltips to overflow cell */
+#prettyResult .score-table td:nth-child(4),
+#prettyResult .score-table th:nth-child(4) {
+  overflow: visible !important;
+}
+/* ===== Smooth fades for hint/suggestions ===== */
+.fade-vis {
+  opacity: 1;
+  transition: opacity 0.26s ease;
+}
+.fade-vis.is-hidden {
+  opacity: 0;
+  pointer-events: none; /* can't click while hidden */
+}

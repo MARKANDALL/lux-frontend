@@ -1,0 +1,16 @@
+{
+  "name": "html-css",
+  "version": "1.0.0",
+  "description": "A template for HTML and CSS",
+  "main": "index.html",
+  "scripts": {
+    "start": "serve",
+    "lux:snapshot": "powershell -ExecutionPolicy Bypass -File scripts/lux-snapshot.ps1"
+  },
+  "keywords": ["html", "css"],
+  "author": "Ives van Hoorne",
+  "license": "MIT",
+  "devDependencies": {
+    "serve": "11.2.0"
+  }
+}

@@ -1,0 +1,1753 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Base / globals -->
+    <link rel="stylesheet" href="base.css" />
+    <link rel="stylesheet" href="features-1.css" />
+    <link rel="stylesheet" href="features-2.css" />
+    <link rel="stylesheet" href="lux-popover.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- TTS (core before peekaboo overrides) -->
+    <link rel="stylesheet" href="./features/features/tts.css" />
+    <link rel="stylesheet" href="./features/features/tts-peekaboo.css" />
+
+    <!-- Self-Playback (core before peekaboo overrides) -->
+    <link rel="stylesheet" href="./features/features/self-playback.css" />
+    <link rel="stylesheet" href="./features/features/selfpb-peekaboo.css" />
+
+    <!-- Guard: keep TTS host hidden until the peekaboo panel adopts it -->
+    <style id="lux-tts-guard-style">
+      #tts-controls {
+        display: none !important;
+      }
+    </style>
+
+    <!-- Inline TTS corner defaults (top-right drawer geometry) -->
+    <style>
+      :root {
+        --lux-tts-panel-w: 360px;
+        --lux-tts-panel-max-w: min(92vw, 380px);
+        --lux-tts-panel-max-h: min(520px, 70vh);
+        --lux-tts-radius: 14px;
+      }
+      .lux-tts-panel {
+        position: fixed;
+        inset: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) auto
+          auto;
+        z-index: 9999;
+        width: var(--lux-tts-panel-w);
+        max-width: var(--lux-tts-panel-max-w);
+        height: auto;
+        max-height: var(--lux-tts-panel-max-h);
+        background: #fff;
+        border-left: 1px solid rgba(0, 0, 0, 0.06);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        border-bottom-left-radius: var(--lux-tts-radius);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+        transform: translateX(calc(100% - 44px));
+        transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+        display: inline-block;
+        overflow: visible;
+      }
+      html.lux-tts-open .lux-tts-panel {
+        transform: translateX(0);
+      }
+      .lux-tts-panel #tts-controls {
+        padding: 14px 16px 16px;
+        height: auto;
+        max-height: none;
+        overflow: visible;
+        box-sizing: border-box;
+      }
+      .lux-tts-tab {
+        position: absolute;
+        left: -128px;
+        top: 18px;
+        padding: 10px 16px;
+        border-radius: 999px 0 0 999px;
+        font: 600 16px/1 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        background: #1082ff;
+        color: #fff;
+        border: 0;
+        cursor: pointer;
+        box-shadow: 0 6px 18px rgba(16, 130, 255, 0.28);
+        transition: transform 0.18s ease, filter 0.18s ease,
+          box-shadow 0.18s ease;
+      }
+      .lux-tts-tab:hover {
+        filter: brightness(1.02);
+        transform: translateX(-2px);
+      }
+      .lux-tts-loading {
+        font: 600 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto,
+          sans-serif;
+        opacity: 0.75;
+        padding: 12px 10px;
+      }
+      @media (max-width: 480px) {
+        :root {
+          --lux-tts-panel-w: 92vw;
+          --lux-tts-panel-max-w: 92vw;
+          --lux-tts-panel-max-h: min(82vh, 640px);
+        }
+      }
+    </style>
+
+    <!-- ✅ Import map must come before any module scripts -->
+    <script type="importmap">
+      {
+        "imports": {
+          "ai.js": "./api/ai.js",
+          "./api.js": "./api/index.js"
+        }
+      }
+    </script>
+
+    <!-- Ensure we have a stable LUX_USER_ID early (before any modules use it) -->
+    <script>
+      (function ensureUID() {
+        var KEY = "LUX_USER_ID",
+          qs = new URLSearchParams(location.search),
+          fromQuery = (qs.get("uid") || "").trim();
+        function looksValid(u) {
+          return /^[0-9a-f-]{18,}$/i.test(u) || (u && u.length >= 6);
+        }
+        function makeUUID() {
+          if (crypto && crypto.randomUUID) return crypto.randomUUID();
+          var s = [],
+            h = "0123456789abcdef";
+          for (var i = 0; i < 36; i++) s[i] = h[(Math.random() * 16) | 0];
+          s[14] = "4";
+          s[19] = h[(parseInt(s[19], 16) & 0x3) | 0x8];
+          s[8] = s[13] = s[18] = s[23] = "-";
+          return s.join("");
+        }
+        var existing = window.LUX_USER_ID || localStorage.getItem(KEY) || "";
+        var uid = looksValid(fromQuery)
+          ? fromQuery
+          : looksValid(existing)
+          ? existing
+          : makeUUID();
+        window.LUX_USER_ID = uid;
+        try {
+          localStorage.setItem(KEY, uid);
+        } catch (_) {}
+        document.documentElement.setAttribute("data-uid", uid);
+      })();
+    </script>
+
+    <!-- Popover (needs UID) -->
+    <script src="lux-popover.js" defer></script>
+
+    <!-- ===== BEGIN: Onboarding Overlay (v2) CSS (moved into <head>) ===== -->
+    <style id="onboardingV2Styles">
+      #onboardingOverlay.ob-hidden {
+        display: none;
+      }
+      #onboardingOverlay {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+      }
+      #onboardingOverlay .ob-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        backdrop-filter: blur(2px);
+      }
+      #onboardingOverlay .ob-card {
+        position: relative;
+        max-width: 720px;
+        margin: 6vh auto;
+        background: #fff;
+        border-radius: 16px;
+        padding: 24px 20px 18px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+        font-family: inherit;
+      }
+      #onboardingOverlay .ob-close {
+        position: absolute;
+        top: 10px;
+        right: 12px;
+        border: 0;
+        background: transparent;
+        font-size: 24px;
+        cursor: pointer;
+      }
+      #onboardingOverlay .ob-slide {
+        min-height: 180px;
+      }
+      #onboardingOverlay .ob-hidden {
+        display: none;
+      }
+      #onboardingOverlay h2 {
+        margin: 4px 0 10px;
+        font-size: 22px;
+      }
+      #onboardingOverlay .ob-body {
+        margin: 0 0 12px;
+        line-height: 1.4;
+      }
+      #onboardingOverlay .ob-note {
+        color: #666;
+        font-size: 13px;
+      }
+      #onboardingOverlay .ob-list {
+        margin: 6px 0 6px 18px;
+      }
+      #onboardingOverlay .ob-cta {
+        padding: 10px 16px;
+        border-radius: 10px;
+        border: 0;
+        cursor: pointer;
+        background: #0078d7;
+        color: #fff;
+        font-weight: 700;
+      }
+      #onboardingOverlay .ob-cta.ob-cta--secondary {
+        background: #f3f3f3;
+        color: #333;
+      }
+      #onboardingOverlay .ob-footer {
+        margin-top: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      #onboardingOverlay .ob-nav {
+        border: 0;
+        background: #f3f3f3;
+        padding: 8px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      #onboardingOverlay .ob-dots {
+        display: flex;
+        gap: 8px;
+      }
+      #onboardingOverlay .ob-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        border: 0;
+        background: #d0d0d0;
+        cursor: pointer;
+      }
+      #onboardingOverlay .ob-dot[aria-current="true"] {
+        background: #333;
+      }
+      @media (max-width: 560px) {
+        #onboardingOverlay .ob-card {
+          margin: 3vh 12px;
+          padding: 18px 14px 12px;
+        }
+        #onboardingOverlay h2 {
+          font-size: 19px;
+        }
+      }
+    </style>
+    <!-- ===== END: Onboarding Overlay (v2) CSS ===== -->
+
+    <!-- === Your long shared APP STYLES (as you pasted) === -->
+    <style>
+      /* --- BEGIN app styles you provided (unchanged) --- */
+      #typewriterMsg {
+        white-space: pre;
+        opacity: 1;
+        transition: opacity 0.5s;
+      }
+      .hidden {
+        display: none !important;
+      }
+      @keyframes tipPop {
+        0% {
+          transform: scale(0.2) rotate(-30deg);
+          opacity: 0;
+          color: #bbb;
+        }
+        40% {
+          transform: scale(1.4) rotate(10deg);
+          opacity: 1;
+          color: #1e90ff;
+        }
+        70% {
+          transform: scale(0.88) rotate(-5deg);
+          color: #205080;
+        }
+        85% {
+          transform: scale(1.05) rotate(0);
+          color: #0078d7;
+        }
+        100% {
+          transform: scale(1) rotate(0);
+          color: inherit;
+        }
+      }
+      #prettyResult a {
+        text-decoration: none !important;
+        font-weight: 700;
+      }
+      #prettyResult a:visited,
+      #prettyResult a:active,
+      #prettyResult a:focus {
+        text-decoration: none !important;
+        color: inherit !important;
+      }
+      #prettyResult a:hover {
+        text-decoration: underline dotted;
+        color: #0078d7;
+      }
+      .pop-in {
+        animation: tipPop 1.4s cubic-bezier(0.18, 1.7, 0.28, 1.01);
+      }
+      body {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        font-family: "Montserrat", system-ui, sans-serif;
+        background: #fff;
+        color: #333;
+        margin: 0;
+        line-height: 1.5;
+        padding: 10px;
+      }
+      #container {
+        width: 100%;
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 2vw 2vw 3vw;
+        box-sizing: border-box;
+      }
+      :root {
+        --rec-base: #eab308;
+        --rec-ink: #111;
+        --rec-glow-soft: rgba(234, 179, 8, 0.55);
+        --rec-glow-strong: rgba(234, 179, 8, 0.92);
+        --stripe-green-1: #34d399;
+        --stripe-green-2: #059669;
+      }
+      @keyframes slowSpin {
+        0% {
+          transform: rotate(0);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      .ai-spinner {
+        display: inline-block;
+        animation: slowSpin 2.4s linear infinite;
+      }
+      button,
+      #nextPartBtn {
+        transition: background 0.15s, transform 0.18s ease, filter 0.18s ease;
+      }
+      button:hover:not(:disabled),
+      #nextPartBtn:hover:not(:disabled) {
+        transform: scale(1.12);
+        filter: brightness(0.85);
+      }
+      #prettyResult a,
+      #prettyResult .tooltip {
+        display: inline-block;
+        transition: transform 0.18s ease, filter 0.18s ease;
+      }
+      #prettyResult a:hover,
+      #prettyResult .tooltip:hover {
+        transform: scale(1.12);
+        filter: brightness(0.85);
+      }
+      #referenceText,
+      #passageSelect,
+      #partsInfoTip {
+        transition: transform 0.18s ease, filter 0.18s ease,
+          box-shadow 0.18s ease;
+      }
+      #referenceText:hover,
+      #passageSelect:hover,
+      #partsInfoTip:hover {
+        transform: scale(1.04);
+        filter: brightness(0.95);
+        box-shadow: 0 0 0 2px rgba(0, 120, 215, 0.3);
+      }
+      .tooltip {
+        transition: transform 0.18s ease, filter 0.18s ease;
+      }
+      .tooltip:hover {
+        transform: scale(1.12);
+        filter: brightness(0.85);
+      }
+      h2 {
+        font-size: 2.25rem;
+        margin: 2rem 0 1rem;
+        text-align: center;
+      }
+      label {
+        font-size: 1.15rem;
+        display: inline-block;
+        text-align: center;
+        width: 100%;
+      }
+      #referenceText {
+        width: 95vw;
+        max-width: 880px;
+        min-height: 120px;
+        font-size: 1.6rem;
+        font-weight: 700;
+        line-height: 1.4;
+        padding: 1.2rem;
+        border-radius: 0.8rem;
+        resize: vertical;
+      }
+      input::placeholder {
+        color: #888 !important;
+        font-style: italic;
+        letter-spacing: 0.03em;
+        opacity: 1;
+        font-size: 1.12rem;
+      }
+      #referenceText::placeholder {
+        opacity: 1;
+        transition: opacity 0.45s ease;
+        font-style: italic;
+      }
+      #referenceText.placeholder-fade::placeholder {
+        opacity: 0;
+      }
+      select {
+        font-size: 1.17rem;
+        font-weight: 700;
+        padding: 0.5rem 1rem;
+        border: 1px solid #bbb;
+        border-radius: 0.6rem;
+        background: #f8f8f8;
+        margin: 0.3rem auto 1rem;
+      }
+      #userMsg {
+        background: #e7f2fb;
+        color: #134e6f;
+        padding: 1em 0.7em;
+        border-radius: 0.7em;
+        opacity: 0;
+        transform: translateY(-40px);
+        transition: opacity 0.7s ease,
+          transform 0.7s cubic-bezier(0.47, 1.64, 0.41, 0.8);
+      }
+      #userMsg.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      #userMsg ol {
+        margin: 0;
+        padding-left: 1.2em;
+      }
+      #userMsg li {
+        margin-bottom: 0.5em;
+        font-size: 1.09em;
+        line-height: 1.5;
+      }
+      #suggested-section {
+        margin: 32px 0 18px;
+        padding: 12px 0;
+        font-size: 1.25em;
+        background: #f3faff;
+        border-radius: 0.8em;
+        font-weight: 700;
+        box-shadow: 0 2px 8px rgba(40, 120, 255, 0.09);
+      }
+      .raw-data-section {
+        background: #f3f3f3;
+        margin: 1em auto;
+        padding: 15px;
+        border-radius: 6px;
+        font-size: 1.16em;
+        max-width: 96vw;
+        max-height: 340px;
+        overflow: auto;
+        display: none;
+        text-align: left;
+      }
+      .show-raw-link {
+        cursor: pointer;
+        color: #0083ff;
+        text-decoration: underline;
+        font-size: 1.12em;
+        margin-left: 8px;
+      }
+      .btn-group {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        margin-bottom: 1.3em;
+      }
+      button {
+        font-size: 1.25rem;
+        padding: 1rem 2.2rem;
+        border: none;
+        border-radius: 0.7rem;
+        background: #0078d7;
+        color: #fff;
+        cursor: pointer;
+        transition: background 0.15s;
+      }
+      #record.record-intro,
+      #record.record-glow,
+      #record.record-intro:disabled,
+      #record.record-glow:disabled {
+        background: var(--rec-base);
+        color: var(--rec-ink);
+      }
+      #record {
+        position: relative;
+        overflow: hidden;
+      }
+      #record.record-intro::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: repeating-linear-gradient(
+          135deg,
+          var(--stripe-green-1) 0 10px,
+          var(--stripe-green-2) 10px 20px
+        );
+        background-size: 220% 100%;
+        animation: recordSlashGreen 0.8s ease-out forwards;
+        pointer-events: none;
+      }
+      @keyframes recordSlashGreen {
+        from {
+          background-position: -220% 0;
+          opacity: 1;
+        }
+        90% {
+          background-position: 0 0;
+          opacity: 1;
+        }
+        to {
+          background-position: 0 0;
+          opacity: 0;
+        }
+      }
+      #record.record-glow,
+      #record.record-glow:disabled {
+        animation: recordGlowAmber 1.6s ease-in-out infinite;
+        box-shadow: 0 0 0 0 var(--rec-glow-soft), 0 0 20px var(--rec-glow-soft);
+        filter: brightness(1);
+      }
+      @keyframes recordGlowAmber {
+        0% {
+          box-shadow: 0 0 0 0 var(--rec-glow-soft),
+            0 0 20px var(--rec-glow-soft);
+          filter: brightness(1);
+        }
+        50% {
+          box-shadow: 0 0 0 16px rgba(234, 179, 8, 0),
+            0 0 38px var(--rec-glow-strong);
+          filter: brightness(1.14);
+        }
+        100% {
+          box-shadow: 0 0 0 0 var(--rec-glow-soft),
+            0 0 20px var(--rec-glow-soft);
+          filter: brightness(1);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #record.record-glow {
+          animation: none;
+        }
+      }
+      button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+      #record::before {
+        content: "🎙️  ";
+      }
+      #stop::before {
+        content: "🛑  ";
+      }
+      #nextPartBtn::before {
+        content: "➡️  ";
+      }
+      .score-table {
+        border-collapse: collapse;
+        width: 95%;
+        margin: 1em auto;
+        font-size: 1.09rem;
+      }
+      .score-table th,
+      .score-table td {
+        border: 1px solid #bbb;
+        padding: 10px;
+        white-space: nowrap;
+        text-align: center;
+      }
+      .score-table th {
+        background: #f3f7fa;
+        font-weight: 700;
+      }
+      .score-good {
+        color: #2a7a19;
+        font-weight: 700;
+      }
+      .score-warn {
+        color: #e6a700;
+        font-weight: 700;
+      }
+      .score-bad {
+        color: #d43c2c;
+        font-weight: 700;
+      }
+      .score-good {
+        position: relative;
+        color: #0b8bdb;
+        background: #e8f5ff;
+        padding: 2px 6px 2px 24px;
+        border-radius: 14px;
+      }
+      .score-warn {
+        position: relative;
+        color: #d07c00;
+        background: #fff6e0;
+        padding: 2px 6px 2px 24px;
+        border-radius: 14px;
+      }
+      .score-bad {
+        position: relative;
+        color: #b90026;
+        background: #ffe7e7;
+        padding: 2px 6px 2px 24px;
+        border-radius: 14px;
+      }
+      .score-good::before,
+      .score-warn::before,
+      .score-bad::before {
+        position: absolute;
+        left: 6px;
+        top: 1px;
+        font-size: 0.9em;
+      }
+      .score-good::before {
+        content: "✔";
+      }
+      .score-warn::before {
+        content: "⚠️";
+      }
+      .score-bad::before {
+        content: "✖";
+      }
+      .word-chip {
+        display: inline-block;
+        background: #eef7fb;
+        color: #205080;
+        font-weight: 700;
+        font-size: 1.12em;
+        padding: 4px 18px;
+        border-radius: 20px;
+        box-shadow: 0 2px 8px rgba(40, 120, 255, 0.13);
+        transition: box-shadow 0.18s, transform 0.16s, filter 0.18s;
+        cursor: pointer;
+        user-select: none;
+      }
+      .word-chip:hover,
+      .word-chip:focus {
+        background: #dbeffd;
+        color: #0b5c9c;
+        box-shadow: 0 6px 20px rgba(20, 90, 220, 0.15);
+        filter: brightness(0.92);
+        transform: scale(1.13);
+      }
+      .tooltip {
+        position: relative;
+        display: inline-block;
+        border-bottom: none !important;
+        cursor: pointer;
+        margin-left: 3px;
+      }
+      .tooltip .tooltiptext {
+        visibility: hidden;
+        opacity: 0;
+        transition: opacity 0.4s;
+        position: absolute;
+        left: 50%;
+        top: 99%;
+        transform: translateX(-50%);
+        background: #444;
+        color: #fff;
+        padding: 10px;
+        border-radius: 5px;
+        min-width: 240px;
+        max-width: 520px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        white-space: normal;
+        word-wrap: break-word;
+        overflow: hidden;
+        z-index: 99999;
+      }
+      .tooltip:hover .tooltiptext {
+        visibility: visible;
+        opacity: 1;
+      }
+      #prettyResult table {
+        transition: width 0.35s ease;
+      }
+      #prettyResult table.collapsed-score td:nth-child(2),
+      #prettyResult table.collapsed-score th#scoreHeader,
+      #prettyResult table.collapsed-error td:nth-child(3),
+      #prettyResult table.collapsed-error th#errorHeader {
+        max-width: 70px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+      .toggle-col {
+        cursor: pointer;
+        user-select: none;
+        transition: color 0.2s;
+      }
+      .toggle-col:hover {
+        color: #0078d7;
+      }
+      #prettyResult .score-table {
+        table-layout: fixed;
+      }
+      #scoreHeader,
+      #errorHeader {
+        width: 34px;
+        text-align: center;
+        position: relative;
+        cursor: pointer;
+        user-select: none;
+      }
+      #prettyResult table.collapsed-score td:nth-child(2),
+      #prettyResult table.collapsed-error td:nth-child(3) {
+        width: 0;
+        min-width: 0;
+        max-width: 0;
+        padding-left: 0;
+        padding-right: 0;
+        overflow: hidden;
+        opacity: 0.15;
+        pointer-events: none;
+        transition: width 0.35s ease, opacity 0.35s ease;
+      }
+      .toggle-col::after {
+        content: "▸";
+        display: inline-block;
+        transition: transform 0.35s ease;
+      }
+      table:not(.collapsed-score) #scoreHeader::after,
+      table:not(.collapsed-error) #errorHeader::after {
+        transform: rotate(90deg);
+      }
+      table:not(.collapsed-score) td:nth-child(2),
+      table:not(.collapsed-error) td:nth-child(3) {
+        width: 85px;
+        opacity: 1;
+        pointer-events: auto;
+      }
+      a,
+      button,
+      select,
+      .tooltip,
+      input[type="checkbox"],
+      input[type="radio"],
+      .clickable {
+        transition: box-shadow 0.18s ease, transform 0.18s ease;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+      }
+      #stop.processing {
+        position: relative;
+        overflow: hidden;
+        color: transparent;
+      }
+      #stop.processing::after {
+        content: "Stopping…";
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        color: #fff;
+        border-radius: inherit;
+        white-space: nowrap;
+        background: repeating-linear-gradient(
+          135deg,
+          #34d399 0 10px,
+          #059669 10px 20px
+        );
+        background-size: 200% 100%;
+        animation: stripeMove 1s linear infinite;
+      }
+      @keyframes stripeMove {
+        from {
+          background-position: 0 0;
+        }
+        to {
+          background-position: 40px 0;
+        }
+      }
+      #wordHeader {
+        background: #f3f7fa;
+        border: 1px solid #bbb;
+        padding: 18px 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        perspective: 700px;
+        overflow: visible;
+        z-index: 5;
+      }
+      #wordHeader .word-chip {
+        display: inline-block;
+        background: #eef7fb;
+        color: #205080;
+        font-weight: 700;
+        font-size: 1.12em;
+        padding: 4px 18px;
+        border-radius: 20px;
+        box-shadow: 0 2px 8px rgba(40, 120, 255, 0.13);
+        transition: box-shadow 0.18s, transform 0.16s, filter 0.18s;
+        cursor: pointer;
+        user-select: none;
+      }
+      #wordHeader .word-chip:hover,
+      #wordHeader .word-chip:focus {
+        background: #dbeffd;
+        color: #0b5c9c;
+        box-shadow: 0 6px 20px rgba(20, 90, 220, 0.15);
+        filter: brightness(0.92);
+        transform: scale(1.13);
+      }
+      #wordHeader .word-chip:focus-visible {
+        outline: 2.5px solid #1976d2;
+        outline-offset: 2px;
+      }
+      #prettyResult .score-table th {
+        background: #f3f7fa;
+        color: #223;
+        border: 1px solid #bbb;
+        text-align: center;
+        font-weight: 700;
+        vertical-align: middle;
+        font-size: 1.14em;
+        padding: 14px 0 12px;
+        transition: background 0.16s, box-shadow 0.18s, transform 0.14s;
+      }
+      #wordHeader.clickable {
+        cursor: pointer;
+        box-shadow: 0 1.5px 5px rgba(40, 120, 255, 0.08);
+        position: relative;
+        z-index: 1;
+      }
+      #wordHeader.clickable:hover,
+      #wordHeader.clickable:focus {
+        background: #e0f2fd;
+        color: #1662b0;
+        box-shadow: 0 5px 24px rgba(20, 90, 220, 0.14),
+          0 1.5px 5px rgba(40, 120, 255, 0.08);
+        transform: scale(1.05);
+      }
+      #prettyResult .score-table th,
+      #prettyResult .score-table td {
+        transition: width 0.35s cubic-bezier(0.45, 1.6, 0.4, 0.95),
+          min-width 0.35s cubic-bezier(0.45, 1.6, 0.4, 0.95),
+          max-width 0.35s cubic-bezier(0.45, 1.6, 0.4, 0.95), padding 0.35s,
+          opacity 0.25s;
+        overflow: hidden;
+        word-wrap: break-word;
+        white-space: normal;
+      }
+      #prettyResult .score-table td:nth-child(4),
+      #prettyResult .score-table th:nth-child(4) {
+        overflow: visible !important;
+      }
+      .tooltip .tooltiptext {
+        z-index: 99999;
+      }
+      #prettyResult table.collapsed-score th#scoreHeader,
+      #prettyResult table.collapsed-score td:nth-child(2),
+      #prettyResult table.collapsed-error th#errorHeader,
+      #prettyResult table.collapsed-error td:nth-child(3) {
+        width: 26px !important;
+        min-width: 26px !important;
+        max-width: 26px !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        opacity: 0.2;
+        pointer-events: auto !important;
+        cursor: pointer;
+      }
+      #prettyResult .score-table td:nth-child(2),
+      #prettyResult .score-table td:nth-child(3) {
+        cursor: pointer;
+      }
+      #prettyResult table:not(.collapsed-score) th#scoreHeader,
+      #prettyResult table:not(.collapsed-score) td:nth-child(2),
+      #prettyResult table:not(.collapsed-error) th#errorHeader,
+      #prettyResult table:not(.collapsed-error) td:nth-child(3) {
+        width: 110px;
+        min-width: 80px;
+        max-width: 160px;
+        padding-left: 10px;
+        padding-right: 10px;
+        opacity: 1;
+      }
+      #prettyResult .pr-gap.ok {
+        background: #d1fae5;
+      }
+      #prettyResult .pr-gap.missing {
+        background: #fde68a;
+      }
+      #prettyResult .pr-gap.unexpected {
+        background: #fecaca;
+      }
+      #prettyResult .pr-tempo.ok {
+        background: #dbeafe;
+      }
+      #prettyResult .pr-tempo.fast {
+        background: #fca5a5;
+      }
+      #prettyResult .pr-tempo.slow {
+        background: #fcd34d;
+      }
+      #prettyResult .pr-seg.fast,
+      #prettyResult .pr-seg.slow,
+      #prettyResult .pr-seg.missing,
+      #prettyResult .pr-seg.unexpected {
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08) inset;
+      }
+      a:hover,
+      button:hover,
+      select:hover,
+      input[type="checkbox"]:hover,
+      input[type="radio"]:hover,
+      .clickable:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.28);
+      }
+      #prettyResult th#wordHeader:hover,
+      #prettyResult th#phonemeHeader:hover {
+        transform: none !important;
+        filter: none !important;
+      }
+      #prettyResult .tooltip .phoneme-chip {
+        display: inline-block;
+        transition: transform 0.18s ease, filter 0.18s ease;
+      }
+      #prettyResult .tooltip:hover .phoneme-chip {
+        transform: scale(1.12);
+        filter: brightness(0.85);
+      }
+      a:active,
+      button:active,
+      select:active,
+      .tooltip:active,
+      input[type="checkbox"]:active,
+      input[type="radio"]:active,
+      .clickable:active {
+        transform: translateY(0);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+      }
+      a:focus-visible,
+      button:focus-visible,
+      select:focus-visible,
+      .tooltip:focus-visible,
+      input[type="checkbox"]:focus-visible,
+      input[type="radio"]:focus-visible,
+      .clickable:focus-visible {
+        outline: 2px solid #0078d7;
+        outline-offset: 2px;
+      }
+      @media (max-width: 650px) {
+        #container {
+          padding: 1vw 0.5vw 4vw;
+        }
+        h2 {
+          font-size: 1.5rem;
+        }
+        input[type="text"],
+        button,
+        #prettyResult,
+        .score-table th,
+        .score-table td {
+          font-size: 1rem;
+        }
+        input[type="text"] {
+          width: 95vw;
+          max-width: 99vw;
+        }
+      }
+      @keyframes pulseOnce {
+        0% {
+          box-shadow: 0 0 0 0 rgba(0, 140, 255, 0.6);
+        }
+        70% {
+          box-shadow: 0 0 0 12px rgba(0, 140, 255, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(0, 140, 255, 0);
+        }
+      }
+      .pulse-once {
+        animation: pulseOnce 1.7s ease-out 1;
+        border-radius: 4px;
+      }
+      .hint-bubble {
+        position: absolute;
+        background: #008cff;
+        color: #fff;
+        padding: 10px 14px;
+        border-radius: 8px;
+        font-size: 1rem;
+        line-height: 1.2;
+        opacity: 0.9;
+        white-space: nowrap;
+        z-index: 9999;
+        pointer-events: none;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+      }
+      #aiFeedback {
+        background: #eef7fe;
+        padding: 1.1em 1em;
+        border: 1px solid #c9e2ff;
+        border-radius: 1em;
+        margin-top: 25px;
+        font-size: 1.14em;
+        line-height: 1.68;
+        color: #223;
+        box-shadow: 0 2px 16px rgba(60, 90, 155, 0.06);
+      }
+      #aiFeedback h2,
+      #aiFeedback h3,
+      #aiFeedback strong {
+        color: #096;
+        display: block;
+        margin-top: 0.7em;
+        margin-bottom: 0.25em;
+        font-size: 1.1em;
+        position: relative;
+        overflow: hidden;
+      }
+      #aiFeedback h2::after,
+      #aiFeedback h3::after,
+      #aiFeedback strong::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 2px;
+        width: 100%;
+        background: currentColor;
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 1.5s ease;
+      }
+      .underline-start::after {
+        transform: scaleX(1);
+      }
+      #aiFeedback ul {
+        margin: 0.2em 0 1em 1.5em;
+        padding: 0;
+        list-style: disc inside;
+      }
+      #aiFeedback li {
+        margin: 0.14em 0;
+      }
+      #aiFeedback em {
+        color: #296aac;
+      }
+      #prettyResult {
+        overflow-x: auto;
+        overflow-y: visible !important;
+        overflow: visible !important;
+        max-height: none !important;
+        height: auto !important;
+        padding-bottom: 1.15rem;
+      }
+      .en-text.hidden {
+        display: none;
+      }
+      #aiFeedback h3 {
+        margin-top: 1.25em;
+        padding-bottom: 0.2em;
+        border-bottom: 1px solid #ddd;
+      }
+      .ai-progress {
+        position: relative;
+        height: 4px;
+        margin-top: 8px;
+        background: #cfe5ff;
+        overflow: hidden;
+        border-radius: 2px;
+      }
+      .ai-progress::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        width: 40%;
+        background: linear-gradient(
+          90deg,
+          #0078d7 0%,
+          #44a8ff 50%,
+          #0078d7 100%
+        );
+        animation: aiLoad 1.2s linear infinite;
+      }
+      @keyframes aiLoad {
+        from {
+          left: -40%;
+        }
+        to {
+          left: 100%;
+        }
+      }
+      .toggle-en-btn {
+        margin: 0.5em 0;
+        padding: 0.35em 1em;
+        font-size: 0.97em;
+        cursor: pointer;
+        background: #f6f6f6;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-weight: 600;
+        color: #222;
+        transition: background 0.18s;
+      }
+      .toggle-en-btn:hover {
+        background: #e0e0e0;
+      }
+      /* --- END app styles --- */
+    </style>
+  </head>
+  <body>
+    <div id="container">
+      <h2>Pronunciation Test</h2>
+      
+
+      <div id="userMsg">
+        <ol>
+          <li>
+            We use and measure for standard American accents. Hear what it
+            should sound like:
+          </li>
+          <li>
+            The more recordings you make, the better the feedback will be 🤔 💭
+            💡 😮:
+            <span
+              class="lux-cta"
+              tabindex="0"
+              aria-haspopup="dialog"
+              aria-expanded="false"
+            >
+              database tracking
+              <span
+                class="lux-pop"
+                role="dialog"
+                aria-label="Database tracking details"
+              >
+                <strong style="display: block; margin-bottom: 6px"
+                  >How tracking helps</strong
+                >
+                <p style="margin: 0 0 8px; color: #444; font-size: 13px">
+                  We save summaries of your practice so feedback improves over
+                  time.
+                </p>
+
+                <div class="lux-uidrow">
+                  <span>Your UID:</span>
+                  <code id="lux-uid">…</code>
+                  <button id="lux-copy" class="lux-btn" type="button">
+                    Copy
+                  </button>
+                  <small
+                    id="lux-copied"
+                    class="lux-copied"
+                    aria-live="polite"
+                  ></small>
+                </div>
+
+                <div class="lux-links">
+                  <a id="lux-link-attempts" target="_blank" rel="noopener"
+                    >Attempts (admin)</a
+                  >
+                  <a id="lux-link-progress" target="_blank" rel="noopener"
+                    >User Progress (admin)</a
+                  >
+                  <a id="lux-link-cohort" target="_blank" rel="noopener"
+                    >Cohort (admin)</a
+                  >
+                </div>
+
+                <small class="lux-note"
+                  >Admin token required for those pages.</small
+                >
+              </span> </span
+            >.
+          </li>
+          <li>Remember—mistakes are a necessary part of learning! :)</li>
+        </ol>
+      </div>
+
+      <!-- Passage + L1 -->
+      <label>
+        Select Passage:
+        <select id="passageSelect">
+          <option value="rainbow">Rainbow Passage</option>
+          <option value="grandfather">Grandfather Passage</option>
+          <option value="minLR">Phoneme Test: L vs R</option>
+          <option value="minEEIH">Phoneme Test: EE vs IH</option>
+          <option value="minAUAH">Phoneme Test: A vs U</option>
+          <option value="wordList">Challenging Word List</option>
+          <option value="sentences">Challenging Sentences</option>
+          <option value="shortStory">Short Story Practice</option>
+        </select>
+        <span
+          id="partsInfoTip"
+          class="tooltip hidden"
+          style="margin-left: 10px; cursor: pointer"
+        >
+          (?)
+          <span class="tooltiptext" style="font-size: 1em">
+            These texts are designed to cover most sounds in English. Practicing
+            them helps reveal your pronunciation strengths and weaknesses.
+          </span>
+        </span>
+      </label>
+
+      <label style="display: block; margin-top: 14px">
+        First language:
+        <select id="l1Select" name="l1Select">
+          <option value="universal" selected>Universal (English-only)</option>
+          <option value="ar">Arabic – العربية</option>
+          <option value="zh">Chinese – 中文</option>
+          <option value="fr">French – Français</option>
+          <option value="de">German – Deutsch</option>
+          <option value="hi">Hindi – हिन्दी</option>
+          <option value="ja">Japanese – 日本語</option>
+          <option value="ko">Korean – 한국어</option>
+          <option value="mr">Marathi – मराठी</option>
+          <option value="pt">Portuguese – Português</option>
+          <option value="ru">Russian – Русский</option>
+          <option value="es">Spanish – Español</option>
+        </select>
+      </label>
+
+      <span id="suggestedSentence" style="display: none"></span>
+      <label style="margin-top: 20px">
+        <span
+          id="typewriterMsg"
+          style="display: block; margin-bottom: 0.7em"
+        ></span>
+        <textarea
+          id="referenceText"
+          placeholder="Paste or type everything you’ll read here."
+          rows="3"
+        ></textarea>
+      </label>
+
+      <!-- Invisible placeholders the JS still needs -->
+      <div id="ghostControls">
+        <button id="nextPartBtn">Next Part</button>
+        <span id="nextPartMsg"></span>
+        <button id="showSummaryBtn">Show Summary</button>
+        <span id="passageLabel"></span>
+        <span id="partProgress"></span>
+      </div>
+
+      <div class="btn-group">
+        <button id="record">Record</button>
+        <button id="stop" disabled>Stop</button>
+      </div>
+
+      <button id="playbackBtn" style="display: none">▶ Play</button>
+      <audio id="playbackAudio" hidden></audio>
+
+      <!-- Learner audio sink (hydrates self-playback when a new blob arrives) -->
+      <script>
+        (function installLearnerSink() {
+          const AUDIO_ID = "playbackAudio",
+            FN = "__attachLearnerBlob";
+          const audio =
+            document.getElementById(AUDIO_ID) ||
+            (() => {
+              const a = document.createElement("audio");
+              a.id = AUDIO_ID;
+              a.hidden = true;
+              document.body.appendChild(a);
+              return a;
+            })();
+          if (audio.__sinkV6) return;
+          audio.__sinkV6 = true;
+          audio.preload = "auto";
+          audio.muted = false;
+          audio.volume = 1;
+          audio.hidden = false;
+
+          let armedAt = 0,
+            ourSet = false;
+          const realLoad = audio.load.bind(audio);
+          audio.load = function () {
+            if (!ourSet && Date.now() - armedAt < 1200) {
+              console.warn("[learner] load() ignored (guard)");
+              return;
+            }
+            return realLoad();
+          };
+          const SRC = Object.getOwnPropertyDescriptor(
+            HTMLMediaElement.prototype,
+            "src"
+          );
+          Object.defineProperty(audio, "src", {
+            get() {
+              return SRC.get.call(this);
+            },
+            set(v) {
+              if (!ourSet && Date.now() - armedAt < 1200) {
+                console.warn("[learner] src set blocked (guard)", v);
+                return;
+              }
+              return SRC.set.call(this, v);
+            },
+          });
+
+          window[FN] = async function attachLearnerBlob(blob) {
+            try {
+              if (!(blob instanceof Blob)) {
+                console.warn("[learner] attach aborted: not a Blob", blob);
+                return;
+              }
+              if (audio.__blobUrl) {
+                try {
+                  URL.revokeObjectURL(audio.__blobUrl);
+                } catch (_) {}
+                audio.__blobUrl = null;
+              }
+              const url = URL.createObjectURL(blob);
+              audio.__blobUrl = url;
+              try {
+                audio.pause();
+              } catch (_) {}
+              audio.srcObject = null;
+              audio.currentTime = 0;
+              ourSet = true;
+              SRC.set.call(audio, url);
+              ourSet = false;
+              audio.hidden = false;
+              armedAt = Date.now();
+
+              document.dispatchEvent(
+                new CustomEvent("lux:new-learner-audio", {
+                  detail: { blob, url },
+                })
+              );
+              const sig = (blob.type || "") + "|" + blob.size;
+              if (
+                window.LuxSelfPB?.setLearnerArrayBuffer &&
+                audio.__hydratedSig !== sig
+              ) {
+                try {
+                  audio.__hydratedSig = sig;
+                  const arr = await blob.arrayBuffer();
+                  await window.LuxSelfPB.setLearnerArrayBuffer(arr);
+                } catch (e) {
+                  console.warn("[learner] hydrate self-playback failed:", e);
+                }
+              }
+              console.log(
+                "[learner] attached",
+                blob.type || "unknown",
+                blob.size,
+                url
+              );
+            } catch (e) {
+              console.warn("[learner] attach failed", e);
+            }
+          };
+          window[FN].__stable = "v6";
+        })();
+      </script>
+
+      <p id="status">Not recording</p>
+      <div id="prettyResult"></div>
+      <div id="aiFeedbackSection"><div id="aiFeedback"></div></div>
+
+      <button
+        id="showMoreBtn"
+        style="
+          display: none;
+          margin: 1em auto;
+          padding: 0.7em 1.3em;
+          font-size: 1em;
+        "
+      >
+        Show More
+      </button>
+
+      <div>
+        <span class="show-raw-link" id="toggleRaw">Show Raw Data</span>
+        <pre id="rawData" class="raw-data-section"></pre>
+      </div>
+
+      <!-- === Video hover preview popover === -->
+      <div id="ygPreview">
+        <video
+          id="ygDemo"
+          src="https://video.wixstatic.com/video/0d5d6f_5ae77fc4972248b38eb63ea25e5068fb/720p/mp4/file.mp4"
+          style="width: 100%; height: 100%; display: block; object-fit: cover"
+          muted
+          playsinline
+          loop
+          autoplay
+        ></video>
+        <div
+          id="unmuteTip"
+          style="
+            color: #fff;
+            background: #111a;
+            position: absolute;
+            bottom: 6px;
+            left: 8px;
+            font-size: 1em;
+            border-radius: 4px;
+            padding: 2px 10px;
+            display: none;
+            z-index: 10;
+            pointer-events: none;
+          "
+        >
+          🔊 Click to unmute
+        </div>
+      </div>
+      <style>
+        #ygPreview {
+          position: fixed;
+          width: 560px;
+          height: 390px;
+          display: none;
+          z-index: 9999;
+          border: 1px solid #ccc;
+          border-radius: 6px;
+          background: #000;
+          box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+          overflow: hidden;
+        }
+      </style>
+      <!-- === End YouGlish popover === -->
+    </div>
+
+    <!-- === Phoneme hover preview popover === -->
+    <div id="phPreview">
+      <video
+        id="phDemo"
+        src="https://video.wixstatic.com/video/0d5d6f_e100780f16524e51bd9c8e49f1c8c71c/480p/mp4/file.mp4"
+        style="
+          width: 100%;
+          height: 100%;
+          display: block;
+          object-fit: contain;
+          background: #000;
+        "
+        muted
+        playsinline
+        loop
+        preload="metadata"
+      >
+        <track
+          kind="subtitles"
+          src="/assets/phoneme-demo.vtt"
+          srclang="en"
+          label="English"
+          default
+        />
+      </video>
+      <div
+        id="phUnmuteTip"
+        style="
+          color: #fff;
+          background: #111a;
+          position: absolute;
+          bottom: 6px;
+          left: 8px;
+          font-size: 1em;
+          border-radius: 4px;
+          padding: 2px 10px;
+          display: none;
+          z-index: 10;
+          pointer-events: none;
+        "
+      >
+        🔊 Click to toggle audio
+      </div>
+    </div>
+    <!-- ===== END: Onboarding Overlay (v2) HTML ===== -->
+
+    <!-- TTS controls host (adopted into the top-right drawer) -->
+    <div id="tts-controls" data-luxHidden="1"></div>
+
+    <!-- Hard override: guarantee top-right CORNER behavior -->
+    <script>
+      (function ensureCornerOverrides() {
+        const ID = "lux-tts-corner-override";
+        if (document.getElementById(ID)) return;
+        const s = document.createElement("style");
+        s.id = ID;
+        s.textContent = `
+          .lux-tts-panel{
+            inset: env(safe-area-inset-top,0) env(safe-area-inset-right,0) auto auto !important;
+            left:auto !important; bottom:auto !important;
+            height:auto !important; min-height:0 !important;
+            max-height:min(520px,70vh) !important;
+            display:inline-block !important; overflow:visible !important;
+            width:360px; max-width:min(92vw,380px);
+          }
+          .lux-tts-panel #tts-controls{
+            height:auto !important; min-height:0 !important;
+            max-height:none !important; overflow:visible !important;
+          }`;
+        document.head.appendChild(s);
+        console.info("[tts] corner override injected");
+      })();
+    </script>
+
+    <!-- Peekaboo boot + late TTS import -->
+    <script type="module">
+      (function () {
+        const GUARD_ID = "lux-tts-guard-style";
+        const CSS_CANDIDATES = ["./features/features/tts-peekaboo.css"];
+
+        function ensureCSS() {
+          const has = [...document.styleSheets].some((s) =>
+            (s.href || "").includes("tts-peekaboo.css")
+          );
+          if (has) return;
+          CSS_CANDIDATES.forEach((href) => {
+            const link = document.createElement("link");
+            link.rel = "stylesheet";
+            link.href = href;
+            link.addEventListener("error", () => link.remove(), { once: true });
+            document.head.appendChild(link);
+          });
+        }
+
+        function ensurePanel() {
+          const host = document.getElementById("tts-controls");
+          if (!host) return false;
+          let panel = document.querySelector(".lux-tts-panel");
+          if (!panel) {
+            panel = document.createElement("aside");
+            panel.className = "lux-tts-panel";
+            panel.innerHTML = `<button class="lux-tts-tab" aria-expanded="false" aria-controls="tts-controls">Text-to-Speech</button>`;
+            document.body.appendChild(panel);
+            const tab = panel.querySelector(".lux-tts-tab");
+            tab.addEventListener("click", () => {
+              const willOpen =
+                !document.documentElement.classList.contains("lux-tts-open");
+              document.documentElement.classList.toggle(
+                "lux-tts-open",
+                willOpen
+              );
+              tab.setAttribute("aria-expanded", String(willOpen));
+            });
+          }
+          if (!panel.contains(host)) panel.appendChild(host);
+
+          document.getElementById(GUARD_ID)?.remove();
+          host.dataset.luxHidden = "0";
+          if (!host.firstElementChild) {
+            const ph = document.createElement("div");
+            ph.className = "lux-tts-loading";
+            ph.textContent = "Loading Text-to-Speech…";
+            host.appendChild(ph);
+          }
+          window.__ttsHost = host;
+
+          window.luxTTS = Object.assign(window.luxTTS || {}, {
+            nudge() {
+              const tab = document.querySelector(".lux-tts-tab");
+              if (!tab) return;
+              tab.classList.remove("lux-tts-nudge");
+              void tab.offsetWidth;
+              tab.classList.add("lux-tts-nudge");
+              setTimeout(() => tab.classList.remove("lux-tts-nudge"), 1400);
+            },
+          });
+
+          console.info("[peekaboo] inline boot active");
+          return true;
+        }
+
+        async function lateMount() {
+          if (!ensurePanel()) return setTimeout(lateMount, 120);
+          try {
+            const mod = await import("./features/features/tts/player-ui.js");
+            const host =
+              window.__ttsHost || document.getElementById("tts-controls");
+            if (mod?.mountTTSPlayer) mod.mountTTSPlayer(host);
+            console.info("[tts] mounted after peekaboo boot");
+          } catch (e) {
+            console.warn("[tts] late import failed", e);
+          }
+        }
+
+        function boot() {
+          ensureCSS();
+          lateMount();
+        }
+        if (document.readyState === "loading")
+          document.addEventListener("DOMContentLoaded", boot);
+        else boot();
+      })();
+    </script>
+
+    <!-- App core -->
+    <script type="module" src="./app-core/index.js"></script>
+
+    <!-- Self-Playback (lite) – mounts top-left + hydrates from hidden audio -->
+    <script type="module">
+      // After (keeps a fallback path if you haven’t deleted the old file yet):
+      const CANDIDATE_PATHS = [
+        "./features/features/selfpb/ui.js",
+        "./features/features/self-playback-lite.js", // fallback shim if kept
+      ];
+      async function loadAndMount() {
+        let mod = null,
+          lastErr = null;
+        for (const p of CANDIDATE_PATHS) {
+          try {
+            mod = await import(p);
+            console.info("[self-pb] loaded module:", p);
+            break;
+          } catch (e) {
+            lastErr = e;
+            console.warn("[self-pb] import failed for", p, e);
+          }
+        }
+        if (!mod?.mountSelfPlaybackLite) {
+          console.error(
+            "[self-pb] module did not export mountSelfPlaybackLite",
+            lastErr || ""
+          );
+          return;
+        }
+        mod.mountSelfPlaybackLite();
+
+        const audioEl = document.getElementById("playbackAudio");
+        async function hydrate() {
+          if (!audioEl) return;
+          const srcFromChild = audioEl.querySelector("source")?.src || "";
+          const url = audioEl.currentSrc || audioEl.src || srcFromChild;
+          if (!url) return;
+          try {
+            const res = await fetch(url, { cache: "no-store" });
+            const arr = await res.arrayBuffer();
+            if (window.LuxSelfPB?.setLearnerArrayBuffer)
+              await window.LuxSelfPB.setLearnerArrayBuffer(arr);
+          } catch (e) {
+            console.warn("[self-pb] could not fetch audio for panel", e);
+          }
+        }
+        audioEl?.addEventListener("loadeddata", hydrate);
+        if (audioEl?.src) hydrate();
+
+        window.addEventListener("load", () => {
+          const st = document.getElementById("selfpb-smoketest");
+          if (window.LuxSelfPB && st) st.remove();
+        });
+      }
+      loadAndMount();
+    </script>
+
+    <!-- Left-side peekaboo shell (adopts #selfpb-lite) -->
+    <script
+      type="module"
+      src="./features/features/08-selfpb-peekaboo.js"
+    ></script>
+
+    <!-- 🔧 Smoke test: only if self-playback truly failed to mount -->
+    <script>
+      (function () {
+        function showFallback() {
+          if (window.LuxSelfPB) return; // mounted
+          if (document.querySelector(".lux-sp-panel, #selfpb-lite")) return; // UI exists
+          if (document.getElementById("selfpb-smoketest")) return;
+
+          const box = document.createElement("div");
+          box.id = "selfpb-smoketest";
+          box.style.cssText =
+            "position:fixed;top:12px;left:12px;z-index:9999;background:#101219;color:#e9ecf1;border:1px solid #2a2f3b;border-radius:14px;padding:10px 12px;font:600 14px system-ui;box-shadow:0 6px 18px rgba(0,0,0,.25)";
+          box.innerHTML = `<div style="margin-bottom:6px">👂 Self Playback (smoke test)</div>
+            <button style="padding:6px 10px;border-radius:8px;border:0;background:#2d6cdf;color:#fff;cursor:pointer">Play</button>`;
+          box.querySelector("button").addEventListener("click", async () => {
+            const builtin = document.getElementById("playbackBtn");
+            if (builtin && !builtin.disabled) {
+              builtin.click();
+              return;
+            }
+            const audio = document.getElementById("playbackAudio");
+            if (audio && audio.src) {
+              try {
+                await audio.play();
+              } catch (_) {}
+              return;
+            }
+            const btn = box.querySelector("button"),
+              prev = btn.textContent;
+            btn.textContent = "No audio yet";
+            setTimeout(() => (btn.textContent = prev), 1400);
+          });
+          document.body.appendChild(box);
+        }
+        // Wait a tad after load so modules can mount first
+        window.addEventListener("load", () => setTimeout(showFallback, 1200));
+      })();
+    </script>
+
+    <!-- Force the TTS panel visible + unlocked geometry (diagnostic & safety) -->
+    <script>
+      (function ensureTtsForceVisible() {
+        if (document.getElementById("lux-tts-force-visible")) return;
+        const s = document.createElement("style");
+        s.id = "lux-tts-force-visible";
+        s.textContent = `
+          html.lux-tts-open .lux-tts-panel { transform: translateX(0) !important; }
+          .lux-tts-panel { z-index: 99999 !important; width: 360px !important; max-width: 92vw !important; }
+          .lux-tts-panel #tts-controls{
+            display:block !important; visibility:visible !important;
+            position:static !important; box-sizing:border-box !important;
+            padding:14px 16px !important; min-width:320px !important; min-height:140px !important;
+            height:auto !important; max-height:none !important; overflow:visible !important;
+          }
+          .lux-tts-panel #tts-controls > *{ position:static !important; }
+        `;
+        document.head.appendChild(s);
+        console.log("[tts] force-visible shim active");
+      })();
+    </script>
+
+    <!-- Safety: prevent unrelated 'typeWriter is not defined' error -->
+    <script>
+      window.typeWriter = window.typeWriter || function () {};
+    </script>
+    <style id="sp-debug-show">
+      .lux-sp-panel,
+      #selfpb-lite {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+      }
+    </style>
+  </body>
+</html>

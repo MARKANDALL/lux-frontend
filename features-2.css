@@ -1,0 +1,766 @@
+/* ============================================================
+   Collapsible Score & Error columns
+   ============================================================ */
+#prettyResult table {
+  transition: width 0.35s ease;
+}
+
+#scoreHeader,
+#errorHeader {
+  width: 34px;
+  text-align: center;
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle-col {
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.2s;
+}
+.toggle-col:hover {
+  color: #0078d7;
+}
+.toggle-col::after {
+  content: "▸";
+  display: inline-block;
+  transition: transform 0.35s ease;
+}
+table:not(.collapsed-score) #scoreHeader::after,
+table:not(.collapsed-error) #errorHeader::after {
+  transform: rotate(90deg);
+}
+table:not(.collapsed-score) th#scoreHeader::after,
+table:not(.collapsed-error) th#errorHeader::after {
+  content: "◂";
+}
+
+/* ultra-collapsed sliver on load */
+#prettyResult table.collapsed-score th#scoreHeader,
+#prettyResult table.collapsed-score td:nth-child(2),
+#prettyResult table.collapsed-error th#errorHeader,
+#prettyResult table.collapsed-error td:nth-child(3) {
+  width: 26px !important;
+  min-width: 26px !important;
+  max-width: 26px !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  opacity: 0.2;
+  pointer-events: auto !important;
+  cursor: pointer;
+}
+
+/* data cells compressed when collapsed */
+#prettyResult table.collapsed-score td:nth-child(2),
+#prettyResult table.collapsed-error td:nth-child(3) {
+  width: 0;
+  min-width: 0;
+  max-width: 0;
+  padding-left: 0;
+  padding-right: 0;
+  overflow: hidden;
+  opacity: 0.15;
+  pointer-events: none;
+  transition: width 0.35s ease, opacity 0.35s ease;
+}
+
+/* open state */
+#prettyResult table:not(.collapsed-score) th#scoreHeader,
+#prettyResult table:not(.collapsed-score) td:nth-child(2),
+#prettyResult table:not(.collapsed-error) th#errorHeader,
+#prettyResult table:not(.collapsed-error) td:nth-child(3) {
+  width: 110px;
+  min-width: 80px;
+  max-width: 160px;
+  padding-left: 10px;
+  padding-right: 10px;
+  opacity: 1;
+}
+
+#prettyResult .score-table td:nth-child(2),
+#prettyResult .score-table td:nth-child(3) {
+  cursor: pointer;
+}
+
+/* ============================================================
+                         Header cells and pills (Word / Phoneme)
+                         ============================================================ */
+#wordHeader,
+#phonemeHeader {
+  background: #f3f7fa;
+  border: 1px solid #bbb;
+  padding: 18px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  perspective: 700px;
+  overflow: visible !important;
+  z-index: 5;
+}
+#prettyResult .score-table th {
+  color: #223;
+  text-align: center;
+  font-weight: 700;
+  vertical-align: middle;
+  font-size: 1.14em;
+  padding: 14px 0 12px 0;
+  transition: background 0.16s, box-shadow 0.18s, transform 0.14s;
+}
+
+/* Make "Word" look clickable */
+#wordHeader.clickable {
+  cursor: pointer;
+  box-shadow: 0 1.5px 5px rgba(40, 120, 255, 0.08);
+  position: relative;
+  z-index: 1;
+}
+#wordHeader.clickable:hover,
+#wordHeader.clickable:focus {
+  background: #e0f2fd;
+  color: #1662b0;
+  box-shadow: 0 5px 24px rgba(20, 90, 220, 0.14),
+    0 1.5px 5px rgba(40, 120, 255, 0.08);
+  transform: scale(1.05);
+}
+#wordHeader .word-chip:focus-visible {
+  outline: 2.5px solid #1976d2;
+  outline-offset: 2px;
+}
+#wordHeader .word-chip {
+  display: inline-block;
+} /* reuse .word-chip style */
+
+/* Stop scaling the whole tooltip box on header hover */
+#prettyResult th#wordHeader:hover,
+#prettyResult th#phonemeHeader:hover {
+  transform: none !important;
+  filter: none !important;
+}
+
+/* Only scale the small pill */
+#prettyResult .tooltip .phoneme-chip {
+  display: inline-block;
+  transition: transform 0.18s ease, filter 0.18s ease;
+}
+#prettyResult .tooltip:hover .phoneme-chip {
+  transform: scale(1.12);
+  filter: brightness(0.85);
+}
+
+/* ============================================================
+                         YouGlish & Phoneme preview popovers
+                         ============================================================ */
+#ygPreview,
+#phPreview {
+  position: fixed;
+  width: 560px;
+  height: 390px;
+  display: none; /* keep both hidden by default */
+  z-index: 9999;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #000;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+#phPreview > video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  background: #000;
+  transform: scale(0.96);
+  transform-origin: center center;
+}
+
+/* Phoneme-column pill layout (header + body) */
+.word-chip.phoneme-chip {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  overflow: visible !important;
+  min-width: 0;
+  padding: 4px 12px;
+}
+#phonemeHeader {
+  max-width: none;
+  min-width: 150px;
+}
+
+/* Floating 🔊 icon above the header pill (PHONEME) */
+#phonemeHeader .phoneme-chip {
+  position: relative !important;
+}
+#phonemeHeader .audio-hint--phoneme {
+  position: absolute;
+  left: 50%;
+  top: -14px;
+  transform: translateX(-50%) scale(1);
+  font-size: 1.1em;
+  color: #205080;
+  opacity: 0; /* hidden by default (match Word) */
+  pointer-events: none;
+  transition: opacity 0.18s, transform 0.25s;
+}
+/* Show + animate on hover/focus (match Word behavior) */
+#phonemeHeader .phoneme-chip:hover .audio-hint--phoneme,
+#phonemeHeader .phoneme-chip:focus-visible .audio-hint--phoneme {
+  opacity: 1;
+  animation: phonemeAudioHoverNudge 0.7s ease-in-out 1,
+    phonemeAudioHoverPulse 1.2s ease-in-out 0.7s infinite alternate;
+}
+@keyframes phonemeAudioHoverPulse {
+  from {
+    transform: translateX(-50%) scale(1);
+  }
+  to {
+    transform: translateX(-50%) scale(1.17) translateY(-1px);
+  }
+}
+@keyframes phonemeAudioHoverNudge {
+  0% {
+    transform: translateX(-50%) scale(1) rotate(0deg);
+  }
+  25% {
+    transform: translateX(-50%) scale(1.25) rotate(-10deg);
+  }
+  50% {
+    transform: translateX(-50%) scale(1) rotate(0deg);
+  }
+  75% {
+    transform: translateX(-50%) scale(1.2) rotate(8deg);
+  }
+  100% {
+    transform: translateX(-50%) scale(1.05) rotate(0deg);
+  }
+}
+
+/* Word-header pill speaker icon */
+#wordHeader .word-chip {
+  position: relative;
+}
+#wordHeader .word-chip::after {
+  content: "🔊";
+  position: absolute;
+  left: 50%;
+  top: -14px;
+  transform: translateX(-50%) scale(1);
+  font-size: 1.1em;
+  color: #205080;
+  opacity: 0; /* hidden by default */
+  pointer-events: none;
+  transition: opacity 0.18s, transform 0.25s;
+}
+/* Show + animate on hover/focus */
+#wordHeader .word-chip:hover::after,
+#wordHeader .word-chip:focus-visible::after {
+  opacity: 1;
+  animation: wordAudioNudge 0.7s ease-in-out 1,
+    wordAudioPulse 1.2s ease-in-out 0.7s infinite alternate;
+}
+#wordHeader .word-chip.is-playing::after {
+  filter: drop-shadow(0 0 2px #ffd54f) brightness(1.3);
+}
+/* hide duplicate icon element if present */
+#wordHeader > .audio-hint {
+  display: none !important;
+}
+
+@keyframes wordAudioPulse {
+  from {
+    transform: translateX(-50%) scale(1);
+  }
+  to {
+    transform: translateX(-50%) scale(1.17) translateY(-1px);
+  }
+}
+@keyframes wordAudioNudge {
+  0% {
+    transform: translateX(-50%) scale(1) rotate(0deg);
+  }
+  25% {
+    transform: translateX(-50%) scale(1.25) rotate(-10deg);
+  }
+  50% {
+    transform: translateX(-50%) scale(1) rotate(0deg);
+  }
+  75% {
+    transform: translateX(-50%) scale(1.2) rotate(8deg);
+  }
+  100% {
+    transform: translateX(-50%) scale(1.05) rotate(0deg);
+  }
+}
+
+/* Play-state fixes & glow */
+.phoneme-chip.is-playing {
+  animation: none !important;
+  transform: none !important;
+}
+.phoneme-chip.is-playing .audio-hint--phoneme {
+  animation: phonemeAudioHoverNudge 0.7s ease-in-out 1,
+    phonemeAudioHoverPulse 1.2s ease-in-out 0.7s infinite alternate;
+  filter: drop-shadow(0 0 2px #ffd54f) brightness(1.3);
+}
+.tooltip.is-playing,
+.tooltip.is-playing:hover {
+  animation: none !important;
+  transform: none !important;
+  filter: none !important;
+}
+#prettyResult .tooltip.is-playing {
+  filter: brightness(1.25);
+  animation: pulseGlow 1s ease-in-out infinite alternate;
+}
+@keyframes pulseGlow {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.12) drop-shadow(0 0 4px #1e90ff);
+  }
+}
+
+/* ============================================================
+                         Prosody ribbons (bars)
+                         ============================================================ */
+.prosody-ribbon {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 8px;
+}
+.pr-seg {
+  display: inline-block;
+  height: 8px;
+  border-radius: 3px;
+}
+.pr-gap.ok {
+  background: #9ad29a;
+}
+.pr-gap.missing {
+  background: #f0b400;
+}
+.pr-gap.unexpected {
+  background: #e86a5a;
+}
+
+.pr-tempo.ok {
+  background: #9bb7ff;
+}
+.pr-tempo.fast {
+  background: #6aa9ff;
+}
+.pr-tempo.slow {
+  background: #b695ff;
+}
+
+/* ============================================================
+                         Left-side legend + table layout
+                         ============================================================ */
+#prettyResult .results-flex {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
+}
+
+#prettyResult .results-flex > table.score-table {
+  flex: 1 1 auto;
+  min-width: 420px;
+}
+
+/* Legend base */
+.prosody-legend {
+  margin: 8px auto 12px;
+  max-width: 950px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #f7fbff;
+  border: 1px solid #d9ebff;
+  color: #234;
+}
+.prosody-legend .legend-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 18px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.prosody-legend .sample {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e8eef7;
+}
+.prosody-legend .sample .prosody-ribbon {
+  transform: scale(0.95);
+  transform-origin: left center;
+}
+.prosody-legend .label {
+  font-weight: 600;
+  color: #355;
+}
+.prosody-legend .note {
+  font-size: 0.95em;
+  color: #556;
+}
+
+/* Side variant (left panel) */
+#prettyResult .prosody-legend--side {
+  margin: 0;
+  max-width: 260px;
+  width: 260px;
+  flex: 0 0 260px;
+  position: sticky;
+  top: 8px;
+}
+
+/* Small screens: stack legend above table */
+@media (max-width: 900px) {
+  #prettyResult .results-flex {
+    flex-direction: column;
+  }
+  #prettyResult .prosody-legend--side {
+    position: static;
+    width: 100%;
+    max-width: 100%;
+    margin: 8px 0 12px;
+  }
+  #prettyResult .results-flex > table.score-table {
+    min-width: 0;
+  }
+}
+
+/* ============================================================
+                         AI Feedback panel
+                         ============================================================ */
+#aiFeedback {
+  background: #eef7fe;
+  padding: 1.1em 1em;
+  border: 1px solid #c9e2ff;
+  border-radius: 1em;
+  margin-top: 25px;
+  font-size: 1.14em;
+  line-height: 1.68;
+  color: #223;
+  box-shadow: 0 2px 16px 0 rgba(60, 90, 155, 0.06);
+}
+#aiFeedback h2,
+#aiFeedback h3,
+#aiFeedback strong {
+  color: #096;
+  display: block;
+  margin-top: 0.7em;
+  margin-bottom: 0.25em;
+  font-size: 1.1em;
+  position: relative;
+  overflow: hidden;
+}
+#aiFeedback h2::after,
+#aiFeedback h3::after,
+#aiFeedback strong::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 1.5s ease;
+}
+.underline-start::after {
+  transform: scaleX(1);
+}
+
+#aiFeedback ul {
+  margin: 0.2em 0 1em 1.5em;
+  padding: 0;
+  list-style: disc inside;
+}
+#aiFeedback li {
+  margin: 0.14em 0;
+}
+#aiFeedback em {
+  color: #296aac;
+}
+
+/* AI feedback loading bar (slider) */
+.ai-progress {
+  position: relative;
+  height: 4px;
+  margin-top: 8px;
+  background: #cfe5ff;
+  overflow: hidden;
+  border-radius: 2px;
+}
+.ai-progress::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background: linear-gradient(90deg, #0078d7 0%, #44a8ff 50%, #0078d7 100%);
+  animation: aiLoad 1.2s linear infinite;
+}
+@keyframes aiLoad {
+  from {
+    left: -40%;
+  }
+  to {
+    left: 100%;
+  }
+}
+
+/* Single small button */
+.toggle-en-btn {
+  margin: 0.5em 0;
+  padding: 0.35em 1em;
+  font-size: 0.97em;
+  cursor: pointer;
+  background: #f6f6f6;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-weight: 600;
+  color: #222;
+  transition: background 0.18s;
+}
+.toggle-en-btn:hover {
+  background: #e0e0e0;
+}
+
+/* ============================================================
+                         Pronunciation result container quick fix
+                         ============================================================ */
+#prettyResult {
+  overflow-x: auto; /* keep horizontal scroll on phones */
+  overflow-y: visible !important;
+  overflow: visible !important;
+  max-height: none !important;
+  height: auto !important;
+  padding-bottom: 1.15rem;
+}
+
+/* ============================================================
+                         Onboarding overlay (namespaced ob-)
+                         ============================================================ */
+#onboardingOverlay.ob-hidden {
+  display: none;
+}
+#onboardingOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+}
+#onboardingOverlay .ob-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+}
+#onboardingOverlay .ob-card {
+  position: relative;
+  max-width: 720px;
+  margin: 6vh auto;
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px 20px 18px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  font-family: inherit;
+}
+#onboardingOverlay .ob-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  border: 0;
+  background: transparent;
+  font-size: 24px;
+  cursor: pointer;
+}
+#onboardingOverlay .ob-slide {
+  min-height: 180px;
+}
+#onboardingOverlay .ob-hidden {
+  display: none;
+}
+#onboardingOverlay h2 {
+  margin: 4px 0 10px;
+  font-size: 22px;
+}
+#onboardingOverlay .ob-body {
+  margin: 0 0 12px;
+  line-height: 1.4;
+}
+#onboardingOverlay .ob-note {
+  color: #666;
+  font-size: 13px;
+}
+#onboardingOverlay .ob-list {
+  margin: 6px 0 6px 18px;
+}
+#onboardingOverlay .ob-cta {
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 0;
+  cursor: pointer;
+  background: #0078d7;
+  color: #fff;
+  font-weight: 700;
+}
+#onboardingOverlay .ob-cta.ob-cta--secondary {
+  background: #f3f3f3;
+  color: #333;
+}
+#onboardingOverlay .ob-footer {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+#onboardingOverlay .ob-nav {
+  border: 0;
+  background: #f3f3f3;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+#onboardingOverlay .ob-dots {
+  display: flex;
+  gap: 8px;
+}
+#onboardingOverlay .ob-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 0;
+  background: #d0d0d0;
+  cursor: pointer;
+}
+#onboardingOverlay .ob-dot[aria-current="true"] {
+  background: #333;
+}
+@media (max-width: 560px) {
+  #onboardingOverlay .ob-card {
+    margin: 3vh 12px;
+    padding: 18px 14px 12px;
+  }
+  #onboardingOverlay h2 {
+    font-size: 19px;
+  }
+}
+
+/* ============================================================
+                         Hints & pulses
+                         ============================================================ */
+@keyframes pulseOnce {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 140, 255, 0.6);
+  }
+  70% {
+    box-shadow: 0 0 0 12px rgba(0, 140, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 140, 255, 0);
+  }
+}
+.pulse-once {
+  animation: pulseOnce 1.7s ease-out 1;
+  border-radius: 4px;
+}
+
+.hint-bubble {
+  position: absolute;
+  background: #008cff;
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 1rem;
+  line-height: 1.2;
+  opacity: 0.9;
+  white-space: nowrap;
+  z-index: 9999;
+  pointer-events: none;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* ============================================================
+                         Misc visibility toggles & tiny helpers
+                         ============================================================ */
+.en-text.hidden {
+  display: none;
+}
+.hidden {
+  display: none !important;
+}
+
+.pop-in {
+  animation: popInTip 280ms ease-out;
+}
+@keyframes popInTip {
+  0% {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ---- Header audio icon base (shared) ---- */
+.audio-hint {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 0.95em;
+  opacity: 0; /* hidden by default */
+  transition: opacity 0.18s, transform 0.25s;
+}
+
+/* Stronger cue when unmuted (optional) */
+#phonemeHeader #phonemeTitle.is-on .audio-hint {
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Bigger tooltip for prosody segment titles */
+.prosody-ribbon .pr-seg[title] {
+  position: relative;
+}
+.prosody-ribbon .pr-seg[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  left: 50%;
+  top: -36px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  background: #1b2540;
+  color: #fff;
+  font-size: 12.5px;
+  line-height: 1;
+  padding: 7px 9px;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+  z-index: 20;
+}
+.prosody-ribbon .pr-seg[title]:hover::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -8px;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #1b2540;
+}
+.prosody-ribbon .pr-seg {
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+.prosody-ribbon .pr-seg:hover {
+  transform: scaleY(1.35);
+  filter: brightness(0.9);
+}

@@ -1,0 +1,245 @@
+/* Container */
+#tts-controls {
+  display: flex;
+}
+#tts-wrap {
+  margin-left: auto;
+  width: 340px;
+  max-width: 95vw;
+}
+
+/* Card */
+.tts-box {
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 12px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  width: 100%;
+}
+
+.tts-compact {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.tts-compact > * {
+  width: 100%;
+  display: flex !important;
+  justify-content: center !important;
+}
+
+/* Head / note */
+.tts-title {
+  font-weight: 700;
+}
+.tts-head {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.tts-note {
+  font-size: 0.9rem;
+  color: #374151;
+  min-height: 1em;
+}
+.tts-note--warn {
+  color: #b45309;
+}
+
+/* Inputs */
+.tts-voice select,
+.tts-style-grid select,
+.tts-style-grid input[type="number"] {
+  padding: 6px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  font: inherit;
+}
+
+.tts-speed {
+  gap: 6px;
+  align-items: center;
+}
+#tts-speed {
+  width: 100%;
+  cursor: pointer;
+}
+#tts-speed-out {
+  min-width: 3.5ch;
+  text-align: right;
+}
+
+/* Style row */
+.tts-style-row {
+  width: 100%;
+}
+.tts-style-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.tts-style-grid label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.95rem;
+  gap: 4px;
+}
+
+/* Main button */
+.tts-btn {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  background: #0078d7;
+  color: #fff;
+  cursor: pointer;
+  transition: filter 0.15s, transform 0.12s, box-shadow 0.15s;
+  font: inherit;
+}
+.tts-btn:hover {
+  filter: brightness(0.92);
+}
+.tts-btn:active {
+  transform: translateY(1px);
+}
+.tts-btn--primary {
+  font-weight: 700;
+}
+
+/* Pitch slider — placed under main button */
+.tts-pitch {
+  width: 100%;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px; /* space below main button */
+  margin-bottom: 8px; /* space above skip buttons */
+}
+#tts-pitch {
+  flex: 1;
+  cursor: pointer;
+}
+#tts-pitch-out {
+  width: 2.5ch;
+  text-align: right;
+}
+
+/* Skip buttons row */
+#tts-main {
+  margin-bottom: 0;
+}
+.tts-skip {
+  gap: 12px;
+  display: flex;
+  justify-content: center;
+}
+.tts-btn--sm {
+  padding: 7px 12px;
+  font-size: 0.95rem;
+  border-radius: 9px;
+}
+
+/* Download link */
+.tts-link {
+  text-decoration: none;
+  font-size: 1.8rem;
+  line-height: 1;
+  color: #0078d7;
+}
+.tts-link:hover {
+  filter: brightness(0.9);
+}
+
+/* Misc legacy */
+.tts-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.tts-controls {
+  margin-top: 8px;
+}
+.tts-text {
+  width: 100%;
+  min-height: 64px;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  font-size: 15px;
+  resize: vertical;
+}
+
+/* Focus states */
+.tts-btn:focus-visible,
+.tts-voice select:focus-visible,
+.tts-style-grid select:focus-visible,
+.tts-style-grid input[type="number"]:focus-visible,
+#tts-speed:focus-visible,
+#tts-pitch:focus-visible,
+.tts-link:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .tts-btn {
+    transition: none;
+  }
+}
+
+/* Responsive */
+@media (max-width: 420px) {
+  .tts-style-grid {
+    grid-template-columns: 1fr;
+  }
+  #tts-wrap {
+    width: 100%;
+  }
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  .tts-box {
+    background: #0b0f14;
+    border-color: #1f2937;
+    box-shadow: none;
+  }
+  .tts-voice select,
+  .tts-style-grid select,
+  .tts-style-grid input[type="number"],
+  .tts-text {
+    background: #111827;
+    color: #e5e7eb;
+    border-color: #374151;
+  }
+  .tts-btn {
+    background: #0ea5e9;
+    border-color: #0284c7;
+  }
+  .tts-link {
+    color: #38bdf8;
+  }
+}
+/* Hide the host until the panel adopts it to avoid any flash */
+#tts-controls[data-luxHidden="1"] {
+  display: none !important;
+}
+
+/* Once #tts-controls is inside the panel, kill any fixed positioning */
+.lux-tts-panel #tts-controls {
+  position: static !important;
+  inset: auto !important;
+  top: auto !important;
+  right: auto !important;
+  left: auto !important;
+  bottom: auto !important;
+  float: none !important;
+  width: 100% !important;
+  margin: 0 !important;
+}

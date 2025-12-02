@@ -1,0 +1,461 @@
+/* ============================================================
+   Global utilities, animations, and link styles
+   ============================================================ */
+#typewriterMsg {
+  white-space: pre; /* preserve spaces while typing */
+  opacity: 1; /* fades to 0 on first input */
+  transition: opacity 0.5s; /* smooth fade-out */
+}
+
+/* one clean copy */
+.hidden {
+  display: none !important;
+}
+
+@keyframes tipPop {
+  0% {
+    transform: scale(0.2) rotate(-30deg);
+    opacity: 0;
+    color: #bbb;
+  }
+  40% {
+    transform: scale(1.4) rotate(10deg);
+    opacity: 1;
+    color: #1e90ff;
+  }
+  70% {
+    transform: scale(0.88) rotate(-5deg);
+    color: #205080;
+  }
+  85% {
+    transform: scale(1.05) rotate(0);
+    color: #0078d7;
+  }
+  100% {
+    transform: scale(1) rotate(0);
+    color: inherit;
+  }
+}
+
+.pop-in {
+  animation: tipPop 1.4s cubic-bezier(0.18, 1.7, 0.28, 1.01);
+}
+
+/* ============================================================
+                             Layout & theme
+                   ============================================================ */
+body {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  font-family: "Montserrat", system-ui, sans-serif;
+  background: #fff;
+  color: #333;
+  margin: 0;
+  line-height: 1.5;
+  padding: 10px;
+}
+#container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2vw 2vw 3vw 2vw;
+  box-sizing: border-box;
+}
+
+:root {
+  --rec-base: #eab308;
+  --rec-ink: #111;
+  --rec-glow-soft: rgba(234, 179, 8, 0.55);
+  --rec-glow-strong: rgba(234, 179, 8, 0.92);
+  --stripe-green-1: #34d399;
+  --stripe-green-2: #059669;
+}
+
+/* ============================================================
+                             Global interactive hover cues
+                   ============================================================ */
+button,
+#nextPartBtn {
+  transition: background 0.15s, transform 0.18s ease, filter 0.18s ease;
+}
+button:hover:not(:disabled),
+#nextPartBtn:hover:not(:disabled) {
+  transform: scale(1.12);
+  filter: brightness(0.85);
+}
+
+/* ============================================================
+                             Headings
+                   ============================================================ */
+h2 {
+  font-size: 2.25rem;
+  margin: 2rem 0 1rem;
+  text-align: center;
+}
+
+/* ============================================================
+                             Inputs & selects
+                   ============================================================ */
+label {
+  font-size: 1.15rem;
+  display: inline-block;
+  text-align: center;
+  width: 100%;
+}
+#referenceText {
+  width: 95vw;
+  max-width: 880px;
+  min-height: 120px;
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.4;
+  padding: 1.2rem;
+  border-radius: 0.8rem;
+  resize: vertical;
+}
+input::placeholder {
+  color: #888 !important;
+  font-style: italic;
+  letter-spacing: 0.03em;
+  opacity: 1;
+  font-size: 1.12rem;
+}
+#referenceText::placeholder {
+  opacity: 1;
+  transition: opacity 0.45s ease;
+  font-style: italic;
+}
+#referenceText.placeholder-fade::placeholder {
+  opacity: 0;
+}
+
+select {
+  font-size: 1.17rem;
+  font-weight: 700;
+  padding: 0.5rem 1rem;
+  border: 1px solid #bbb;
+  border-radius: 0.6rem;
+  background: #f8f8f8;
+  margin: 0.3rem auto 1rem;
+}
+
+/* ============================================================
+                             Buttons
+                   ============================================================ */
+.btn-group {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 1.3em;
+}
+button {
+  font-size: 1.25rem;
+  padding: 1rem 2.2rem;
+  border: none;
+  border-radius: 0.7rem;
+  background: #0078d7;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+#record::before {
+  content: "🎙️  ";
+}
+#stop::before {
+  content: "🛑  ";
+}
+#nextPartBtn::before {
+  content: "➡️  ";
+}
+
+/* Default hidden until we have results */
+#showSummaryBtn {
+  display: none;
+}
+
+/* ============================================================
+                             Global interactive depth effect
+                   ============================================================ */
+a,
+button,
+select,
+.tooltip,
+input[type="checkbox"],
+input[type="radio"],
+.clickable {
+  transition: box-shadow 0.18s ease, transform 0.18s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+}
+a:hover,
+button:hover,
+select:hover,
+input[type="checkbox"]:hover,
+input[type="radio"]:hover,
+.clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.28);
+}
+a:active,
+button:active,
+select:active,
+.tooltip:active,
+input[type="checkbox"]:active,
+input[type="radio"]:active,
+.clickable:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+a:focus-visible,
+button:focus-visible,
+select:focus-visible,
+.tooltip:focus-visible,
+input[type="checkbox"]:focus-visible,
+input[type="radio"]:focus-visible,
+.clickable:focus-visible {
+  outline: 2px solid #0078d7;
+  outline-offset: 2px;
+}
+
+/* ============================================================
+                             Mobile
+                   ============================================================ */
+@media (max-width: 650px) {
+  #container {
+    padding: 1vw 0.5vw 4vw;
+  }
+  h2 {
+    font-size: 1.5rem;
+  }
+  input[type="text"],
+  button,
+  #prettyResult,
+  .score-table th,
+  .score-table td {
+    font-size: 1rem;
+  }
+  input[type="text"] {
+    width: 95vw;
+    max-width: 99vw;
+  }
+} /* ← close the mobile @media block here */
+
+/* ============================================================
+                     Onboarding overlay (namespaced ob-) — BLUE ICON BUTTONS
+                   ============================================================ */
+:root {
+  --ob-accent: #0078d7; /* blue */
+  --ob-ink: #111;
+  --ob-muted: #6b7280;
+  --ob-ring: rgba(0, 0, 0, 0.1);
+  --ob-ring-strong: rgba(0, 120, 215, 0.35);
+  --ob-btn-hover: #0a66c2; /* darker blue */
+}
+
+#onboardingOverlay.ob-hidden {
+  display: none;
+}
+#onboardingOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+}
+#onboardingOverlay .ob-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+}
+
+/* Card */
+#onboardingOverlay .ob-card {
+  position: relative;
+  max-width: 720px;
+  margin: 6vh auto;
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px 20px 18px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  font-family: inherit;
+  color: var(--ob-ink);
+}
+
+/* -------- Solid blue icon buttons (X, arrows) -------- */
+#onboardingOverlay .ob-iconbtn,
+#onboardingOverlay .ob-close,
+#onboardingOverlay .ob-nav {
+  -webkit-tap-highlight-color: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  border-radius: 999px;
+  border: 0;
+  background: var(--ob-accent) !important; /* always BLUE */
+  color: #fff !important; /* always WHITE icon/glyph */
+  cursor: pointer;
+  box-shadow: 0 1px 2px var(--ob-ring);
+  transition: background 0.15s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+/* keep disabled buttons blue as well */
+#onboardingOverlay .ob-nav[disabled],
+#onboardingOverlay .ob-nav[aria-disabled="true"] {
+  background: var(--ob-accent) !important;
+  color: #fff !important;
+  opacity: 1 !important;
+  cursor: not-allowed;
+}
+
+/* Hover: bulge + darken */
+#onboardingOverlay .ob-iconbtn:hover,
+#onboardingOverlay .ob-close:hover,
+#onboardingOverlay .ob-nav:hover {
+  background: var(--ob-btn-hover) !important;
+  transform: scale(1.08);
+  box-shadow: 0 4px 10px var(--ob-ring);
+}
+
+/* Close (X) */
+#onboardingOverlay .ob-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* Footer / nav */
+#onboardingOverlay .ob-footer {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+#onboardingOverlay .ob-cta {
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 0;
+  cursor: pointer;
+  background: var(--ob-accent);
+  color: #fff;
+  font-weight: 700;
+}
+#onboardingOverlay .ob-cta.ob-cta--secondary {
+  background: #f3f3f3;
+  color: #333;
+}
+
+/* Left/Right arrows */
+#onboardingOverlay .ob-nav {
+  font-size: 18px;
+  padding: 0;
+} /* size from 40x40 circle */
+#onboardingOverlay .ob-nav--prev::before {
+  content: "◂";
+} /* WHITE via color: inherit */
+#onboardingOverlay .ob-nav--next::before {
+  content: "▸";
+}
+
+/* Dots */
+#onboardingOverlay .ob-dots {
+  display: flex;
+  gap: 8px;
+}
+#onboardingOverlay .ob-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 0;
+  background: #cfd4da;
+  cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.15s ease,
+    box-shadow 0.18s;
+}
+#onboardingOverlay .ob-dot:hover {
+  transform: scale(1.12);
+}
+#onboardingOverlay .ob-dot[aria-current="true"] {
+  background: var(--ob-accent);
+  box-shadow: 0 0 0 4px rgba(0, 120, 215, 0.15);
+}
+
+/* Slide area & text */
+#onboardingOverlay .ob-slide {
+  min-height: 180px;
+}
+#onboardingOverlay .ob-hidden {
+  display: none;
+}
+#onboardingOverlay h2 {
+  margin: 4px 0 10px;
+  font-size: 22px;
+}
+#onboardingOverlay .ob-body {
+  margin: 0 0 12px;
+  line-height: 1.4;
+}
+#onboardingOverlay .ob-note {
+  color: var(--ob-muted);
+  font-size: 13px;
+}
+#onboardingOverlay .ob-list {
+  margin: 6px 0 6px 18px;
+}
+
+/* Keyboard focus */
+#onboardingOverlay .ob-iconbtn:focus-visible,
+#onboardingOverlay .ob-close:focus-visible,
+#onboardingOverlay .ob-nav:focus-visible,
+#onboardingOverlay .ob-cta:focus-visible,
+#onboardingOverlay .ob-dot:focus-visible {
+  outline: 2px solid var(--ob-accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--ob-ring-strong);
+}
+
+/* Mobile tweaks */
+@media (max-width: 560px) {
+  #onboardingOverlay .ob-card {
+    margin: 3vh 12px;
+    padding: 18px 14px 12px;
+  }
+  #onboardingOverlay h2 {
+    font-size: 19px;
+  }
+  #onboardingOverlay .ob-close {
+    top: 6px;
+    right: 8px;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  #onboardingOverlay .ob-iconbtn,
+  #onboardingOverlay .ob-close,
+  #onboardingOverlay .ob-nav,
+  #onboardingOverlay .ob-dot {
+    transition: none;
+  }
+}
+/* ============================================================
+   Results table overflow safeguards (phoneme tooltips)
+   ============================================================ */
+/* === Phoneme column / table should never clip the tooltip card === */
+#prettyResult,
+#prettyResult .score-table {
+  overflow: visible !important;
+}
+#prettyResult .score-table td:nth-child(4),
+#prettyResult .score-table th:nth-child(4) {
+  overflow: visible !important;
+  position: relative;
+}

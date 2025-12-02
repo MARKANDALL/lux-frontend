@@ -1,0 +1,232 @@
+/* ==========================================================================
+   Text-to-Speech “Peekaboo” Panel (top-right corner drawer)
+   File: features/tts-peekaboo.css
+   Scope: only layout/UX chrome for the panel + tab
+   (The actual TTS control styling lives in features/tts.css)
+   ========================================================================== */
+
+/* ---- Safety: if inline guard fails, keep the host hidden until adopted ---- */
+#tts-controls[data-luxHidden="1"] {
+  display: none !important;
+}
+
+/* ---- Base CSS variables you can tweak if needed -------------------------- */
+:root {
+  /* panel sizing */
+  --lux-tts-panel-w: 360px; /* preferred width */
+  --lux-tts-panel-max-w: min(92vw, 380px); /* width cap for small screens */
+  --lux-tts-panel-max-h: min(520px, 70vh); /* CORNER drawer height cap */
+
+  /* look & feel */
+  --lux-tts-radius: 14px;
+  --lux-tts-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  --lux-tts-border: 1px solid rgba(0, 0, 0, 0.06);
+
+  /* tab colors */
+  --lux-tts-tab-bg: #1082ff;
+  --lux-tts-tab-bg-hover: #0d6ad1;
+  --lux-tts-tab-ink: #ffffff;
+}
+
+/* ==========================================================================
+   CORNER DRAWER PANEL (top-right ONLY; no full-height)
+   ========================================================================== */
+.lux-tts-panel {
+  position: fixed;
+
+  /* Explicitly pin to top-right and UNSET bottom/left so legacy rules can't stretch it */
+  inset: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) auto auto !important;
+
+  z-index: 9999;
+
+  /* Content-sized box with a max cap */
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: var(--lux-tts-panel-max-h);
+
+  width: var(--lux-tts-panel-w);
+  max-width: var(--lux-tts-panel-max-w);
+
+  background: #fff;
+  border-left: var(--lux-tts-border);
+  border-bottom: var(--lux-tts-border);
+  border-bottom-left-radius: var(--lux-tts-radius);
+  box-shadow: var(--lux-tts-shadow);
+  overflow: hidden;
+
+  /* closed = tucked just off-screen to the right */
+  transform: translate3d(110%, 0, 0);
+  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Open state toggled by <html class="lux-tts-open"> */
+.lux-tts-open .lux-tts-panel {
+  transform: translate3d(0, 0, 0);
+}
+
+/* Inner host scrolls; the panel itself stays compact */
+.lux-tts-panel #tts-controls {
+  display: block;
+  padding: 14px 16px 16px;
+  max-height: calc(var(--lux-tts-panel-max-h) - 8px);
+  overflow: auto;
+}
+
+/* Slightly tighter default spacing for the compact panel (optional) */
+.lux-tts-panel .tts-box {
+  gap: 10px;
+}
+
+/* Defensive reset against any global/legacy full-height aside rules */
+.lux-tts-panel,
+.lux-tts-panel * {
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   FLOATING “PEEKABOO” TAB
+   Stays near the top-right; nudges after recordings; toggles panel.
+   ========================================================================== */
+.lux-tts-tab {
+  position: fixed;
+  top: 14px;
+  right: 20px;
+  z-index: 10000;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--lux-tts-tab-bg);
+  color: var(--lux-tts-tab-ink);
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+
+  box-shadow: 0 6px 18px rgba(16, 130, 255, 0.28);
+  transition: transform 0.18s ease, filter 0.18s ease, box-shadow 0.18s ease;
+}
+
+.lux-tts-tab:hover,
+.lux-tts-tab:focus-visible {
+  transform: translateX(-6px) scale(1.03);
+  filter: brightness(1.02);
+  background: var(--lux-tts-tab-bg-hover);
+  box-shadow: 0 8px 22px rgba(16, 130, 255, 0.34);
+  outline: none;
+}
+
+.lux-tts-tab:active {
+  transform: translateX(-3px) scale(0.99);
+}
+
+/* Optional: dim the tab slightly when the panel is open */
+.lux-tts-open .lux-tts-tab[aria-expanded="true"] {
+  opacity: 0.95;
+}
+
+/* ==========================================================================
+   NUDGE ANIMATION (called after “lux:record:stopped”)
+   Subtle glow + wiggle to draw attention without opening the panel.
+   ========================================================================== */
+@keyframes luxTTSGlow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 130, 255, 0), 0 0 0 rgba(16, 130, 255, 0);
+  }
+  20% {
+    box-shadow: 0 0 0 10px rgba(16, 130, 255, 0.12),
+      0 0 22px rgba(16, 130, 255, 0.45);
+  }
+  40% {
+    box-shadow: 0 0 0 0 rgba(16, 130, 255, 0), 0 0 0 rgba(16, 130, 255, 0);
+  }
+  60% {
+    box-shadow: 0 0 0 10px rgba(16, 130, 255, 0.12),
+      0 0 22px rgba(16, 130, 255, 0.45);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 130, 255, 0), 0 0 0 rgba(16, 130, 255, 0);
+  }
+}
+
+@keyframes luxTTSWiggle {
+  0% {
+    transform: translateX(0) rotate(0);
+  }
+  15% {
+    transform: translateX(-3px) rotate(-2deg);
+  }
+  30% {
+    transform: translateX(2px) rotate(1.5deg);
+  }
+  45% {
+    transform: translateX(-2px) rotate(-1.2deg);
+  }
+  60% {
+    transform: translateX(1px) rotate(0.8deg);
+  }
+  75% {
+    transform: translateX(-1px) rotate(-0.6deg);
+  }
+  100% {
+    transform: translateX(0) rotate(0);
+  }
+}
+
+/* Applied/removed by JS (window.luxTTS.nudge()) */
+.lux-tts-tab.lux-tts-nudge {
+  animation: luxTTSGlow 1.4s ease-in-out, luxTTSWiggle 0.7s ease-in-out;
+}
+
+/* ==========================================================================
+   RESPONSIVE TWEAKS
+   ========================================================================== */
+@media (max-width: 480px) {
+  :root {
+    --lux-tts-panel-w: 92vw;
+    --lux-tts-panel-max-w: 92vw;
+    --lux-tts-panel-max-h: min(82vh, 640px);
+  }
+
+  .lux-tts-tab {
+    right: 12px;
+    top: 10px;
+    padding: 8px 12px;
+    font-size: 0.95rem;
+  }
+}
+
+/* Optional: when printing, keep it out of the way */
+@media print {
+  .lux-tts-panel,
+  .lux-tts-tab {
+    display: none !important;
+  }
+}
+/* --- HARD OVERRIDES: keep corner panel only as tall as its content --- */
+.lux-tts-panel {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: var(--lux-tts-panel-max-h) !important;
+
+  /* Make sure the fixed box is only anchored at top-right, not stretching */
+  top: env(safe-area-inset-top, 0) !important;
+  right: env(safe-area-inset-right, 0) !important;
+  bottom: auto !important;
+  left: auto !important;
+
+  /* Shrink-wrap behavior on some quirky stacks */
+  display: inline-block !important;
+  overflow: hidden !important; /* we already scroll inside #tts-controls */
+}
+
+/* Ensure the inner host can't force growth */
+.lux-tts-panel #tts-controls {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: calc(var(--lux-tts-panel-max-h) - 8px) !important;
+  overflow: auto !important;
+}
