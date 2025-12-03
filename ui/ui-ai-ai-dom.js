@@ -1,138 +1,136 @@
 // ui/ui-ai-ai-dom.js
-// DOM-only helpers for the AI feedback panel. No network/state here.
-// - Targets #aiFeedbackSection > #aiFeedback (see index.html).
-// - Knows how to show: placeholder, loading, error, and markdown-ish content.
-// - Pure browser DOM; no window globals exported.
-
-/* ------------ internal helpers ------------ */
+// Handles DOM updates for the AI feedback panel.
+// FIXED: Includes 'hideAI', 'renderSections', 'setShowMoreState' to prevent crash.
 
 function getSectionAndBox() {
   const section = document.getElementById("aiFeedbackSection");
   const box = document.getElementById("aiFeedback");
-  if (!box) return { section: null, box: null };
-
-  if (section) {
-    // Make sure the wrapper is visible any time we touch the box.
-    section.style.display = "";
-  }
   return { section, box };
 }
 
-// Very small MD → HTML tailored for our AI feedback responses.
-// Supports:
-// - blank-line separated paragraphs
-// - lines starting with "- " or "* " as bullet lists
-// - **bold** and *italic* spans
-function mdToHtml(md = "") {
-  if (!md.trim()) return "";
+/* ========================================================================
+   Public API (Exports expected by logic module)
+   ======================================================================== */
 
-  const lines = md.split(/\r?\n/);
-  const blocks = [];
-  let currentList = null;
-
-  function flushList() {
-    if (currentList && currentList.length) {
-      const items = currentList
-        .map((li) => `<li>${inlineFormat(li)}</li>`)
-        .join("");
-      blocks.push(`<ul>${items}</ul>`);
-    }
-    currentList = null;
-  }
-
-  function inlineFormat(text) {
-    if (!text) return "";
-    let html = text;
-
-    // **bold**
-    html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
-    // *italic*
-    html = html.replace(/\*(.+?)\*/g, "<em>$1</em>");
-
-    return html;
-  }
-
-  for (const rawLine of lines) {
-    const line = rawLine.trimEnd();
-    if (!line.trim()) {
-      // paragraph break / end of list
-      flushList();
-      continue;
-    }
-
-    const listMatch = line.match(/^[-*]\s+(.*)/);
-    if (listMatch) {
-      if (!currentList) currentList = [];
-      currentList.push(listMatch[1]);
-      continue;
-    }
-
-    // Normal paragraph
-    flushList();
-    blocks.push(`<p>${inlineFormat(line.trim())}</p>`);
-  }
-
-  flushList();
-  return blocks.join("\n");
+export function hideAI() {
+  const { section } = getSectionAndBox();
+  if (section) section.style.display = "none";
 }
 
-/* ------------ exported DOM helpers ------------ */
-
-export function showAIFeedbackPlaceholder() {
-  const { box } = getSectionAndBox();
-  if (!box) return;
-
-  box.innerHTML =
-    "<div style='color:#6b7280;font-size:0.9rem;font-style:italic;'>AI feedback will appear here after your recording is analyzed.</div>";
-}
-
-export function showAIFeedbackLoading() {
-  const { box } = getSectionAndBox();
-  if (!box) return;
-
-  box.innerHTML = `
-    <div style="display:flex;align-items:center;font-size:0.9rem;color:#334155;">
-      <div style="
-        width:16px;
-        height:16px;
-        border-radius:999px;
-        border:2px solid #93c5fd;
-        border-top-color:#1d4ed8;
-        margin-right:8px;
-        animation:lux-ai-spin 0.8s linear infinite;
-      "></div>
-      <span>AI feedback loading…</span>
-    </div>
-  `;
-}
-
-export function renderAIFeedbackMarkdown(markdown) {
-  const { box } = getSectionAndBox();
-  if (!box) return;
-
-  const html = mdToHtml(markdown || "");
-  if (!html) {
-    showAIFeedbackPlaceholder();
-    return;
+export function showLoading() {
+  const { section, box } = getSectionAndBox();
+  if (section) section.style.display = "";
+  if (box) {
+    box.style.display = "";
+    box.innerHTML = `
+      <div style="display:flex;align-items:center;font-size:0.9rem;color:#334155;">
+        <div class="ai-spinner" style="
+          width:16px;height:16px;border-radius:50%;
+          border:2px solid #93c5fd;border-top-color:#1d4ed8;
+          margin-right:8px;
+        "></div>
+        <span>AI feedback loading…</span>
+      </div>`;
   }
+}
+
+export function renderSections(sections, count) {
+  const { section, box } = getSectionAndBox();
+  if (section) section.style.display = "";
+  if (!box) return { shown: 0, moreAvailable: false };
+
+  // Render the requested number of sections
+  const toShow = sections.slice(0, count);
+
+  const html = toShow
+    .map((sec) => {
+      // Handle both new schema (sections) and fallback schema
+      const title = sec.title || sec.emoji || "";
+      const text = sec.en || sec.content || "";
+      const l1 = sec.l1
+        ? `<div style="margin-top:4px;color:#4b5563;font-size:0.9em"><em>${sec.l1}</em></div>`
+        : "";
+
+      return `
+      <div style="margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid #e2e8f0;">
+        <div style="font-weight:700; color:#0f172a; margin-bottom:4px;">${title}</div>
+        <div style="color:#334155;">${mdToHtml(text)}</div>
+        ${l1}
+      </div>
+    `;
+    })
+    .join("");
 
   box.innerHTML = html;
+
+  return {
+    shown: toShow.length,
+    moreAvailable: count < sections.length,
+  };
 }
 
-export function showAIFeedbackError(message = "AI feedback is temporarily unavailable.") {
-  const { box } = getSectionAndBox();
-  if (!box) return;
+export function setShowMoreState({ visible }) {
+  const btn = document.getElementById("showMoreBtn");
+  if (btn) {
+    btn.style.display = visible ? "block" : "none";
+  }
+}
 
-  box.innerHTML = `
-    <div style="color:#b91c1c;font-size:0.9rem;">
-      <strong>AI feedback error</strong><br/>
-      <span style="font-size:0.86rem;">${message}</span>
-    </div>
-  `;
+export function onShowMore(callback) {
+  const btn = document.getElementById("showMoreBtn");
+  // Remove old listeners by cloning (simple reset trick)
+  if (btn) {
+    const newBtn = btn.cloneNode(true);
+    btn.parentNode.replaceChild(newBtn, btn);
+    newBtn.addEventListener("click", callback);
+  }
+}
+
+// Kept for backward compatibility if other modules import them
+export function showAIFeedbackPlaceholder() {
+  const { box } = getSectionAndBox();
+  if (box)
+    box.innerHTML =
+      "<div style='color:#666;font-style:italic'>AI feedback pending...</div>";
+}
+
+export function showAIFeedbackError(msg) {
+  const { box } = getSectionAndBox();
+  if (box) box.innerHTML = `<div style="color:#c00">Error: ${msg}</div>`;
 }
 
 export function clearAIFeedback() {
   const { box } = getSectionAndBox();
+  if (box) box.innerHTML = "";
+}
+
+/* ========================================================================
+   Internal Helpers
+   ======================================================================== */
+
+// Exported just in case, but mainly used internally
+export function renderAIFeedbackMarkdown(markdown) {
+  const { box } = getSectionAndBox();
   if (!box) return;
-  box.innerHTML = "";
+  box.innerHTML = mdToHtml(markdown);
+}
+
+function mdToHtml(md = "") {
+  if (!md.trim()) return "";
+  let html = md
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.+?)\*/g, "<em>$1</em>");
+
+  // Basic list handling
+  if (html.includes("- ")) {
+    html = html
+      .split("\n")
+      .map((line) => {
+        return line.trim().startsWith("- ")
+          ? `<li>${line.trim().substring(2)}</li>`
+          : line;
+      })
+      .join("<br>");
+  }
+  return html;
 }
