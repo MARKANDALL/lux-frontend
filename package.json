@@ -5,9 +5,13 @@
   "main": "index.html",
   "scripts": {
     "start": "serve",
-    "lux:snapshot": "powershell -ExecutionPolicy Bypass -File scripts/lux-snapshot.ps1"
+    "lux:snapshot": "powershell -ExecutionPolicy Bypass -File scripts/lux-snapshot.ps1",
+    "lux:release": "powershell -ExecutionPolicy Bypass -File scripts/lux-release.ps1"
   },
-  "keywords": ["html", "css"],
+  "keywords": [
+    "html",
+    "css"
+  ],
   "author": "Ives van Hoorne",
   "license": "MIT",
   "devDependencies": {
