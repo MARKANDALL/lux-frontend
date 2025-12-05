@@ -55,14 +55,6 @@ Tip: shorter sentences (≈10–15 s) give the clearest results.`;
 
 /**
  * Multi-part navigation + summary button controller.
- *
- * Rules:
- * - For 0 or 1 part: hide Next + Summary and the helper message.
- * - For multi-part:
- *   - On each part we REQUIRE a fresh recording before allowing "Next".
- *   - "Next Part" is visible but disabled until a recording completes.
- *   - "Show Summary" is ALWAYS hidden here; it is only revealed by
- *     markPartCompleted() *after* the final part has been recorded.
  */
 export function togglePartNav(enabled) {
   const nextBtn = $("#nextPartBtn");
@@ -98,8 +90,7 @@ export function togglePartNav(enabled) {
   if (nextBtn) {
     // No "Next" on the final part.
     nextBtn.style.display = atLast ? "none" : "";
-    // Landing on a part always requires a new recording before moving on.
-    nextBtn.disabled = !atLast; // value is irrelevant when hidden
+    nextBtn.disabled = !atLast;
   }
 
   if (nextMsg) {
@@ -231,10 +222,6 @@ export function wireNextBtn() {
 
 /**
  * Called by the recorder pipeline after a successful Azure assessment.
- *
- * Responsibilities:
- * - On non-final parts: enable "Next Part" and hide the helper text.
- * - On the final part: hide "Next Part" and reveal "Show Summary".
  */
 export function markPartCompleted() {
   if (isCustom) return;
@@ -249,7 +236,7 @@ export function markPartCompleted() {
   const summaryBtn = $("#showSummaryBtn");
 
   if (!atLast) {
-    // Middle parts: unlock Next once we've recorded.
+    // Middle parts: unlock Next
     if (nextBtn) {
       nextBtn.disabled = false;
       nextBtn.style.display = "";
@@ -272,7 +259,8 @@ export function markPartCompleted() {
       nextMsg.style.display = "none";
     }
     if (summaryBtn) {
-      summaryBtn.style.display = "";
+      // ✅ FIX: Force "inline-block" to override CSS "none"
+      summaryBtn.style.display = "inline-block";
       summaryBtn.disabled = false;
     }
   }

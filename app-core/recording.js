@@ -2,7 +2,7 @@
 // [HYBRID MOCK MODE]
 // 1. Records REAL Audio (for Self Playback)
 // 2. Returns MOCK API Results (to bypass firewall)
-// 3. Auto-Scrolls to focus content
+// 3. Auto-Scrolls + Saves Data for Summary
 
 import {
   setText,
@@ -12,7 +12,15 @@ import {
   debug as logDebug,
 } from "./lux-utils.js";
 
-import { currentPassageKey, currentPartIdx, isCustom, getChosenLang } from "./state.js";
+// ✅ ADDED: allPartsResults, currentParts
+import { 
+  currentPassageKey, 
+  currentPartIdx, 
+  isCustom, 
+  getChosenLang, 
+  allPartsResults,
+  currentParts 
+} from "./state.js";
 
 // -- REAL API IMPORTS --
 import { assessPronunciation, saveAttempt, getUID } from "../api/index.js";
@@ -21,11 +29,8 @@ import { assessPronunciation, saveAttempt, getUID } from "../api/index.js";
 import { showPrettyResults, showRawData } from "../features/results/index.js";
 import { getAIFeedback } from "../ui/ui-ai-ai-logic.js";
 import { markPartCompleted } from "./passages.js"; 
-
-// ✅ NEW IMPORT: Scroll helper
 import { bringInputToTop } from "../helpers/index.js"; 
 
-// -- GLOBALS FOR RECORDING --
 export let mediaRecorder = null;
 let recordedChunks = [];
 let isInitialized = false;
@@ -149,8 +154,7 @@ async function handleRecordingComplete() {
     const textarea = getTextarea();
     const text = textarea ? textarea.value.trim() : "Mock text";
 
-    // ✅ NEW: Scroll input to top immediately so user sees "Analyzing..."
-    // (It will adjust again if results grow the page)
+    // Scroll input to top
     bringInputToTop();
 
     // A. HANDLE REAL AUDIO
@@ -166,6 +170,14 @@ async function handleRecordingComplete() {
     const result = generateMockResult(text);
     logDebug("MOCK RESULT GENERATED", result);
 
+    // ✅ SAVE FOR SUMMARY
+    // If we are in a curated passage (not custom), save the result for the summary
+    if (!isCustom && currentParts && currentParts.length > 1) {
+       allPartsResults[currentPartIdx] = result;
+       // Shim for legacy boot.js which reads window.__allPartsResults
+       window.__allPartsResults = allPartsResults; 
+    }
+
     // C. TRIGGER UI FLOW
     setStatus("Not recording");
     markStopProcessing(false);
@@ -174,9 +186,7 @@ async function handleRecordingComplete() {
     const prettyFn = showPrettyResults || window.showPrettyResults;
     if (prettyFn) prettyFn(result);
 
-    // ✅ NEW: Ensure we are still looking at the top after render
     bringInputToTop();
-
     markPartCompleted();
 
     try {
@@ -186,7 +196,6 @@ async function handleRecordingComplete() {
       console.warn("AI Feedback Mock Warning:", e);
     }
 
-    // Attempt log
     try {
       const uid = getUID && getUID();
       if (uid) {
