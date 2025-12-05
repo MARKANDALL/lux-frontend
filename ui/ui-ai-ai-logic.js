@@ -11,13 +11,6 @@ import {
 
 import { fetchAIFeedback } from "../api/index.js";
 
-/**
- * Main entrypoint for AI feedback.
- * Called after Azure assess with:
- *  - azureResult: raw Azure JSON
- *  - referenceText: passage / custom text the user read
- *  - firstLang: first-language code (or "universal")
- */
 export async function getAIFeedback(azureResult, referenceText, firstLang) {
   // --- 1) Bail if there was no real speech ---
   const nb = azureResult?.NBest?.[0];
@@ -28,7 +21,7 @@ export async function getAIFeedback(azureResult, referenceText, firstLang) {
     return;
   }
 
-  // --- 2) Show loading UI (spinner + bar) ---
+  // --- 2) Show loading UI ---
   showLoading();
 
   const lang =
@@ -73,8 +66,10 @@ export async function getAIFeedback(azureResult, referenceText, firstLang) {
   const initialCount = Math.min(2, sections.length);
   let { shown, moreAvailable } = renderSections(sections, initialCount);
 
+  // --- CRITICAL FIX: Update button state immediately ---
+  setShowMoreState({ visible: moreAvailable });
+
   if (!moreAvailable) {
-    // All sections fit in the first batch; renderSections will hide/disable Show More.
     return;
   }
 
@@ -86,8 +81,8 @@ export async function getAIFeedback(azureResult, referenceText, firstLang) {
     const res = renderSections(sections, shownCount);
     shown = res.shown;
     moreAvailable = res.moreAvailable;
-    // When res.moreAvailable === false, renderSections will update the button for us.
+    
+    // Update button state after click
+    setShowMoreState({ visible: moreAvailable });
   });
 }
-
-// NOTE: no window.getAIFeedback export here — this is now pure ES module.

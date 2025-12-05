@@ -1,6 +1,6 @@
 // ui/ui-ai-ai-dom.js
 // Handles DOM updates for the AI feedback panel.
-// FIXED: Includes 'hideAI', 'renderSections', 'setShowMoreState' to prevent crash.
+// RESTORED: Robot Spinner + Blue Progress Line
 
 function getSectionAndBox() {
   const section = document.getElementById("aiFeedbackSection");
@@ -9,7 +9,7 @@ function getSectionAndBox() {
 }
 
 /* ========================================================================
-   Public API (Exports expected by logic module)
+   Public API
    ======================================================================== */
 
 export function hideAI() {
@@ -22,15 +22,16 @@ export function showLoading() {
   if (section) section.style.display = "";
   if (box) {
     box.style.display = "";
+    // RESTORED VISUALS:
+    // 1. .ai-spinner class triggers the CSS rotation.
+    // 2. .ai-progress class triggers the blue sliding line animation.
     box.innerHTML = `
-      <div style="display:flex;align-items:center;font-size:0.9rem;color:#334155;">
-        <div class="ai-spinner" style="
-          width:16px;height:16px;border-radius:50%;
-          border:2px solid #93c5fd;border-top-color:#1d4ed8;
-          margin-right:8px;
-        "></div>
-        <span>AI feedback loading…</span>
-      </div>`;
+      <div style="text-align:center; padding: 15px;">
+         <div class="ai-spinner" style="font-size: 2.5rem; display:inline-block; margin-bottom:12px;">🤖</div>
+         <div style="font-weight:600; color:#475569; margin-bottom:10px;">AI Coach is analyzing...</div>
+         <div class="ai-progress"></div>
+      </div>
+    `;
   }
 }
 
@@ -47,14 +48,18 @@ export function renderSections(sections, count) {
       // Handle both new schema (sections) and fallback schema
       const title = sec.title || sec.emoji || "";
       const text = sec.en || sec.content || "";
+      
+      // L1 Translation Block
       const l1 = sec.l1
-        ? `<div style="margin-top:4px;color:#4b5563;font-size:0.9em"><em>${sec.l1}</em></div>`
+        ? `<div style="margin-top:6px; padding-top:6px; border-top:1px dashed #cbd5e1; color:#4b5563; font-size:0.95em">
+             <em>${sec.l1}</em>
+           </div>`
         : "";
 
       return `
       <div style="margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid #e2e8f0;">
         <div style="font-weight:700; color:#0f172a; margin-bottom:4px;">${title}</div>
-        <div style="color:#334155;">${mdToHtml(text)}</div>
+        <div style="color:#334155; line-height:1.5;">${mdToHtml(text)}</div>
         ${l1}
       </div>
     `;
@@ -86,17 +91,15 @@ export function onShowMore(callback) {
   }
 }
 
-// Kept for backward compatibility if other modules import them
+// Kept for backward compatibility
 export function showAIFeedbackPlaceholder() {
   const { box } = getSectionAndBox();
-  if (box)
-    box.innerHTML =
-      "<div style='color:#666;font-style:italic'>AI feedback pending...</div>";
+  if (box) showLoading();
 }
 
 export function showAIFeedbackError(msg) {
   const { box } = getSectionAndBox();
-  if (box) box.innerHTML = `<div style="color:#c00">Error: ${msg}</div>`;
+  if (box) box.innerHTML = `<div style="color:#c00; padding:10px;">Error: ${msg}</div>`;
 }
 
 export function clearAIFeedback() {
@@ -108,7 +111,6 @@ export function clearAIFeedback() {
    Internal Helpers
    ======================================================================== */
 
-// Exported just in case, but mainly used internally
 export function renderAIFeedbackMarkdown(markdown) {
   const { box } = getSectionAndBox();
   if (!box) return;

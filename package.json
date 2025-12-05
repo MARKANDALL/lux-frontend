@@ -4,7 +4,7 @@
   "description": "A template for HTML and CSS",
   "main": "index.html",
   "scripts": {
-    "start": "serve",
+    "start": "powershell -ExecutionPolicy Bypass -Command \"Start-Process 'cmd.exe' '/c npx serve -l 3000'; Start-Sleep -Seconds 4; Start-Process 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe' 'http://localhost:3000'\"",
     "lux:snapshot": "powershell -ExecutionPolicy Bypass -File scripts/lux-snapshot.ps1",
     "lux:release": "powershell -ExecutionPolicy Bypass -File scripts/lux-release.ps1"
   },

@@ -2,9 +2,7 @@
 // Central, safe boot for UI interactions.
 // - Idempotent
 // - Uses dynamic imports with fallbacks so CSB path quirks don't break the app.
-// NOTE: We only boot interactions that actually exist in the modern trunk.
-//       Phantom imports (word-click, phoneme-chips) were removed to stop MIME warnings.
-//       Phase-E polish: re-boot header hover/audio modules (yg-hover, ph-audio).
+// UPDATED: Added correct export names (setupYGHover, initPhonemeAudio) to fix console warnings.
 
 let interactionsBooted = false;
 
@@ -51,10 +49,10 @@ export function bootInteractions() {
       "ph-hover"
     );
 
-    // Only load the real phoneme chips module (phantom fallbacks removed)
+    // Only load the real phoneme chips module
     const PhChips = await loadFirst(["./ph-chips.js"], "ph-chips");
 
-    // Header interactions (were missing from boot)
+    // Header interactions
     const YgHover = await loadFirst(["./yg-hover.js"], "yg-hover");
     const PhAudio = await loadFirst(["./ph-audio.js"], "ph-audio");
 
@@ -69,7 +67,7 @@ export function bootInteractions() {
     callFirstFunction(
       PhChips,
       [
-        "initPhonemeChipBehavior", // ✅ canonical init
+        "initPhonemeChipBehavior",
         "setupPhonemeChips",
         "hydratePhonemeChips",
         "initPhonemeChips",
@@ -84,6 +82,7 @@ export function bootInteractions() {
     callFirstFunction(
       YgHover,
       [
+        "setupYGHover", // <--- FIXED: Added Uppercase YG (Primary export)
         "setupYgHover",
         "bootYgHover",
         "initYgHover",
@@ -97,6 +96,7 @@ export function bootInteractions() {
     callFirstFunction(
       PhAudio,
       [
+        "initPhonemeAudio", // <--- FIXED: Added correct export name
         "setupPhonemeHeaderAudio",
         "initPhonemeHeaderAudio",
         "bootPhonemeHeaderAudio",
