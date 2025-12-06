@@ -174,9 +174,9 @@ button:disabled {
   content: "➡️  ";
 }
 
-/* Default hidden until we have results */
+/* TEMPORARY DEV: Force button visible always */
 #showSummaryBtn {
-  display: none;
+  display: inline-block !important;
 }
 
 /* ============================================================

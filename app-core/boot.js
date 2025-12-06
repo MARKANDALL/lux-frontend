@@ -12,7 +12,7 @@ import { initLuxRecorder } from "./recording.js";
 import { initUI } from "../ui/ui-shell-typing.js";
 import { initOnboarding } from "../ui/ui-shell-onboarding.js";
 import { showSummary } from "../ui/views/index.js";
-import { bootInteractions } from "../ui/interactions/boot.js"; // ✅ NEW
+import { bootInteractions } from "../ui/interactions/boot.js"; 
 
 export function bootApp() {
   nukeSWInDev();
@@ -28,9 +28,6 @@ export function bootApp() {
     const partProgress = $("#partProgress");
     if (partProgress) partProgress.textContent = "";
 
-    const summaryBtn = $("#showSummaryBtn");
-    if (summaryBtn) summaryBtn.style.display = "none";
-
     // Show helper message a bit after load
     setTimeout(() => {
       const msg = $("#userMsg");
@@ -38,8 +35,10 @@ export function bootApp() {
     }, 2000);
 
     // Passages + navigation
+    // NOTE: showCurrentPart() hides the summary button by default,
+    // so our override must come AFTER this block.
     ensureCustomOption();
-    showCurrentPart();
+    showCurrentPart(); 
     updatePartsInfoTip();
     wirePassageSelect();
     wireNextBtn();
@@ -51,20 +50,26 @@ export function bootApp() {
     initUI();
     initOnboarding();
 
-    // ✅ Boot interactions once (safe even before results exist;
-    // ph-hover/ph-chips use MutationObserver to bind later)
+    // Boot interactions once
     try {
       bootInteractions();
     } catch (e) {
       console.warn("[LUX] bootInteractions failed", e);
     }
 
-    // Summary button behavior
+    // Summary button behavior & FORCE VISIBLE
+    const summaryBtn = $("#showSummaryBtn");
     if (summaryBtn) {
       summaryBtn.onclick = () => {
         const results = window.__allPartsResults || [];
         showSummary({ allPartsResults: results, currentParts: [] });
       };
+
+      // ✅ TEMPORARY DEV OVERRIDE: ALWAYS SHOW
+      // We place this at the very end to ensure it overrides the 
+      // default hiding logic in showCurrentPart().
+      summaryBtn.style.display = "inline-block";
+      summaryBtn.disabled = false;
     }
   };
 

@@ -79,18 +79,20 @@ function markStopProcessing(on) {
 }
 
 /* ===========================
-   MOCK DATA GENERATOR
+   MOCK DATA GENERATOR (High Error Rate for UI Testing)
    =========================== */
 function generateMockResult(text) {
   const words = text.split(/\s+/).filter(w => w.length > 0);
   const mockWords = words.map((w, i) => ({
     Word: w,
-    AccuracyScore: i % 5 === 0 ? 65 : 95, 
-    ErrorType: "None",
-    Phonemes: w.split('').map(char => ({
+    // Fail every 3rd word to force summary cards to appear
+    AccuracyScore: i % 3 === 0 ? 55 : 95, 
+    ErrorType: i % 3 === 0 ? "Mispronunciation" : "None",
+    Phonemes: w.split('').map((char, j) => ({
       Phoneme: char.toLowerCase(),
-      AccuracyScore: 90,
-      ErrorType: "None"
+      // Fail the first letter of every 3rd word to trigger phoneme cards
+      AccuracyScore: (i % 3 === 0 && j === 0) ? 45 : 95,
+      ErrorType: (i % 3 === 0 && j === 0) ? "Mispronunciation" : "None"
     }))
   }));
 
@@ -101,10 +103,10 @@ function generateMockResult(text) {
       ITN: text,
       MaskedITN: text,
       Display: text,
-      AccuracyScore: 92.0,
-      FluencyScore: 88.0,
+      AccuracyScore: 70.0,
+      FluencyScore: 65.0,
       CompletenessScore: 100.0,
-      PronScore: 89.5,
+      PronScore: 68.5,
       Words: mockWords
     }]
   };
