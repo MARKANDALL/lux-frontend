@@ -1,4 +1,4 @@
-// passages.js
+// src/data/passages.js
 // Centralized passage arrays extracted from the original data.js
 
 /* ---------- PASSAGES / PART ARRAYS ---------- */
@@ -32,29 +32,14 @@ export const grandfatherParts = [
 ];
 
 /* Minimal-pair sets */
-export const minLRParts = [
-  "light",
-  "right",
-  "glass",
-  "grass",
-  "collect",
-  "correct",
-];
+export const minLRParts = ["light", "right", "glass", "grass", "collect", "correct"];
 export const minEEIHParts = ["sheep", "ship", "beat", "bit", "leave", "live"];
 export const minAUAHParts = ["cap", "cup", "bat", "but", "bag", "bug"];
 
 /* Targeted word list */
 export const wordListParts = [
-  "three",
-  "think",
-  "this",
-  "street",
-  "spring",
-  "milk",
-  "world",
-  "advice",
-  "leaves",
-  "buzz",
+  "three", "think", "this", "street", "spring",
+  "milk", "world", "advice", "leaves", "buzz",
 ];
 
 /* Controlled sentences */
@@ -72,10 +57,22 @@ export const shortStoryParts = [
   "They laughed and talked until it got dark.",
 ];
 
-/* ---------- MASTER LOOKUP ---------- */
+/* ---------- MASTER LOOKUP (UPDATED) ---------- */
 export const passages = {
-  rainbow: { name: "Rainbow Passage", parts: rainbowParts },
-  grandfather: { name: "Grandfather Passage", parts: grandfatherParts },
+  rainbow: { 
+    name: "Rainbow Passage", 
+    parts: rainbowParts,
+    // Mandarin speakers video sample
+    youtubeId: "2Sf3vDdV2Ps", 
+    startAt: 0 
+  },
+  grandfather: { 
+    name: "Grandfather Passage", 
+    parts: grandfatherParts,
+    // OTOY Interview Video
+    youtubeId: "vAMGh1YLgAE", 
+    startAt: 0
+  },
 
   /* tests */
   minLR: { name: "Phoneme Test: L vs R", parts: minLRParts },

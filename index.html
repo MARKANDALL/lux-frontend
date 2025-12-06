@@ -1277,109 +1277,94 @@
       <audio id="playbackAudio" hidden></audio>
 
       <!-- Learner audio sink (hydrates self-playback when a new blob arrives) -->
-      <script>
-        (function installLearnerSink() {
-          const AUDIO_ID = "playbackAudio",
-            FN = "__attachLearnerBlob";
-          const audio =
-            document.getElementById(AUDIO_ID) ||
-            (() => {
-              const a = document.createElement("audio");
-              a.id = AUDIO_ID;
-              a.hidden = true;
-              document.body.appendChild(a);
-              return a;
-            })();
-          if (audio.__sinkV6) return;
-          audio.__sinkV6 = true;
-          audio.preload = "auto";
-          audio.muted = false;
-          audio.volume = 1;
-          audio.hidden = false;
+  <script>
+  (function installLearnerSink() {
+    const AUDIO_ID = "playbackAudio";
+    const FN = "__attachLearnerBlob";
+    
+    // 1. Get or Create Audio Element
+    const audio = document.getElementById(AUDIO_ID) || (() => {
+      const a = document.createElement("audio");
+      a.id = AUDIO_ID;
+      a.hidden = true;
+      document.body.appendChild(a);
+      return a;
+    })();
 
-          let armedAt = 0,
-            ourSet = false;
-          const realLoad = audio.load.bind(audio);
-          audio.load = function () {
-            if (!ourSet && Date.now() - armedAt < 1200) {
-              console.warn("[learner] load() ignored (guard)");
-              return;
-            }
-            return realLoad();
-          };
-          const SRC = Object.getOwnPropertyDescriptor(
-            HTMLMediaElement.prototype,
-            "src"
-          );
-          Object.defineProperty(audio, "src", {
-            get() {
-              return SRC.get.call(this);
-            },
-            set(v) {
-              if (!ourSet && Date.now() - armedAt < 1200) {
-                console.warn("[learner] src set blocked (guard)", v);
-                return;
-              }
-              return SRC.set.call(this, v);
-            },
-          });
+    if (audio.__sinkV7) return; // Prevent double-init
+    audio.__sinkV7 = true;
+    audio.preload = "auto";
+    audio.muted = false;
+    audio.volume = 1;
+    audio.hidden = false;
 
-          window[FN] = async function attachLearnerBlob(blob) {
-            try {
-              if (!(blob instanceof Blob)) {
-                console.warn("[learner] attach aborted: not a Blob", blob);
-                return;
-              }
-              if (audio.__blobUrl) {
-                try {
-                  URL.revokeObjectURL(audio.__blobUrl);
-                } catch (_) {}
-                audio.__blobUrl = null;
-              }
-              const url = URL.createObjectURL(blob);
-              audio.__blobUrl = url;
-              try {
-                audio.pause();
-              } catch (_) {}
-              audio.srcObject = null;
-              audio.currentTime = 0;
-              ourSet = true;
-              SRC.set.call(audio, url);
-              ourSet = false;
-              audio.hidden = false;
-              armedAt = Date.now();
+    // 2. Robust Loader
+    let pendingSrc = null;
+    let isLoading = false;
 
-              document.dispatchEvent(
-                new CustomEvent("lux:new-learner-audio", {
-                  detail: { blob, url },
-                })
-              );
-              const sig = (blob.type || "") + "|" + blob.size;
-              if (
-                window.LuxSelfPB?.setLearnerArrayBuffer &&
-                audio.__hydratedSig !== sig
-              ) {
-                try {
-                  audio.__hydratedSig = sig;
-                  const arr = await blob.arrayBuffer();
-                  await window.LuxSelfPB.setLearnerArrayBuffer(arr);
-                } catch (e) {
-                  console.warn("[learner] hydrate self-playback failed:", e);
-                }
-              }
-              console.log(
-                "[learner] attached",
-                blob.type || "unknown",
-                blob.size,
-                url
-              );
-            } catch (e) {
-              console.warn("[learner] attach failed", e);
-            }
-          };
-          window[FN].__stable = "v6";
-        })();
-      </script>
+    const safeLoad = async (url, blob) => {
+      // If already loading, queue this url as the next pending one
+      if (isLoading) {
+        console.log("[learner] Load in progress, queueing next...");
+        pendingSrc = { url, blob };
+        return;
+      }
+
+      isLoading = true;
+
+      try {
+        // Reset state
+        audio.pause();
+        audio.src = url;
+        audio.load(); 
+        
+        // Wait for metadata to ensure engine is ready
+        await new Promise((resolve, reject) => {
+            const onMeta = () => { cleanup(); resolve(); };
+            const onError = (e) => { cleanup(); reject(e); };
+            const cleanup = () => {
+                audio.removeEventListener('loadedmetadata', onMeta);
+                audio.removeEventListener('error', onError);
+            };
+            audio.addEventListener('loadedmetadata', onMeta, { once: true });
+            audio.addEventListener('error', onError, { once: true });
+        });
+
+        // Hydrate Self-Playback (Logic extracted from spaghetti)
+        document.dispatchEvent(new CustomEvent("lux:new-learner-audio", { detail: { blob, url } }));
+        
+        if (window.LuxSelfPB?.setLearnerArrayBuffer) {
+            const arr = await blob.arrayBuffer();
+            await window.LuxSelfPB.setLearnerArrayBuffer(arr);
+        }
+
+      } catch (err) {
+        console.warn("[learner] Audio load interruption or error:", err);
+      } finally {
+        isLoading = false;
+        // If a new request came in while we were loading, process it now
+        if (pendingSrc) {
+            const next = pendingSrc;
+            pendingSrc = null;
+            safeLoad(next.url, next.blob);
+        }
+      }
+    };
+
+    // 3. Expose Global Hook
+    window[FN] = function attachLearnerBlob(blob) {
+      if (!(blob instanceof Blob)) return;
+      
+      // Cleanup old URL to prevent memory leaks
+      if (audio.__blobUrl) URL.revokeObjectURL(audio.__blobUrl);
+      
+      const url = URL.createObjectURL(blob);
+      audio.__blobUrl = url; // Store for cleanup next time
+      
+      safeLoad(url, blob);
+    };
+  })();
+</script>
 
       <p id="status">Not recording</p>
       <div id="prettyResult"></div>
