@@ -38,6 +38,14 @@ function bootPhonemeHoverOnce() {
 /* ------------ phoneme chip hydration ------------ */
 
 function hydratePhonemeChips() {
+  // CRITICAL FIX: Temporarily disabled to stop Memory Leak / Video Loop
+  // This prevents the app from creating thousands of video players and crashing RAM.
+  // Once ui/interactions/ph-chips.js is fixed, we can uncomment this.
+  
+  console.log("[LUX] ⚠️ PHONEME CHIP HYDRATION DISABLED TO PREVENT CRASH");
+  return; 
+
+  /* // --- ORIGINAL CODE BELOW (DISABLED) ---
   try {
     if (typeof initPhonemeChipBehavior === "function") {
       initPhonemeChipBehavior();
@@ -50,6 +58,7 @@ function hydratePhonemeChips() {
   } catch (e) {
     console.warn("[LUX] phoneme chip hydration failed", e);
   }
+  */
 }
 
 /* ------------ small local helpers ------------ */
@@ -129,7 +138,7 @@ export function showDetailedAnalysisSingle(result) {
 /**
  * Summary front door:
  * - For multi-part results, delegate to ui/views/summary-shell.js
- *   (canonical summary + DB-tracking footer).
+ * (canonical summary + DB-tracking footer shell).
  * - For single results / fallback, show the last rendered result table.
  */
 export function showSummary({ allPartsResults, currentParts } = {}) {

@@ -85,7 +85,7 @@ export function detailedPhonemeFeedback(issues, maxCount = 5) {
              
              ${asset.video ? `
                <div style="flex:0 0 auto; width:140px;">
-                 <video src="${asset.video}" muted loop autoplay playsinline style="width:100%; border-radius:8px; background:#000; box-shadow:0 2px 5px rgba(0,0,0,0.1);"></video>
+                 <video src="${asset.video}" controls playsinline preload="none" style="width:100%; border-radius:8px; background:#000; box-shadow:0 2px 5px rgba(0,0,0,0.1);"></video>
                  <div style="text-align:center; font-size:0.75em; color:#64748b; margin-top:4px;">Mouth Position</div>
                </div>
              ` : ""}
@@ -268,8 +268,4 @@ export function showSummary({ allPartsResults, currentParts }) {
     : `<div style="color:#059669; font-style:italic; padding:10px; background:#f0fdf4; border-radius:8px; border:1px solid #bbf7d0;">No word-level scores below 70%. Excellent accuracy!</div>`;
 
   $out.innerHTML = html;
-  
-  // --- TEMPORARY FIX: Button stays visible ---
-  // const btn = document.getElementById("showSummaryBtn");
-  // if (btn) btn.style.display = "none";
 }

@@ -121,16 +121,37 @@ export function initSelfPBCore() {
         console.warn("[selfpb] setReference failed:", e);
       }
     },
+    
+    // ✅ CRITICAL FIX: BREAK THE LOOP & FIX MEMORY LEAK
     async setLearnerArrayBuffer(arrBuf) {
       try {
-        const blob = new Blob([arrBuf], { type: "audio/mpeg" });
-        const url = URL.createObjectURL(blob);
-        audio.src = url;
-        await audio.load?.();
+        // 1. Cleanup old memory if we tracked it
+        if (window.LuxSelfPB_LastUrl) {
+            URL.revokeObjectURL(window.LuxSelfPB_LastUrl);
+        }
+
+        // 2. STOP THE LOOP:
+        // We do NOT set audio.src here. The main recorder logic (recording.js/index.html) 
+        // has already set the source. Setting it again causes the 'loadeddata' event 
+        // to fire again, which calls this function again -> Infinite Loop.
+        
+        console.log("[selfpb] Learner buffer received (Loop guarded).");
+        
+        // We just ensure the audio is ready to play if needed, 
+        // but we trust the existing src.
+        if (!audio.src) {
+             const blob = new Blob([arrBuf], { type: "audio/mpeg" });
+             const url = URL.createObjectURL(blob);
+             window.LuxSelfPB_LastUrl = url;
+             audio.src = url;
+             await audio.load?.();
+        }
+        
       } catch (e) {
         console.warn("[selfpb] setLearnerArrayBuffer failed:", e);
       }
     },
+    
     async play() {
       try {
         await audio.play();

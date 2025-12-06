@@ -3,6 +3,7 @@
 // Controls the existing <audio id="playbackAudio"> so it stays in sync with your blue Play button.
 // Now with: setReference({ url|audioEl, meta }), setRefRate(v), setLearnerArrayBuffer(arrBuf)
 // ensure we never double-mount or double-tick
+
 if (window.LuxSelfPB?.__mounted) {
   console.warn("[self-pb] already mounted, aborting second mount");
   throw new Error("self-pb double mount");
@@ -400,15 +401,24 @@ export function mountSelfPlaybackLite() {
         console.warn("[selfpb] setReference failed:", e);
       }
     },
-    // NEW: allow hydration of learner recording from an ArrayBuffer
+    
+    // ✅ CRITICAL LOOP FIX + MEMORY FIX
     async setLearnerArrayBuffer(arrBuf) {
       try {
-        const blob = new Blob([arrBuf], { type: "audio/mpeg" });
-        const url = URL.createObjectURL(blob);
-        audio.src = url;
-        await audio.load?.();
+        // MEMORY FIX: Revoke previous blob so we don't leak 3GB RAM
+        if (window.LuxSelfPB_LastUrl) {
+            URL.revokeObjectURL(window.LuxSelfPB_LastUrl);
+        }
+
+        // LOOP FIX: Do NOT create a new blob and set audio.src here.
+        // The main recorder already did that. We just sync the UI.
+        // We only create a blob if we absolutely need it for something else,
+        // but setting 'audio.src' again triggers the infinite loop.
+        
+        console.log("[selfpb] Learner buffer received (Loop guarded).");
         syncTime();
         syncScrub();
+        
       } catch (e) {
         console.warn("[selfpb] setLearnerArrayBuffer failed:", e);
       }
