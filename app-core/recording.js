@@ -154,50 +154,63 @@ function stopRecording() {
 async function handleRecordingComplete() {
   try {
     const textarea = getTextarea();
-    const text = textarea ? textarea.value.trim() : "Mock text";
+    const text = textarea ? textarea.value.trim() : "";
 
-    // Scroll input to top
+    // 1. Scroll input to top
     bringInputToTop();
 
-    // A. HANDLE REAL AUDIO
+    // 2. Prepare Real Audio
     const audioBlob = new Blob(recordedChunks, { type: "audio/webm" });
     if (window.__attachLearnerBlob) {
       window.__attachLearnerBlob(audioBlob);
     }
 
-    // B. HANDLE MOCK API
-    setStatus("Analyzing (Mock)...");
+    // 3. UI: Set Status
+    setStatus("Analyzing...");
+    
+    // --- [SWITCH] REAL API vs MOCK ---
+    
+    // OPTION A: REAL AZURE API (Restored)
+    const lang = getChosenLang();
+    const result = await assessPronunciation({ 
+      audioBlob, 
+      text, 
+      firstLang: lang 
+    });
+
+    /* // OPTION B: MOCK DATA (Disabled)
     await new Promise(r => setTimeout(r, 1200));
+    const result = generateMockResult(text || "Test");
+    */
 
-    const result = generateMockResult(text);
-    logDebug("MOCK RESULT GENERATED", result);
+    logDebug("AZURE RESULT RECEIVED", result);
 
-    // ✅ SAVE FOR SUMMARY
-    // If we are in a curated passage (not custom), save the result for the summary
+    // 4. Save for Summary (Curated Passages only)
     if (!isCustom && currentParts && currentParts.length > 1) {
        allPartsResults[currentPartIdx] = result;
-       // Shim for legacy boot.js which reads window.__allPartsResults
        window.__allPartsResults = allPartsResults; 
     }
 
-    // C. TRIGGER UI FLOW
+    // 5. Trigger UI Flow
     setStatus("Not recording");
     markStopProcessing(false);
     setUIRecording(false);
 
+    // Render Results
     const prettyFn = showPrettyResults || window.showPrettyResults;
     if (prettyFn) prettyFn(result);
 
     bringInputToTop();
     markPartCompleted();
 
+    // 6. Fetch AI Coaching (Real)
     try {
-      const lang = getChosenLang(); 
       getAIFeedback(result, text, lang); 
     } catch (e) {
-      console.warn("AI Feedback Mock Warning:", e);
+      console.warn("AI Feedback Error:", e);
     }
 
+    // 7. Log to Database
     try {
       const uid = getUID && getUID();
       if (uid) {
@@ -213,7 +226,8 @@ async function handleRecordingComplete() {
 
   } catch (err) {
     logError("handleRecordingComplete failed", err);
-    setStatus("Error in analysis flow");
+    setStatus("Error: " + (err.message || "Analysis failed"));
+    markStopProcessing(false);
     setUIRecording(false);
   }
 }
