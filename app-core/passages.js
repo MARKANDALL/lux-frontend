@@ -100,10 +100,14 @@ export function togglePartNav(enabled) {
     nextBtn.disabled = !atLast;
   }
 
+  // Initial State: "Record something..." (Grey/Warn)
   if (nextMsg) {
     if (!atLast) {
-      nextMsg.textContent = "Record something before continuing.";
-      nextMsg.style.display = "inline";
+      nextMsg.textContent = "Record to continue.";
+      nextMsg.style.display = "inline-block";
+      nextMsg.style.color = "#666"; 
+      nextMsg.style.marginLeft = "10px";
+      nextMsg.style.fontWeight = "normal";
     } else {
       nextMsg.textContent = "";
       nextMsg.style.display = "none";
@@ -229,6 +233,7 @@ export function wireNextBtn() {
 
 /**
  * Called by the recorder pipeline after a successful Azure assessment.
+ * RECONNECTED: Shows success message ("Finished...") instead of hiding it.
  */
 export function markPartCompleted() {
   if (isCustom) return;
@@ -248,9 +253,13 @@ export function markPartCompleted() {
       nextBtn.disabled = false;
       nextBtn.style.display = "";
     }
+    // SUCCESS STATE:
     if (nextMsg) {
-      nextMsg.textContent = "";
-      nextMsg.style.display = "none";
+      nextMsg.textContent = "Finished: Ready for your next one?";
+      nextMsg.style.display = "inline-block";
+      nextMsg.style.marginLeft = "12px";
+      nextMsg.style.color = "#15803d"; // Success Green
+      nextMsg.style.fontWeight = "700";
     }
     if (summaryBtn) {
       summaryBtn.style.display = "none";
