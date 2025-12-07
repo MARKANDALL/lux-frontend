@@ -1,12 +1,10 @@
 /* ============================================================================
-   MODERN HEADER BUILDER — CANONICAL SCORING + PROSODY LEGEND RESTORED
+   MODERN HEADER BUILDER — PHONEME HELP RESTORED (CORRECT LAYOUT)
    ---------------------------------------------------------------------------
    - Uses core/scoring/index.js for authoritative score extraction.
    - RESTORES the "Your Results" dashboard (Score Chips).
-   - RESTORES the Prosody Legend (Toggle + Slide-out Panel) by wrapping the
-     table in .results-flex and adding the #prosodyLegendToggle trigger.
-   - The interaction logic lives in ui/interactions/legend-toggle.js and
-     will automatically attach to these elements.
+   - RESTORES the Prosody Legend (Toggle + Slide-out Panel).
+   - RESTORES the Phoneme Help Tooltip (?) as a sibling to the pill.
 ============================================================================ */
 
 import {
@@ -21,7 +19,8 @@ const TOOLTIPS = {
   Fluency: "How smooth and natural your speech was.",
   Completeness: "Did you say all the words in the reference?",
   Pronunciation: "Overall pronunciation quality.",
-  Prosody: "Stress, intonation, rhythm, and pacing. Captures phrasing, word stress, and natural flow."
+  Prosody: "Stress, intonation, rhythm, and pacing. Captures phrasing, word stress, and natural flow.",
+  Phoneme: "The smallest possible sound in a language." // <--- Added for Header
 };
 
 /**
@@ -75,8 +74,7 @@ export function renderResultsHeaderModern(data) {
     `data-overall-score="${overall || 0}"`
   ].join(" ");
 
-  // 6. PROSODY LEGEND HTML (Restored from Legacy)
-  // This hidden block slides out when the user clicks the (?) trigger.
+  // 6. PROSODY LEGEND HTML
   const legendHtml = `
     <div id="prosodyLegend" class="prosody-legend prosody-legend--side hidden" role="note" aria-live="polite">
       <div class="legend-row">
@@ -124,7 +122,6 @@ export function renderResultsHeaderModern(data) {
   `;
 
   // 7. FINAL ASSEMBLY
-  // Note the use of .results-flex wrapper to handle the side-by-side sliding animation
   return `
     <div id="resultHeader" style="margin-bottom: 20px;">
       <div style="margin-bottom: 12px; font-size: 1.1em;">
@@ -158,17 +155,23 @@ export function renderResultsHeaderModern(data) {
                   These bars show <b>pause</b> (left) and <b>word length</b> (right). Click to show a quick legend.
                 </span>
               </span>
-
             </th>
+
             <th ${scoreHeaderAttrs}>
               Score ▸
             </th>
             <th id="errorHeader" class="toggle-col">
               Error ▸
             </th>
+
             <th id="phonemeHeader">
               <span class="word-chip phoneme-chip clickable" id="phonemeTitle">
                 Phoneme
+              </span>
+              
+              <span class="tooltip result-tip tip-Phoneme" style="margin-left: 8px;">
+                 (?)
+                 <span class="tooltiptext">${TOOLTIPS.Phoneme}</span>
               </span>
             </th>
           </tr>

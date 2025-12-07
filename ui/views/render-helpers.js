@@ -1,6 +1,6 @@
 // ui/views/render-helpers.js
-// Phase-E helper extraction: NO behavior changes.
-// Purely moves logic out of render-modern.js.
+import { speechDetected } from "../../helpers/assess.js";
+import { detailedPhonemeFeedback } from "./summary.js"; // Needed for circular dep in analysis build
 
 export function computeIssueSummary(words) {
   const issues = {};
@@ -36,6 +36,11 @@ export function computeTimingsAndMedian(words, computeTimings, median) {
   return { timings, med };
 }
 
+/**
+ * Prepares the output container.
+ * RESTORED: Uses speechDetected() to show the "Graceful Fallback" message
+ * if Azure returns valid JSON but no audible speech.
+ */
 export function preparePrettyOut(data) {
   const $out = document.getElementById("prettyResult");
   if (!$out) return { $out: null, nbest: null, stop: true };
@@ -44,6 +49,7 @@ export function preparePrettyOut(data) {
   $out.style.height = "auto";
   $out.style.overflowY = "visible";
 
+  // 1. Hard API Errors
   if (!data || data.error) {
     $out.innerHTML = `<span class="score-bad">Error: ${
       data?.error || "Unknown"
@@ -51,12 +57,23 @@ export function preparePrettyOut(data) {
     return { $out, nbest: null, stop: true };
   }
 
-  const nbest = data.NBest && data.NBest[0];
-  if (!nbest) {
-    $out.innerHTML = `<span>No analysis returned.</span>`;
+  // 2. Graceful Fallback: No Speech Detected
+  // This catches silence, mic errors, or empty results
+  if (!speechDetected(data)) {
+    $out.innerHTML = `
+      <div style="padding: 10px 0;">
+        <h3 style="margin-top:0; color:#1f2937;">No speech detected.</h3>
+        <p style="color:#b91c1c; font-weight:700; margin-bottom: 0;">
+          Sorry, but we didn’t hear anything. Please check your mic and try again.
+        </p>
+      </div>
+    `;
+    // We stop here to prevent rendering a broken table
     return { $out, nbest: null, stop: true };
   }
 
+  // 3. Valid Result
+  const nbest = data.NBest && data.NBest[0];
   return { $out, nbest, stop: false };
 }
 
@@ -68,7 +85,7 @@ export function preparePrettyOutSingle(data) {
   $out.style.height = "auto";
   $out.style.overflowY = "visible";
 
-  if (!data || !data.NBest || !data.NBest[0]) {
+  if (!speechDetected(data)) {
     $out.innerHTML = `<span>No analysis returned.</span>`;
     return { $out, nbest: null, stop: true };
   }
@@ -100,7 +117,6 @@ export function buildDetailedAnalysisHTML({
   return html;
 }
 
-// Phase-E Slice E-5: ensure the detailed analysis container exists (no behavior change)
 export function ensureAnalysisSummaryContainer($out) {
   let summary = document.getElementById("customAnalysisSummary");
   if (!summary) {
