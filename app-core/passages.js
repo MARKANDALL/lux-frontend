@@ -18,11 +18,18 @@ import {
 export function ensureCustomOption() {
   const passageSelect = $("#passageSelect");
   if (!passageSelect) return;
+
+  // 1. Create the option if missing
   if (!passageSelect.querySelector('option[value="custom"]')) {
     const opt = document.createElement("option");
     opt.value = "custom";
     opt.textContent = "✍️ Write your own…";
     passageSelect.insertBefore(opt, passageSelect.firstChild);
+  }
+
+  // 2. FORCE SELECT: If state is custom, make sure the dropdown matches
+  if (isCustom) {
+    passageSelect.value = "custom";
   }
 }
 

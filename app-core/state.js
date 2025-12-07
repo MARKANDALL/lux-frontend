@@ -22,18 +22,24 @@ const IS_PROD =
   typeof location !== "undefined" &&
   /luxurylanguagelearninglab\.com$/.test(location.hostname);
 
-export const DEFAULT_PASSAGE = "rainbow";
-export const fallbackParts = passages[DEFAULT_PASSAGE]?.parts || [];
+// CHANGE: Default is now custom (blank input)
+export const DEFAULT_PASSAGE = "custom"; 
 
 // ---- Mutables (single source of truth)
-export let currentPassageKey = passages[DEFAULT_PASSAGE]
-  ? DEFAULT_PASSAGE
-  : Object.keys(passages)[0];
-export let currentParts = passages[currentPassageKey]?.parts || fallbackParts;
+// CHANGE: Allow 'custom' as a valid key, otherwise fallback to first passage
+export let currentPassageKey = DEFAULT_PASSAGE;
+
+// CHANGE: If custom, parts is empty array. If passage, get parts.
+export let currentParts = (currentPassageKey === "custom") 
+  ? [""] 
+  : (passages[currentPassageKey]?.parts || []);
+
 export let currentPartIdx = 0;
 export let allPartsResults = [];
 export let playbackUrl = null;
-export let isCustom = false;
+
+// CHANGE: Default isCustom to true
+export let isCustom = (currentPassageKey === "custom");
 
 // Small helpers
 export const $ = (sel, r = document) => r.querySelector(sel);
