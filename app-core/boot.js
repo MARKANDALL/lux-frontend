@@ -28,7 +28,7 @@ export function bootApp() {
     const partProgress = $("#partProgress");
     if (partProgress) partProgress.textContent = "";
 
-    // Show helper message a bit after load
+    // RESTORED: 3-second delayed drop-down for the Blue Welcome Box (#userMsg)
     setTimeout(() => {
       const msg = $("#userMsg");
       if (msg) msg.classList.add("show");

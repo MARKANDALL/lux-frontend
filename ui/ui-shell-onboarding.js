@@ -214,8 +214,8 @@ export function initOnboarding() {
   didInit = true;
 
   hydrateUidAndLinks();
-  ensureUserMsgVisible();
-  installPlaceholderFade(); // <— THIS is the call you asked about
+  // ensureUserMsgVisible(); // <--- DISABLED: Let boot.js handle the timing
+  installPlaceholderFade();
   installCooperativeRotator();
 
   const overlay = $("#onboardingOverlay");
