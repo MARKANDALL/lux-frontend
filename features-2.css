@@ -189,27 +189,45 @@ table:not(.collapsed-error) th#errorHeader::after {
   min-width: 150px;
 }
 
-/* Floating 🔊 icon above the header pill (PHONEME) */
+/* ============================================================
+   FIXED: Mirrored "Ghost" Emoji Logic for Phoneme Header
+   ============================================================ */
+
+/* 1. Ensure the parent is the anchor */
 #phonemeHeader .phoneme-chip {
   position: relative !important;
 }
-#phonemeHeader .audio-hint--phoneme {
+
+/* 2. Create the Ghost Emoji using CSS (No extra HTML needed) */
+#phonemeHeader .phoneme-chip::after {
+  content: "🔊";
   position: absolute;
   left: 50%;
   top: -14px;
   transform: translateX(-50%) scale(1);
   font-size: 1.1em;
   color: #205080;
-  opacity: 0; /* hidden by default (match Word) */
+  opacity: 0; /* Hidden by default */
   pointer-events: none;
   transition: opacity 0.18s, transform 0.25s;
 }
-/* Show + animate on hover/focus (match Word behavior) */
-#phonemeHeader .phoneme-chip:hover .audio-hint--phoneme,
-#phonemeHeader .phoneme-chip:focus-visible .audio-hint--phoneme {
+
+/* 3. Hover State: Make it appear + Rock + Breathe */
+#phonemeHeader .phoneme-chip:hover::after,
+#phonemeHeader .phoneme-chip:focus-visible::after {
   opacity: 1;
-  animation: phonemeAudioHoverNudge 0.7s ease-in-out 1,
-    phonemeAudioHoverPulse 1.2s ease-in-out 0.7s infinite alternate;
+  /* Re-using the animations defined further down in your file */
+  animation: 
+    wordAudioNudge 0.7s ease-in-out 1, 
+    wordAudioPulse 1.2s ease-in-out 0.7s infinite alternate;
+}
+
+/* 4. Active State: When clicked (Audio playing) */
+#phonemeHeader .phoneme-chip.is-playing::after {
+  opacity: 1;
+  filter: drop-shadow(0 0 2px #ffd54f) brightness(1.3);
+  /* Keep breathing while playing */
+  animation: wordAudioPulse 1.2s ease-in-out 0 infinite alternate; 
 }
 @keyframes phonemeAudioHoverPulse {
   from {
