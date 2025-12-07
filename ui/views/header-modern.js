@@ -1,11 +1,12 @@
 /* ============================================================================
-   MODERN HEADER BUILDER — CANONICAL SCORING RESTORED
+   MODERN HEADER BUILDER — CANONICAL SCORING + PROSODY LEGEND RESTORED
    ---------------------------------------------------------------------------
    - Uses core/scoring/index.js for authoritative score extraction.
-   - RESTORES the full "Your Results" dashboard (Prosody, Accuracy, etc.)
-     that was present in the legacy header.
-   - Retains the modern table structure.
-   - Reconnects global speaking rate logic for the "w/s" metric.
+   - RESTORES the "Your Results" dashboard (Score Chips).
+   - RESTORES the Prosody Legend (Toggle + Slide-out Panel) by wrapping the
+     table in .results-flex and adding the #prosodyLegendToggle trigger.
+   - The interaction logic lives in ui/interactions/legend-toggle.js and
+     will automatically attach to these elements.
 ============================================================================ */
 
 import {
@@ -20,29 +21,27 @@ const TOOLTIPS = {
   Fluency: "How smooth and natural your speech was.",
   Completeness: "Did you say all the words in the reference?",
   Pronunciation: "Overall pronunciation quality.",
-  Prosody: "Stress, intonation, rhythm, and pacing. Captures phrasing, word stress, and natural flow.",
-  Content: "Vocabulary, Grammar, and Topic scoring."
+  Prosody: "Stress, intonation, rhythm, and pacing. Captures phrasing, word stress, and natural flow."
 };
 
 /**
  * renderResultsHeaderModern
  * -------------------------
- * Returns HTML for the main results header (Score Chips) + table shell.
- * Now fully populated with the metrics you were missing.
+ * Returns HTML for:
+ * 1. The Score Summary (Chips)
+ * 2. The Sliding Prosody Legend (Hidden by default)
+ * 3. The Main Table
  */
 export function renderResultsHeaderModern(data) {
-  // 1. SCORING LOGIC: Connect to existing core logic
+  // 1. SCORING LOGIC
   let scores = getAzureScores(data);
-  
-  // Fallback if Azure data is partial/mock
   if (scores.accuracy == null) {
     const fb = deriveFallbackScores(data);
     scores = { ...scores, ...fb };
   }
+  const { accuracy, fluency, completeness, overall, prosody, nbest } = scores;
 
-  const { accuracy, fluency, completeness, overall, prosody, content, nbest } = scores;
-
-  // 2. SPEAKING RATE: Reconnect to global prosody calculator if available
+  // 2. SPEAKING RATE
   let rateStr = "";
   if (typeof globalThis.getSpeakingRate === "function") {
       const rate = globalThis.getSpeakingRate(data);
@@ -51,7 +50,7 @@ export function renderResultsHeaderModern(data) {
       }
   }
 
-  // 3. CHIP RENDERER: Recreates the exact look of the old "Score Chips"
+  // 3. CHIP RENDERER
   const renderChip = (label, val, key, extra = "") => {
       const cls = scoreClass(val); 
       return `
@@ -65,20 +64,10 @@ export function renderResultsHeaderModern(data) {
       `;
   };
 
-  // 4. CONTENT SLOT: (Vocab/Grammar)
-  let contentHtml = `<span style="margin-right:4px;">Content: –</span>`;
-  if (content && (content.vocab || content.grammar)) {
-      const parts = [];
-      if (content.vocab) parts.push(`Vocab: ${fmtPct(content.vocab)}`);
-      if (content.grammar) parts.push(`Grammar: ${fmtPct(content.grammar)}`);
-      if (content.topic) parts.push(`Topic: ${fmtPct(content.topic)}`);
-      contentHtml = `<span style="margin-right:4px;">Content: ${parts.join(" | ")}</span>`;
-  }
-
-  // 5. "WHAT YOU SAID" TEXT
+  // 4. "WHAT YOU SAID"
   const saidText = data?.DisplayText || nbest?.Display || "(No speech detected)";
 
-  // 6. HEADER ATTRIBUTES (For the "Score" column collapse color)
+  // 5. HEADER ATTRIBUTES
   const headerScoreClass = overall != null ? scoreClass(overall) : "";
   const scoreHeaderAttrs = [
     'id="scoreHeader"',
@@ -86,7 +75,56 @@ export function renderResultsHeaderModern(data) {
     `data-overall-score="${overall || 0}"`
   ].join(" ");
 
+  // 6. PROSODY LEGEND HTML (Restored from Legacy)
+  // This hidden block slides out when the user clicks the (?) trigger.
+  const legendHtml = `
+    <div id="prosodyLegend" class="prosody-legend prosody-legend--side hidden" role="note" aria-live="polite">
+      <div class="legend-row">
+        <div class="sample">
+          <div class="prosody-ribbon">
+            <span class="pr-seg pr-gap ok" style="width:12px"></span>
+            <span class="pr-seg pr-tempo ok" style="width:28px"></span>
+          </div>
+          <span class="label">Normal pause & tempo</span>
+        </div>
+        <div class="sample">
+          <div class="prosody-ribbon">
+            <span class="pr-seg pr-gap missing" style="width:20px"></span>
+            <span class="pr-seg pr-tempo ok" style="width:28px"></span>
+          </div>
+          <span class="label">Phrase break (medium pause)</span>
+        </div>
+        <div class="sample">
+          <div class="prosody-ribbon">
+            <span class="pr-seg pr-gap unexpected" style="width:30px"></span>
+            <span class="pr-seg pr-tempo ok" style="width:28px"></span>
+          </div>
+          <span class="label">Long / unexpected pause</span>
+        </div>
+        <div class="sample">
+          <div class="prosody-ribbon">
+            <span class="pr-seg pr-gap ok" style="width:12px"></span>
+            <span class="pr-seg pr-tempo fast" style="width:16px"></span>
+          </div>
+          <span class="label">Fast word</span>
+        </div>
+        <div class="sample">
+          <div class="prosody-ribbon">
+            <span class="pr-seg pr-gap ok" style="width:12px"></span>
+            <span class="pr-seg pr-tempo slow" style="width:42px"></span>
+          </div>
+          <span class="label">Slow word</span>
+        </div>
+      </div>
+      <div class="note">
+        Left mini segment = <b>pause before the word</b>. Right bar = <b>word length</b> (tempo).
+        <i>Color</i> = status, <i>width</i> = how big the effect is.
+      </div>
+    </div>
+  `;
+
   // 7. FINAL ASSEMBLY
+  // Note the use of .results-flex wrapper to handle the side-by-side sliding animation
   return `
     <div id="resultHeader" style="margin-bottom: 20px;">
       <div style="margin-bottom: 12px; font-size: 1.1em;">
@@ -106,26 +144,37 @@ export function renderResultsHeaderModern(data) {
       </div>
     </div>
 
-    <table class="score-table collapsed-score collapsed-error">
-      <thead>
-        <tr>
-          <th id="wordHeader">
-            <span class="word-chip clickable">Word</span>
-          </th>
-          <th ${scoreHeaderAttrs}>
-            Score ▸
-          </th>
-          <th id="errorHeader" class="toggle-col">
-            Error ▸
-          </th>
-          <th id="phonemeHeader">
-            <span class="word-chip phoneme-chip clickable" id="phonemeTitle">
-              Phoneme
-            </span>
-          </th>
-        </tr>
-      </thead>
-      <tbody id="resultBody"></tbody>
-    </table>
+    <div class="results-flex">
+      ${legendHtml}
+
+      <table class="score-table collapsed-score collapsed-error">
+        <thead>
+          <tr>
+            <th id="wordHeader">
+              <span class="word-chip clickable">Word</span>
+              
+              <span id="prosodyLegendToggle" class="tooltip result-tip tip-ProsodyBars" style="margin-left:8px;">
+                (?) <span class="tooltiptext">
+                  These bars show <b>pause</b> (left) and <b>word length</b> (right). Click to show a quick legend.
+                </span>
+              </span>
+
+            </th>
+            <th ${scoreHeaderAttrs}>
+              Score ▸
+            </th>
+            <th id="errorHeader" class="toggle-col">
+              Error ▸
+            </th>
+            <th id="phonemeHeader">
+              <span class="word-chip phoneme-chip clickable" id="phonemeTitle">
+                Phoneme
+              </span>
+            </th>
+          </tr>
+        </thead>
+        <tbody id="resultBody"></tbody>
+      </table>
+    </div>
   `;
 }
