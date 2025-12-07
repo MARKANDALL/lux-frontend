@@ -13,9 +13,13 @@ import { initUI } from "../ui/ui-shell-typing.js";
 import { initOnboarding } from "../ui/ui-shell-onboarding.js";
 import { showSummary } from "../ui/views/index.js";
 import { bootInteractions } from "../ui/interactions/boot.js"; 
+import { ensureUID } from "../api/identity.js"; // <--- NEW IMPORT
 
 export function bootApp() {
   nukeSWInDev();
+
+  // Ensure UID is generated/loaded immediately (replaces inline script in index.html)
+  ensureUID();
 
   const start = () => {
     // Initial UI cleanup / reset

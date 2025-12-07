@@ -103,50 +103,7 @@
     </style>
 
     <!-- ✅ Import map must come before any module scripts -->
-    <script type="importmap">
-      {
-        "imports": {
-          "ai.js": "./api/ai.js",
-          "./api.js": "./api/index.js"
-        }
-      }
-    </script>
-
-    <!-- Ensure we have a stable LUX_USER_ID early (before any modules use it) -->
-    <script>
-      (function ensureUID() {
-        var KEY = "LUX_USER_ID",
-          qs = new URLSearchParams(location.search),
-          fromQuery = (qs.get("uid") || "").trim();
-        function looksValid(u) {
-          return /^[0-9a-f-]{18,}$/i.test(u) || (u && u.length >= 6);
-        }
-        function makeUUID() {
-          if (crypto && crypto.randomUUID) return crypto.randomUUID();
-          var s = [],
-            h = "0123456789abcdef";
-          for (var i = 0; i < 36; i++) s[i] = h[(Math.random() * 16) | 0];
-          s[14] = "4";
-          s[19] = h[(parseInt(s[19], 16) & 0x3) | 0x8];
-          s[8] = s[13] = s[18] = s[23] = "-";
-          return s.join("");
-        }
-        var existing = window.LUX_USER_ID || localStorage.getItem(KEY) || "";
-        var uid = looksValid(fromQuery)
-          ? fromQuery
-          : looksValid(existing)
-          ? existing
-          : makeUUID();
-        window.LUX_USER_ID = uid;
-        try {
-          localStorage.setItem(KEY, uid);
-        } catch (_) {}
-        document.documentElement.setAttribute("data-uid", uid);
-      })();
-    </script>
-
-    <!-- Popover (needs UID) -->
-    <script src="lux-popover.js" defer></script>
+    
 
     <!-- ===== BEGIN: Onboarding Overlay (v2) CSS (moved into <head>) ===== -->
     <style id="onboardingV2Styles">

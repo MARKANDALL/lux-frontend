@@ -6,6 +6,7 @@
    - Do not attach window.* globals here.
    - Safe to move to /legacy after grep confirms zero callers.
 ============================================================================ */
+/*
 // helpers/media.js
 export function setupYGHover({
   previewId = "ygPreview",

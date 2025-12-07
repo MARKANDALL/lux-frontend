@@ -15,6 +15,7 @@
    - Do not attach window.* globals here.
    - Safe to move to /legacy after grep confirms zero callers.
 ============================================================================ */
+/*
 // ui/headers/dom.js — DOM fill & toggles (relies on state.js functions)
 (function () {
   const G = window;

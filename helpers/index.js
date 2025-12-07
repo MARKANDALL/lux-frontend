@@ -16,9 +16,11 @@ export {
   keepTooltipInView,
 } from "./dom.js";
 
+/*
 export {
   setupYGHover,
-  setupPhHeaderHover, // ✅ new name
+  setupPhHeaderHover,
   initPhonemeAudio,
   initPhonemeClickPlay,
 } from "./media.js";
+*/

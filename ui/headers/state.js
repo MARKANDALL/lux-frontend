@@ -18,6 +18,7 @@
    The live results path does NOT import this file.
    Keep only for reference until Phase 3 cleanup moves it to /legacy.
 ============================================================================ */
+/*
 // ui/headers/state.js — data helpers + header HTML builder (no DOM writes)
 (function () {
   const G = window;

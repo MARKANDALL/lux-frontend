@@ -7,6 +7,7 @@
    - Safe to move to /legacy after grep confirms zero callers.
 ============================================================================ */
 // ui/views/render.js
+/*
 import { computeTimings, median } from "./deps.js";
 import { ensureHeader, wirePostDom } from "./header.js";
 import { buildRows } from "./rows.js";
