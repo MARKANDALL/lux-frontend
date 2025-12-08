@@ -40,22 +40,24 @@
       /* LOCK THE CONTAINER */
       html body .lux-tts-panel {
         position: fixed !important;
-        top: 80px !important;       /* Clear of the top headers */
-        width: 360px !important;    /* Force strict width */
+        top: 80px !important;
+        width: 360px !important;
         height: auto !important;
         max-width: 90vw !important;
         
-        /* THE MAGIC NUMBERS: */
-        right: -356px !important;   /* Hide 356px, leave 4px visible */
-        left: auto !important;      /* Ignore left positioning */
-        transform: none !important; /* Stop using transform */
+        /* ADJUSTMENT 1: THE BOX VISIBILITY */
+        /* 360px width - 352px hidden = 8px visible. 
+           (Previously -356px was only 4px visible). */
+        right: -352px !important;
+        
+        left: auto !important;
+        transform: none !important;
         
         z-index: 2147483647 !important;
         background: #fff !important;
         
-        /* VISIBILITY: Add a border so the white box doesn't blend in */
         border: 1px solid #ccc !important;
-        border-right: 0 !important; /* No border on the screen edge */
+        border-right: 0 !important;
         border-bottom-left-radius: 14px !important;
         box-shadow: 0 4px 20px rgba(0,0,0,0.15) !important;
         
@@ -68,27 +70,50 @@
         right: 0 !important;
       }
 
-      /* TAB POSITIONING */
+      /* ADJUSTMENT 2: THE TAB SHAPE */
       .lux-tts-tab {
         position: absolute !important;
-        left: -128px !important; /* Hangs off the left side */
-        top: 18px !important;
-        width: 128px !important;
-        padding: 10px 16px !important;
+        
+        /* Longer and thinner dimensions */
+        width: 148px !important;  /* Wider (was 128px) */
+        left: -148px !important;  /* Match width to hang correctly */
+        
+        padding: 6px 12px !important; /* Thinner (was 10px) */
+        top: 24px !important;         /* Pushed down slightly */
+        
         border-radius: 999px 0 0 999px !important;
         background: #1082ff !important;
         color: #fff !important;
         border: none !important;
         cursor: pointer !important;
         box-shadow: -4px 4px 10px rgba(0,0,0,0.1) !important;
-        font-weight: 700 !important;
+        font: 600 15px/1.2 system-ui, -apple-system, sans-serif !important;
+        letter-spacing: 0.5px !important;
       }
 
-      /* Hide mobile junk for now to keep it simple */
+      .lux-tts-tab:hover {
+        filter: brightness(1.02);
+        padding-right: 18px !important; /* Subtle hover effect */
+      }
+      
+      .lux-tts-panel #tts-controls {
+        padding: 14px 16px 16px;
+        height: auto;
+        max-height: none;
+        overflow: visible;
+        box-sizing: border-box;
+      }
+      
+      .lux-tts-loading {
+        font: 600 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        opacity: 0.75;
+        padding: 12px 10px;
+      }
+
       @media (max-width: 480px) {
         html body .lux-tts-panel {
            width: 85vw !important;
-           right: calc((85vw - 4px) * -1) !important;
+           right: calc((85vw - 8px) * -1) !important;
         }
       }
     </style>
