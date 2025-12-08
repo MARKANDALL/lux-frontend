@@ -1,21 +1,25 @@
 {
-  "name": "html-css",
-  "version": "1.0.0",
-  "description": "A template for HTML and CSS",
+  "name": "lux-pronunciation-tool",
+  "version": "1.6.9",
+  "description": "Lux Pronunciation Tool with Vite",
   "main": "index.html",
+  "type": "module",
   "scripts": {
-    "start": "powershell -ExecutionPolicy Bypass -Command \"Start-Process 'cmd.exe' '/c npx serve -l 3000'; Start-Sleep -Seconds 4; Start-Process 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe' 'http://localhost:3000'\"",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "lux:snapshot": "powershell -ExecutionPolicy Bypass -File scripts/lux-snapshot.ps1",
     "lux:release": "powershell -ExecutionPolicy Bypass -File scripts/lux-release.ps1"
   },
   "keywords": [
-    "html",
-    "css"
+    "pronunciation",
+    "learning",
+    "app"
   ],
-  "author": "Ives van Hoorne",
+  "author": "Mark",
   "license": "MIT",
   "devDependencies": {
     "serve": "11.2.0",
-    "vite": "^7.2.7"
+    "vite": "^6.0.0"
   }
 }
