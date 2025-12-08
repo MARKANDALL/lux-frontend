@@ -1,4 +1,3 @@
-// vite.config.js
 import { defineConfig } from 'vite';
 
 export default defineConfig({
@@ -13,9 +12,12 @@ export default defineConfig({
   server: {
     port: 3000,
     open: true,
-    // THE PROXY: This fixes the CORS / "Empty Dashboard" issue
+    // THE PROXY FIX:
+    // We use a Regex to match "/api" ONLY if it does NOT end in ".js"
+    // This allows local source files (api/identity.js) to load, 
+    // while API calls (api/assess) go to the server.
     proxy: {
-      '/api': {
+      '^/api/(?!.*\\.js$)': {
         target: 'https://luxury-language-api.vercel.app',
         changeOrigin: true,
         secure: false,

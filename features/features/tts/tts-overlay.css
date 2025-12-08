@@ -1,0 +1,94 @@
+/* features/features/tts/tts-overlay.css */
+/* The "Rock Solid" Positioning Layer. */
+
+:root {
+  --lux-tts-panel-w: 360px;
+  --lux-tts-panel-max-w: min(92vw, 380px);
+  --lux-tts-panel-max-h: min(520px, 70vh);
+  --lux-tts-radius: 14px;
+}
+
+/* LOCK THE CONTAINER */
+html body .lux-tts-panel {
+  position: fixed !important;
+  top: 80px !important;
+  width: 360px !important;
+  height: auto !important;
+  max-width: 90vw !important;
+  
+  /* CRITICAL FIX: Allow the tab to hang outside the box */
+  overflow: visible !important; 
+  
+  /* POSITIONING: 8px visible sliver */
+  right: -352px !important;
+  
+  left: auto !important;
+  transform: none !important;
+  
+  z-index: 2147483647 !important;
+  background: #fff !important;
+  
+  border: 1px solid #ccc !important;
+  border-right: 0 !important;
+  border-bottom-left-radius: 14px !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15) !important;
+  
+  transition: right 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+  display: block !important;
+}
+
+/* OPEN STATE */
+html.lux-tts-open body .lux-tts-panel {
+  right: 0 !important;
+}
+
+/* THE TAB SHAPE */
+.lux-tts-tab {
+  position: absolute !important;
+  display: flex !important; /* Force display */
+  align-items: center;
+  justify-content: center;
+  
+  /* Dimensions */
+  width: 148px !important;
+  left: -148px !important; /* Hang off the left side */
+  top: 24px !important;
+  height: 34px !important;
+  
+  border-radius: 999px 0 0 999px !important;
+  background: #1082ff !important;
+  color: #fff !important;
+  border: none !important;
+  cursor: pointer !important;
+  box-shadow: -4px 4px 10px rgba(0,0,0,0.1) !important;
+  
+  font: 600 15px/1.2 system-ui, -apple-system, sans-serif !important;
+  letter-spacing: 0.5px !important;
+  z-index: 2147483648 !important; /* One layer above the panel */
+}
+
+.lux-tts-tab:hover {
+  filter: brightness(1.02);
+  padding-right: 18px !important;
+}
+
+.lux-tts-panel #tts-controls {
+  padding: 14px 16px 16px;
+  height: auto;
+  max-height: none;
+  overflow: visible;
+  box-sizing: border-box;
+}
+
+.lux-tts-loading {
+  font: 600 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  opacity: 0.75;
+  padding: 12px 10px;
+}
+
+@media (max-width: 480px) {
+  html body .lux-tts-panel {
+     width: 85vw !important;
+     right: calc((85vw - 8px) * -1) !important;
+  }
+}
