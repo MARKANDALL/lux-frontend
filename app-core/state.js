@@ -17,19 +17,16 @@ const dbg = (label, extra) =>
   typeof window.luxDbg === "function" &&
   window.luxDbg(label, extra);
 
-// safer prod check (won't blow up outside browser)
+// safer prod check
 const IS_PROD =
   typeof location !== "undefined" &&
   /luxurylanguagelearninglab\.com$/.test(location.hostname);
 
-// CHANGE: Default is now custom (blank input)
 export const DEFAULT_PASSAGE = "custom"; 
 
 // ---- Mutables (single source of truth)
-// CHANGE: Allow 'custom' as a valid key, otherwise fallback to first passage
 export let currentPassageKey = DEFAULT_PASSAGE;
 
-// CHANGE: If custom, parts is empty array. If passage, get parts.
 export let currentParts = (currentPassageKey === "custom") 
   ? [""] 
   : (passages[currentPassageKey]?.parts || []);
@@ -38,8 +35,10 @@ export let currentPartIdx = 0;
 export let allPartsResults = [];
 export let playbackUrl = null;
 
-// CHANGE: Default isCustom to true
 export let isCustom = (currentPassageKey === "custom");
+
+// ---- Session State (New for Atlas) ----
+let _sessionId = null;
 
 // Small helpers
 export const $ = (sel, r = document) => r.querySelector(sel);
@@ -78,7 +77,17 @@ export function getChosenLang() {
   return lang;
 }
 
-// Dev convenience (kept from old file)
+// --- New Session ID Helper ---
+export function getSessionId() {
+  if (!_sessionId) {
+    // Simple random ID for the session
+    _sessionId = Math.random().toString(36).substring(2, 15) + 
+                 Math.random().toString(36).substring(2, 15);
+  }
+  return _sessionId;
+}
+
+// Dev convenience
 export function nukeSWInDev() {
   if (
     !IS_PROD &&

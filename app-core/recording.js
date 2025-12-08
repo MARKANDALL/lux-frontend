@@ -12,14 +12,15 @@ import {
   debug as logDebug,
 } from "./lux-utils.js";
 
-// ✅ ADDED: allPartsResults, currentParts
+// ✅ ADDED: getSessionId
 import { 
   currentPassageKey, 
   currentPartIdx, 
   isCustom, 
   getChosenLang, 
   allPartsResults,
-  currentParts 
+  currentParts,
+  getSessionId
 } from "./state.js";
 
 // -- REAL API IMPORTS --
@@ -210,16 +211,22 @@ async function handleRecordingComplete() {
       console.warn("AI Feedback Error:", e);
     }
 
-    // 7. Log to Database
+    // 7. Log to Database (ATLAS UPDATE: Added L1, Session, Time)
     try {
       const uid = getUID && getUID();
+      const sessionId = getSessionId();
+      const localTime = new Date().toISOString();
+
       if (uid) {
         saveAttempt({
           uid,
           passageKey: currentPassageKey,
           partIndex: currentPartIdx,
           text,
-          azureResult: result
+          azureResult: result,
+          l1: lang,
+          sessionId,
+          localTime
         }).catch(e => console.warn("Supabase log failed", e));
       }
     } catch (e) {}

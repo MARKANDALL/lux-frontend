@@ -9,9 +9,24 @@ export async function saveAttempt({
   partIndex,
   text,
   azureResult,
+  // New Atlas Fields
+  l1,
+  sessionId,
+  localTime
 }) {
-  const body = { uid, passageKey, partIndex, text, azureResult };
-  dbg("POST", ATTEMPT_URL, { uid, passageKey, partIndex });
+  const body = { 
+    uid, 
+    passageKey, 
+    partIndex, 
+    text, 
+    azureResult,
+    l1,
+    sessionId,
+    localTime
+  };
+  
+  dbg("POST", ATTEMPT_URL, { uid, passageKey, partIndex, l1 });
+  
   const resp = await fetch(ATTEMPT_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
