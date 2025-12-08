@@ -2,7 +2,7 @@
 export { assessPronunciation } from "./assess.js";
 export { fetchAIFeedback } from "./ai.js";
 export { saveAttempt } from "./attempts.js";
-export { getUID } from "./identity.js";
+export { getUID, ensureUID } from "./identity.js"; // Added ensureUID for completeness
 export {
   ENABLE_WIX_SAVE,
   savePronunciationResult,

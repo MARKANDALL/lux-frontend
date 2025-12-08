@@ -6,28 +6,24 @@
 
 import {
   setText,
-  setVisible,
   logStatus,
   logError,
   debug as logDebug,
 } from "./lux-utils.js";
 
-// ✅ ADDED: getSessionId
+// ✅ CLEANED: Imported pushPartResult, removed direct array manipulation
 import { 
   currentPassageKey, 
   currentPartIdx, 
   isCustom, 
   getChosenLang, 
-  allPartsResults,
   currentParts,
-  getSessionId
+  getSessionId,
+  pushPartResult
 } from "./state.js";
 
-// -- REAL API IMPORTS --
 import { assessPronunciation, saveAttempt, getUID } from "../api/index.js";
-
-// -- UI GATEWAYS --
-import { showPrettyResults, showRawData } from "../features/results/index.js";
+import { showPrettyResults } from "../features/results/index.js";
 import { getAIFeedback } from "../ui/ui-ai-ai-logic.js";
 import { markPartCompleted } from "./passages.js"; 
 import { bringInputToTop } from "../helpers/index.js"; 
@@ -43,7 +39,6 @@ function getTextarea() { return document.querySelector("#referenceText"); }
 function getRecordBtn() { return document.querySelector("#record"); }
 function getStopBtn() { return document.querySelector("#stop"); }
 function getStatusEl() { return document.querySelector("#status"); }
-function getErrorEl() { return document.querySelector("#recordingError"); }
 
 /* ===========================
    UI helpers
@@ -77,40 +72,6 @@ function markStopProcessing(on) {
   if (!stopBtn) return;
   if (on) stopBtn.classList.add("processing");
   else stopBtn.classList.remove("processing");
-}
-
-/* ===========================
-   MOCK DATA GENERATOR (High Error Rate for UI Testing)
-   =========================== */
-function generateMockResult(text) {
-  const words = text.split(/\s+/).filter(w => w.length > 0);
-  const mockWords = words.map((w, i) => ({
-    Word: w,
-    // Fail every 3rd word to force summary cards to appear
-    AccuracyScore: i % 3 === 0 ? 55 : 95, 
-    ErrorType: i % 3 === 0 ? "Mispronunciation" : "None",
-    Phonemes: w.split('').map((char, j) => ({
-      Phoneme: char.toLowerCase(),
-      // Fail the first letter of every 3rd word to trigger phoneme cards
-      AccuracyScore: (i % 3 === 0 && j === 0) ? 45 : 95,
-      ErrorType: (i % 3 === 0 && j === 0) ? "Mispronunciation" : "None"
-    }))
-  }));
-
-  return {
-    NBest: [{
-      Confidence: 0.9,
-      Lexical: text,
-      ITN: text,
-      MaskedITN: text,
-      Display: text,
-      AccuracyScore: 70.0,
-      FluencyScore: 65.0,
-      CompletenessScore: 100.0,
-      PronScore: 68.5,
-      Words: mockWords
-    }]
-  };
 }
 
 /* ===========================
@@ -170,7 +131,6 @@ async function handleRecordingComplete() {
     setStatus("Analyzing...");
     
     // --- [SWITCH] REAL API vs MOCK ---
-    
     // OPTION A: REAL AZURE API (Restored)
     const lang = getChosenLang();
     const result = await assessPronunciation({ 
@@ -179,17 +139,12 @@ async function handleRecordingComplete() {
       firstLang: lang 
     });
 
-    /* // OPTION B: MOCK DATA (Disabled)
-    await new Promise(r => setTimeout(r, 1200));
-    const result = generateMockResult(text || "Test");
-    */
-
     logDebug("AZURE RESULT RECEIVED", result);
 
     // 4. Save for Summary (Curated Passages only)
+    // ✅ CLEANED: Uses state module, no globals
     if (!isCustom && currentParts && currentParts.length > 1) {
-       allPartsResults[currentPartIdx] = result;
-       window.__allPartsResults = allPartsResults; 
+       pushPartResult(currentPartIdx, result);
     }
 
     // 5. Trigger UI Flow
@@ -211,7 +166,7 @@ async function handleRecordingComplete() {
       console.warn("AI Feedback Error:", e);
     }
 
-    // 7. Log to Database (ATLAS UPDATE: Added L1, Session, Time)
+    // 7. Log to Database (Atlas)
     try {
       const uid = getUID && getUID();
       const sessionId = getSessionId();

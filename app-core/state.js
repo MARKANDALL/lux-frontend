@@ -11,13 +11,11 @@ if (typeof window !== "undefined") {
   };
 }
 
-// make a tiny local helper so we don't sprinkle window.* everywhere
 const dbg = (label, extra) =>
   typeof window !== "undefined" &&
   typeof window.luxDbg === "function" &&
   window.luxDbg(label, extra);
 
-// safer prod check
 const IS_PROD =
   typeof location !== "undefined" &&
   /luxurylanguagelearninglab\.com$/.test(location.hostname);
@@ -32,12 +30,12 @@ export let currentParts = (currentPassageKey === "custom")
   : (passages[currentPassageKey]?.parts || []);
 
 export let currentPartIdx = 0;
-export let allPartsResults = [];
+export let allPartsResults = []; // <--- The Source of Truth
 export let playbackUrl = null;
 
 export let isCustom = (currentPassageKey === "custom");
 
-// ---- Session State (New for Atlas) ----
+// ---- Session State
 let _sessionId = null;
 
 // Small helpers
@@ -69,35 +67,35 @@ export function setPlaybackUrl(u) {
   dbg("state:setPlaybackUrl", { playbackUrl });
 }
 
+// --- NEW: Atomic State Updates (Cleaner than manual array manipulation) ---
+export function pushPartResult(idx, result) {
+  allPartsResults[idx] = result;
+  dbg("state:pushPartResult", { idx, score: result?.NBest?.[0]?.AccuracyScore });
+}
+
+export function resetSessionResults() {
+  allPartsResults = [];
+  dbg("state:resetSessionResults", "cleared");
+}
+
 export function getChosenLang() {
   const l1Select = $("#l1Select");
   const v = (l1Select?.value || "").trim();
   const lang = v === "" ? "universal" : v;
-  dbg("state:getChosenLang", { lang });
   return lang;
 }
 
-// --- New Session ID Helper ---
 export function getSessionId() {
   if (!_sessionId) {
-    // Simple random ID for the session
     _sessionId = Math.random().toString(36).substring(2, 15) + 
                  Math.random().toString(36).substring(2, 15);
   }
   return _sessionId;
 }
 
-// Dev convenience
 export function nukeSWInDev() {
-  if (
-    !IS_PROD &&
-    typeof navigator !== "undefined" &&
-    "serviceWorker" in navigator
-  ) {
-    navigator.serviceWorker
-      .getRegistrations?.()
-      .then((rs) => rs.forEach((r) => r.unregister()))
-      .catch(() => {});
-    dbg("state:nukeSWInDev", "Service workers unregistered in dev");
+  if (!IS_PROD && typeof navigator !== "undefined" && "serviceWorker" in navigator) {
+    navigator.serviceWorker.getRegistrations?.().then((rs) => rs.forEach((r) => r.unregister())).catch(() => {});
+    dbg("state:nukeSWInDev", "Service workers unregistered");
   }
 }

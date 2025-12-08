@@ -1,12 +1,12 @@
 // app-core/boot.js
 
-import { nukeSWInDev, $ } from "./state.js";
+import { nukeSWInDev, $, allPartsResults, currentParts } from "./state.js"; // ✅ CLEANED: Added imports
 import {
   ensureCustomOption,
   updatePartsInfoTip,
   wirePassageSelect,
   wireNextBtn,
-  showCurrentPart,  // <--- This was missing/hidden!
+  showCurrentPart, 
 } from "./passages.js";
 import { initLuxRecorder } from "./recording.js";
 import { initUI } from "../ui/ui-shell-typing.js";
@@ -26,7 +26,7 @@ export function bootApp() {
   // 2. Initialize the audio sink (hidden player)
   initAudioSink();
 
-  // 3. Initialize Prosody Tooltips (New ES Module)
+  // 3. Initialize Prosody Tooltips
   initProsodyTooltips();
 
   const start = () => {
@@ -70,12 +70,12 @@ export function bootApp() {
     // Summary button behavior & FORCE VISIBLE
     const summaryBtn = $("#showSummaryBtn");
     if (summaryBtn) {
+      // ✅ CLEANED: Uses state imports, no globals
       summaryBtn.onclick = () => {
-        const results = window.__allPartsResults || [];
-        showSummary({ allPartsResults: results, currentParts: [] });
+        showSummary({ allPartsResults: allPartsResults, currentParts: currentParts });
       };
 
-      // ✅ TEMPORARY DEV OVERRIDE: ALWAYS SHOW
+      // TEMPORARY DEV OVERRIDE: ALWAYS SHOW
       summaryBtn.style.display = "inline-block";
       summaryBtn.disabled = false;
     }
