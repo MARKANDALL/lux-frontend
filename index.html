@@ -37,16 +37,16 @@
         --lux-tts-radius: 14px;
       }
 
-      /* We use 'html body' to add weight to our selector so it wins */
       html body .lux-tts-panel {
         position: fixed !important;
-        top: 0 !important;
+        /* Moved down to 80px so it doesn't block the top-right corner icons */
+        top: 80px !important; 
         right: 0 !important;
         bottom: auto !important;
         left: auto !important;
-        inset: auto !important; /* Reset any 'inset' junk */
+        inset: auto !important;
         
-        z-index: 2147483647 !important; /* Maximum visibility */
+        z-index: 2147483647 !important;
         
         width: var(--lux-tts-panel-w);
         max-width: var(--lux-tts-panel-max-w);
@@ -54,28 +54,22 @@
         max-height: var(--lux-tts-panel-max-h);
         
         background: #fff !important;
-        
-        /* VISUAL FIX: Add a border so you can see the white edge against white bg */
         border-left: 1px solid #ccc !important;
         border-bottom: 1px solid #ccc !important;
         border-bottom-left-radius: var(--lux-tts-radius);
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18) !important;
         
-        /* POSITION FIX: 
-           We hide the panel but leave 40px of the white box visible. 
-           The Blue Tab hangs off the left of that 40px, so it's fully visible. 
-        */
-        transform: translateX(calc(100% - 40px)) !important;
+        /* THE FIX: We only pull it in by 2px. 
+           Since the Tab sticks out 128px, this results in:
+           128px Tab + 2px Border = Perfect Visibility */
+        transform: translateX(calc(100% - 2px)) !important;
         
         transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
         display: block !important;
         overflow: visible !important;
       }
 
-      /* OPEN STATE: 
-         When open, we slide it to 0 (flush with right edge). 
-         No breathing room needed if we want maximum screen space. 
-      */
+      /* OPEN STATE: Slide flush to the edge */
       html.lux-tts-open body .lux-tts-panel {
         transform: translateX(0) !important;
       }
@@ -90,7 +84,7 @@
       
       .lux-tts-tab {
         position: absolute;
-        left: -128px; /* Sticks out to the left of the panel */
+        left: -128px;
         top: 18px;
         padding: 10px 16px;
         border-radius: 999px 0 0 999px;
