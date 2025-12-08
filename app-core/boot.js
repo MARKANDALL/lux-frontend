@@ -6,7 +6,7 @@ import {
   updatePartsInfoTip,
   wirePassageSelect,
   wireNextBtn,
-  showCurrentPart,
+  showCurrentPart,  // <--- This was missing/hidden!
 } from "./passages.js";
 import { initLuxRecorder } from "./recording.js";
 import { initUI } from "../ui/ui-shell-typing.js";
@@ -14,17 +14,20 @@ import { initOnboarding } from "../ui/ui-shell-onboarding.js";
 import { showSummary } from "../ui/views/index.js";
 import { bootInteractions } from "../ui/interactions/boot.js"; 
 import { ensureUID } from "../api/identity.js";
-import { initAudioSink } from "./audio-sink.js"; // <--- NEW: Import the Audio Sink module
+import { initAudioSink } from "./audio-sink.js";
+import { initProsodyTooltips } from "../prosody/prosody-help-bars.js";
 
 export function bootApp() {
   nukeSWInDev();
 
-  // 1. Ensure UID is generated/loaded immediately (replaces inline script in index.html)
+  // 1. Ensure UID is generated/loaded immediately
   ensureUID();
 
-  // 2. Initialize the audio sink (hidden player + race condition guards)
-  // This replaces the "installLearnerSink" inline script in index.html
+  // 2. Initialize the audio sink (hidden player)
   initAudioSink();
+
+  // 3. Initialize Prosody Tooltips (New ES Module)
+  initProsodyTooltips();
 
   const start = () => {
     // Initial UI cleanup / reset
@@ -44,8 +47,6 @@ export function bootApp() {
     }, 2000);
 
     // Passages + navigation
-    // NOTE: showCurrentPart() hides the summary button by default,
-    // so our override must come AFTER this block.
     ensureCustomOption();
     showCurrentPart(); 
     updatePartsInfoTip();
@@ -75,8 +76,6 @@ export function bootApp() {
       };
 
       // ✅ TEMPORARY DEV OVERRIDE: ALWAYS SHOW
-      // We place this at the very end to ensure it overrides the 
-      // default hiding logic in showCurrentPart().
       summaryBtn.style.display = "inline-block";
       summaryBtn.disabled = false;
     }

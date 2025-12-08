@@ -1,22 +1,10 @@
 /* ============================================================================
-   CANONICAL PROSODY GATEWAY — GLOBAL-BACKED (PHASE-E)
+   CANONICAL PROSODY GATEWAY — ES MODULES (MODERN)
    ---------------------------------------------------------------------------
-   - Truthy entrypoint for prosody helpers used by the results renderer.
-   - For now, this module simply proxies to globalThis:
-       computeTimings, median, classifyTempo, classifyGap, renderProsodyRibbon.
-   - View-layer shims (ui/views/deps.js, ui/views/rows.js, ui/views/summary.js)
-     should import from here instead of reading globalThis directly.
-   - Future Phase-E slices can move real implementations in here while keeping
-     the public surface stable.
+   - Aggregates the modernized prosody modules.
+   - Consumers (like ui/views/rows.js) import from here.
 ============================================================================ */
 
-const G = globalThis;
-
-// NOTE: These are intentionally direct references (no wrappers) to avoid
-// changing behavior: if a helper is missing, callers will see `undefined`
-// just as they did when importing straight from globalThis.
-export const computeTimings = G.computeTimings;
-export const median = G.median;
-export const classifyTempo = G.classifyTempo;
-export const classifyGap = G.classifyGap;
-export const renderProsodyRibbon = G.renderProsodyRibbon;
+export { computeTimings, median } from "../../prosody/core-calc.js";
+export { classifyTempo, classifyGap } from "../../prosody/annotate.js";
+export { renderProsodyRibbon } from "../../prosody/prosody-render-bars.js";
