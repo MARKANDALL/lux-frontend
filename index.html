@@ -1,12 +1,9 @@
-<!-- GEMINI TEST: VS Code <-> CodeSandbox ROUND TRIP -->
-<!-- GEMINI TEST: VS Code -> CodeSandbox -->
 <!DOCTYPE html>
 <html>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- Base / globals -->
     <link rel="stylesheet" href="base.css" />
     <link rel="stylesheet" href="features-1.css" />
     <link rel="stylesheet" href="features-2.css" />
@@ -16,22 +13,18 @@
       rel="stylesheet"
     />
 
-    <!-- TTS (core before peekaboo overrides) -->
     <link rel="stylesheet" href="./features/features/tts.css" />
     <link rel="stylesheet" href="./features/features/tts-peekaboo.css" />
 
-    <!-- Self-Playback (core before peekaboo overrides) -->
     <link rel="stylesheet" href="./features/features/self-playback.css" />
     <link rel="stylesheet" href="./features/features/selfpb-peekaboo.css" />
 
-    <!-- Guard: keep TTS host hidden until the peekaboo panel adopts it -->
     <style id="lux-tts-guard-style">
       #tts-controls {
         display: none !important;
       }
     </style>
 
-    <!-- Inline TTS corner defaults (top-right drawer geometry) -->
     <style>
       :root {
         --lux-tts-panel-w: 360px;
@@ -102,10 +95,17 @@
       }
     </style>
 
-    <!-- ✅ Import map must come before any module scripts -->
-    
+    <script type="importmap">
+      {
+        "imports": {
+          "ai.js": "./api/ai.js",
+          "./api.js": "./api/index.js"
+        }
+      }
+    </script>
 
-    <!-- ===== BEGIN: Onboarding Overlay (v2) CSS (moved into <head>) ===== -->
+    <script src="lux-popover.js" defer></script>
+
     <style id="onboardingV2Styles">
       #onboardingOverlay.ob-hidden {
         display: none;
@@ -213,9 +213,6 @@
         }
       }
     </style>
-    <!-- ===== END: Onboarding Overlay (v2) CSS ===== -->
-
-    <!-- === Your long shared APP STYLES (as you pasted) === -->
     <style>
       /* --- BEGIN app styles you provided (unchanged) --- */
       #typewriterMsg {
@@ -530,13 +527,13 @@
         cursor: not-allowed;
       }
       #record::before {
-        content: "🎙️  ";
+        content: "🎙️  ";
       }
       #stop::before {
-        content: "🛑  ";
+        content: "🛑  ";
       }
       #nextPartBtn::before {
-        content: "➡️  ";
+        content: "➡️  ";
       }
       .score-table {
         border-collapse: collapse;
@@ -625,6 +622,10 @@
         box-shadow: 0 6px 20px rgba(20, 90, 220, 0.15);
         filter: brightness(0.92);
         transform: scale(1.13);
+      }
+      .word-chip:focus-visible {
+        outline: 2.5px solid #1976d2;
+        outline-offset: 2px;
       }
       .tooltip {
         position: relative;
@@ -1159,7 +1160,6 @@
         </ol>
       </div>
 
-      <!-- Passage + L1 -->
       <label>
         Select Passage:
         <select id="passageSelect">
@@ -1216,7 +1216,6 @@
         ></textarea>
       </label>
 
-      <!-- Invisible placeholders the JS still needs -->
       <div id="ghostControls">
         <button id="nextPartBtn">Next Part</button>
         <span id="nextPartMsg"></span>
@@ -1232,96 +1231,6 @@
 
       <button id="playbackBtn" style="display: none">▶ Play</button>
       <audio id="playbackAudio" hidden></audio>
-
-      <!-- Learner audio sink (hydrates self-playback when a new blob arrives) -->
-  <script>
-  (function installLearnerSink() {
-    const AUDIO_ID = "playbackAudio";
-    const FN = "__attachLearnerBlob";
-    
-    // 1. Get or Create Audio Element
-    const audio = document.getElementById(AUDIO_ID) || (() => {
-      const a = document.createElement("audio");
-      a.id = AUDIO_ID;
-      a.hidden = true;
-      document.body.appendChild(a);
-      return a;
-    })();
-
-    if (audio.__sinkV7) return; // Prevent double-init
-    audio.__sinkV7 = true;
-    audio.preload = "auto";
-    audio.muted = false;
-    audio.volume = 1;
-    audio.hidden = false;
-
-    // 2. Robust Loader
-    let pendingSrc = null;
-    let isLoading = false;
-
-    const safeLoad = async (url, blob) => {
-      // If already loading, queue this url as the next pending one
-      if (isLoading) {
-        console.log("[learner] Load in progress, queueing next...");
-        pendingSrc = { url, blob };
-        return;
-      }
-
-      isLoading = true;
-
-      try {
-        // Reset state
-        audio.pause();
-        audio.src = url;
-        audio.load(); 
-        
-        // Wait for metadata to ensure engine is ready
-        await new Promise((resolve, reject) => {
-            const onMeta = () => { cleanup(); resolve(); };
-            const onError = (e) => { cleanup(); reject(e); };
-            const cleanup = () => {
-                audio.removeEventListener('loadedmetadata', onMeta);
-                audio.removeEventListener('error', onError);
-            };
-            audio.addEventListener('loadedmetadata', onMeta, { once: true });
-            audio.addEventListener('error', onError, { once: true });
-        });
-
-        // Hydrate Self-Playback (Logic extracted from spaghetti)
-        document.dispatchEvent(new CustomEvent("lux:new-learner-audio", { detail: { blob, url } }));
-        
-        if (window.LuxSelfPB?.setLearnerArrayBuffer) {
-            const arr = await blob.arrayBuffer();
-            await window.LuxSelfPB.setLearnerArrayBuffer(arr);
-        }
-
-      } catch (err) {
-        console.warn("[learner] Audio load interruption or error:", err);
-      } finally {
-        isLoading = false;
-        // If a new request came in while we were loading, process it now
-        if (pendingSrc) {
-            const next = pendingSrc;
-            pendingSrc = null;
-            safeLoad(next.url, next.blob);
-        }
-      }
-    };
-
-    // 3. Expose Global Hook
-    window[FN] = function attachLearnerBlob(blob) {
-      if (!(blob instanceof Blob)) return;
-      
-      // Cleanup old URL to prevent memory leaks
-      if (audio.__blobUrl) URL.revokeObjectURL(audio.__blobUrl);
-      
-      const url = URL.createObjectURL(blob);
-      audio.__blobUrl = url; // Store for cleanup next time
-      
-      safeLoad(url, blob);
-    };
-  })();
-</script>
 
       <p id="status">Not recording</p>
       <div id="prettyResult"></div>
@@ -1344,7 +1253,6 @@
         <pre id="rawData" class="raw-data-section"></pre>
       </div>
 
-      <!-- === Video hover preview popover === -->
       <div id="ygPreview">
         <video
           id="ygDemo"
@@ -1388,10 +1296,8 @@
           overflow: hidden;
         }
       </style>
-      <!-- === End YouGlish popover === -->
-    </div>
+      </div>
 
-    <!-- === Phoneme hover preview popover === -->
     <div id="phPreview">
       <video
         id="phDemo"
@@ -1435,12 +1341,8 @@
         🔊 Click to toggle audio
       </div>
     </div>
-    <!-- ===== END: Onboarding Overlay (v2) HTML ===== -->
-
-    <!-- TTS controls host (adopted into the top-right drawer) -->
     <div id="tts-controls" data-luxHidden="1"></div>
 
-    <!-- Hard override: guarantee top-right CORNER behavior -->
     <script>
       (function ensureCornerOverrides() {
         const ID = "lux-tts-corner-override";
@@ -1459,13 +1361,14 @@
           .lux-tts-panel #tts-controls{
             height:auto !important; min-height:0 !important;
             max-height:none !important; overflow:visible !important;
-          }`;
+          }
+          .lux-tts-panel #tts-controls > *{ position:static !important; }
+        `;
         document.head.appendChild(s);
-        console.info("[tts] corner override injected");
+        console.log("[tts] corner override injected");
       })();
     </script>
 
-    <!-- Peekaboo boot + late TTS import -->
     <script type="module">
       (function () {
         const GUARD_ID = "lux-tts-guard-style";
@@ -1555,14 +1458,13 @@
       })();
     </script>
 
-    <!-- App core -->
-<script src="./prosody/core-calc.js"></script>
+    <script src="./prosody/core-calc.js"></script>
     <script src="./prosody/annotate.js"></script>
     <script src="./prosody/prosody-help-bars.js"></script>
     <script src="./prosody/prosody-render-bars.js"></script>
 
     <script type="module" src="./app-core/index.js"></script>
-    <!-- Self-Playback (lite) – mounts top-left + hydrates from hidden audio -->
+    
     <script type="module">
       // After (keeps a fallback path if you haven’t deleted the old file yet):
       const CANDIDATE_PATHS = [
@@ -1617,13 +1519,11 @@
       loadAndMount();
     </script>
 
-    <!-- Left-side peekaboo shell (adopts #selfpb-lite) -->
     <script
       type="module"
       src="./features/features/08-selfpb-peekaboo.js"
     ></script>
 
-    <!-- 🔧 Smoke test: only if self-playback truly failed to mount -->
     <script>
       (function () {
         function showFallback() {
@@ -1662,29 +1562,6 @@
       })();
     </script>
 
-    <!-- Force the TTS panel visible + unlocked geometry (diagnostic & safety) -->
-    <script>
-      (function ensureTtsForceVisible() {
-        if (document.getElementById("lux-tts-force-visible")) return;
-        const s = document.createElement("style");
-        s.id = "lux-tts-force-visible";
-        s.textContent = `
-          html.lux-tts-open .lux-tts-panel { transform: translateX(0) !important; }
-          .lux-tts-panel { z-index: 99999 !important; width: 360px !important; max-width: 92vw !important; }
-          .lux-tts-panel #tts-controls{
-            display:block !important; visibility:visible !important;
-            position:static !important; box-sizing:border-box !important;
-            padding:14px 16px !important; min-width:320px !important; min-height:140px !important;
-            height:auto !important; max-height:none !important; overflow:visible !important;
-          }
-          .lux-tts-panel #tts-controls > *{ position:static !important; }
-        `;
-        document.head.appendChild(s);
-        console.log("[tts] force-visible shim active");
-      })();
-    </script>
-
-    <!-- Safety: prevent unrelated 'typeWriter is not defined' error -->
     <script>
       window.typeWriter = window.typeWriter || function () {};
     </script>

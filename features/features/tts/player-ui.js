@@ -96,8 +96,20 @@ export async function mountTTSPlayer(hostEl) {
   const host = hostEl || document.getElementById("tts-controls");
   if (!host) return;
 
-  document.getElementById("lux-tts-guard-style")?.remove();
+  // --- NUCLEAR FIX START ---
+  // 1. Kill the guard style tag explicitly
+  const guard = document.getElementById("lux-tts-guard-style");
+  if (guard) guard.remove();
+
+  // 2. Flip the data attribute
   host.dataset.luxHidden = "0";
+  host.removeAttribute("data-luxHidden"); // Double tap
+
+  // 3. Force inline style to override everything (Critical Fix)
+  host.style.display = "flex";
+  host.style.visibility = "visible";
+  host.style.opacity = "1";
+  // --- NUCLEAR FIX END ---
 
   renderControls(host);
 

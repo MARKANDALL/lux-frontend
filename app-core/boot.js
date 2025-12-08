@@ -13,13 +13,18 @@ import { initUI } from "../ui/ui-shell-typing.js";
 import { initOnboarding } from "../ui/ui-shell-onboarding.js";
 import { showSummary } from "../ui/views/index.js";
 import { bootInteractions } from "../ui/interactions/boot.js"; 
-import { ensureUID } from "../api/identity.js"; // <--- NEW IMPORT
+import { ensureUID } from "../api/identity.js";
+import { initAudioSink } from "./audio-sink.js"; // <--- NEW: Import the Audio Sink module
 
 export function bootApp() {
   nukeSWInDev();
 
-  // Ensure UID is generated/loaded immediately (replaces inline script in index.html)
+  // 1. Ensure UID is generated/loaded immediately (replaces inline script in index.html)
   ensureUID();
+
+  // 2. Initialize the audio sink (hidden player + race condition guards)
+  // This replaces the "installLearnerSink" inline script in index.html
+  initAudioSink();
 
   const start = () => {
     // Initial UI cleanup / reset
