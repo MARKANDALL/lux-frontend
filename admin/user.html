@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Attempts (admin)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; margin: 14px; color:#222; }
+    h1 { font-size: 1.4rem; margin: 0 0 12px; }
+    .row { display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+    .row > * { margin: 4px 0; }
+    input, button { padding:6px 10px; border:1px solid #ccc; border-radius:6px; }
+    button { background:#0a66ff; color:#fff; border:0; cursor:pointer; }
+    table { width:100%; border-collapse:collapse; margin-top:10px; }
+    th, td { border:1px solid #ddd; padding:8px; font-size:13px; }
+    th { background:#f5f7fa; text-align:left; }
+    .nav { display:flex; gap:10px; margin-bottom:8px; }
+    .nav-link { padding:2px 6px; text-decoration:none; color:inherit; }
+    .nav-link.active { font-weight:600; text-decoration:underline; }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <a href="/admin/overview.html" class="nav-link">Cohort</a>
+    <a href="/admin/user.html" class="nav-link active">Attempts</a>
+    <a href="/admin/index.html" class="nav-link">User Progress</a>
+  </nav>
+
+  <h1>Attempts (admin)</h1>
+
+  <div class="row">
+    <label>UID <input id="uidFilter" type="text" placeholder="uid..."></label>
+    <label>Limit <input id="limit" type="number" value="200" style="width:60px"></label>
+    <button id="reloadBtn">Reload</button>
+    <span>Rows: <strong id="count">0</strong></span>
+  </div>
+
+  <table>
+    <thead><tr><th>Time</th><th>User</th><th>Passage</th><th>Score</th><th>Text</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+
+<script>
+const API_BASE = "";
+  const TOKEN = sessionStorage.getItem('lux_admin_token');
+  const headers = TOKEN ? { 'x-admin-token': TOKEN } : {};
+
+  async function loadAttempts() {
+    const uid = document.getElementById('uidFilter').value;
+    const limit = document.getElementById('limit').value;
+    const res = await fetch(`${API_BASE}/api/admin-recent?limit=${limit}&uid=${uid}`, { headers });
+    if (!res.ok) return alert('Failed');
+    const json = await res.json();
+    const rows = json.rows || [];
+    
+    document.getElementById('count').textContent = rows.length;
+    document.getElementById('rows').innerHTML = rows.map(r => `
+      <tr>
+        <td>${new Date(r.ts).toLocaleString()}</td>
+        <td>${r.label || r.uid}</td>
+        <td>${r.passage_key}</td>
+        <td>${r.summary?.pron || '-'}</td>
+        <td>${r.text}</td>
+      </tr>
+    `).join('');
+  }
+
+  document.getElementById('reloadBtn').onclick = loadAttempts;
+  if (TOKEN) loadAttempts();
+  else {
+    const t = prompt('Admin Token');
+    if(t) { sessionStorage.setItem('lux_admin_token', t); location.reload(); }
+  }
+</script>
+</body>
+</html>

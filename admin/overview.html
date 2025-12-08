@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Cohort Overview (admin)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 16px; }
+    h1 { margin: 0 0 14px; }
+    .nav { display:flex; gap:10px; margin-bottom:10px; }
+    .bar { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+    table { border-collapse:collapse; width:100%; margin-top:12px; font-size:13px; }
+    th,td { border:1px solid #e7e7e7; padding:8px; }
+    th { background:#f7f9fc; }
+    .spark { width:100px; height:26px; }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <a href="/admin/overview.html" style="font-weight:bold">Cohort</a>
+    <a href="/admin/user.html">Attempts</a>
+    <a href="/admin/index.html">User Progress</a>
+  </nav>
+
+  <h1>Cohort Overview</h1>
+
+  <div class="bar">
+    <label>Quick range <select id="quick"><option value="14">14 days</option><option value="30">30 days</option></select></label>
+    <button id="reload">Reload</button>
+  </div>
+
+  <table id="grid">
+    <thead><tr><th>User</th><th>Attempts</th><th>Avg Pron</th><th>Last Seen</th><th>Trend</th></tr></thead>
+    <tbody></tbody>
+  </table>
+
+<script>
+const API_BASE = "";
+  const TOKEN = sessionStorage.getItem('lux_admin_token');
+  
+  async function loadCohort() {
+    const days = document.getElementById('quick').value;
+    const to = new Date();
+    const from = new Date(); from.setDate(from.getDate() - days);
+    
+    // We fetch a larger list to aggregate locally
+    const url = `${API_BASE}/api/admin-recent?limit=2000&from=${from.toISOString().slice(0,10)}`;
+    const res = await fetch(url, { headers: { 'x-admin-token': TOKEN } });
+    if (!res.ok) return alert('Load failed');
+    const json = await res.json();
+    
+    // Simple Aggregation
+    const map = new Map();
+    json.rows.forEach(r => {
+        if(!map.has(r.uid)) map.set(r.uid, { uid: r.uid, label: r.label, attempts:0, sum:0, scores:[], last: r.ts });
+        const entry = map.get(r.uid);
+        entry.attempts++;
+        if(r.summary?.pron) {
+            entry.sum += Number(r.summary.pron);
+            entry.scores.push(Number(r.summary.pron));
+        }
+    });
+
+    const tbody = document.querySelector('#grid tbody');
+    tbody.innerHTML = '';
+    
+    for(const u of map.values()) {
+        const avg = u.scores.length ? (u.sum / u.scores.length).toFixed(1) : '-';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><a href="/admin/index.html?uid=${u.uid}">${u.label || u.uid}</a></td>
+            <td>${u.attempts}</td>
+            <td>${avg}</td>
+            <td>${new Date(u.last).toLocaleString()}</td>
+            <td><canvas class="spark" width="100" height="26"></canvas></td>
+        `;
+        tbody.appendChild(tr);
+        
+        // Sparkline
+        if(u.scores.length > 1) {
+            new Chart(tr.querySelector('canvas'), {
+                type: 'line',
+                data: { labels: u.scores.map((_,i)=>i), datasets: [{ data: u.scores.reverse(), borderColor: 'blue', borderWidth: 1, pointRadius: 0 }] },
+                options: { responsive: false, plugins: { legend: {display:false} }, scales: { x:{display:false}, y:{display:false} } }
+            });
+        }
+    }
+  }
+
+  document.getElementById('reload').onclick = loadCohort;
+  if(TOKEN) loadCohort();
+  else {
+      const t = prompt('Admin Token');
+      if(t) { sessionStorage.setItem('lux_admin_token', t); location.reload(); }
+  }
+</script>
+</body>
+</html>

@@ -2,16 +2,24 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  // Base path (keeps paths relative so they work on Vercel/Netlify)
+  // Base path
   base: './', 
   build: {
-    outDir: 'dist',    // Production build goes here
+    outDir: 'dist',
     assetsDir: 'assets',
-    sourcemap: true,   // Helps debugging in production
-    emptyOutDir: true, // Cleans the dist folder before building
+    sourcemap: true,
+    emptyOutDir: true,
   },
   server: {
-    port: 3000,        // Keeps your familiar port
-    open: true,        // Opens browser automatically
+    port: 3000,
+    open: true,
+    // THE PROXY: This fixes the CORS / "Empty Dashboard" issue
+    proxy: {
+      '/api': {
+        target: 'https://luxury-language-api.vercel.app',
+        changeOrigin: true,
+        secure: false,
+      }
+    }
   }
 });
