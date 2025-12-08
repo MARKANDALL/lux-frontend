@@ -1,0 +1,120 @@
+/* lux-onboarding.css */
+/* Styles for the V2 Onboarding Overlay */
+
+#onboardingOverlay.ob-hidden {
+  display: none;
+}
+#onboardingOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+}
+#onboardingOverlay .ob-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+}
+#onboardingOverlay .ob-card {
+  position: relative;
+  max-width: 720px;
+  margin: 6vh auto;
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px 20px 18px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  font-family: inherit;
+}
+#onboardingOverlay .ob-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  border: 0;
+  background: transparent;
+  font-size: 24px;
+  cursor: pointer;
+}
+#onboardingOverlay .ob-slide {
+  min-height: 180px;
+}
+#onboardingOverlay .ob-hidden {
+  display: none;
+}
+#onboardingOverlay h2 {
+  margin: 4px 0 10px;
+  font-size: 22px;
+}
+#onboardingOverlay .ob-body {
+  margin: 0 0 12px;
+  line-height: 1.4;
+}
+#onboardingOverlay .ob-note {
+  color: #666;
+  font-size: 13px;
+}
+#onboardingOverlay .ob-list {
+  margin: 6px 0 6px 18px;
+}
+#onboardingOverlay .ob-cta {
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 0;
+  cursor: pointer;
+  background: #0078d7;
+  color: #fff;
+  font-weight: 700;
+}
+#onboardingOverlay .ob-cta.ob-cta--secondary {
+  background: #f3f3f3;
+  color: #333;
+}
+#onboardingOverlay .ob-footer {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+#onboardingOverlay .ob-nav {
+  border: 0;
+  background: #f3f3f3;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+#onboardingOverlay .ob-dots {
+  display: flex;
+  gap: 8px;
+}
+#onboardingOverlay .ob-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 0;
+  background: #d0d0d0;
+  cursor: pointer;
+}
+#onboardingOverlay .ob-dot[aria-current="true"] {
+  background: #333;
+}
+
+/* Keyboard focus */
+#onboardingOverlay .ob-iconbtn:focus-visible,
+#onboardingOverlay .ob-close:focus-visible,
+#onboardingOverlay .ob-nav:focus-visible,
+#onboardingOverlay .ob-cta:focus-visible,
+#onboardingOverlay .ob-dot:focus-visible {
+  outline: 2px solid var(--ob-accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--ob-ring-strong);
+}
+
+@media (max-width: 560px) {
+  #onboardingOverlay .ob-card {
+    margin: 3vh 12px;
+    padding: 18px 14px 12px;
+  }
+  #onboardingOverlay h2 {
+    font-size: 19px;
+  }
+}
