@@ -29,7 +29,7 @@
       }
     </style>
 
-    <style>
+<style>
       :root {
         --lux-tts-panel-w: 360px;
         --lux-tts-panel-max-w: min(92vw, 380px);
@@ -50,14 +50,20 @@
         border-bottom: 1px solid rgba(0, 0, 0, 0.06);
         border-bottom-left-radius: var(--lux-tts-radius);
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
-        transform: translateX(calc(100% - 75px));
+        
+        /* UPDATED: 100px ensures the tab + part of the white box is visible */
+        transform: translateX(calc(100% - 100px));
+        
         transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
         display: inline-block;
         overflow: visible;
       }
+      
+      /* UPDATED: -20px gives breathing room from the scrollbar when open */
       html.lux-tts-open .lux-tts-panel {
-        transform: translateX(0);
+        transform: translateX(-20px);
       }
+      
       .lux-tts-panel #tts-controls {
         padding: 14px 16px 16px;
         height: auto;
