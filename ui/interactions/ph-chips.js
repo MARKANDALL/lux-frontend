@@ -1,11 +1,12 @@
 // ui/interactions/ph-chips.js
 import { norm } from "../../src/data/phonemes/core.js";
 import { getPhonemeAssetByIPA } from "../../src/data/phonemes/assets.js";
-import { phonemeDetailsByIPA } from "../../src/data/phonemes/details.js";
+// ✅ FIXED: Imported articulatorPlacement
+import { phonemeDetailsByIPA, articulatorPlacement } from "../../src/data/phonemes/details.js";
 
 /**
  * Builds/refreshes tooltip content for each phoneme chip.
- * FIX APPLIED: Removed auto-play logic to prevent network flood.
+ * SAFETY: Uses preload="metadata" to show first frame without buffering entire video.
  */
 export async function initPhonemeChipBehavior(
   containerSelector = "#prettyResult"
@@ -13,28 +14,30 @@ export async function initPhonemeChipBehavior(
   const root = document.querySelector(containerSelector);
   if (!root) return;
 
+  // Select only chips that haven't been hydrated yet
   const CHIP_SEL = [
-    "#resultBody td:nth-child(4) .phoneme-chip.tooltip",
-    "#prettyResult .phoneme-chip.tooltip",
+    "#resultBody td:nth-child(4) .phoneme-chip.tooltip:not([data-hydrated-ipa])",
+    "#prettyResult .phoneme-chip.tooltip:not([data-hydrated-ipa])",
   ].join(",");
 
   const chips = [...root.querySelectorAll(CHIP_SEL)];
   if (!chips.length) return;
 
   for (const chip of chips) {
-    const currentMark = chip.getAttribute("data-hydrated-ipa") || "";
-
     const ipa = deriveIPA(chip);
     if (!ipa) continue;
-    if (currentMark === ipa) continue;
 
-    // IMPORTANT: cache the true IPA on the chip for future passes
+    // Cache the IPA so we don't process this chip again
+    chip.setAttribute("data-hydrated-ipa", ipa);
     chip.setAttribute("data-ipa", ipa);
 
     const asset = getPhonemeAssetByIPA(ipa);
-    const details = phonemeDetailsByIPA[norm(ipa)] || phonemeDetailsByIPA[ipa];
+    
+    // ✅ FIXED: Check Coaching Details OR Standard Placement
+    const key = norm(ipa);
+    const details = phonemeDetailsByIPA[key] || articulatorPlacement[key] || {};
 
-    // Ensure tooltip container exists
+    // Create the tooltip container if missing
     let tip = chip.querySelector(".tooltiptext");
     if (!tip) {
       tip = document.createElement("span");
@@ -42,7 +45,11 @@ export async function initPhonemeChipBehavior(
       chip.appendChild(tip);
     }
 
-    // FIX: preload="none" prevents browser from fetching 500 videos at once
+    // Determine tip text (prefer 'tip', fall back to 'label' or nothing)
+    const tipText = details.tip || details.label || "";
+
+    // Render content safely
+    // ✅ FIXED: preload="metadata" ensures the first frame renders (no black box)
     tip.innerHTML = `
       <div class="ph-tooltip" style="max-width:560px;max-height:420px;overflow:auto">
         <div class="ph-head" style="padding:8px 10px;font:600 14px system-ui">
@@ -54,33 +61,29 @@ export async function initPhonemeChipBehavior(
           }
         </div>
         ${
-          details?.tip
-            ? `<div class="ph-tip" style="padding:0 10px 8px">${escapeHTML(
-                details.tip
-              )}</div>`
+          tipText
+            ? `<div class="ph-tip" style="padding:0 10px 8px">${escapeHTML(tipText)}</div>`
             : ""
         }
         ${
           asset?.video
-            ? `<video class="ph-video" playsinline muted preload="none" style="display:block;width:100%;height:auto"></video>`
+            ? `<video class="ph-video" playsinline muted preload="metadata" style="display:block;width:100%;height:auto"></video>`
             : `<div style="padding:10px;color:#b00">No demo video available for ${ipa}</div>`
         }
       </div>
     `;
 
+    // Set src
     const vid = tip.querySelector(".ph-video");
     if (vid && asset?.video) {
       vid.src = asset.video;
       vid.poster = asset.poster || "";
-      // 🛑 DELETED: The auto-play/pause logic was here. 
-      // Removing it stops the network flood.
     }
-
-    chip.setAttribute("data-hydrated-ipa", ipa);
   }
 }
 
-// Phones we actually support (canonical IPA + common Azure/ASCII)
+// --- Helpers ---
+
 const KNOWN_PHONES = new Set([
   "p","b","t","d","k","g","m","n","f","v","s","z","h","l","ɹ","r","w","j","ŋ",
   "θ","ð","ʃ","ʒ","tʃ","dʒ","ɾ","ʔ","ʍ",
@@ -90,8 +93,7 @@ const KNOWN_PHONES = new Set([
   "th","dh","sh","zh","ch","jh","dx","ng","hh","wh","q","y"
 ]);
 
-const PHONE_RX =
-  /\b([a-zɪɛæɑɔʊəɝɚʃʒŋɾʔ]{1,2}|tʃ|dʒ|eɪ|aɪ|ɔɪ|aʊ|oʊ)\b/i;
+const PHONE_RX = /\b([a-zɪɛæɑɔʊəɝɚʃʒŋɾʔ]{1,2}|tʃ|dʒ|eɪ|aɪ|ɔɪ|aʊ|oʊ)\b/i;
 
 function deriveIPA(chip) {
   // 1) Prefer explicit attributes
@@ -105,7 +107,6 @@ function deriveIPA(chip) {
   if (explicitRaw) {
     const normed = norm(explicitRaw);
     if (KNOWN_PHONES.has(normed)) return normed;
-
     const mExp = String(explicitRaw).match(PHONE_RX);
     if (mExp) {
       const candidate = norm(mExp[1]);
@@ -114,7 +115,7 @@ function deriveIPA(chip) {
     return "";
   }
 
-  // 2) Fallback: look at chip label
+  // 2) Fallback: look at chip text content
   const labelNode = [...chip.childNodes].find(
     (n) => n.nodeType === Node.TEXT_NODE && n.textContent.trim()
   );

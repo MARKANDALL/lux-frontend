@@ -1,13 +1,5 @@
 // ui/views/index.js
-// Canonical results renderer entrypoint for Lux Pronunciation Tool.
-// - Uses Phase-E renderer (ui/views/render-modern.js → render-core.js)
-//   which preserves the legacy pill/table layout.
-// - Hydrates phoneme chips (initPhonemeChipBehavior) after each render.
-// - Adds phoneme hover boot (setupPhonemeHover) once per page load.
-// - Delegates multi-part summaries to ui/views/summary-shell.js
-//   (canonical summary + DB-tracking footer shell).
-// - Exposes ES module exports only.
-//   NOTE: Legacy window.* globals are attached ONLY in features/results/index.js.
+// Canonical results renderer entrypoint.
 
 import {
   showPrettyResults as legacyShowPrettyResults,
@@ -38,27 +30,17 @@ function bootPhonemeHoverOnce() {
 /* ------------ phoneme chip hydration ------------ */
 
 function hydratePhonemeChips() {
-  // CRITICAL FIX: Temporarily disabled to stop Memory Leak / Video Loop
-  // This prevents the app from creating thousands of video players and crashing RAM.
-  // Once ui/interactions/ph-chips.js is fixed, we can uncomment this.
-  
-  console.log("[LUX] ⚠️ PHONEME CHIP HYDRATION DISABLED TO PREVENT CRASH");
-  return; 
-
-  /* // --- ORIGINAL CODE BELOW (DISABLED) ---
+  // ✅ ENABLED: Safe version of ph-chips.js is now in place.
   try {
     if (typeof initPhonemeChipBehavior === "function") {
       initPhonemeChipBehavior();
-      console.log("[LUX] phoneme chips hydrated");
+      // console.log("[LUX] phoneme chips hydrated"); // Optional log
     } else {
-      console.log(
-        "[LUX] ph-chips: initPhonemeChipBehavior not found on module"
-      );
+      console.warn("[LUX] ph-chips: initPhonemeChipBehavior not found");
     }
   } catch (e) {
     console.warn("[LUX] phoneme chip hydration failed", e);
   }
-  */
 }
 
 /* ------------ small local helpers ------------ */
@@ -135,16 +117,9 @@ export function showDetailedAnalysisSingle(result) {
   bootPhonemeHoverOnce();
 }
 
-/**
- * Summary front door:
- * - For multi-part results, delegate to ui/views/summary-shell.js
- * (canonical summary + DB-tracking footer shell).
- * - For single results / fallback, show the last rendered result table.
- */
 export function showSummary({ allPartsResults, currentParts } = {}) {
-  // Canonical multi-part path (Phase-E summary + DB shell)
+  // Canonical multi-part path
   if (Array.isArray(allPartsResults) && allPartsResults.length) {
-    // Keep lastResult aligned with “latest part” for raw view + fallbacks.
     const tail = allPartsResults[allPartsResults.length - 1];
     if (tail) lastResult = tail;
 
@@ -159,13 +134,12 @@ export function showSummary({ allPartsResults, currentParts } = {}) {
     return;
   }
 
-  // Fallback: if we have no parts array, just re-render the last result.
+  // Fallback
   if (lastResult) {
     showPrettyResults(lastResult);
   }
 }
 
-// Raw JSON view (used by recording.js / legacy UI)
 export function showRawData() {
   if (!lastResult) return;
   const host = getContainer();
