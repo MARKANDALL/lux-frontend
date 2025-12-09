@@ -1,8 +1,8 @@
 // app-core/passages.js
+// Controller: Manages passage state and orchestrates DOM updates.
+
 import { passages } from "../src/data/index.js";
 import {
-  $,
-  $$,
   setCustom,
   setPassageKey,
   setPartIdx,
@@ -13,154 +13,124 @@ import {
   isCustom,
 } from "./state.js";
 
-/* ---------------- helpers ---------------- */
+import * as DOM from "./passages-dom.js";
+
+/* ---------------- Logic / Helpers ---------------- */
+
+const TIPS = {
+  curated: `These built-in texts were designed to cover most English sounds. 
+Practicing them gives a balanced baseline and helps reveal strengths & weaknesses.`,
+  custom: `Type anything you want to practice—speeches, interviews, tricky words, 
+or everyday phrases. We’ll score words & phonemes and add prosody feedback. 
+Tip: shorter sentences (≈10–15 s) give the clearest results.`
+};
 
 export function ensureCustomOption() {
-  const passageSelect = $("#passageSelect");
-  if (!passageSelect) return;
-
-  // 1. Create the option if missing
-  if (!passageSelect.querySelector('option[value="custom"]')) {
-    const opt = document.createElement("option");
-    opt.value = "custom";
-    opt.textContent = "✍️ Write your own…";
-    passageSelect.insertBefore(opt, passageSelect.firstChild);
-  }
-
-  // 2. FORCE SELECT: If state is custom, make sure the dropdown matches
+  DOM.ensureCustomOptionInDOM();
   if (isCustom) {
-    passageSelect.value = "custom";
+    DOM.forceSelectCustom();
   }
 }
 
 export function isCustomMode() {
-  const passageSelect = $("#passageSelect");
+  // Prefer state, fallback to DOM check
   if (typeof isCustom === "boolean") return isCustom;
-  const val = passageSelect?.value || "";
-  const label = passageSelect?.selectedOptions?.[0]?.textContent || "";
-  return val === "custom" || /write.*own/i.test(label);
+  return DOM.isSelectCustom();
 }
 
 export function updatePartsInfoTip() {
-  const refInput = $("#referenceText");
-  const passageSel = $("#passageSelect");
-  const partsTip = $("#partsInfoTip");
-  const partsText = partsTip?.querySelector(".tooltiptext");
-  if (!partsTip) return;
-
-  const TIP_CURATED = `These built-in texts were designed to cover most English sounds. 
-Practicing them gives a balanced baseline and helps reveal strengths & weaknesses.`;
-  const TIP_CUSTOM = `Type anything you want to practice—speeches, interviews, tricky words, 
-or everyday phrases. We’ll score words & phonemes and add prosody feedback (stress, pauses, rhythm). 
-Tip: shorter sentences (≈10–15 s) give the clearest results.`;
-
-  const hasText = !!refInput?.value?.trim();
+  const hasText = !!DOM.getInputValue().trim();
+  const hasSelection = !!DOM.getSelectValue();
   const custom = isCustomMode();
-  partsTip.classList.toggle("hidden", !(hasText || passageSel?.value));
-  if (partsText) partsText.innerHTML = custom ? TIP_CUSTOM : TIP_CURATED;
+
+  DOM.renderInfoTip({
+    visible: hasText || hasSelection,
+    textHTML: custom ? TIPS.custom : TIPS.curated
+  });
 }
 
 /**
- * Multi-part navigation + summary button controller.
+ * Calculates navigation state and updates UI.
  */
 export function togglePartNav(enabled) {
-  const nextBtn = $("#nextPartBtn");
-  const nextMsg = $("#nextPartMsg");
-  const summaryBtn = $("#showSummaryBtn");
-  const tip = $("#partsInfoTip");
-
   const total = Array.isArray(currentParts) ? currentParts.length : 0;
   const isMulti = enabled && total > 1;
 
-  // Summary is controlled exclusively by markPartCompleted.
-  if (summaryBtn) {
-    summaryBtn.style.display = "none";
-    summaryBtn.disabled = false;
-  }
-
-  tip?.classList.toggle("hidden", !isMulti);
-
+  // 1. Tip Visibility handled by updatePartsInfoTip usually, 
+  // but we might want to hide it if not multi? 
+  // (Original logic hid it if !isMulti).
   if (!isMulti) {
-    if (nextBtn) {
-      nextBtn.style.display = "none";
-      nextBtn.disabled = true;
-    }
-    if (nextMsg) {
-      nextMsg.textContent = "";
-      nextMsg.style.display = "none";
-    }
+    DOM.updateNavVisibility({ 
+      showNext: false, 
+      enableNext: false, 
+      nextMsgText: "",
+      showSummary: true // Default to showing summary btn if single part
+    });
     return;
   }
 
   const atLast = currentPartIdx >= total - 1;
 
-  if (nextBtn) {
-    // No "Next" on the final part.
-    nextBtn.style.display = atLast ? "none" : "";
-    nextBtn.disabled = !atLast;
-  }
-
-  // Initial State: "Record something..." (Grey/Warn)
-  if (nextMsg) {
-    if (!atLast) {
-      nextMsg.textContent = "Record to continue.";
-      nextMsg.style.display = "inline-block";
-      nextMsg.style.color = "#666"; 
-      nextMsg.style.marginLeft = "10px";
-      nextMsg.style.fontWeight = "normal";
-    } else {
-      nextMsg.textContent = "";
-      nextMsg.style.display = "none";
-    }
-  }
+  // 2. Navigation UI
+  DOM.updateNavVisibility({
+    showNext: !atLast,
+    enableNext: !atLast, // Enabled if not at last
+    nextMsgText: !atLast ? "Record to continue." : "",
+    nextMsgColor: "#666",
+    showSummary: false // Hidden until completion
+  });
 }
 
-/* ---------------- core UI ---------------- */
+/* ---------------- Core Actions ---------------- */
 
 export function showCurrentPart({ preserveExistingInput = false } = {}) {
-  const suggested = $("#suggestedSentence");
-  const input = $("#referenceText");
-  const progress = $("#partProgress");
-  const label = $("#passageLabel");
-  if (!suggested || !input || !progress) return;
+  const total = Array.isArray(currentParts) ? currentParts.length : 0;
 
   if (isCustom) {
     const txt = currentParts?.[0] ?? "";
-    if (!preserveExistingInput) input.value = txt;
-    suggested.textContent = "";
-    progress.textContent = "Part 1 of 1";
-    if (label) {
-      label.style.display = "";
-      label.textContent = "Your text:";
+    
+    DOM.renderPartState({
+      text: "", // Custom mode clears "suggested" text
+      progressText: "Part 1 of 1",
+      labelText: "Your text:",
+      showLabel: true,
+      preserveInput: preserveExistingInput // Don't overwrite what user is typing
+    });
+    
+    // Ensure input has value if we aren't preserving it
+    if (!preserveExistingInput && DOM.getInputValue() !== txt) {
+       // logic handled by renderPartState usually, but custom logic specific here:
+       // actually renderPartState does: if (!preserve) input.value = text
+       // For custom, text is passed as "" above to 'suggested', wait.
+       // Let's fix the call:
+       DOM.qs("#referenceText").value = txt; 
     }
+
     togglePartNav(false);
   } else {
+    // Curated Mode
     const text = currentParts[currentPartIdx];
-    suggested.textContent = text;
-    input.value = text;
-    progress.textContent = `Part ${currentPartIdx + 1} of ${
-      currentParts.length
-    }`;
-    if (label) {
-      const name = passages[currentPassageKey]?.name || "Passage";
-      label.style.display = currentPartIdx === 0 ? "" : "none";
-      label.textContent = `${name}:`;
-    }
-    togglePartNav(currentParts.length > 1);
+    const name = passages[currentPassageKey]?.name || "Passage";
+    
+    DOM.renderPartState({
+      text: text,
+      progressText: `Part ${currentPartIdx + 1} of ${total}`,
+      labelText: `${name}:`,
+      showLabel: currentPartIdx === 0,
+      preserveInput: false
+    });
+    
+    togglePartNav(total > 1);
   }
 }
 
 export function setPassage(key, { clearInputForCustom = false } = {}) {
-  const refInput = $("#referenceText");
-  const pretty = $("#prettyResult");
-  const status = $("#status");
-
   setCustom(key === "custom");
   setPassageKey(key);
   setPartIdx(0);
 
   if (isCustom) {
-    const nextText = clearInputForCustom ? "" : refInput?.value ?? "";
+    const nextText = clearInputForCustom ? "" : DOM.getInputValue();
     setParts([nextText]);
     showCurrentPart({ preserveExistingInput: !clearInputForCustom });
   } else {
@@ -169,45 +139,7 @@ export function setPassage(key, { clearInputForCustom = false } = {}) {
     showCurrentPart();
   }
 
-  if (pretty) pretty.innerHTML = "";
-  if (status) status.textContent = "Not recording";
-
-  const aiBox = $("#aiFeedback");
-  if (aiBox) {
-    aiBox.style.display = "none";
-    aiBox.innerHTML = "";
-  }
-  const showMore = $("#showMoreBtn");
-  if (showMore) showMore.style.display = "none";
-}
-
-export function wirePassageSelect() {
-  const passageSelect = $("#passageSelect");
-  const refInput = $("#referenceText");
-
-  passageSelect?.addEventListener("change", function () {
-    setPassage(this.value, { clearInputForCustom: this.value === "custom" });
-    updatePartsInfoTip();
-  });
-
-  passageSelect?.addEventListener("click", () => {
-    const suggestionEmpty = !$("#suggestedSentence")?.textContent?.trim();
-    if (suggestionEmpty && !isCustom) showCurrentPart();
-  });
-
-  refInput?.addEventListener("input", () => {
-    if (!isCustom) {
-      if (passageSelect) passageSelect.value = "custom";
-      setPassage("custom", { clearInputForCustom: false });
-    }
-    if (isCustom) {
-      setParts([refInput.value]);
-      setPartIdx(0);
-      const progress = $("#partProgress");
-      if (progress) progress.textContent = "Part 1 of 1";
-    }
-    updatePartsInfoTip();
-  });
+  DOM.clearResultsUI();
 }
 
 export function goToNextPart() {
@@ -215,26 +147,10 @@ export function goToNextPart() {
   if (currentPartIdx < currentParts.length - 1) {
     setPartIdx(currentPartIdx + 1);
     showCurrentPart();
-    const pretty = $("#prettyResult");
-    const status = $("#status");
-    if (pretty) pretty.innerHTML = "";
-    if (status) status.textContent = "Not recording";
+    DOM.clearResultsUI();
   }
 }
 
-export function wireNextBtn() {
-  $("#nextPartBtn")?.addEventListener("click", goToNextPart);
-
-  // Ensure Next / Summary / tip visibility is correct on boot.
-  const total = Array.isArray(currentParts) ? currentParts.length : 0;
-  togglePartNav(total > 1);
-  updatePartsInfoTip();
-}
-
-/**
- * Called by the recorder pipeline after a successful Azure assessment.
- * RECONNECTED: Shows success message ("Finished...") instead of hiding it.
- */
 export function markPartCompleted() {
   if (isCustom) return;
 
@@ -243,41 +159,69 @@ export function markPartCompleted() {
 
   const atLast = currentPartIdx >= total - 1;
 
-  const nextBtn = $("#nextPartBtn");
-  const nextMsg = $("#nextPartMsg");
-  const summaryBtn = $("#showSummaryBtn");
-
   if (!atLast) {
-    // Middle parts: unlock Next
-    if (nextBtn) {
-      nextBtn.disabled = false;
-      nextBtn.style.display = "";
-    }
-    // SUCCESS STATE:
-    if (nextMsg) {
-      nextMsg.textContent = "Finished: Ready for your next one?";
-      nextMsg.style.display = "inline-block";
-      nextMsg.style.marginLeft = "12px";
-      nextMsg.style.color = "#15803d"; // Success Green
-      nextMsg.style.fontWeight = "700";
-    }
-    if (summaryBtn) {
-      summaryBtn.style.display = "none";
-    }
+    // Middle parts: Unlock Next, Show Success Msg
+    DOM.updateNavVisibility({
+      showNext: true,
+      enableNext: true,
+      nextMsgText: "Finished: Ready for your next one?",
+      nextMsgColor: "#15803d", // Success Green
+      showSummary: false
+    });
   } else {
-    // Final part completed: hide Next, show Summary.
-    if (nextBtn) {
-      nextBtn.disabled = true;
-      nextBtn.style.display = "none";
-    }
-    if (nextMsg) {
-      nextMsg.textContent = "";
-      nextMsg.style.display = "none";
-    }
-    if (summaryBtn) {
-      // ✅ FIX: Force "inline-block" to override CSS "none"
-      summaryBtn.style.display = "inline-block";
-      summaryBtn.disabled = false;
-    }
+    // Final part: Hide Next, Show Summary
+    DOM.updateNavVisibility({
+      showNext: false,
+      enableNext: false,
+      nextMsgText: "",
+      showSummary: true
+    });
   }
+}
+
+/* ---------------- Wiring ---------------- */
+
+export function wirePassageSelect() {
+  DOM.wireSelectEvents({
+    onChange: (val) => {
+      setPassage(val, { clearInputForCustom: val === "custom" });
+      updatePartsInfoTip();
+    },
+    onClick: () => {
+      // If suggested text is empty but we aren't custom, refresh UI
+      // (Handles edge case where UI might be stale)
+      const empty = !DOM.qs("#suggestedSentence")?.textContent?.trim();
+      if (empty && !isCustom) showCurrentPart();
+    }
+  });
+
+  DOM.wireInputEvents({
+    onInput: (val) => {
+      // Auto-switch to custom if typing
+      if (!isCustom) {
+        DOM.forceSelectCustom();
+        setPassage("custom", { clearInputForCustom: false });
+      }
+      // Update state
+      setParts([val]);
+      setPartIdx(0);
+      DOM.renderPartState({ 
+        text: "", 
+        progressText: "Part 1 of 1", 
+        labelText: "Your text:", 
+        showLabel: true,
+        preserveInput: true 
+      });
+      updatePartsInfoTip();
+    }
+  });
+}
+
+export function wireNextBtn() {
+  DOM.wireNextBtnEvent(goToNextPart);
+
+  // Initial Sync
+  const total = Array.isArray(currentParts) ? currentParts.length : 0;
+  togglePartNav(total > 1);
+  updatePartsInfoTip();
 }
