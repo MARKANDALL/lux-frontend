@@ -1,11 +1,11 @@
-// app-core/recording.js
+// features/recorder/index.js
 // The Orchestrator: Connects DOM <-> Media <-> API <-> State.
 
-import { logError, debug as logDebug } from "./lux-utils.js";
+import { logError, debug as logDebug } from "../../app-core/lux-utils.js";
 
-// 1. Modules
-import * as DOM from "./rec-dom.js";
-import * as Mic from "./rec-media.js";
+// 1. Modules (Local Siblings)
+import * as DOM from "./ui.js";
+import * as Mic from "./media.js";
 
 // 2. State & Data
 import { 
@@ -16,14 +16,14 @@ import {
   currentParts,
   getSessionId,
   pushPartResult
-} from "./state.js";
+} from "../../app-core/state.js";
 
 // 3. APIs & Features
-import { assessPronunciation, saveAttempt, getUID } from "../api/index.js";
-import { showPrettyResults } from "../features/results/index.js";
-import { getAIFeedback } from "../ui/ui-ai-ai-logic.js";
-import { markPartCompleted } from "./passages.js"; 
-import { bringInputToTop } from "../helpers/index.js"; 
+import { assessPronunciation, saveAttempt, getUID } from "../../api/index.js";
+import { showPrettyResults } from "../results/index.js"; // Point to results
+import { getAIFeedback } from "../../ui/ui-ai-ai-logic.js";
+import { markPartCompleted } from "../passages/index.js"; // Point to new passages location
+import { bringInputToTop } from "../../helpers/index.js"; 
 
 let isInitialized = false;
 
@@ -58,15 +58,12 @@ async function handleRecordingComplete(audioBlob) {
   try {
     const text = DOM.ui.textarea ? DOM.ui.textarea.value.trim() : "";
 
-    // 1. Scroll input to top
     bringInputToTop();
 
-    // 2. Hydrate Audio Sink (Self-Playback)
     if (window.__attachLearnerBlob) {
       window.__attachLearnerBlob(audioBlob);
     }
 
-    // 3. UI: Set Status
     DOM.setStatus("Analyzing...");
     
     // --- API CALL ---
@@ -79,12 +76,10 @@ async function handleRecordingComplete(audioBlob) {
 
     logDebug("AZURE RESULT RECEIVED", result);
 
-    // 4. Save to State (Session Memory)
     if (!isCustom && currentParts && currentParts.length > 1) {
        pushPartResult(currentPartIdx, result);
     }
 
-    // 5. Update UI
     DOM.setStatus("Not recording");
     DOM.setVisualState("idle");
 

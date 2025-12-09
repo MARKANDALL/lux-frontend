@@ -1,14 +1,14 @@
 // app-core/boot.js
 
-import { nukeSWInDev, $, allPartsResults, currentParts } from "./state.js"; // ✅ CLEANED: Added imports
+import { nukeSWInDev, $, allPartsResults, currentParts } from "./state.js";
 import {
   ensureCustomOption,
   updatePartsInfoTip,
   wirePassageSelect,
   wireNextBtn,
   showCurrentPart, 
-} from "./passages.js";
-import { initLuxRecorder } from "./recording.js";
+} from "../features/passages/index.js"; // UPDATED
+import { initLuxRecorder } from "../features/recorder/index.js"; // UPDATED
 import { initUI } from "../ui/ui-shell-typing.js";
 import { initOnboarding } from "../ui/ui-shell-onboarding.js";
 import { showSummary } from "../ui/views/index.js";
@@ -70,7 +70,6 @@ export function bootApp() {
     // Summary button behavior & FORCE VISIBLE
     const summaryBtn = $("#showSummaryBtn");
     if (summaryBtn) {
-      // ✅ CLEANED: Uses state imports, no globals
       summaryBtn.onclick = () => {
         showSummary({ allPartsResults: allPartsResults, currentParts: currentParts });
       };

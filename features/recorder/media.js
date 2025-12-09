@@ -1,15 +1,9 @@
-// app-core/rec-media.js
-// Wraps the browser's MediaRecorder API.
-
-import { logError } from "./lux-utils.js";
+// features/recorder/media.js
+import { logError } from "../../app-core/lux-utils.js";
 
 let mediaRecorder = null;
 let recordedChunks = [];
 
-/**
- * Request mic access and start recording.
- * @param {Function} onStopCallback - called with (audioBlob) when stopped
- */
 export async function startMic(onStopCallback) {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -22,9 +16,7 @@ export async function startMic(onStopCallback) {
     };
 
     mediaRecorder.onstop = () => {
-      // Kill the stream tracks (turn off the red dot in tab)
       stream.getTracks().forEach(t => t.stop());
-      
       const blob = new Blob(recordedChunks, { type: "audio/webm" });
       if (onStopCallback) onStopCallback(blob);
     };

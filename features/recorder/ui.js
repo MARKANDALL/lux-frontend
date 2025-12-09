@@ -1,7 +1,7 @@
-// app-core/rec-dom.js
+// features/recorder/ui.js
 // Responsible for all DOM element lookups and UI state updates.
 
-import { setText, logStatus } from "./lux-utils.js";
+import { setText, logStatus } from "../../app-core/lux-utils.js";
 
 // --- Element Getters ---
 export const ui = {
@@ -24,19 +24,16 @@ export function setVisualState(state) {
   if (!recordBtn || !stopBtn) return;
 
   if (state === "recording") {
-    // Record: disabled + glow, Stop: enabled + armed
     recordBtn.disabled = true;
     recordBtn.classList.add("record-intro", "record-glow");
     stopBtn.disabled = false;
     stopBtn.classList.add("is-armed");
   } else if (state === "processing") {
-    // Record: disabled, Stop: disabled + spinner
-    recordBtn.disabled = false; // Optional: keep disabled if you want
+    recordBtn.disabled = false;
     recordBtn.classList.remove("record-intro", "record-glow");
     stopBtn.disabled = true;
     stopBtn.classList.add("processing");
   } else {
-    // Idle
     recordBtn.disabled = false;
     recordBtn.classList.remove("record-intro", "record-glow");
     stopBtn.disabled = true;

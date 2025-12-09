@@ -1,9 +1,9 @@
-// app-core/passages-dom.js
+// features/passages/dom.js
 // Pure DOM manipulation for passage navigation and inputs.
 
-import { qs, setText, setVisible } from "./lux-utils.js";
+// UPDATED IMPORT: Point back to app-core
+import { qs, setText, setVisible } from "../../app-core/lux-utils.js";
 
-// Helper to get common elements
 const ui = {
   get select() { return qs("#passageSelect"); },
   get input() { return qs("#referenceText"); },
@@ -74,7 +74,7 @@ export function renderPartState({
   showLabel, 
   preserveInput 
 }) {
-  if (ui.suggested) ui.suggested.textContent = text; // Hidden "ghost" text
+  if (ui.suggested) ui.suggested.textContent = text; 
   if (ui.input && !preserveInput) ui.input.value = text;
   if (ui.progress) ui.progress.textContent = progressText;
   
@@ -101,16 +101,11 @@ export function updateNavVisibility({ showNext, enableNext, nextMsgText, nextMsg
   }
 
   if (ui.summaryBtn) {
-    // Summary button visibility is often managed by CSS/Globals, 
-    // but we support explicit toggling here.
     if (showSummary !== undefined) {
         setVisible(ui.summaryBtn, showSummary);
         ui.summaryBtn.disabled = !showSummary;
     }
   }
-  
-  // Toggle tip visibility based on "multi-part" context passed implicitly?
-  // Actually, let's keep tip logic separate in renderInfoTip.
 }
 
 export function clearResultsUI() {
