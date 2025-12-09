@@ -1,8 +1,11 @@
 // features/passages/index.js
 // Controller: Manages passage state and orchestrates DOM updates.
 
-// UPDATED IMPORTS:
+// 1. DATA IMPORT
+// (Ensure this path matches where your data lives. If "src" isn't in your folder structure, remove it)
 import { passages } from "../../src/data/index.js"; 
+
+// 2. STATE IMPORT
 import {
   setCustom,
   setPassageKey,
@@ -12,9 +15,10 @@ import {
   currentPartIdx,
   currentPassageKey,
   isCustom,
-} from "../../app-core/state.js"; // Point back to app-core
+} from "../../app-core/state.js"; 
 
-import * as DOM from "./dom.js"; // Sibling import
+// 3. DOM IMPORT (Corrected to "import * as" for named exports)
+import * as DOM from "./dom.js"; 
 
 /* ---------------- Logic / Helpers ---------------- */
 
@@ -91,7 +95,9 @@ export function showCurrentPart({ preserveExistingInput = false } = {}) {
     });
     
     if (!preserveExistingInput && DOM.getInputValue() !== txt) {
-       DOM.qs("#referenceText").value = txt; 
+       // FIX: Replaced broken "DOM.qs" with standard "document.querySelector"
+       const refInput = document.querySelector("#referenceText");
+       if (refInput) refInput.value = txt; 
     }
 
     togglePartNav(false);
@@ -173,7 +179,9 @@ export function wirePassageSelect() {
       updatePartsInfoTip();
     },
     onClick: () => {
-      const empty = !DOM.qs("#suggestedSentence")?.textContent?.trim();
+      // FIX: Replaced broken "DOM.qs" with standard "document.querySelector"
+      const el = document.querySelector("#suggestedSentence");
+      const empty = !el?.textContent?.trim();
       if (empty && !isCustom) showCurrentPart();
     }
   });

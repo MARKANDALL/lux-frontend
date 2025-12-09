@@ -20,9 +20,9 @@ import {
 
 // 3. APIs & Features
 import { assessPronunciation, saveAttempt, getUID } from "../../api/index.js";
-import { showPrettyResults } from "../results/index.js"; // Point to results
+import { showPrettyResults } from "../results/index.js"; 
 import { getAIFeedback } from "../../ui/ui-ai-ai-logic.js";
-import { markPartCompleted } from "../passages/index.js"; // Point to new passages location
+import { markPartCompleted } from "../passages/index.js"; 
 import { bringInputToTop } from "../../helpers/index.js"; 
 
 let isInitialized = false;
@@ -59,6 +59,16 @@ async function handleRecordingComplete(audioBlob) {
     const text = DOM.ui.textarea ? DOM.ui.textarea.value.trim() : "";
 
     bringInputToTop();
+
+    // --- AUDIO HANDOFF ---
+    // We send the audio to the hidden player so the Top-Left Panel can find it.
+    const audioEl = document.getElementById("playbackAudio");
+    
+    if (audioEl) {
+        const audioUrl = URL.createObjectURL(audioBlob);
+        audioEl.src = audioUrl; // This triggers the top-left panel to load the sound.
+    }
+    // ---------------------
 
     if (window.__attachLearnerBlob) {
       window.__attachLearnerBlob(audioBlob);

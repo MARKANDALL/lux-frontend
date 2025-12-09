@@ -73,6 +73,8 @@
       <label>
         Select Passage:
         <select id="passageSelect">
+          <option value="" disabled selected>Select Passage...</option>
+          
           <option value="rainbow">Rainbow Passage</option>
           <option value="grandfather">Grandfather Passage</option>
           <option value="minLR">Phoneme Test: L vs R</option>
@@ -81,7 +83,12 @@
           <option value="wordList">Challenging Word List</option>
           <option value="sentences">Challenging Sentences</option>
           <option value="shortStory">Short Story Practice</option>
+          
+          <option disabled>-------------------</option>
+          <option value="write-own">Write Your Own...</option>
+          <option value="clear" style="color:red;">Clear Text / Reset</option>
         </select>
+        
         <span id="partsInfoTip" class="tooltip hidden" style="margin-left: 10px; cursor: pointer">
           (?)
           <span class="tooltiptext" style="font-size: 1em">
@@ -164,10 +171,158 @@
 
     <div id="tts-controls" data-luxHidden="1"></div>
 
-    <script type="module" src="./app-core/index.js"></script>
+    <script type="module">
+      import { 
+        wirePassageSelect, 
+        wireNextBtn
+      } from './features/passages/index.js';
+
+      import { 
+        initLuxRecorder, 
+        wireRecordingButtons 
+      } from './features/recorder/index.js';
+
+      import { 
+        showSummary 
+      } from './features/results/index.js';
+
+      // --- VISUALS: Typewriter Effect (Updated & Speeded Up) ---
+      let typewriterTimeout; // To track and kill the animation
+
+      function startTypewriter() {
+        const input = document.getElementById('referenceText');
+        if (!input) return;
+
+        // The "Near Infinite" list of suggestions
+        const phrases = [
+          "Paste or type everything you’ll read here...",
+          "Try the Rainbow Passage to test all phonemes...",
+          "Focus on difficult words you struggle with...",
+          "Select a passage from the menu above...",
+          "Practice your elevator pitch...",
+          "Rehearse your upcoming presentation script...",
+          "Read an email draft out loud to check the tone...",
+          "Prepare for a job interview answer...",
+          "Practice your Zoom meeting introduction...",
+          "Read your favorite poem aloud...",
+          "Practice a movie monologue...",
+          "Try a difficult tongue twister...",
+          "Read a recipe instruction clearly...",
+          "Tell a short story...",
+          "Practice ordering coffee clearly...",
+          "Read a news headline...",
+          "Practice explaining a complex idea simple...",
+          "Work on your 'R' and 'L' sounds...",
+          "Slow down and enunciate every syllable..."
+        ];
+        
+        let i = 0;
+        let charIndex = 0;
+        let isDeleting = false;
+        let currentPhrase = "";
+
+        function type() {
+          // If user clicked or typed, STOP completely.
+          if (document.activeElement === input || input.value.length > 0) return;
+
+          const fullPhrase = phrases[i];
+
+          if (isDeleting) {
+            currentPhrase = fullPhrase.substring(0, charIndex - 1);
+            charIndex--;
+          } else {
+            currentPhrase = fullPhrase.substring(0, charIndex + 1);
+            charIndex++;
+          }
+
+          input.setAttribute('placeholder', currentPhrase);
+
+          // --- SPEED SETTINGS (Faster) ---
+          let speed = 40; // Fast typing
+          if (isDeleting) speed = 20; // Super fast deleting
+
+          if (!isDeleting && charIndex === fullPhrase.length) {
+            speed = 2000; // Pause at end of sentence
+            isDeleting = true;
+          } else if (isDeleting && charIndex === 0) {
+            isDeleting = false;
+            i = (i + 1) % phrases.length;
+            speed = 500; // Pause briefly before next sentence
+          }
+
+          typewriterTimeout = setTimeout(type, speed);
+        }
+        
+        type();
+      }
+
+      // --- MAIN BOOT SEQUENCE ---
+      async function bootApp() {
+        console.log("[Lux] Booting features...");
+
+        // 1. Setup Passages (Standard)
+        wirePassageSelect();     
+        wireNextBtn();           
+
+        // 2. Setup "Write Your Own" and "Clear" Handling
+        const passageSelect = document.getElementById('passageSelect');
+        const textInput = document.getElementById('referenceText');
+        
+        passageSelect.addEventListener('change', (e) => {
+            const val = e.target.value;
+            
+            // Handle Custom Menu Options
+            if (val === 'write-own') {
+                textInput.value = "";
+                textInput.focus(); // This triggers the focus event below
+            } 
+            else if (val === 'clear') {
+                textInput.value = "";
+                passageSelect.value = ""; // Reset dropdown to "Select Passage"
+                textInput.blur(); // Remove focus so animation can restart
+                startTypewriter(); // Restart animation
+            }
+            // Note: Standard passages are handled by wirePassageSelect()
+        });
+
+        // 3. Stop animation on click/focus
+        textInput.addEventListener('focus', () => {
+            clearTimeout(typewriterTimeout);
+            // Change placeholder to the "Ready" state
+            textInput.setAttribute('placeholder', "Type whatever you like here...");
+        });
+        
+        // 4. Restart animation if they leave it empty
+        textInput.addEventListener('blur', () => {
+            if (textInput.value.trim() === "") {
+                startTypewriter();
+            }
+        });
+
+        // 5. Setup Recorder
+        await initLuxRecorder(); 
+        wireRecordingButtons();
+
+        // 6. Setup Summary Button
+        const summaryBtn = document.getElementById('showSummaryBtn');
+        if (summaryBtn) {
+          summaryBtn.addEventListener('click', showSummary);
+        }
+
+        // 7. Start the visuals
+        startTypewriter();
+        
+        console.log("[Lux] App fully initialized.");
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootApp);
+      } else {
+        bootApp();
+      }
+    </script>
 
     <script type="module">
-      // FIXED PATH: Pointing to ./features/features/tts/boot-tts.js based on your folder structure
       import { bootTTS } from './features/features/tts/boot-tts.js';
       
       if (document.readyState === 'loading') {
@@ -181,7 +336,6 @@
       import { mountSelfPlaybackLite } from "./features/features/selfpb/ui.js";
       mountSelfPlaybackLite();
 
-      // Hydration logic
       const audioEl = document.getElementById("playbackAudio");
       async function hydrate() {
         if (!audioEl) return;
@@ -204,6 +358,7 @@
     <script type="module" src="./features/features/08-selfpb-peekaboo.js"></script>
 
     <script>
+      // Fallback in case old typewriter calls still exist
       window.typeWriter = window.typeWriter || function () {};
     </script>
   </body>

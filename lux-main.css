@@ -337,7 +337,7 @@ button:disabled {
 .score-table td {
   border: 1px solid #bbb;
   padding: 10px;
-  white-space: normal; /* <--- FIXED: Allow wrapping to prevent overflow */
+  white-space: normal;
   text-align: center;
 }
 .score-table th {
@@ -345,7 +345,8 @@ button:disabled {
   font-weight: 700;
 }
 
-.score-good { color: #2a7a19; font-weight: 700; position: relative; background: #e8f5ff; padding: 2px 6px 2px 24px; border-radius: 14px; }
+/* === COLORS UPDATED: .score-good is BLUE (#0b8bdb) again === */
+.score-good { color: #0b8bdb; font-weight: 700; position: relative; background: #e8f5ff; padding: 2px 6px 2px 24px; border-radius: 14px; }
 .score-warn { color: #e6a700; font-weight: 700; position: relative; background: #fff6e0; padding: 2px 6px 2px 24px; border-radius: 14px; }
 .score-bad { color: #d43c2c; font-weight: 700; position: relative; background: #ffe7e7; padding: 2px 6px 2px 24px; border-radius: 14px; }
 
