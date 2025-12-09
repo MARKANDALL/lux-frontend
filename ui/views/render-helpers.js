@@ -1,6 +1,7 @@
 // ui/views/render-helpers.js
 import { speechDetected } from "../../helpers/assess.js";
-import { detailedPhonemeFeedback } from "./summary.js"; // Needed for circular dep in analysis build
+// UPDATED IMPORT: Circular dependency resolved by using the new leaf module
+import { detailedPhonemeFeedback } from "./summary-feedback.js";
 
 export function computeIssueSummary(words) {
   const issues = {};

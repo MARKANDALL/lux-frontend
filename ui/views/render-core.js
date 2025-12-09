@@ -10,7 +10,8 @@
 import { computeTimings, median } from "./deps.js";
 import { ensureHeader, wirePostDom } from "./header.js";
 import { buildRows } from "./rows.js";
-import { detailedPhonemeFeedback } from "./summary.js";
+// UPDATED IMPORT: Pointing to the new independent module
+import { detailedPhonemeFeedback } from "./summary-feedback.js";
 import {
   computeIssueSummary,
   computeTimingsAndMedian,
