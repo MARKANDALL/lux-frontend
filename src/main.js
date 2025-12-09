@@ -16,9 +16,14 @@ import {
   showSummary 
 } from '/features/results/index.js';
 
+// NEW IMPORTS: Needed to make the "Show Summary" button work correctly
+import {
+  allPartsResults,
+  currentParts
+} from '/app-core/state.js';
+
 // --- VISUALS: Typewriter Effect ---
 let typewriterTimeout; 
-
 
 function startTypewriter() {
   const input = document.getElementById('referenceText');
@@ -132,14 +137,28 @@ async function bootApp() {
   await initLuxRecorder(); 
   wireRecordingButtons();
 
-  // 6. Setup Summary Button
+  // 6. Setup Summary Button (FIXED)
+  // We now pass the actual state data instead of the Click Event object
   const summaryBtn = document.getElementById('showSummaryBtn');
   if (summaryBtn) {
-    summaryBtn.addEventListener('click', showSummary);
+    summaryBtn.addEventListener('click', () => {
+      showSummary({ 
+        allPartsResults: allPartsResults, 
+        currentParts: currentParts 
+      });
+    });
   }
 
   // 7. Start Visuals
   startTypewriter();
+
+  // 8. Trigger the Blue Welcome Box animation (Restored)
+  setTimeout(() => {
+    const msg = document.getElementById('userMsg');
+    if (msg) {
+      msg.classList.add('show');
+    }
+  }, 2500);
   
   console.log("[Lux] App fully initialized.");
 }
