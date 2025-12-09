@@ -1,118 +1,42 @@
-// UI: rendering, event wiring, audio control
+// features/features/tts/player-ui.js
+// Logic: Event wiring, audio state management, and API orchestration.
+
 import {
   VOICES,
   DEFAULT_SPEED,
-  DEFAULT_PITCH_ST,
   getVoiceCaps,
   synthesize,
 } from "./player-core.js";
 
-const $ = (root, sel) => root.querySelector(sel);
+import { 
+  $, 
+  getCurrentText, 
+  renderControls, 
+  populateStyles 
+} from "./player-dom.js";
+
 const isPlaying = (audio) =>
   !audio.paused && !audio.ended && audio.currentTime > 0;
-
-function getCurrentText() {
-  const el =
-    document.querySelector("#referenceText") ||
-    document.querySelector("#free-input") ||
-    document.querySelector("#reference-text") ||
-    document.querySelector("textarea");
-  const typed = el?.value?.trim();
-  const sel = window.getSelection()?.toString()?.trim();
-  return (typed || sel || "").trim();
-}
-
-function renderControls(mount) {
-  const voiceOptions = VOICES.map(
-    (v) => `<option value="${v.id}">${v.label}</option>`
-  ).join("");
-  mount.innerHTML = `
-      <div id="tts-wrap">
-        <div class="tts-box tts-compact">
-          <div class="tts-head">
-            <div class="tts-title">Text-to-Speech</div>
-            <div id="tts-note" class="tts-note" aria-live="polite"></div>
-          </div>
-  
-          <label class="tts-voice"><span>Voice</span>
-            <select id="tts-voice">${voiceOptions}</select>
-          </label>
-  
-          <label class="tts-speed"><span>Speed</span>
-            <input id="tts-speed" type="range" min="0.7" max="1.3" step="0.05" value="${DEFAULT_SPEED}">
-            <span id="tts-speed-out">${DEFAULT_SPEED.toFixed(2)}×</span>
-          </label>
-  
-          <div class="tts-style-row">
-            <div class="tts-style-grid">
-              <label>Style
-                <select id="tts-style"><option value="">(neutral)</option></select>
-              </label>
-  
-              <label>Degree
-                <input id="tts-styledegree" type="number" min="0.1" max="2.5" step="0.1" value="1.0"/>
-              </label>
-            </div>
-          </div>
-  
-          <button id="tts-main" class="tts-btn tts-btn--primary"
-            title="Click: play/pause • Double-click: restart & play">🔊 Generate & Play</button>
-  
-          <label class="tts-pitch">
-            <span>Pitch (st)</span>
-            <input id="tts-pitch" type="range" min="-12" max="12" step="1" value="${DEFAULT_PITCH_ST}">
-            <span id="tts-pitch-out">${DEFAULT_PITCH_ST}</span>
-          </label>
-  
-          <div class="tts-skip">
-            <button id="tts-back" class="tts-btn tts-btn--sm" title="Back 5 seconds">↺ 5s</button>
-            <button id="tts-fwd"  class="tts-btn tts-btn--sm" title="Forward 5 seconds">↻ 5s</button>
-          </div>
-  
-          <a id="tts-download" class="tts-link" href="#" download="lux_tts.mp3" title="Download last audio">⬇️</a>
-        </div>
-      </div>
-    `;
-  const box = mount.querySelector(".tts-compact");
-  if (box)
-    Object.assign(box.style, {
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-    });
-}
-
-function populateStyles(styleSel, caps, voiceId) {
-  if (!styleSel) return;
-  const styles = caps?.[voiceId]?.styles || [];
-  const keep = styleSel.value;
-  styleSel.innerHTML =
-    `<option value="">(neutral)</option>` +
-    styles.map((s) => `<option value="${s}">${s}</option>`).join("");
-  if (keep && styles.includes(keep)) styleSel.value = keep;
-}
 
 export async function mountTTSPlayer(hostEl) {
   const host = hostEl || document.getElementById("tts-controls");
   if (!host) return;
 
-  // --- NUCLEAR FIX START ---
-  // 1. Kill the guard style tag explicitly
+  // --- NUCLEAR FIX START (Visibility Guards) ---
   const guard = document.getElementById("lux-tts-guard-style");
   if (guard) guard.remove();
 
-  // 2. Flip the data attribute
   host.dataset.luxHidden = "0";
-  host.removeAttribute("data-luxHidden"); // Double tap
-
-  // 3. Force inline style to override everything (Critical Fix)
+  host.removeAttribute("data-luxHidden"); 
   host.style.display = "flex";
   host.style.visibility = "visible";
   host.style.opacity = "1";
   // --- NUCLEAR FIX END ---
 
+  // 1. Render the HTML Template
   renderControls(host);
 
+  // 2. Select Elements
   const voiceSel = $(host, "#tts-voice");
   const speedEl = $(host, "#tts-speed");
   const speedOut = $(host, "#tts-speed-out");
@@ -126,35 +50,42 @@ export async function mountTTSPlayer(hostEl) {
   const styleSel = $(host, "#tts-style");
   const degreeEl = $(host, "#tts-styledegree");
 
+  // 3. Initialize Audio
   const audio = new Audio();
   audio.preload = "auto";
   audio.playbackRate = DEFAULT_SPEED;
 
-  // expose audio for other panels
+  // Expose audio for other panels (like Self Playback sync)
   window.luxTTS = Object.assign(window.luxTTS || {}, { audioEl: audio });
 
-  // voice capabilities
+  // 4. Load Capabilities (Async)
   let caps = await getVoiceCaps();
   populateStyles(styleSel, caps, voiceSel.value);
+  
   voiceSel.addEventListener("change", () =>
     populateStyles(styleSel, caps, voiceSel.value)
   );
 
+  // 5. Wire Inputs
   const updateSpeedOut = () => {
     const v = Number(speedEl.value) || 1;
     speedOut.textContent = v.toFixed(2) + "×";
     audio.playbackRate = v;
     if (window.LuxSelfPB?.setRefRate) window.LuxSelfPB.setRefRate(v);
   };
+  
   const updatePitchOut = () => {
     const p = Number(pitchEl.value) || 0;
     pitchOut.textContent = String(p);
   };
+
   updateSpeedOut();
   updatePitchOut();
+  
   speedEl.addEventListener("input", updateSpeedOut);
   pitchEl.addEventListener("input", updatePitchOut);
 
+  // 6. Audio Controls
   backBtn.addEventListener("click", () => {
     audio.currentTime = Math.max(0, audio.currentTime - 5);
   });
@@ -165,11 +96,13 @@ export async function mountTTSPlayer(hostEl) {
     );
   });
 
+  // 7. Playback Logic
   function setMainLabel(playing) {
     mainBtn.textContent = playing
       ? "⏸️ Pause (dbl-click = Restart)"
       : "🔊 Generate & Play";
   }
+  
   function uiNote(msg, tone = "info") {
     if (!note) return;
     note.textContent = msg || "";
@@ -194,18 +127,12 @@ export async function mountTTSPlayer(hostEl) {
 
     const key = `${voice}|${text}|style:${style}|deg:${styledegree}|rate:${ratePct}|pitch:${pitchSt}`;
 
+    // Reuse existing blob if params match
     if (key === lastKey && audio.src) {
       if (window.LuxSelfPB?.setReference) {
         window.LuxSelfPB.setReference({
           audioEl: audio,
-          meta: {
-            voice,
-            style,
-            styledegree,
-            rate: speedMult,
-            ratePct,
-            pitchSt,
-          },
+          meta: { voice, style, styledegree, rate: speedMult, ratePct, pitchSt },
         });
       }
       try {
@@ -215,6 +142,7 @@ export async function mountTTSPlayer(hostEl) {
       return;
     }
 
+    // Generate New
     try {
       const blob = await synthesize({
         text,
@@ -224,14 +152,12 @@ export async function mountTTSPlayer(hostEl) {
         style,
         styledegree,
       });
+      
       if (blob._meta) {
         const { styleUsed, styleRequested, fallback, message } = blob._meta;
         if (message) uiNote(message, fallback ? "warn" : "info");
         else if (fallback)
-          uiNote(
-            `Style '${styleRequested}' unsupported for ${voice}. Playing neutral.`,
-            "warn"
-          );
+          uiNote(`Style '${styleRequested}' unsupported. Playing neutral.`, "warn");
         else if (styleUsed && styleUsed !== "neutral")
           uiNote(`Playing ${voice} in '${styleUsed}'.`);
         else uiNote("");
@@ -242,22 +168,17 @@ export async function mountTTSPlayer(hostEl) {
       audio.src = blobUrl;
       audio.playbackRate = speedMult;
       lastKey = key;
+      
       if (dl) {
         dl.href = blobUrl;
         dl.download = "lux_tts.mp3";
       }
 
+      // Sync with Self Playback
       if (window.LuxSelfPB?.setReference) {
         window.LuxSelfPB.setReference({
           audioEl: audio,
-          meta: {
-            voice,
-            style,
-            styledegree,
-            rate: speedMult,
-            ratePct,
-            pitchSt,
-          },
+          meta: { voice, style, styledegree, rate: speedMult, ratePct, pitchSt },
         });
       }
 
@@ -270,6 +191,7 @@ export async function mountTTSPlayer(hostEl) {
     }
   }
 
+  // Double-click to Restart
   mainBtn.addEventListener("dblclick", async (e) => {
     e.preventDefault();
     dblTriggered = true;
@@ -284,10 +206,12 @@ export async function mountTTSPlayer(hostEl) {
     }
   });
 
+  // Single-click to Toggle
   mainBtn.addEventListener("click", async (e) => {
     e.preventDefault();
     if (clickPending) return;
     clickPending = true;
+    
     setTimeout(async () => {
       if (!dblTriggered) {
         if (!audio.src || audio.ended) await ensureAudioReadyAndPlay();
@@ -311,5 +235,3 @@ export async function mountTTSPlayer(hostEl) {
   (window.luxTTS?.nudge || (() => {}))();
   console.info("[tts-player] azure controls mounted");
 }
-
-export {}; // ESM

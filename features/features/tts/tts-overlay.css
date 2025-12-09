@@ -16,7 +16,7 @@ html body .lux-tts-panel {
   height: auto !important;
   max-width: 90vw !important;
   
-  /* CRITICAL FIX: Allow the tab to hang outside the box */
+  /* Allow the tab to hang outside the box */
   overflow: visible !important; 
   
   /* POSITIONING: 8px visible sliver */
@@ -30,7 +30,10 @@ html body .lux-tts-panel {
   
   border: 1px solid #ccc !important;
   border-right: 0 !important;
-  border-bottom-left-radius: 14px !important;
+
+  /* VISUAL TEST CHANGE: Round Left corners, Square Right corners */
+  border-radius: 14px 0 0 14px !important;
+  
   box-shadow: 0 4px 20px rgba(0,0,0,0.15) !important;
   
   transition: right 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
@@ -78,6 +81,15 @@ html.lux-tts-open body .lux-tts-panel {
   max-height: none;
   overflow: visible;
   box-sizing: border-box;
+
+  /* --- HIDE SCROLLBAR (Visual Only) --- */
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE/Edge */
+}
+
+/* Chrome/Safari/Opera Scrollbar Hiding */
+.lux-tts-panel #tts-controls::-webkit-scrollbar {
+  display: none !important;
 }
 
 .lux-tts-loading {
