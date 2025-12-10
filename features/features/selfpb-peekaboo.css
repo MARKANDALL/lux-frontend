@@ -30,8 +30,9 @@
   height: auto;
   max-height: var(--lux-sp-panel-max-h);
 
-  background: #0d1117;
-  color: #e9edf3;
+  /* CHANGE HERE: White background and dark text */
+  background: #fff;
+  color: #111;
   border: var(--lux-sp-border);
   border-left: 0;
   border-top-right-radius: var(--lux-sp-radius);

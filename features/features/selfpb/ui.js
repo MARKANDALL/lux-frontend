@@ -1,5 +1,7 @@
 // features/features/selfpb/ui.js
 // UI: styles + panel DOM + wiring to the core
+// UPDATED: Light theme color cleanup and added "Toast" error message and safety guards for Play button.
+
 import { initSelfPBCore } from "./core.js";
 
 function ensureStyles() {
@@ -8,11 +10,12 @@ function ensureStyles() {
   const s = document.createElement("style");
   s.id = STYLE_ID;
   s.textContent = `
-    #selfpb-lite{position:fixed;top:12px;left:12px;z-index:9999;background:#101219;color:#e9ecf1;border:1px solid #2a2f3b;border-radius:14px;padding:10px 12px;font:600 14px system-ui,-apple-system,Segoe UI,Roboto,sans-serif;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+    /* Removed inline dark theme styling; now using self-playback.css variables */
+    #selfpb-lite{position:fixed;top:12px;left:12px;z-index:9999;border-radius:14px;padding:10px 12px;font:600 14px system-ui,-apple-system,Segoe UI,Roboto,sans-serif;box-shadow:0 6px 18px rgba(0,0,0,.25)}
     #selfpb-lite .row{display:flex;align-items:center;gap:8px}
     #selfpb-lite .btn{padding:6px 10px;border-radius:8px;border:0;background:#2d6cdf;color:#fff;cursor:pointer}
     #selfpb-lite .btn[disabled]{opacity:.5;cursor:not-allowed}
-    #selfpb-lite .pill{background:#1b2230;border:1px solid #2a2f3b;border-radius:999px;padding:6px 10px}
+    #selfpb-lite .pill{border-radius:999px;padding:6px 10px}
     #selfpb-lite .meta{opacity:.85}
     #selfpb-lite input[type="range"]{accent-color:#2d6cdf}
     #selfpb-lite .ab{display:flex;gap:6px}
@@ -27,8 +30,21 @@ function buildUI() {
   const host = document.createElement("div");
   host.id = "selfpb-lite";
   host.innerHTML = `
-    <div class="row" style="margin-bottom:6px">
+    <div class="row" style="margin-bottom:6px; position:relative;">
       <span class="meta">👂 Self Playback</span>
+      
+      <span id="spb-toast" class="pill tiny" style="
+          display:none; 
+          position:absolute; 
+          right:0; 
+          top:0; 
+          background:#ef4444; 
+          border-color:#b91c1c; 
+          color:#fff;
+          z-index:10;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+      "></span>
+
       <div class="spacer"></div>
       <span class="pill tiny" id="spb-ref">Ref: —</span>
       <span class="pill tiny" id="spb-time">0:00 / 0:00</span>
@@ -64,6 +80,7 @@ function buildUI() {
   document.body.appendChild(host);
   return {
     host,
+    toast: host.querySelector("#spb-toast"), // <--- New reference for toast
     playBtn: host.querySelector("#spb-play"),
     pauseBtn: host.querySelector("#spb-pause"),
     backBtn: host.querySelector("#spb-back"),
@@ -88,6 +105,24 @@ export function mountSelfPlaybackLite() {
   // styles + DOM
   ensureStyles();
   const ui = buildUI();
+
+  // --- Helper: Show a temporary message (from previous step) ---
+  const showToast = (msg, duration = 2000) => {
+    ui.toast.textContent = msg;
+    ui.toast.style.display = "inline-block";
+    
+    // Shake animation for attention
+    ui.host.animate([
+      { transform: 'translateX(0)' },
+      { transform: 'translateX(-4px)' },
+      { transform: 'translateX(4px)' },
+      { transform: 'translateX(0)' }
+    ], { duration: 200 });
+
+    setTimeout(() => {
+      ui.toast.style.display = "none";
+    }, duration);
+  };
 
   // wire helpers
   const syncTime = () => {
@@ -127,16 +162,32 @@ export function mountSelfPlaybackLite() {
 
   // controls
   ui.playBtn.addEventListener("click", async () => {
+    // --- CHECK 1: Is there audio? (Guard from previous step) ---
+    if (!audio.currentSrc && !audio.src) {
+      showToast("No recording yet!");
+      return;
+    }
+    
+    // --- CHECK 2: Is it valid? ---
+    if (audio.duration === 0 || isNaN(audio.duration)) {
+        showToast("Audio empty/loading...");
+        return;
+    }
+    
     try {
       if (st.looping && st.a != null && st.b != null && st.b > st.a) {
         const inside = (t) => t >= st.a && t <= st.b;
         if (!inside(audio.currentTime)) audio.currentTime = st.a;
       }
       await api.play();
+    } catch (err) {
+       console.warn("[selfpb] Play failed:", err);
+       showToast("Playback failed");
     } finally {
       syncButtons();
     }
   });
+
   ui.pauseBtn.addEventListener("click", () => {
     api.pause();
     syncButtons();
