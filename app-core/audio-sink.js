@@ -2,6 +2,8 @@
 // Handles the hidden learner audio element, race-condition-free loading,
 // and hydration of the Self-Playback feature.
 
+import { loadLearnerAudio } from "../features/features/selfpb/waveform-logic.js"; // <--- NEW IMPORT for Phase C
+
 export function initAudioSink() {
   const AUDIO_ID = "playbackAudio";
   const FN = "__attachLearnerBlob";
@@ -57,8 +59,22 @@ export function initAudioSink() {
       // Hydrate Self-Playback
       document.dispatchEvent(new CustomEvent("lux:new-learner-audio", { detail: { blob, url } }));
 
+      // --- DECODE AUDIO AND PASS TO WAVEFORM LOGIC ---
+      const arr = await blob.arrayBuffer();
+      
+      if (window.AudioContext && window.AudioContext.prototype.decodeAudioData && loadLearnerAudio) {
+          try {
+              const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+              // Pass a copy (slice(0)) to prevent decodeAudioData from corrupting the original buffer
+              const buffer = await audioContext.decodeAudioData(arr.slice(0)); 
+              loadLearnerAudio(buffer);
+          } catch (e) {
+              console.warn("[learner] Failed to decode audio for waveform:", e);
+          }
+      }
+      // --- END WAVEFORM LOGIC ---
+
       if (window.LuxSelfPB?.setLearnerArrayBuffer) {
-        const arr = await blob.arrayBuffer();
         await window.LuxSelfPB.setLearnerArrayBuffer(arr);
       }
 
