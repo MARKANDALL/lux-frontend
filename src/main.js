@@ -1,7 +1,7 @@
 // src/main.js
 // The Main Entry Point: Boots the app, handles the Typewriter, and wires the Dropdown.
+// UPDATED: Now initializes the Audio Sink to power the Waveforms.
 
-// --- UPDATED IMPORTS: Using Absolute Paths (starts with /) ---
 import { 
   wirePassageSelect, 
   wireNextBtn
@@ -16,11 +16,13 @@ import {
   showSummary 
 } from '/features/results/index.js';
 
-// NEW IMPORTS: Needed to make the "Show Summary" button work correctly
 import {
   allPartsResults,
   currentParts
 } from '/app-core/state.js';
+
+// NEW IMPORT: The Bridge for Audio/Waveforms
+import { initAudioSink } from '/app-core/audio-sink.js';
 
 // --- VISUALS: Typewriter Effect ---
 let typewriterTimeout; 
@@ -57,7 +59,6 @@ function startTypewriter() {
   let currentPhrase = "";
 
   function type() {
-    // If user clicked or typed, STOP completely.
     if (document.activeElement === input || input.value.length > 0) return;
 
     const fullPhrase = phrases[i];
@@ -72,12 +73,11 @@ function startTypewriter() {
 
     input.setAttribute('placeholder', currentPhrase);
 
-    // --- SPEED SETTINGS ---
-    let speed = 40; // Fast typing
-    if (isDeleting) speed = 20; // Super fast deleting
+    let speed = 40; 
+    if (isDeleting) speed = 20; 
 
     if (!isDeleting && charIndex === fullPhrase.length) {
-      speed = 2000; // Pause at end of sentence
+      speed = 2000; 
       isDeleting = true;
     } else if (isDeleting && charIndex === 0) {
       isDeleting = false;
@@ -95,37 +95,36 @@ function startTypewriter() {
 async function bootApp() {
   console.log("[Lux] Booting features...");
 
-  // 1. Setup Passages
+  // 1. Initialize Audio Infrastructure (Critical for Waveforms)
+  initAudioSink();
+
+  // 2. Setup Passages
   wirePassageSelect();     
   wireNextBtn();           
 
-  // 2. Setup Dropdown Logic ("Write Your Own" / "Clear")
+  // 3. Setup Dropdown Logic
   const passageSelect = document.getElementById('passageSelect');
   const textInput = document.getElementById('referenceText');
   
   if (passageSelect && textInput) {
       passageSelect.addEventListener('change', (e) => {
           const val = e.target.value;
-          
           if (val === 'write-own') {
               textInput.value = "";
               textInput.focus(); 
-          } 
-          else if (val === 'clear') {
+          } else if (val === 'clear') {
               textInput.value = "";
-              passageSelect.value = ""; // Reset dropdown
+              passageSelect.value = ""; 
               textInput.blur(); 
-              startTypewriter(); // Restart animation
+              startTypewriter(); 
           }
       });
 
-      // 3. Stop animation on click/focus
       textInput.addEventListener('focus', () => {
           if(typewriterTimeout) clearTimeout(typewriterTimeout);
           textInput.setAttribute('placeholder', "Type whatever you like here...");
       });
       
-      // 4. Restart animation if they leave it empty
       textInput.addEventListener('blur', () => {
           if (textInput.value.trim() === "") {
               startTypewriter();
@@ -133,12 +132,11 @@ async function bootApp() {
       });
   }
 
-  // 5. Setup Recorder
+  // 4. Setup Recorder
   await initLuxRecorder(); 
   wireRecordingButtons();
 
-  // 6. Setup Summary Button (FIXED)
-  // We now pass the actual state data instead of the Click Event object
+  // 5. Setup Summary Button
   const summaryBtn = document.getElementById('showSummaryBtn');
   if (summaryBtn) {
     summaryBtn.addEventListener('click', () => {
@@ -149,10 +147,9 @@ async function bootApp() {
     });
   }
 
-  // 7. Start Visuals
+  // 6. Start Visuals
   startTypewriter();
 
-  // 8. Trigger the Blue Welcome Box animation (Restored)
   setTimeout(() => {
     const msg = document.getElementById('userMsg');
     if (msg) {

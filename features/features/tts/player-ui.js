@@ -1,6 +1,6 @@
 // features/features/tts/player-ui.js
 // Logic: Event wiring, audio state management, and API orchestration.
-// UPDATED: Integrates waveform logic to decode the TTS audio buffer and draw the reference wave.
+// UPDATED: simplified Waveform handoff (passes Blob directly to WaveSurfer).
 
 import {
   VOICES,
@@ -16,8 +16,8 @@ import {
   populateStyles 
 } from "./player-dom.js";
 
-// NEW IMPORT for Waveform integration
-import { loadReferenceAudio } from "../selfpb/waveform-logic.js"; 
+// NEW IMPORT: simplified blob loader
+import { loadReferenceBlob } from "../selfpb/waveform-logic.js"; 
 
 const isPlaying = (audio) =>
   !audio.paused && !audio.ended && audio.currentTime > 0;
@@ -178,17 +178,11 @@ export async function mountTTSPlayer(hostEl) {
         dl.download = "lux_tts.mp3";
       }
 
-      // --- NEW: DECODE AND DRAW REFERENCE WAVEFORM ---
-      if (window.AudioContext) {
-          const arr = await blob.arrayBuffer();
-          const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-          
-          // Decode audio buffer and pass to the waveform drawing logic
-          audioContext.decodeAudioData(arr.slice(0)) 
-              .then(buffer => loadReferenceAudio(buffer))
-              .catch(e => console.warn("[TTS] Failed to decode audio for waveform:", e));
+      // --- WAVEFORM HANDOFF (Simplified) ---
+      if (blob) {
+          loadReferenceBlob(blob);
       }
-      // --- END NEW WAVEFORM INTEGRATION ---
+      // ------------------------------------
 
       // Sync with Self Playback
       if (window.LuxSelfPB?.setReference) {
