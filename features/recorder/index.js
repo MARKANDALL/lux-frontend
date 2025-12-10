@@ -1,5 +1,6 @@
 // features/recorder/index.js
 // The Orchestrator: Connects DOM <-> Media <-> API <-> State.
+// UPDATED: Restored "Stop Delay" logic (1.0s hang time) to prevent audio cutoff.
 
 import { logError, debug as logDebug } from "../../app-core/lux-utils.js";
 
@@ -26,6 +27,8 @@ import { markPartCompleted } from "../passages/index.js";
 import { bringInputToTop } from "../../helpers/index.js"; 
 
 let isInitialized = false;
+// The "Hang Time" duration. Matches the CSS animation (~1s) + a tiny buffer.
+const STOP_DELAY_MS = 1000; 
 
 /* ===========================
    Workflow Logic
@@ -46,9 +49,14 @@ async function startRecordingFlow() {
 }
 
 function stopRecordingFlow() {
+  // 1. Visual Feedback Immediately: "Stopping..." stripes
   DOM.setStatus("Stopping...");
   DOM.setVisualState("processing");
-  Mic.stopMic();
+
+  // 2. Logic Delay: Keep listening for 1.0s to catch the end of the word
+  setTimeout(() => {
+    Mic.stopMic();
+  }, STOP_DELAY_MS);
 }
 
 /**
@@ -65,11 +73,15 @@ async function handleRecordingComplete(audioBlob) {
     const audioEl = document.getElementById("playbackAudio");
     
     if (audioEl) {
+        // Revoke old URL to free memory if it exists
+        if (audioEl.src) URL.revokeObjectURL(audioEl.src);
+        
         const audioUrl = URL.createObjectURL(audioBlob);
         audioEl.src = audioUrl; // This triggers the top-left panel to load the sound.
     }
     // ---------------------
 
+    // Legacy hook for older audio components (Audio Sink)
     if (window.__attachLearnerBlob) {
       window.__attachLearnerBlob(audioBlob);
     }
