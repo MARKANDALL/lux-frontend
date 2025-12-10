@@ -56,14 +56,13 @@
   filter: brightness(0.85);
 }
 
-/* 3) Input, dropdown, and (?) tip */
+/* 3) Input and (?) tip */
+/* FIX: Removed #passageSelect from here so it gets the standard drop shadow from lux-main.css */
 #referenceText,
-#passageSelect,
 #partsInfoTip {
   transition: transform 0.18s ease, filter 0.18s ease, box-shadow 0.18s ease;
 }
 #referenceText:hover,
-#passageSelect:hover,
 #partsInfoTip:hover {
   transform: scale(1.04);
   filter: brightness(0.95);

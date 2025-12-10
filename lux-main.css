@@ -99,13 +99,12 @@ button:hover:not(:disabled),
   filter: brightness(0.85);
 }
 
+/* --- UPDATED: Removed #passageSelect from here so it gets the standard drop shadow --- */
 #referenceText,
-#passageSelect,
 #partsInfoTip {
   transition: transform 0.18s ease, filter 0.18s ease, box-shadow 0.18s ease;
 }
 #referenceText:hover,
-#passageSelect:hover,
 #partsInfoTip:hover {
   transform: scale(1.04);
   filter: brightness(0.95);
@@ -345,7 +344,6 @@ button:disabled {
   font-weight: 700;
 }
 
-/* === COLORS UPDATED: .score-good is BLUE (#0b8bdb) again === */
 .score-good { color: #0b8bdb; font-weight: 700; position: relative; background: #e8f5ff; padding: 2px 6px 2px 24px; border-radius: 14px; }
 .score-warn { color: #e6a700; font-weight: 700; position: relative; background: #fff6e0; padding: 2px 6px 2px 24px; border-radius: 14px; }
 .score-bad { color: #d43c2c; font-weight: 700; position: relative; background: #ffe7e7; padding: 2px 6px 2px 24px; border-radius: 14px; }
@@ -412,7 +410,6 @@ button:disabled {
   opacity: 1;
 }
 
-/* Collapsible columns */
 #prettyResult table { transition: width 0.35s ease; }
 .toggle-col { cursor: pointer; user-select: none; transition: color 0.2s; }
 .toggle-col:hover { color: #0078d7; }
@@ -435,7 +432,6 @@ table:not(.collapsed-error) #errorHeader::after { transform: rotate(90deg); }
 table:not(.collapsed-score) td:nth-child(2),
 table:not(.collapsed-error) td:nth-child(3) { width: 85px; opacity: 1; pointer-events: auto; }
 
-/* Word Header */
 #wordHeader {
   background: #f3f7fa;
   border: 1px solid #bbb;
@@ -460,7 +456,6 @@ table:not(.collapsed-error) td:nth-child(3) { width: 85px; opacity: 1; pointer-e
 #prettyResult .tooltip:hover .phoneme-chip { transform: scale(1.12); filter: brightness(0.85); }
 #prettyResult .score-table td:nth-child(4), #prettyResult .score-table th:nth-child(4) { overflow: visible !important; }
 
-/* Prosody Ribbons */
 #prettyResult .pr-gap.ok { background: #d1fae5; }
 #prettyResult .pr-gap.missing { background: #fde68a; }
 #prettyResult .pr-gap.unexpected { background: #fecaca; }
@@ -474,11 +469,47 @@ table:not(.collapsed-error) td:nth-child(3) { width: 85px; opacity: 1; pointer-e
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08) inset;
 }
 
-a:active, button:active, select:active, .tooltip:active, input[type="checkbox"]:active, input[type="radio"]:active, .clickable:active {
-  transform: translateY(0); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+/* ============================================================
+   Global Interactive Depth Effect (Generic)
+   ============================================================ */
+a,
+button,
+select,
+.tooltip,
+input[type="checkbox"],
+input[type="radio"],
+.clickable {
+  transition: box-shadow 0.18s ease, transform 0.18s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
 }
-a:focus-visible, button:focus-visible, select:focus-visible, .tooltip:focus-visible, input[type="checkbox"]:focus-visible, input[type="radio"]:focus-visible, .clickable:focus-visible {
-  outline: 2px solid #0078d7; outline-offset: 2px;
+a:hover,
+button:hover,
+select:hover,
+input[type="checkbox"]:hover,
+input[type="radio"]:hover,
+.clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.28);
+}
+a:active,
+button:active,
+select:active,
+.tooltip:active,
+input[type="checkbox"]:active,
+input[type="radio"]:active,
+.clickable:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+a:focus-visible,
+button:focus-visible,
+select:focus-visible,
+.tooltip:focus-visible,
+input[type="checkbox"]:focus-visible,
+input[type="radio"]:focus-visible,
+.clickable:focus-visible {
+  outline: 2px solid #0078d7;
+  outline-offset: 2px;
 }
 
 @media (max-width: 650px) {
