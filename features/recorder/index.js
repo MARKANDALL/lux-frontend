@@ -1,6 +1,6 @@
 // features/recorder/index.js
 // The Orchestrator: Connects DOM <-> Media <-> API <-> State.
-// UPDATED: Restored "Stop Delay" logic (1.0s hang time) to prevent audio cutoff.
+// UPDATED: Fixes "Long Stripes" bug by clearing animation immediately upon mic stop.
 
 import { logError, debug as logDebug } from "../../app-core/lux-utils.js";
 
@@ -27,8 +27,8 @@ import { markPartCompleted } from "../passages/index.js";
 import { bringInputToTop } from "../../helpers/index.js"; 
 
 let isInitialized = false;
-// The "Hang Time" duration. Matches the CSS animation (~1s) + a tiny buffer.
-const STOP_DELAY_MS = 1000; 
+// The "Hang Time" duration. Matches the CSS animation (~0.8s).
+const STOP_DELAY_MS = 800; 
 
 /* ===========================
    Workflow Logic
@@ -53,7 +53,7 @@ function stopRecordingFlow() {
   DOM.setStatus("Stopping...");
   DOM.setVisualState("processing");
 
-  // 2. Logic Delay: Keep listening for 1.0s to catch the end of the word
+  // 2. Logic Delay: Keep listening for 0.8s to catch the end of the word
   setTimeout(() => {
     Mic.stopMic();
   }, STOP_DELAY_MS);
@@ -64,6 +64,13 @@ function stopRecordingFlow() {
  */
 async function handleRecordingComplete(audioBlob) {
   try {
+    // --- CRITICAL FIX ---
+    // Immediately clear the "Green Stripes" animation. 
+    // We are done "Stopping". Now we are "Analyzing".
+    // Passing any state other than 'processing'/'recording' clears the stripes.
+    DOM.setVisualState("analyzing"); 
+    // --------------------
+
     const text = DOM.ui.textarea ? DOM.ui.textarea.value.trim() : "";
 
     bringInputToTop();
