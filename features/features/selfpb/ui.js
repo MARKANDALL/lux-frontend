@@ -1,6 +1,6 @@
 // features/features/selfpb/ui.js
 // UI: styles + panel DOM + wiring to the core
-// UPDATED: Light Theme, Unified Play, Smart Loop Button, Error Toast
+// UPDATED: Light Theme, Unified Play, Smart Loop Button, Error Toast, 2.5s Jump
 
 import { initSelfPBCore } from "./core.js";
 
@@ -74,9 +74,9 @@ function buildUI() {
     </div>
 
     <div class="row" style="margin-bottom:6px">
-      <button class="btn" id="spb-back">−5s</button>
+      <button class="btn" id="spb-back">−2.5s</button>
       <input id="spb-scrub" class="scrub" type="range" min="0" max="1000" step="1" value="0" title="Seek">
-      <button class="btn" id="spb-fwd">+5s</button>
+      <button class="btn" id="spb-fwd">+2.5s</button>
     </div>
 
     <div class="row" style="margin-bottom:8px">
@@ -246,12 +246,13 @@ export function mountSelfPlaybackLite() {
   ui.mainBtn.addEventListener("click", (e) => { if (e.detail !== 2) handlePlayAction(false); });
   ui.mainBtn.addEventListener("dblclick", (e) => { e.preventDefault(); handlePlayAction(true); });
 
+  // 2.5s Jump Logic
   ui.backBtn.addEventListener("click", () => {
-    audio.currentTime = api.clamp((audio.currentTime || 0) - 5, 0, audio.duration || 0);
+    audio.currentTime = api.clamp((audio.currentTime || 0) - 2.5, 0, audio.duration || 0);
     syncTime(); syncScrub();
   });
   ui.fwdBtn.addEventListener("click", () => {
-    audio.currentTime = api.clamp((audio.currentTime || 0) + 5, 0, audio.duration || 0);
+    audio.currentTime = api.clamp((audio.currentTime || 0) + 2.5, 0, audio.duration || 0);
     syncTime(); syncScrub();
   });
 
@@ -309,8 +310,7 @@ export function mountSelfPlaybackLite() {
         api.setRate(api.clamp((audio.playbackRate || 1) + 0.05, 0.5, 1.5)); 
         syncRateUI(); 
     }
-    // Map L/I/O to new single button logic if desired, or keep specific markers
-    // Keeping logic consistent: 'L' toggles/cycles through the main button logic
+    // Map L to Smart Loop click
     else if (e.key.toLowerCase() === "l") { e.preventDefault(); ui.loopAction.click(); }
   }, { passive: false });
 
