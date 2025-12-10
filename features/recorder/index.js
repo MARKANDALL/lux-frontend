@@ -1,6 +1,6 @@
 // features/recorder/index.js
 // The Orchestrator: Connects DOM <-> Media <-> API <-> State.
-// UPDATED: Fixes "Long Stripes" bug by clearing animation immediately upon mic stop.
+// UPDATED: Allows Custom parts to be pushed to session results (for aggregation).
 
 import { logError, debug as logDebug } from "../../app-core/lux-utils.js";
 
@@ -49,11 +49,9 @@ async function startRecordingFlow() {
 }
 
 function stopRecordingFlow() {
-  // 1. Visual Feedback Immediately: "Stopping..." stripes
   DOM.setStatus("Stopping...");
   DOM.setVisualState("processing");
 
-  // 2. Logic Delay: Keep listening for 0.8s to catch the end of the word
   setTimeout(() => {
     Mic.stopMic();
   }, STOP_DELAY_MS);
@@ -64,31 +62,20 @@ function stopRecordingFlow() {
  */
 async function handleRecordingComplete(audioBlob) {
   try {
-    // --- CRITICAL FIX ---
-    // Immediately clear the "Green Stripes" animation. 
-    // We are done "Stopping". Now we are "Analyzing".
-    // Passing any state other than 'processing'/'recording' clears the stripes.
     DOM.setVisualState("analyzing"); 
-    // --------------------
 
     const text = DOM.ui.textarea ? DOM.ui.textarea.value.trim() : "";
 
     bringInputToTop();
 
     // --- AUDIO HANDOFF ---
-    // We send the audio to the hidden player so the Top-Left Panel can find it.
     const audioEl = document.getElementById("playbackAudio");
-    
     if (audioEl) {
-        // Revoke old URL to free memory if it exists
         if (audioEl.src) URL.revokeObjectURL(audioEl.src);
-        
         const audioUrl = URL.createObjectURL(audioBlob);
-        audioEl.src = audioUrl; // This triggers the top-left panel to load the sound.
+        audioEl.src = audioUrl; 
     }
-    // ---------------------
-
-    // Legacy hook for older audio components (Audio Sink)
+    
     if (window.__attachLearnerBlob) {
       window.__attachLearnerBlob(audioBlob);
     }
@@ -105,7 +92,9 @@ async function handleRecordingComplete(audioBlob) {
 
     logDebug("AZURE RESULT RECEIVED", result);
 
-    if (!isCustom && currentParts && currentParts.length > 1) {
+    // --- UPDATED: Save result even if Custom (enables aggregation) ---
+    // We check currentParts length to ensure we have a valid context
+    if (currentParts && currentParts.length > 0) {
        pushPartResult(currentPartIdx, result);
     }
 
@@ -118,10 +107,7 @@ async function handleRecordingComplete(audioBlob) {
     bringInputToTop();
     markPartCompleted();
 
-    // 6. Async: Get AI Feedback
     getAIFeedback(result, text, lang).catch(e => console.warn("AI Feedback Error:", e));
-
-    // 7. Async: Save to Database (Atlas)
     saveToDatabase(result, text, lang);
 
   } catch (err) {

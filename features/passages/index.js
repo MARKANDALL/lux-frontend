@@ -1,8 +1,8 @@
 // features/passages/index.js
 // Controller: Manages passage state and orchestrates DOM updates.
+// UPDATED: Supports Multi-Part Custom Mode (Add + Summarize).
 
 // 1. DATA IMPORT
-// (Ensure this path matches where your data lives. If "src" isn't in your folder structure, remove it)
 import { passages } from "../../src/data/index.js"; 
 
 // 2. STATE IMPORT
@@ -17,7 +17,7 @@ import {
   isCustom,
 } from "../../app-core/state.js"; 
 
-// 3. DOM IMPORT (Corrected to "import * as" for named exports)
+// 3. DOM IMPORT
 import * as DOM from "./dom.js"; 
 
 /* ---------------- Logic / Helpers ---------------- */
@@ -25,8 +25,7 @@ import * as DOM from "./dom.js";
 const TIPS = {
   curated: `These built-in texts were designed to cover most English sounds. 
 Practicing them gives a balanced baseline and helps reveal strengths & weaknesses.`,
-  custom: `Type anything you want to practice—speeches, interviews, tricky words, 
-or everyday phrases. We’ll score words & phonemes and add prosody feedback. 
+  custom: `Type anything you want to practice. We’ll score words & phonemes and add prosody feedback. 
 Tip: shorter sentences (≈10–15 s) give the clearest results.`
 };
 
@@ -57,7 +56,7 @@ export function togglePartNav(enabled) {
   const total = Array.isArray(currentParts) ? currentParts.length : 0;
   const isMulti = enabled && total > 1;
 
-  if (!isMulti) {
+  if (!isMulti && !isCustom) {
     DOM.updateNavVisibility({ 
       showNext: false, 
       enableNext: false, 
@@ -84,22 +83,17 @@ export function showCurrentPart({ preserveExistingInput = false } = {}) {
   const total = Array.isArray(currentParts) ? currentParts.length : 0;
 
   if (isCustom) {
-    const txt = currentParts?.[0] ?? "";
+    const txt = currentParts?.[currentPartIdx] ?? "";
     
     DOM.renderPartState({
-      text: "",
-      progressText: "Part 1 of 1",
+      text: txt,
+      progressText: `Custom Part ${currentPartIdx + 1}`,
       labelText: "Your text:",
       showLabel: true,
       preserveInput: preserveExistingInput
     });
     
-    if (!preserveExistingInput && DOM.getInputValue() !== txt) {
-       // FIX: Replaced broken "DOM.qs" with standard "document.querySelector"
-       const refInput = document.querySelector("#referenceText");
-       if (refInput) refInput.value = txt; 
-    }
-
+    // In Custom mode, we normally hide nav until recording finishes
     togglePartNav(false);
   } else {
     const text = currentParts[currentPartIdx];
@@ -123,6 +117,7 @@ export function setPassage(key, { clearInputForCustom = false } = {}) {
   setPartIdx(0);
 
   if (isCustom) {
+    // If switching to custom, start fresh or keep typing
     const nextText = clearInputForCustom ? "" : DOM.getInputValue();
     setParts([nextText]);
     showCurrentPart({ preserveExistingInput: !clearInputForCustom });
@@ -135,8 +130,33 @@ export function setPassage(key, { clearInputForCustom = false } = {}) {
   DOM.clearResultsUI();
 }
 
+// --- UPDATED: Handle "Next" for both Fixed and Custom passages ---
 export function goToNextPart() {
-  if (isCustom) return;
+  const CAP = 10; // Cap custom parts to prevent memory abuse
+
+  // 1. Custom Mode: "Add Another Section" behavior
+  if (isCustom) {
+      if (currentParts.length >= CAP) {
+          alert("Maximum parts reached. Please view summary.");
+          return;
+      }
+      
+      // Push new empty slot
+      const newParts = [...currentParts, ""];
+      setParts(newParts);
+      setPartIdx(currentPartIdx + 1);
+      
+      // Clear UI for new entry
+      showCurrentPart({ preserveExistingInput: false });
+      DOM.clearResultsUI();
+      
+      // Auto-focus input for flow
+      const input = document.querySelector("#referenceText");
+      if(input) input.focus();
+      return;
+  }
+
+  // 2. Standard Mode: "Next Part" behavior
   if (currentPartIdx < currentParts.length - 1) {
     setPartIdx(currentPartIdx + 1);
     showCurrentPart();
@@ -144,8 +164,19 @@ export function goToNextPart() {
   }
 }
 
+// --- UPDATED: Handle Completion logic for Custom Mode ---
 export function markPartCompleted() {
-  if (isCustom) return;
+  // If Custom, we ALWAYS show controls to Add More or Finish
+  if (isCustom) {
+      DOM.updateNavVisibility({
+          showNext: true,
+          enableNext: true,
+          nextMsgText: "", // "Add Section" label handled by DOM.js or CSS
+          showSummary: true,
+          customMode: true // Signal to DOM to change button labels
+      });
+      return;
+  }
 
   const total = Array.isArray(currentParts) ? currentParts.length : 0;
   if (total <= 1) return;
@@ -179,7 +210,6 @@ export function wirePassageSelect() {
       updatePartsInfoTip();
     },
     onClick: () => {
-      // FIX: Replaced broken "DOM.qs" with standard "document.querySelector"
       const el = document.querySelector("#suggestedSentence");
       const empty = !el?.textContent?.trim();
       if (empty && !isCustom) showCurrentPart();
@@ -188,15 +218,21 @@ export function wirePassageSelect() {
 
   DOM.wireInputEvents({
     onInput: (val) => {
+      // Auto-switch to Custom mode if typing on a fixed passage
       if (!isCustom) {
         DOM.forceSelectCustom();
         setPassage("custom", { clearInputForCustom: false });
       }
-      setParts([val]);
-      setPartIdx(0);
+      
+      // --- CRITICAL FIX: Update ONLY the current index ---
+      // Do not wipe the whole array. Use functional update to be safe.
+      const updatedParts = [...currentParts];
+      updatedParts[currentPartIdx] = val;
+      setParts(updatedParts);
+      
       DOM.renderPartState({ 
         text: "", 
-        progressText: "Part 1 of 1", 
+        progressText: `Custom Part ${currentPartIdx + 1}`, 
         labelText: "Your text:", 
         showLabel: true,
         preserveInput: true 

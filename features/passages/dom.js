@@ -1,7 +1,7 @@
 // features/passages/dom.js
 // Pure DOM manipulation for passage navigation and inputs.
+// UPDATED: Handles dynamic button labels for Custom Mode.
 
-// UPDATED IMPORT: Point back to app-core
 import { qs, setText, setVisible } from "../../app-core/lux-utils.js";
 
 const ui = {
@@ -84,10 +84,21 @@ export function renderPartState({
   }
 }
 
-export function updateNavVisibility({ showNext, enableNext, nextMsgText, nextMsgColor, showSummary }) {
+// --- UPDATED: Handle Custom Labels ---
+export function updateNavVisibility({ showNext, enableNext, nextMsgText, nextMsgColor, showSummary, customMode }) {
   if (ui.nextBtn) {
     setVisible(ui.nextBtn, showNext);
     ui.nextBtn.disabled = !enableNext;
+    
+    // Dynamic Label
+    if (customMode) {
+        ui.nextBtn.textContent = "➕ Add Another Section";
+        // Optionally style it differently
+        ui.nextBtn.style.backgroundColor = "#0f766e"; // Teal for Add
+    } else {
+        ui.nextBtn.textContent = "Next Part"; // Reset default
+        ui.nextBtn.style.backgroundColor = ""; // Reset color
+    }
   }
 
   if (ui.nextMsg) {
@@ -104,6 +115,13 @@ export function updateNavVisibility({ showNext, enableNext, nextMsgText, nextMsg
     if (showSummary !== undefined) {
         setVisible(ui.summaryBtn, showSummary);
         ui.summaryBtn.disabled = !showSummary;
+        
+        // Custom Mode Label
+        if (customMode) {
+            ui.summaryBtn.textContent = "Finish & View Summary";
+        } else {
+            ui.summaryBtn.textContent = "Show Summary";
+        }
     }
   }
 }
