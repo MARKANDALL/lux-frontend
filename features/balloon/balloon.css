@@ -1,59 +1,63 @@
 /* features/balloon/balloon.css */
 
-/* Container: Floats, bobs, and moves up/down via JS */
+/* Container: Drifts BROADLY across the screen */
 #lux-balloon-wrapper {
   position: fixed;
-  bottom: 40px; /* Base position, JS will lift this as it grows */
+  bottom: 40px; 
   right: 40px;
   width: 100px;
-  height: 140px; /* Taller to accommodate string */
+  height: 180px; 
   z-index: 9999;
   pointer-events: none;
   
-  /* Chaotic Bobbing */
+  /* CHAOTIC FLOAT: Prime numbers (7s, 5s) prevent sync */
   animation: 
-    wanderX 5s ease-in-out infinite alternate,
-    wanderY 6s ease-in-out infinite alternate;
+    wanderX 7s ease-in-out infinite alternate,
+    wanderY 5s ease-in-out infinite alternate;
   
-  transition: bottom 0.5s ease; /* Smooth lift when growing */
+  transition: bottom 0.5s ease; 
 }
 
-/* The Balloon Visual (3D Sphere) */
+/* --- The Balloon (Sphere) --- */
 #lux-balloon {
+  /* Default Scale Variable (Modified by JS) */
+  --scale: 1;
+  
   width: 50px;
   height: 62px;
   border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
   
-  /* 3D Shading (Base color set by JS) */
+  /* 3D Shading */
   background: radial-gradient(circle at 35% 35%, 
               rgba(255,255,255,0.8) 0%, 
               rgba(255,255,255,0.2) 20%, 
               transparent 50%);
               
-  /* Deep rim shadows for roundness */
   box-shadow: 
-    inset -5px -5px 15px rgba(0,0,0,0.4), /* Dark bottom-right */
-    inset 2px 2px 5px rgba(255,255,255,0.4), /* Top-left catchlight */
-    2px 8px 15px rgba(0,0,0,0.3); /* Drop shadow */
+    inset -5px -5px 15px rgba(0,0,0,0.4), 
+    inset 2px 2px 5px rgba(255,255,255,0.4), 
+    2px 8px 15px rgba(0,0,0,0.3); 
     
   pointer-events: auto;
   
-  /* --- CURSOR MAGIC: Transform mouse into a Tack 📌 --- */
-  /* Hotspot is set to 0 20 (bottom-left tip of the pin usually) */
+  /* CURSOR: Tack 📌 */
   cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' style='font-size:24px'><text y='24'>📌</text></svg>") 0 20, pointer;
   
-  /* Swelling transition */
+  /* Apply the scale variable here so transitions work */
+  transform: scale(var(--scale));
   transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
   
-  /* Center in wrapper */
   position: absolute;
-  top: 40%;
+  top: 20%; 
   left: 50%;
-  margin-left: -25px; /* Half width */
-  margin-top: -31px;  /* Half height */
+  margin-left: -25px; 
+  margin-top: -31px;  
+  
+  /* Wobble uses the variable to preserve size */
+  animation: balloonWobble 6s ease-in-out infinite alternate;
 }
 
-/* The Shine (Specular Highlight) */
+/* Shine */
 #lux-balloon::before {
   content: "";
   position: absolute;
@@ -67,34 +71,69 @@
   filter: blur(1px);
 }
 
-/* The String */
+/* --- THE STRING (Randomized & White) --- */
 #lux-balloon::after {
   content: "";
   position: absolute;
-  top: 98%; /* Just under the knot */
-  left: 50%;
-  transform: translateX(-50%);
-  width: 2px;
-  height: 40px; /* Longer string */
-  background: rgba(255,255,255,0.6); /* White-ish string looks better on varied backgrounds */
-  box-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+  top: 96%; /* Attached to bottom */
+  left: 50%; /* Center */
+  
+  width: 25px; /* Width accommodates curve */
+  height: 65px; /* Long tail */
+  
+  /* COLOR FIX: Pure White + Crisp Shadow (No Brown) */
+  border-left: 2px solid #ffffff;
+  filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.3));
+  
+  /* PHYSICS: Anchor Top-Left (Base of Balloon) */
+  transform-origin: top left; 
+  
+  /* TWO LAYERS OF CHAOS */
+  animation: 
+    stringSway 3.1s ease-in-out infinite alternate,
+    stringCurl 2.3s ease-in-out infinite alternate-reverse;
 }
 
-/* Bobbing Keyframes */
-@keyframes wanderX {
-  0% { transform: translateX(-5px) rotate(-3deg); }
-  100% { transform: translateX(5px) rotate(3deg); }
+
+/* --- ANIMATION KEYFRAMES --- */
+
+/* Balloon Wobble: MUST INCLUDE SCALE VARIABLE */
+@keyframes balloonWobble {
+  0% { transform: scale(var(--scale)) rotate(-3deg); }
+  100% { transform: scale(var(--scale)) rotate(3deg); }
 }
+
+/* Drastic Side-to-Side (80px Range) */
+@keyframes wanderX {
+  0% { transform: translateX(-40px); } 
+  100% { transform: translateX(40px); }
+}
+
+/* Up/Down (Vertical Drift) */
 @keyframes wanderY {
   0% { transform: translateY(0px); }
-  100% { transform: translateY(-15px); }
+  100% { transform: translateY(-30px); }
 }
 
-/* Tooltip (Left Side) */
+/* String Sway (Pendulum) */
+@keyframes stringSway {
+  0% { transform: rotate(10deg); }
+  100% { transform: rotate(-10deg); }
+}
+
+/* String Curl (Shape Morpher) */
+@keyframes stringCurl {
+  0% { border-bottom-left-radius: 0%; }   /* Straight */
+  50% { border-bottom-left-radius: 40%; } /* Slight Hook */
+  100% { border-bottom-left-radius: 80%; } /* Deep Hook */
+}
+
+
+/* --- Tooltip --- */
 #lux-balloon-tip {
   position: absolute;
-  right: 110%;
-  top: 40%;
+  right: 130%; /* Push further left */
+  top: 30%;
   background: #1e293b;
   color: #fff;
   padding: 6px 12px;
@@ -112,21 +151,31 @@
   transform: translateX(-5px);
 }
 
-/* --- CONFETTI PHYSICS --- */
+/* --- CONFETTI --- */
 .lux-confetti {
   position: absolute;
   width: 8px;
   height: 8px;
-  top: 40%; /* Start at balloon center */
+  top: 30%; 
   left: 50%;
   opacity: 1;
   pointer-events: none;
   border-radius: 2px;
 }
 
-/* Explode OUT, then drift DOWN */
 @keyframes confettiFall {
-  0% { transform: translate(0,0) rotate(0deg); opacity: 1; }
-  20% { transform: translate(var(--x), var(--y-up)) rotate(120deg); opacity: 1; } /* Explode out/up */
-  100% { transform: translate(var(--x), 300px) rotate(720deg); opacity: 0; } /* Drift down */
+  0% { 
+    transform: translate(0,0) rotate(0deg); 
+    opacity: 1; 
+    animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+  }
+  35% { 
+    transform: translate(var(--x-mid), var(--y-up)) rotate(180deg); 
+    opacity: 1;
+    animation-timing-function: cubic-bezier(0.42, 0, 1, 1);
+  }
+  100% { 
+    transform: translate(var(--x-end), 300px) rotate(720deg); 
+    opacity: 0; 
+  }
 }
