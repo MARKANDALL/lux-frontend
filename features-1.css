@@ -1,3 +1,4 @@
+/* features-1.css */
 /* ============================================================
    Global utilities → link styles for results table
    ============================================================ */
@@ -56,17 +57,16 @@
   filter: brightness(0.85);
 }
 
-/* 3) Input and (?) tip */
-/* FIX: Removed #passageSelect from here so it gets the standard drop shadow from lux-main.css */
+/* 3) Input and (?) tip (UPDATED TO MATCH DROPDOWNS: translateY/-2px + deep shadow) */
 #referenceText,
 #partsInfoTip {
-  transition: transform 0.18s ease, filter 0.18s ease, box-shadow 0.18s ease;
+  transition: transform 0.18s ease, box-shadow 0.18s ease; /* Removed filter from transition */
 }
 #referenceText:hover,
 #partsInfoTip:hover {
-  transform: scale(1.04);
-  filter: brightness(0.95);
-  box-shadow: 0 0 0 2px rgba(0, 120, 215, 0.3);
+  transform: translateY(-2px); /* Bulge up like dropdown */
+  filter: none; /* Removed darkening/filter */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.28); /* Deep shadow like dropdown */
 }
 
 /* 4) Any other tooltip trigger */

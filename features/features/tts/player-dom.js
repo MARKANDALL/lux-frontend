@@ -37,12 +37,12 @@ export function renderControls(mount) {
       <div id="tts-wrap">
         <div class="tts-box tts-compact">
           <div class="tts-head">
-            <div class="tts-title">Text-to-Speech</div>
-            <div id="tts-note" class="tts-note" aria-live="polite"></div>
+            <div id="tts-note" class="tts-note" aria-live="polite" style="text-align:center; min-height:10px;"></div>
           </div>
   
-          <label class="tts-voice"><span>Voice</span>
-            <select id="tts-voice">${voiceOptions}</select>
+          <label class="tts-voice" style="width:100%; text-align:center; display:block;">
+            <span style="display:block; font-weight:700; margin-bottom:6px; font-size:1.1em; color:#333;">Voice</span>
+            <select id="tts-voice" style="width:90%; margin:0 auto; display:block;">${voiceOptions}</select>
           </label>
   
           <label class="tts-speed"><span>Speed</span>
