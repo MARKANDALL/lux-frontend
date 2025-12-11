@@ -1,106 +1,158 @@
 /* features/features/tts/tts-overlay.css */
 /* The "Rock Solid" Positioning Layer. */
+/* REWRITTEN: Right-side Drawer with Left-Protruding Header Tab */
 
 :root {
   --lux-tts-panel-w: 360px;
   --lux-tts-panel-max-w: min(92vw, 380px);
   --lux-tts-panel-max-h: min(520px, 70vh);
+  
   --lux-tts-radius: 14px;
+  
+  /* Tab visuals */
+  --lux-tts-tab-h: 34px;
+  --lux-tts-tab-protrude: 140px; /* How far it sticks out to the LEFT */
+  --lux-tts-tab-peek: 44px;      /* How much of the TAB is visible when closed */
+  --lux-tts-box-peek: 8px;       /* How much of the BOX EDGE is visible when closed */
+  
+  --lux-tts-tab-bg: #2d6cdf;
+  --lux-tts-tab-bg-hover: #2457b1;
+  --lux-tts-tab-ink: #fff;
 }
 
-/* LOCK THE CONTAINER */
+/* ==========================================================================
+   PANEL CONTAINER (Right Side)
+   ========================================================================== */
 html body .lux-tts-panel {
   position: fixed !important;
-  top: 80px !important;
-  width: 360px !important;
-  height: auto !important;
-  max-width: 90vw !important;
   
-  /* Allow the tab to hang outside the box */
-  overflow: visible !important; 
-  
-  /* POSITIONING: 8px visible sliver */
-  right: -352px !important;
-  
+  /* Anchor Top-Right */
+  top: 80px !important; 
+  right: 0 !important; /* Pinned to the right edge */
   left: auto !important;
-  transform: none !important;
+  
+  /* Dimensions */
+  width: var(--lux-tts-panel-w) !important;
+  max-width: var(--lux-tts-panel-max-w) !important;
+  height: auto !important;
+  
+  /* Theme */
+  background: #fff !important;
+  color: #111 !important;
+  
+  /* Borders (Rounded Left corners) */
+  border: 1px solid rgba(0, 0, 0, 0.06) !important;
+  border-right: 0 !important;
+  border-top-left-radius: var(--lux-tts-radius) !important;
+  border-bottom-left-radius: var(--lux-tts-radius) !important;
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  
+  /* Depth */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18) !important;
+  
+  /* IMPORTANT: Allow the tab to hang outside (to the left) */
+  overflow: visible !important;
+  
+  /* CLOSED STATE: Slide Right, leaving just the tab peek + box sliver visible */
+  /* Calculation: Move 100% right, then pull back by (Tab Peek + Box Peek) */
+  transform: translate3d(calc(100% - var(--lux-tts-tab-peek) - var(--lux-tts-box-peek)), 0, 0) !important;
+  
+  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
   
   z-index: 2147483647 !important;
-  background: #fff !important;
-  
-  border: 1px solid #ccc !important;
-  border-right: 0 !important;
-
-  /* VISUAL TEST CHANGE: Round Left corners, Square Right corners */
-  border-radius: 14px 0 0 14px !important;
-  
-  box-shadow: 0 4px 20px rgba(0,0,0,0.15) !important;
-  
-  transition: right 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
   display: block !important;
 }
 
-/* OPEN STATE */
+/* OPEN STATE: Slide back to 0 (Fully visible) */
 html.lux-tts-open body .lux-tts-panel {
-  right: 0 !important;
+  transform: translate3d(0, 0, 0) !important;
 }
 
-/* THE TAB SHAPE */
+/* ==========================================================================
+   THE TAB (Full-width header that protrudes Left)
+   ========================================================================== */
 .lux-tts-tab {
   position: absolute !important;
-  display: flex !important; /* Force display */
-  align-items: center;
-  justify-content: center;
+  top: 6px !important;
   
-  /* Dimensions */
-  width: 148px !important;
-  left: -148px !important; /* Hang off the left side */
-  top: 24px !important;
-  height: 34px !important;
+  /* Stretch Strategy: Pin Right side inside the box, Pin Left side OUTSIDE the box */
+  right: 6px !important;
+  left: calc(var(--lux-tts-tab-protrude) * -1) !important; 
+  width: auto !important; /* Let left/right define width */
   
-  border-radius: 999px 0 0 999px !important;
-  background: #1082ff !important;
-  color: #fff !important;
+  height: var(--lux-tts-tab-h) !important;
+  
+  /* Layout */
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  
+  /* Theme */
+  background: var(--lux-tts-tab-bg) !important;
+  color: var(--lux-tts-tab-ink) !important;
   border: none !important;
-  cursor: pointer !important;
-  box-shadow: -4px 4px 10px rgba(0,0,0,0.1) !important;
+  border-radius: 999px !important;
   
-  font: 600 15px/1.2 system-ui, -apple-system, sans-serif !important;
-  letter-spacing: 0.5px !important;
-  z-index: 2147483648 !important; /* One layer above the panel */
+  /* Typography */
+  font: 600 14px/1 system-ui, -apple-system, sans-serif !important;
+  letter-spacing: 0 !important;
+  
+  /* Interaction */
+  cursor: pointer !important;
+  user-select: none !important;
+  box-shadow: 0 6px 18px rgba(13, 17, 23, 0.35) !important;
+  z-index: 2 !important; /* Above panel content */
+  
+  padding: 0 16px !important;
+  transition: background 0.2s ease, padding 0.2s ease !important;
 }
 
 .lux-tts-tab:hover {
-  filter: brightness(1.02);
-  padding-right: 18px !important;
+  background: var(--lux-tts-tab-bg-hover) !important;
+  filter: none !important;
 }
 
+/* Icon Rotation */
+.lux-tts-tab-icon {
+  display: inline-block !important;
+  font-size: 14px !important;
+  transition: transform 0.25s ease !important;
+}
+
+/* Flip arrow when open (Left arrow becomes Right arrow) */
+html.lux-tts-open .lux-tts-tab-icon {
+  transform: rotate(180deg) !important;
+}
+
+/* ==========================================================================
+   PANEL BODY (No Scrollbars, Full Visibility)
+   ========================================================================== */
 .lux-tts-panel #tts-controls {
-  padding: 14px 16px 16px;
-  height: auto;
-  max-height: none;
-  overflow: visible;
-  box-sizing: border-box;
-
-  /* --- HIDE SCROLLBAR (Visual Only) --- */
-  scrollbar-width: none !important; /* Firefox */
-  -ms-overflow-style: none !important; /* IE/Edge */
+  /* Push content down so it doesn't overlap the header tab */
+  padding: calc(var(--lux-tts-tab-h) + 14px) 16px 16px !important;
+  
+  /* Allow natural height, NO internal scrolling */
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  box-sizing: border-box !important;
 }
 
-/* Chrome/Safari/Opera Scrollbar Hiding */
+/* Hide any accidental scrollbars just in case */
 .lux-tts-panel #tts-controls::-webkit-scrollbar {
   display: none !important;
 }
 
-.lux-tts-loading {
-  font: 600 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  opacity: 0.75;
-  padding: 12px 10px;
-}
-
+/* ==========================================================================
+   MOBILE TWEAKS
+   ========================================================================== */
 @media (max-width: 480px) {
   html body .lux-tts-panel {
-     width: 85vw !important;
-     right: calc((85vw - 8px) * -1) !important;
+     width: 90vw !important;
+  }
+  :root {
+    --lux-tts-tab-protrude: 88px; /* Shorter tongue on mobile */
   }
 }
