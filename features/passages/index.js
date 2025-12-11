@@ -1,6 +1,6 @@
 // features/passages/index.js
 // Controller: Manages passage state and orchestrates DOM updates.
-// UPDATED: Supports Multi-Part Custom Mode (Add + Summarize).
+// UPDATED: Balloon Integration + Cap of 15.
 
 // 1. DATA IMPORT
 import { passages } from "../../src/data/index.js"; 
@@ -28,6 +28,9 @@ Practicing them gives a balanced baseline and helps reveal strengths & weaknesse
   custom: `Type anything you want to practice. We’ll score words & phonemes and add prosody feedback. 
 Tip: shorter sentences (≈10–15 s) give the clearest results.`
 };
+
+// --- NEW: CAP CONSTANT ---
+const MAX_CUSTOM_PARTS = 15;
 
 export function ensureCustomOption() {
   DOM.ensureCustomOptionInDOM();
@@ -93,7 +96,9 @@ export function showCurrentPart({ preserveExistingInput = false } = {}) {
       preserveInput: preserveExistingInput
     });
     
-    // In Custom mode, we normally hide nav until recording finishes
+    // Update Balloon Visuals
+    DOM.updateBalloonUI(currentParts.length, MAX_CUSTOM_PARTS);
+    
     togglePartNav(false);
   } else {
     const text = currentParts[currentPartIdx];
@@ -107,6 +112,9 @@ export function showCurrentPart({ preserveExistingInput = false } = {}) {
       preserveInput: false
     });
     
+    // Hide balloon in standard mode
+    DOM.updateBalloonUI(0, MAX_CUSTOM_PARTS);
+    
     togglePartNav(total > 1);
   }
 }
@@ -117,7 +125,6 @@ export function setPassage(key, { clearInputForCustom = false } = {}) {
   setPartIdx(0);
 
   if (isCustom) {
-    // If switching to custom, start fresh or keep typing
     const nextText = clearInputForCustom ? "" : DOM.getInputValue();
     setParts([nextText]);
     showCurrentPart({ preserveExistingInput: !clearInputForCustom });
@@ -130,33 +137,27 @@ export function setPassage(key, { clearInputForCustom = false } = {}) {
   DOM.clearResultsUI();
 }
 
-// --- UPDATED: Handle "Next" for both Fixed and Custom passages ---
 export function goToNextPart() {
-  const CAP = 10; // Cap custom parts to prevent memory abuse
-
-  // 1. Custom Mode: "Add Another Section" behavior
+  // 1. Custom Mode: Add Section
   if (isCustom) {
-      if (currentParts.length >= CAP) {
-          alert("Maximum parts reached. Please view summary.");
+      if (currentParts.length >= MAX_CUSTOM_PARTS) {
+          alert(`Memory Full! You have reached the limit of ${MAX_CUSTOM_PARTS} recordings. Please view your summary now.`);
           return;
       }
       
-      // Push new empty slot
       const newParts = [...currentParts, ""];
       setParts(newParts);
       setPartIdx(currentPartIdx + 1);
       
-      // Clear UI for new entry
       showCurrentPart({ preserveExistingInput: false });
       DOM.clearResultsUI();
       
-      // Auto-focus input for flow
       const input = document.querySelector("#referenceText");
       if(input) input.focus();
       return;
   }
 
-  // 2. Standard Mode: "Next Part" behavior
+  // 2. Standard Mode
   if (currentPartIdx < currentParts.length - 1) {
     setPartIdx(currentPartIdx + 1);
     showCurrentPart();
@@ -164,17 +165,22 @@ export function goToNextPart() {
   }
 }
 
-// --- UPDATED: Handle Completion logic for Custom Mode ---
 export function markPartCompleted() {
-  // If Custom, we ALWAYS show controls to Add More or Finish
   if (isCustom) {
+      // Check if Cap Reached
+      const isFull = currentParts.length >= MAX_CUSTOM_PARTS;
+      
       DOM.updateNavVisibility({
-          showNext: true,
-          enableNext: true,
-          nextMsgText: "", // "Add Section" label handled by DOM.js or CSS
+          showNext: !isFull, // Hide "Add" if full
+          enableNext: !isFull,
+          nextMsgText: isFull ? "Memory Full (Limit 15)" : "",
+          nextMsgColor: isFull ? "#ef4444" : "",
           showSummary: true,
-          customMode: true // Signal to DOM to change button labels
+          customMode: true 
       });
+      
+      // Force update balloon to show "Full" state
+      DOM.updateBalloonUI(currentParts.length, MAX_CUSTOM_PARTS);
       return;
   }
 
@@ -218,14 +224,11 @@ export function wirePassageSelect() {
 
   DOM.wireInputEvents({
     onInput: (val) => {
-      // Auto-switch to Custom mode if typing on a fixed passage
       if (!isCustom) {
         DOM.forceSelectCustom();
         setPassage("custom", { clearInputForCustom: false });
       }
       
-      // --- CRITICAL FIX: Update ONLY the current index ---
-      // Do not wipe the whole array. Use functional update to be safe.
       const updatedParts = [...currentParts];
       updatedParts[currentPartIdx] = val;
       setParts(updatedParts);

@@ -1,6 +1,6 @@
 // features/passages/dom.js
 // Pure DOM manipulation for passage navigation and inputs.
-// UPDATED: Handles dynamic button labels for Custom Mode.
+// UPDATED: Added "Balloon" UI logic.
 
 import { qs, setText, setVisible } from "../../app-core/lux-utils.js";
 
@@ -19,6 +19,8 @@ const ui = {
   get status() { return qs("#status"); },
   get aiBox() { return qs("#aiFeedback"); },
   get showMore() { return qs("#showMoreBtn"); },
+  // New Balloon Getter
+  get ghostControls() { return qs("#ghostControls"); }
 };
 
 /* --- Read --- */
@@ -90,14 +92,12 @@ export function updateNavVisibility({ showNext, enableNext, nextMsgText, nextMsg
     setVisible(ui.nextBtn, showNext);
     ui.nextBtn.disabled = !enableNext;
     
-    // Dynamic Label
     if (customMode) {
         ui.nextBtn.textContent = "➕ Add Another Section";
-        // Optionally style it differently
-        ui.nextBtn.style.backgroundColor = "#0f766e"; // Teal for Add
+        ui.nextBtn.style.backgroundColor = "#0f766e"; // Teal
     } else {
-        ui.nextBtn.textContent = "Next Part"; // Reset default
-        ui.nextBtn.style.backgroundColor = ""; // Reset color
+        ui.nextBtn.textContent = "Next Part"; 
+        ui.nextBtn.style.backgroundColor = ""; 
     }
   }
 
@@ -116,7 +116,6 @@ export function updateNavVisibility({ showNext, enableNext, nextMsgText, nextMsg
         setVisible(ui.summaryBtn, showSummary);
         ui.summaryBtn.disabled = !showSummary;
         
-        // Custom Mode Label
         if (customMode) {
             ui.summaryBtn.textContent = "Finish & View Summary";
         } else {
@@ -124,6 +123,52 @@ export function updateNavVisibility({ showNext, enableNext, nextMsgText, nextMsg
         }
     }
   }
+}
+
+// --- NEW: Balloon Logic ---
+export function updateBalloonUI(count, max) {
+    let wrap = document.getElementById("lux-balloon-container");
+    
+    // 1. Create if missing
+    if (!wrap && ui.ghostControls) {
+        wrap = document.createElement("div");
+        wrap.id = "lux-balloon-container";
+        wrap.innerHTML = `<div id="lux-balloon"></div>`;
+        // Insert after the Next button
+        if (ui.nextBtn) {
+            ui.nextBtn.parentNode.insertBefore(wrap, ui.nextBtn.nextSibling);
+        } else {
+            ui.ghostControls.appendChild(wrap);
+        }
+    }
+    
+    if (!wrap) return;
+
+    // 2. Hide if count is 0 or 1 (not really a session yet)
+    if (count <= 1) {
+        wrap.style.display = "none";
+        return;
+    }
+    wrap.style.display = "inline-flex";
+
+    // 3. Calculate Swell
+    const ball = wrap.querySelector("#lux-balloon");
+    const ratio = count / max;
+    
+    // Scale from 1.0 to 2.5 based on fullness
+    const scale = 1.0 + (ratio * 1.5); 
+    ball.style.transform = `scale(${scale})`;
+
+    // 4. Color & Tip
+    wrap.setAttribute("data-tip", `${count} / ${max} memory used`);
+    
+    ball.classList.remove("is-warning", "is-full");
+    if (ratio >= 1) {
+        ball.classList.add("is-full");
+        wrap.setAttribute("data-tip", "Memory Full!");
+    } else if (ratio > 0.7) {
+        ball.classList.add("is-warning");
+    }
 }
 
 export function clearResultsUI() {
