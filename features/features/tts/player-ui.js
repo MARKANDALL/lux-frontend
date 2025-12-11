@@ -89,14 +89,14 @@ export async function mountTTSPlayer(hostEl) {
   speedEl.addEventListener("input", updateSpeedOut);
   pitchEl.addEventListener("input", updatePitchOut);
 
-  // 6. Audio Controls
+  // 6. Audio Controls (UPDATED to 2 seconds)
   backBtn.addEventListener("click", () => {
-    audio.currentTime = Math.max(0, audio.currentTime - 5);
+    audio.currentTime = Math.max(0, audio.currentTime - 2);
   });
   fwdBtn.addEventListener("click", () => {
     audio.currentTime = Math.min(
       audio.duration || Infinity,
-      audio.currentTime + 5
+      audio.currentTime + 2
     );
   });
 

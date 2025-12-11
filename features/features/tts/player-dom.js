@@ -57,7 +57,7 @@ export function renderControls(mount) {
               </label>
   
               <label>Degree
-                <input id="tts-styledegree" type="number" min="0.1" max="2.5" step="0.1" value="1.0"/>
+                <input id="tts-styledegree" type="number" min="0.1" max="2.5" step="0.1" value="2.5"/>
               </label>
             </div>
           </div>
@@ -72,8 +72,8 @@ export function renderControls(mount) {
           </label>
   
           <div class="tts-skip">
-            <button id="tts-back" class="tts-btn tts-btn--sm" title="Back 5 seconds">↺ 5s</button>
-            <button id="tts-fwd"  class="tts-btn tts-btn--sm" title="Forward 5 seconds">↻ 5s</button>
+            <button id="tts-back" class="tts-btn tts-btn--sm" title="Back 2 seconds">↺ 2s</button>
+            <button id="tts-fwd"  class="tts-btn tts-btn--sm" title="Forward 2 seconds">↻ 2s</button>
           </div>
   
           <a id="tts-download" class="tts-link" href="#" download="lux_tts.mp3" title="Download last audio">⬇️</a>

@@ -1,10 +1,11 @@
+// features/features/tts/player-core.js
 // Core: networking, constants, voice caps (no DOM writes)
 export const TTS_URL = "https://luxury-language-api.vercel.app/api/tts";
 
 export const VOICES = [
+  { id: "en-US-AriaNeural", label: "US — Aria" },
   { id: "en-US-AvaNeural", label: "US — Ava" },
   { id: "en-US-JennyNeural", label: "US — Jenny" },
-  { id: "en-US-AriaNeural", label: "US — Aria" },
   { id: "en-US-GuyNeural", label: "US — Guy" },
   { id: "en-US-DavisNeural", label: "US — Davis" },
   { id: "en-US-SaraNeural", label: "US — Sara" },
