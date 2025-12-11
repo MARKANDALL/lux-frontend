@@ -1,11 +1,8 @@
 // features/passages/index.js
 // Controller: Manages passage state and orchestrates DOM updates.
-// UPDATED: Balloon Integration + Cap of 15.
+// UPDATED: Universal Balloon Support + Confetti Pop on Summary.
 
-// 1. DATA IMPORT
 import { passages } from "../../src/data/index.js"; 
-
-// 2. STATE IMPORT
 import {
   setCustom,
   setPassageKey,
@@ -16,9 +13,8 @@ import {
   currentPassageKey,
   isCustom,
 } from "../../app-core/state.js"; 
-
-// 3. DOM IMPORT
 import * as DOM from "./dom.js"; 
+import { updateBalloon, popBalloon } from "../balloon/index.js";
 
 /* ---------------- Logic / Helpers ---------------- */
 
@@ -29,7 +25,6 @@ Practicing them gives a balanced baseline and helps reveal strengths & weaknesse
 Tip: shorter sentences (≈10–15 s) give the clearest results.`
 };
 
-// --- NEW: CAP CONSTANT ---
 const MAX_CUSTOM_PARTS = 15;
 
 export function ensureCustomOption() {
@@ -96,8 +91,8 @@ export function showCurrentPart({ preserveExistingInput = false } = {}) {
       preserveInput: preserveExistingInput
     });
     
-    // Update Balloon Visuals
-    DOM.updateBalloonUI(currentParts.length, MAX_CUSTOM_PARTS);
+    // Custom: Fill based on count vs MAX (15)
+    updateBalloon(currentParts.length, MAX_CUSTOM_PARTS);
     
     togglePartNav(false);
   } else {
@@ -112,8 +107,9 @@ export function showCurrentPart({ preserveExistingInput = false } = {}) {
       preserveInput: false
     });
     
-    // Hide balloon in standard mode
-    DOM.updateBalloonUI(0, MAX_CUSTOM_PARTS);
+    // Curated: Fill based on current index vs Total Parts
+    // We add 1 to index so it starts partially full (Part 1 of 12)
+    updateBalloon(currentPartIdx, total);
     
     togglePartNav(total > 1);
   }
@@ -138,7 +134,6 @@ export function setPassage(key, { clearInputForCustom = false } = {}) {
 }
 
 export function goToNextPart() {
-  // 1. Custom Mode: Add Section
   if (isCustom) {
       if (currentParts.length >= MAX_CUSTOM_PARTS) {
           alert(`Memory Full! You have reached the limit of ${MAX_CUSTOM_PARTS} recordings. Please view your summary now.`);
@@ -157,7 +152,6 @@ export function goToNextPart() {
       return;
   }
 
-  // 2. Standard Mode
   if (currentPartIdx < currentParts.length - 1) {
     setPartIdx(currentPartIdx + 1);
     showCurrentPart();
@@ -166,25 +160,23 @@ export function goToNextPart() {
 }
 
 export function markPartCompleted() {
+  const total = Array.isArray(currentParts) ? currentParts.length : 0;
+
   if (isCustom) {
-      // Check if Cap Reached
       const isFull = currentParts.length >= MAX_CUSTOM_PARTS;
-      
       DOM.updateNavVisibility({
-          showNext: !isFull, // Hide "Add" if full
+          showNext: !isFull, 
           enableNext: !isFull,
           nextMsgText: isFull ? "Memory Full (Limit 15)" : "",
           nextMsgColor: isFull ? "#ef4444" : "",
           showSummary: true,
           customMode: true 
       });
-      
-      // Force update balloon to show "Full" state
-      DOM.updateBalloonUI(currentParts.length, MAX_CUSTOM_PARTS);
+      // Custom: update count
+      updateBalloon(currentParts.length, MAX_CUSTOM_PARTS);
       return;
   }
 
-  const total = Array.isArray(currentParts) ? currentParts.length : 0;
   if (total <= 1) return;
 
   const atLast = currentPartIdx >= total - 1;
@@ -197,6 +189,8 @@ export function markPartCompleted() {
       nextMsgColor: "#15803d",
       showSummary: false
     });
+    // Curated: Update progress (current part finished)
+    updateBalloon(currentPartIdx + 1, total);
   } else {
     DOM.updateNavVisibility({
       showNext: false,
@@ -204,6 +198,8 @@ export function markPartCompleted() {
       nextMsgText: "",
       showSummary: true
     });
+    // Curated: Full!
+    updateBalloon(total, total);
   }
 }
 
@@ -243,6 +239,14 @@ export function wirePassageSelect() {
       updatePartsInfoTip();
     }
   });
+  
+  // GLOBAL POP HANDLER (For both modes)
+  const summaryBtn = document.getElementById('showSummaryBtn');
+  if (summaryBtn) {
+      summaryBtn.addEventListener('click', () => {
+          popBalloon();
+      });
+  }
 }
 
 export function wireNextBtn() {

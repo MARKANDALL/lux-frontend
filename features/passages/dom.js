@@ -1,6 +1,6 @@
 // features/passages/dom.js
 // Pure DOM manipulation for passage navigation and inputs.
-// UPDATED: Added "Balloon" UI logic.
+// CLEANED: Balloon logic moved to features/balloon/
 
 import { qs, setText, setVisible } from "../../app-core/lux-utils.js";
 
@@ -19,8 +19,6 @@ const ui = {
   get status() { return qs("#status"); },
   get aiBox() { return qs("#aiFeedback"); },
   get showMore() { return qs("#showMoreBtn"); },
-  // New Balloon Getter
-  get ghostControls() { return qs("#ghostControls"); }
 };
 
 /* --- Read --- */
@@ -86,7 +84,6 @@ export function renderPartState({
   }
 }
 
-// --- UPDATED: Handle Custom Labels ---
 export function updateNavVisibility({ showNext, enableNext, nextMsgText, nextMsgColor, showSummary, customMode }) {
   if (ui.nextBtn) {
     setVisible(ui.nextBtn, showNext);
@@ -123,52 +120,6 @@ export function updateNavVisibility({ showNext, enableNext, nextMsgText, nextMsg
         }
     }
   }
-}
-
-// --- NEW: Balloon Logic ---
-export function updateBalloonUI(count, max) {
-    let wrap = document.getElementById("lux-balloon-container");
-    
-    // 1. Create if missing
-    if (!wrap && ui.ghostControls) {
-        wrap = document.createElement("div");
-        wrap.id = "lux-balloon-container";
-        wrap.innerHTML = `<div id="lux-balloon"></div>`;
-        // Insert after the Next button
-        if (ui.nextBtn) {
-            ui.nextBtn.parentNode.insertBefore(wrap, ui.nextBtn.nextSibling);
-        } else {
-            ui.ghostControls.appendChild(wrap);
-        }
-    }
-    
-    if (!wrap) return;
-
-    // 2. Hide if count is 0 or 1 (not really a session yet)
-    if (count <= 1) {
-        wrap.style.display = "none";
-        return;
-    }
-    wrap.style.display = "inline-flex";
-
-    // 3. Calculate Swell
-    const ball = wrap.querySelector("#lux-balloon");
-    const ratio = count / max;
-    
-    // Scale from 1.0 to 2.5 based on fullness
-    const scale = 1.0 + (ratio * 1.5); 
-    ball.style.transform = `scale(${scale})`;
-
-    // 4. Color & Tip
-    wrap.setAttribute("data-tip", `${count} / ${max} memory used`);
-    
-    ball.classList.remove("is-warning", "is-full");
-    if (ratio >= 1) {
-        ball.classList.add("is-full");
-        wrap.setAttribute("data-tip", "Memory Full!");
-    } else if (ratio > 0.7) {
-        ball.classList.add("is-warning");
-    }
 }
 
 export function clearResultsUI() {
