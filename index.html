@@ -135,8 +135,16 @@
       <div id="aiFeedbackSection"><div id="aiFeedback"></div></div>
       <button id="showMoreBtn" style="display: none; margin: 1em auto; padding: 0.7em 1.3em; font-size: 1em;">Show More</button>
       <div><span class="show-raw-link" id="toggleRaw">Show Raw Data</span><pre id="rawData" class="raw-data-section"></pre></div>
-      <div id="ygPreview"><video id="ygDemo" src="" style="width: 100%; height: 100%; display: block; object-fit: cover" muted playsinline loop autoplay></video><div id="unmuteTip" style="display:none;">🔊 Click to unmute</div></div>
-      <div id="phPreview"><video id="phDemo" src="" style="width: 100%; height: 100%; display: block; object-fit: contain; background: #000;" muted playsinline loop preload="metadata"></video><div id="phUnmuteTip" style="display:none;">🔊 Click to toggle audio</div></div>
+      
+      <div id="ygPreview">
+        <video id="ygDemo" src="https://video.wixstatic.com/video/0d5d6f_5ae77fc4972248b38eb63ea25e5068fb/720p/mp4/file.mp4" style="width: 100%; height: 100%; display: block; object-fit: cover" muted playsinline loop autoplay></video>
+        <div id="unmuteTip" style="display:none;">🔊 Click to unmute</div>
+      </div>
+      
+      <div id="phPreview">
+        <video id="phDemo" src="https://video.wixstatic.com/video/0d5d6f_e100780f16524e51bd9c8e49f1c8c71c/480p/mp4/file.mp4" style="width: 100%; height: 100%; display: block; object-fit: contain; background: #000;" muted playsinline loop preload="metadata"></video>
+        <div id="phUnmuteTip" style="display:none;">🔊 Click to toggle audio</div>
+      </div>
     </div>
 
     <div id="tts-controls" data-luxHidden="1"></div>
@@ -159,8 +167,6 @@
         if (!audioEl) return;
         const src = audioEl.currentSrc || audioEl.src || audioEl.querySelector("source")?.src;
         if (!src) return;
-        // Waveform Logic: Just pass the Blob URL directly if available.
-        // The new audio-sink.js handles the handoff via CustomEvent.
       }
       audioEl?.addEventListener("loadeddata", hydrate);
       if (audioEl?.src) hydrate();
