@@ -1,4 +1,4 @@
-/* Self-Playback “Peekaboo” Panel (top-left) — mirrors TTS behavior */
+/* Self-Playback “Peekaboo” Panel (top-left) */
 
 :root {
   --lux-sp-panel-w: 360px;
@@ -6,13 +6,13 @@
   --lux-sp-panel-max-h: min(520px, 70vh);
 
   --lux-sp-radius: 14px;
-  --lux-sp-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
-  --lux-sp-border: 1px solid rgba(0, 0, 0, 0.06);
+  --lux-sp-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  --lux-sp-border: 1px solid rgba(0, 0, 0, 0.08);
 
   /* Tab visuals */
   --lux-sp-tab-h: 34px;
-  --lux-sp-tab-protrude: 140px; /* how far the tab sticks out into the page */
-  --lux-sp-tab-peek: 44px; /* how much stays visible when the panel is closed */
+  --lux-sp-tab-protrude: 140px; 
+  --lux-sp-tab-peek: 44px; /* The "Edge" that sticks out */
 
   --lux-sp-tab-bg: #2d6cdf;
   --lux-sp-tab-bg-hover: #2457b1;
@@ -30,53 +30,71 @@
   height: auto;
   max-height: var(--lux-sp-panel-max-h);
 
-  /* CHANGE HERE: White background and dark text */
-  background: #fff;
-  color: #111;
+  /* LIGHT THEME BACKGROUND */
+  background: #ffffff;
+  color: #333333;
+  
   border: var(--lux-sp-border);
   border-left: 0;
   border-top-right-radius: var(--lux-sp-radius);
   border-bottom-right-radius: var(--lux-sp-radius);
   box-shadow: var(--lux-sp-shadow);
 
-  /* IMPORTANT: allow the tab to extend outside the panel */
   overflow: visible;
 
-  /* Closed = tuck off-screen to the LEFT, but keep a small “peek” visible */
+  /* Closed State: Tucked left, but leaving 'peek' pixels visible */
   transform: translate3d(calc(-100% + var(--lux-sp-tab-peek)), 0, 0);
   transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* Open state toggled on <html> */
+/* Open State */
 .lux-sp-open .lux-sp-panel {
   transform: translate3d(0, 0, 0);
 }
 
-/* Body wrapper (gives room under the tab) */
+/* Body Wrapper */
 .lux-sp-body {
-  padding: calc(var(--lux-sp-tab-h) + 10px) 6px 6px 6px; /* reserve space for the top tab */
+  padding: calc(var(--lux-sp-tab-h) + 10px) 6px 6px 6px;
   box-sizing: border-box;
+  
+  /* FORCE HEIGHT: Matches open state (~280px) */
+  min-height: 280px; 
 }
 
-/* The inner host scrolls inside the panel */
+/* === GHOST FILLER BOX (Light Mode) === */
+.lux-sp-body:empty {
+  display: block;
+  margin: 4px;
+  border-radius: 8px;
+  
+  /* Subtle grey pulse for light background */
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px dashed rgba(0, 0, 0, 0.1);
+  
+  animation: spGhostPulse 2s infinite ease-in-out;
+}
+
+@keyframes spGhostPulse {
+  0% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+  100% { opacity: 0.4; }
+}
+
+/* Internal Host Scrolling */
 .lux-sp-panel #selfpb-lite {
   position: static !important;
   height: auto !important;
   min-height: 0 !important;
-  max-height: calc(
-    var(--lux-sp-panel-max-h) - var(--lux-sp-tab-h) - 16px
-  ) !important;
+  max-height: calc(var(--lux-sp-panel-max-h) - var(--lux-sp-tab-h) - 16px) !important;
   overflow: auto !important;
 }
 
-/* ───────────────── Tab (full-width top bar with a right “tongue”) ───────────────── */
+/* ───────────────── Tab ───────────────── */
 .lux-sp-tab {
   position: absolute;
   top: 6px;
-  left: 6px; /* start inside the left edge */
-  width: calc(
-    100% + var(--lux-sp-tab-protrude)
-  ); /* span the panel and protrude to the right */
+  left: 6px;
+  width: calc(100% + var(--lux-sp-tab-protrude));
   height: var(--lux-sp-tab-h);
 
   display: inline-flex;
@@ -90,11 +108,9 @@
   background: var(--lux-sp-tab-bg);
   color: var(--lux-sp-tab-ink);
   font: 600 14px/1 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  box-shadow: 0 6px 18px rgba(13, 17, 23, 0.35);
+  box-shadow: 0 6px 18px rgba(13, 17, 23, 0.15); /* Softer shadow for light theme */
   cursor: pointer;
   user-select: none;
-
-  /* keep it above panel contents */
   z-index: 2;
 }
 
@@ -114,25 +130,19 @@
   transition: transform 0.25s ease;
 }
 
-/* Arrow flips when open */
 .lux-sp-open .lux-sp-tab-icon {
   transform: rotate(180deg);
 }
 
-/* ───────────────── Small screens ───────────────── */
 @media (max-width: 560px) {
   :root {
     --lux-sp-panel-w: 92vw;
     --lux-sp-panel-max-w: 92vw;
     --lux-sp-panel-max-h: min(82vh, 640px);
-    --lux-sp-tab-protrude: 88px; /* slightly shorter tongue on phones */
+    --lux-sp-tab-protrude: 88px;
   }
 }
 
-/* Keep out of print */
 @media print {
-  .lux-sp-panel,
-  .lux-sp-tab {
-    display: none !important;
-  }
+  .lux-sp-panel, .lux-sp-tab { display: none !important; }
 }
