@@ -1,17 +1,17 @@
 // ui/interactions/index.js
 import { safePlay, playWithGesture, prepareVideo } from "./utils.js";
-import { installLegendCueStyles } from "./cue-styles.js";
+// Removed: installLegendCueStyles
 import { initScoreErrorCollapse } from "./score-collapse.js";
 import { initProsodyLegendToggle } from "./legend-toggle.js";
 import { setupYGHover } from "./yg-hover.js";
-import { setupPhonemeHover } from "./ph-hover.js"; // ← portal-capable
+import { setupPhonemeHover } from "./ph-hover.js";
 import { initPhonemeAudio } from "./ph-audio.js";
 import { initPhonemeChipBehavior } from "./ph-chips.js";
 import { animateMetricTips } from "./tips.js";
 import { showClickHint, keepTooltipInView } from "./helpers.js";
 import { bootInteractions } from "./boot.js";
 
-// Re-attach legacy globals (no fallback for setupPhonemeHover)
+// Re-attach legacy globals
 globalThis.initScoreErrorCollapse =
   globalThis.initScoreErrorCollapse || initScoreErrorCollapse;
 globalThis.initProsodyLegendToggle =
@@ -20,7 +20,6 @@ globalThis.animateMetricTips =
   globalThis.animateMetricTips || animateMetricTips;
 globalThis.setupYGHover = globalThis.setupYGHover || setupYGHover;
 
-// Always prefer the portal-capable version
 globalThis.setupPhonemeHover = setupPhonemeHover;
 
 globalThis.initPhonemeAudio = globalThis.initPhonemeAudio || initPhonemeAudio;
@@ -35,10 +34,6 @@ globalThis.safePlay = globalThis.safePlay || safePlay;
 globalThis.playWithGesture = globalThis.playWithGesture || playWithGesture;
 globalThis.prepareVideo = globalThis.prepareVideo || prepareVideo;
 
-// Optional: expose style injector
-globalThis.installLegendCueStyles =
-  globalThis.installLegendCueStyles || installLegendCueStyles;
-
 // Auto-boot same as old file did
 bootInteractions();
 
@@ -47,7 +42,7 @@ export {
   safePlay,
   playWithGesture,
   prepareVideo,
-  installLegendCueStyles,
+  // Removed: installLegendCueStyles
   initScoreErrorCollapse,
   initProsodyLegendToggle,
   setupYGHover,

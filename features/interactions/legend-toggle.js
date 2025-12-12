@@ -1,8 +1,8 @@
 // ui/interactions/legend-toggle.js
-import { installLegendCueStyles } from "./cue-styles.js";
+// CLEANED: Removed dynamic CSS injection (now handled by lux-results.css)
 
 export function initProsodyLegendToggle() {
-  installLegendCueStyles();
+  // Removed: installLegendCueStyles();
 
   const tip = document.getElementById("prosodyLegendToggle");
   const legend = document.getElementById("prosodyLegend");

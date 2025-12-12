@@ -34,4 +34,4 @@ export function installLegendCueStyles() {
   style.id = "legendCueStyles";
   style.textContent = css;
   document.head.appendChild(style);
-}
+} 
