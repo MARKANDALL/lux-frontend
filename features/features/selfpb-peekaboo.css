@@ -23,7 +23,7 @@
 .lux-sp-panel {
   position: fixed;
   inset: env(safe-area-inset-top, 0) auto auto env(safe-area-inset-left, 0);
-  z-index: 9999;
+  z-index: var(--z-drawer); /* Treaty Compliant */
 
   width: var(--lux-sp-panel-w);
   max-width: var(--lux-sp-panel-max-w);

@@ -20,8 +20,9 @@ export function installLegendCueStyles() {
       .tip-ProsodyBars .tooltiptext::before{content:"";position:absolute;left:10px;right:10px;bottom:6px;height:2px;background:#ffffff66;border-radius:2px;}
       .tip-ProsodyBars .tooltiptext::after{content:"";position:absolute;bottom:2px;width:0;height:0;border-right:10px solid #fff;border-top:6px solid transparent;border-bottom:6px solid transparent;right:-18px;opacity:.9;animation:legendArrow 1.7s linear infinite;}
       @keyframes legendArrow{from{right:-18px}to{right:calc(100% + 18px)}}
-      .lux-cta{transition:color .15s ease;}
-      .lux-cta:hover{color:#409cff;}
+      
+      /* REMOVED: .lux-cta styles (Moved to lux-popover.css) */
+
       /* chip tap feedback */
       #resultBody .phoneme-chip.tap-flash{animation:chipTap .22s ease-out 1;}
       @keyframes chipTap{

@@ -21,11 +21,12 @@
   box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.6);
   animation: luxPulse 2.6s ease-in-out infinite !important;
 
-  transition: transform 0.12s ease, background-color 0.12s ease;
+  /* Added color transition here to replace JS injection later */
+  transition: transform 0.12s ease, background-color 0.12s ease, color 0.15s ease;
 
   /* create own stacking context & sit above ordinary tips */
   isolation: isolate;
-  z-index: 200001;
+  z-index: var(--z-popover); /* Treaty Compliant */
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -37,9 +38,9 @@
 .lux-cta:hover,
 .lux-cta:focus {
   background: #eef3ff;
+  color: #409cff; /* Moved from JS to here */
   transform: translateY(-1px) scale(1.02);
-  /* Pause pulse on hover so it doesn't fight the focus ring */
-  animation: none !important; 
+  /* CRITICAL FIX: Removed 'animation: none !important' so ring persists */
 }
 
 .lux-cta:focus-visible {
@@ -83,7 +84,7 @@
   will-change: opacity, transform;
 
   /* decisively above any tooltip bubbles elsewhere */
-  z-index: 200000;
+  z-index: calc(var(--z-popover) + 1); /* Treaty Compliant */
 }
 .lux-cta:hover .lux-pop,
 .lux-cta:focus-within .lux-pop,
@@ -214,7 +215,7 @@ button.lux-btn:disabled {
 /* ── NEW: Body-level tooltip used by prosody bars ──────────────────────── */
 .lux-tip {
   position: fixed;
-  z-index: 200100; /* above .lux-cta and .lux-pop */
+  z-index: calc(var(--z-popover) + 10); /* Above standard popovers */
   pointer-events: none; /* mouse goes through */
   background: rgba(0, 0, 0, 0.88);
   color: #fff;

@@ -21,12 +21,8 @@
                            Spinner
                            ============================================================ */
 @keyframes slowSpin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 .ai-spinner {
   display: inline-block;
@@ -34,7 +30,7 @@
 }
 
 /* ============================================================
-                           Global interactive hover cues (feature elements)
+                           Global interactive hover cues
                            ============================================================ */
 /* 2) Word links & phoneme symbols */
 #prettyResult a,
@@ -48,7 +44,7 @@
   filter: brightness(0.85);
 }
 
-/* 2a) Phoneme header pill hover effect (NEW) */
+/* 2a) Phoneme header pill hover effect */
 #prettyResult th .phoneme-chip {
   transition: transform 0.18s ease, filter 0.18s ease;
 }
@@ -57,16 +53,16 @@
   filter: brightness(0.85);
 }
 
-/* 3) Input and (?) tip (UPDATED TO MATCH DROPDOWNS: translateY/-2px + deep shadow) */
+/* 3) Input and (?) tip */
 #referenceText,
 #partsInfoTip {
-  transition: transform 0.18s ease, box-shadow 0.18s ease; /* Removed filter from transition */
+  transition: transform 0.18s ease, box-shadow 0.18s ease; 
 }
 #referenceText:hover,
 #partsInfoTip:hover {
-  transform: translateY(-2px); /* Bulge up like dropdown */
-  filter: none; /* Removed darkening/filter */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.28); /* Deep shadow like dropdown */
+  transform: translateY(-2px); 
+  filter: none; 
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.28); 
 }
 
 /* 4) Any other tooltip trigger */
@@ -87,31 +83,9 @@
 }
 
 /* ============================================================
-                           Status & result panels
-                           ============================================================ */
-#userMsg {
-  background: #e7f2fb;
-  color: #134e6f;
-  padding: 1em 0.7em;
-  border-radius: 0.7em;
-  opacity: 0;
-  transform: translateY(-40px);
-  transition: opacity 0.7s ease,
-    transform 0.7s cubic-bezier(0.47, 1.64, 0.41, 0.8);
-}
-#userMsg.show {
-  opacity: 1;
-  transform: translateY(0);
-}
-#userMsg ol {
-  margin: 0;
-  padding-left: 1.2em;
-}
-#userMsg li {
-  margin-bottom: 0.5em;
-  font-size: 1.09em;
-  line-height: 1.5;
-}
+                           Result panels
+   (Removed #userMsg - moved to lux-main.css)
+   ============================================================ */
 
 #suggested-section {
   margin: 32px 0 18px;
@@ -146,6 +120,12 @@
 /* ============================================================
                            Buttons → recording states & effects
                            ============================================================ */
+/* 1. Base Icons (Rescued from base.css) */
+#record::before { content: "🎙️  "; }
+#stop::before { content: "🛑  "; }
+#nextPartBtn::before { content: "➡️  "; }
+
+/* 2. Recording State Colors */
 #record.record-intro,
 #record.record-glow,
 #record.record-intro:disabled,
@@ -174,18 +154,9 @@
   pointer-events: none;
 }
 @keyframes recordSlashGreen {
-  from {
-    background-position: -220% 0;
-    opacity: 1;
-  }
-  90% {
-    background-position: 0 0;
-    opacity: 1;
-  }
-  to {
-    background-position: 0 0;
-    opacity: 0;
-  }
+  from { background-position: -220% 0; opacity: 1; }
+  90% { background-position: 0 0; opacity: 1; }
+  to { background-position: 0 0; opacity: 0; }
 }
 
 /* Sustained glow while recording */
@@ -196,23 +167,12 @@
   filter: brightness(1);
 }
 @keyframes recordGlowAmber {
-  0% {
-    box-shadow: 0 0 0 0 var(--rec-glow-soft), 0 0 20px var(--rec-glow-soft);
-    filter: brightness(1);
-  }
-  50% {
-    box-shadow: 0 0 0 16px rgba(234, 179, 8, 0), 0 0 38px var(--rec-glow-strong);
-    filter: brightness(1.14);
-  }
-  100% {
-    box-shadow: 0 0 0 0 var(--rec-glow-soft), 0 0 20px var(--rec-glow-soft);
-    filter: brightness(1);
-  }
+  0% { box-shadow: 0 0 0 0 var(--rec-glow-soft), 0 0 20px var(--rec-glow-soft); filter: brightness(1); }
+  50% { box-shadow: 0 0 0 16px rgba(234, 179, 8, 0), 0 0 38px var(--rec-glow-strong); filter: brightness(1.14); }
+  100% { box-shadow: 0 0 0 0 var(--rec-glow-soft), 0 0 20px var(--rec-glow-soft); filter: brightness(1); }
 }
 @media (prefers-reduced-motion: reduce) {
-  #record.record-glow {
-    animation: none;
-  }
+  #record.record-glow { animation: none; }
 }
 
 /* Stop-button loading stripes */
@@ -241,12 +201,8 @@
   animation: stripeMove 1s linear infinite;
 }
 @keyframes stripeMove {
-  from {
-    background-position: 0 0;
-  }
-  to {
-    background-position: 40px 0;
-  }
+  from { background-position: 0 0; }
+  to { background-position: 40px 0; }
 }
 
 /* ============================================================
@@ -287,36 +243,16 @@
   padding: 2px 6px 2px 24px;
   border-radius: 14px;
 }
-.score-good {
-  color: #0b8bdb;
-  background: #e8f5ff;
-}
-.score-warn {
-  color: #d07c00;
-  background: #fff6e0;
-}
-.score-bad {
-  color: #b90026;
-  background: #ffe7e7;
-}
+.score-good { color: #0b8bdb; background: #e8f5ff; }
+.score-warn { color: #d07c00; background: #fff6e0; }
+.score-bad { color: #b90026; background: #ffe7e7; }
 
-.score-good::before,
-.score-warn::before,
-.score-bad::before {
-  position: absolute;
-  left: 6px;
-  top: 1px;
-  font-size: 0.9em;
+.score-good::before, .score-warn::before, .score-bad::before {
+  position: absolute; left: 6px; top: 1px; font-size: 0.9em;
 }
-.score-good::before {
-  content: "✔";
-}
-.score-warn::before {
-  content: "⚠️";
-}
-.score-bad::before {
-  content: "✖";
-}
+.score-good::before { content: "✔"; }
+.score-warn::before { content: "⚠️"; }
+.score-bad::before { content: "✖"; }
 
 .word-chip {
   display: inline-block;
@@ -332,7 +268,7 @@
   user-select: none;
 }
 
-/* tooltip generic styles */
+/* tooltip generic styles (reverted to Grey) */
 .tooltip .tooltiptext {
   visibility: hidden;
   opacity: 0;
@@ -342,22 +278,20 @@
   top: 99%;
   transform: translateX(-50%);
   
-  /* --- REVERTED BACK TO GREY --- */
   background: #444; 
   color: #fff;
-  /* --------------------------- */
   
   padding: 10px;
   border-radius: 5px;
   min-width: 240px;
   max-width: 520px;
-  
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); /* Reverted shadow */
-  
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   white-space: normal;
   word-wrap: break-word;
   overflow: hidden;
-  z-index: 99999; /* above everything */
+  
+  /* UPDATED: Use Treaty Variable */
+  z-index: var(--z-popover); 
 }
 .tooltip:hover .tooltiptext {
   visibility: visible;
@@ -365,7 +299,7 @@
 }
 .tooltip:hover,
 .tooltip:focus-within {
-  z-index: 9999;
+  z-index: var(--z-popover);
 }
 
 /* Allow phoneme tooltips to overflow cell */
@@ -381,35 +315,4 @@
 .fade-vis.is-hidden {
   opacity: 0;
   pointer-events: none; /* can't click while hidden */
-}
-
-/* ============================================================
-   Specific Overrides: Database Tracking Tooltip
-   ============================================================ */
-
-/* 1. DEFINE THE PULSE ANIMATION */
-@keyframes pulseBlueRing {
-  0% {
-    box-shadow: 0 0 0 0 rgba(0, 140, 255, 0.7);
-  }
-  70% {
-    box-shadow: 0 0 0 10px rgba(0, 140, 255, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(0, 140, 255, 0);
-  }
-}
-
-/* 2. APPLY PULSE RING TO THE TEXT LINK ON HOVER */
-/* Add the class "db-tracking-tip" to your database tracking HTML span! */
-.db-tracking-tip:hover {
-  animation: pulseBlueRing 1.5s infinite ease-out;
-  border-radius: 4px; /* Makes the ring look nicer around text */
-  color: #0078d7; /* Ensures text turns blue too */
-}
-
-/* 3. MAKE ONLY THIS SPECIFIC POPUP BOX BLUE */
-.db-tracking-tip .tooltiptext {
-  background: #008cff !important; /* Bright blue background */
-  box-shadow: 0 4px 12px rgba(0, 140, 255, 0.3) !important; /* Blue shadow */
 }

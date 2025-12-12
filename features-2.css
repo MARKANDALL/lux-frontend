@@ -253,76 +253,20 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
 }
 
 /* ============================================================
-   Onboarding overlay (namespaced ob-)
+   REMOVED: Duplicate Onboarding Styles
+   (These are now handled by lux-onboarding.css)
    ============================================================ */
-#onboardingOverlay.ob-hidden { display: none; }
-#onboardingOverlay { position: fixed; inset: 0; z-index: 99999; }
-#onboardingOverlay .ob-backdrop {
-  position: absolute; inset: 0; background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(2px);
-}
-#onboardingOverlay .ob-card {
-  position: relative; max-width: 720px; margin: 6vh auto; background: #fff;
-  border-radius: 16px; padding: 24px 20px 18px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
-  font-family: inherit;
-}
-#onboardingOverlay .ob-close {
-  position: absolute; top: 10px; right: 12px; border: 0; background: transparent; font-size: 24px; cursor: pointer;
-}
-#onboardingOverlay .ob-slide { min-height: 180px; }
-#onboardingOverlay .ob-hidden { display: none; }
-#onboardingOverlay h2 { margin: 4px 0 10px; font-size: 22px; }
-#onboardingOverlay .ob-body { margin: 0 0 12px; line-height: 1.4; }
-#onboardingOverlay .ob-note { color: #666; font-size: 13px; }
-#onboardingOverlay .ob-list { margin: 6px 0 6px 18px; }
-#onboardingOverlay .ob-cta {
-  padding: 10px 16px; border-radius: 10px; border: 0; cursor: pointer;
-  background: #0078d7; color: #fff; font-weight: 700;
-}
-#onboardingOverlay .ob-cta.ob-cta--secondary { background: #f3f3f3; color: #333; }
-#onboardingOverlay .ob-footer {
-  margin-top: 10px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
-}
-#onboardingOverlay .ob-nav {
-  border: 0; background: #f3f3f3; padding: 8px 12px; border-radius: 8px; cursor: pointer;
-}
-#onboardingOverlay .ob-dots { display: flex; gap: 8px; }
-#onboardingOverlay .ob-dot {
-  width: 10px; height: 10px; border-radius: 50%; border: 0; background: #d0d0d0; cursor: pointer;
-}
-#onboardingOverlay .ob-dot[aria-current="true"] { background: #333; }
-
-@media (max-width: 560px) {
-  #onboardingOverlay .ob-card { margin: 3vh 12px; padding: 18px 14px 12px; }
-  #onboardingOverlay h2 { font-size: 19px; }
-}
 
 /* ============================================================
-   Hints & pulses
+   REMOVED: Duplicate Hint/Pulse Styles
+   (These are now handled by lux-main.css)
    ============================================================ */
-@keyframes pulseOnce {
-  0% { box-shadow: 0 0 0 0 rgba(0, 140, 255, 0.6); }
-  70% { box-shadow: 0 0 0 12px rgba(0, 140, 255, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(0, 140, 255, 0); }
-}
-.pulse-once { animation: pulseOnce 1.7s ease-out 1; border-radius: 4px; }
-
-.hint-bubble {
-  position: absolute; background: #008cff; color: #fff; padding: 10px 14px; border-radius: 8px;
-  font-size: 1rem; line-height: 1.2; opacity: 0.9; white-space: nowrap; z-index: 9999;
-  pointer-events: none; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
-}
 
 /* ============================================================
    Misc visibility toggles & tiny helpers
    ============================================================ */
 .en-text.hidden { display: none; }
-.hidden { display: none !important; }
-
-.pop-in { animation: popInTip 280ms ease-out; }
-@keyframes popInTip {
-  0% { opacity: 0; transform: translateY(-4px) scale(0.98); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
-}
+/* .hidden is now in lux-main.css */
 
 /* ---- Header audio icon base (shared) ---- */
 .audio-hint {

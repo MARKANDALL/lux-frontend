@@ -60,7 +60,7 @@ html body .lux-tts-panel {
   
   transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
   
-  z-index: 2147483647 !important;
+  z-index: var(--z-drawer) !important; /* Treaty Compliant */
   display: block !important;
 }
 
