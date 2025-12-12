@@ -332,7 +332,7 @@
   user-select: none;
 }
 
-/* tooltip */
+/* tooltip generic styles */
 .tooltip .tooltiptext {
   visibility: hidden;
   opacity: 0;
@@ -341,13 +341,19 @@
   left: 50%;
   top: 99%;
   transform: translateX(-50%);
-  background: #444;
+  
+  /* --- REVERTED BACK TO GREY --- */
+  background: #444; 
   color: #fff;
+  /* --------------------------- */
+  
   padding: 10px;
   border-radius: 5px;
   min-width: 240px;
   max-width: 520px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); /* Reverted shadow */
+  
   white-space: normal;
   word-wrap: break-word;
   overflow: hidden;
@@ -375,4 +381,35 @@
 .fade-vis.is-hidden {
   opacity: 0;
   pointer-events: none; /* can't click while hidden */
+}
+
+/* ============================================================
+   Specific Overrides: Database Tracking Tooltip
+   ============================================================ */
+
+/* 1. DEFINE THE PULSE ANIMATION */
+@keyframes pulseBlueRing {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 140, 255, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(0, 140, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 140, 255, 0);
+  }
+}
+
+/* 2. APPLY PULSE RING TO THE TEXT LINK ON HOVER */
+/* Add the class "db-tracking-tip" to your database tracking HTML span! */
+.db-tracking-tip:hover {
+  animation: pulseBlueRing 1.5s infinite ease-out;
+  border-radius: 4px; /* Makes the ring look nicer around text */
+  color: #0078d7; /* Ensures text turns blue too */
+}
+
+/* 3. MAKE ONLY THIS SPECIFIC POPUP BOX BLUE */
+.db-tracking-tip .tooltiptext {
+  background: #008cff !important; /* Bright blue background */
+  box-shadow: 0 4px 12px rgba(0, 140, 255, 0.3) !important; /* Blue shadow */
 }
