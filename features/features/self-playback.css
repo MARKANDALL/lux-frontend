@@ -1,7 +1,7 @@
 /* =========================================================
    Self Playback (peekaboo, top-left)
    File: features/features/self-playback.css
-   UPDATED: Hero Waveform Layout + Light Theme
+   UPDATED: Hero Waveform Layout + Light Theme + Skeleton Loader
    ========================================================= */
 
 :root {
@@ -47,8 +47,8 @@
 }
 
 /* ===========================
-       Toggle “tab” (always visible)
-       =========================== */
+        Toggle “tab” (always visible)
+        =========================== */
 .selfpb-toggle {
   cursor: pointer;
   user-select: none;
@@ -89,8 +89,8 @@
 }
 
 /* ===========================
-       Drawer panel
-       =========================== */
+        Drawer panel
+        =========================== */
 .selfpb-panel {
   position: absolute;
   top: 0;
@@ -261,8 +261,8 @@
 }
 
 /* ===========================
-       Waveform Container (Hero)
-       =========================== */
+        Waveform Container (Hero)
+        =========================== */
 #spb-waveform-container {
   display: flex;
   flex-direction: column;
@@ -290,4 +290,45 @@
 #spb-wave-ref {
   /* Bottom Half: Reference */
   background: rgba(0, 0, 0, 0.02); /* Slightly darker bg to distinguish ref */
+}
+
+/* ============================================================
+   SKELETON / GHOST BOX
+   Stands in for the player while JS lazy-loads.
+   Targeting .lux-sp-body (from your DOM structure)
+   ============================================================ */
+
+.lux-sp-body {
+  /* UPDATED HEIGHT to match the real player */
+  min-height: 260px;
+  min-width: 320px;
+  background-color: #fcfcfc;
+  transition: min-height 0.2s ease;
+  position: relative;
+  /* Ensure it doesn't look like a broken line */
+  border-radius: 0 0 14px 14px; 
+}
+
+/* 1. Show "Loading..." text only when empty */
+.lux-sp-body:empty::before {
+  content: "Loading Player...";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #9ca3af; /* Light gray text */
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* 2. Pulse animation for the empty state */
+.lux-sp-body:empty {
+  animation: luxPulse 1.5s infinite ease-in-out;
+}
+
+@keyframes luxPulse {
+  0% { background-color: #fcfcfc; }
+  50% { background-color: #f3f4f6; }
+  100% { background-color: #fcfcfc; }
 }

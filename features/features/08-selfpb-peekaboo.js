@@ -1,21 +1,17 @@
-// Self-Playback “Peekaboo” — top-left drawer mirroring TTS
+// features/features/08-selfpb-peekaboo.js
+// LAZY LOADER: Creates the tab immediately, but loads the heavy UI/WaveSurfer only on click.
+
 (() => {
-  const OPEN_CLASS = "lux-sp-open"; // toggled on <html>
+  const OPEN_CLASS = "lux-sp-open";
   const PANEL_SEL = ".lux-sp-panel";
   const BODY_SEL = ".lux-sp-body";
-  const HOST_ID = "selfpb-lite"; // created by self-playback-lite.js
+  const HOST_ID = "selfpb-lite"; 
   const CSS_HREF = "./features/features/selfpb-peekaboo.css";
-  const GUARD_ID = "lux-sp-guard-style"; // hides #selfpb-lite until adopted
+  
+  let isLoaded = false;
+  let isLoading = false;
 
-  // 0) Guard: keep the raw host hidden until we adopt it
-  if (!document.getElementById(GUARD_ID)) {
-    const s = document.createElement("style");
-    s.id = GUARD_ID;
-    s.textContent = `#${HOST_ID}{display:none !important;visibility:hidden !important;}`;
-    document.head.appendChild(s);
-  }
-
-  // 1) Ensure CSS (once)
+  // 1) Ensure Panel CSS (Lightweight)
   (function ensureCSS() {
     const has = [...document.styleSheets].some((ss) =>
       (ss.href || "").includes("selfpb-peekaboo.css")
@@ -24,91 +20,124 @@
       const link = document.createElement("link");
       link.rel = "stylesheet";
       link.href = CSS_HREF;
-      link.addEventListener("error", () => link.remove(), { once: true });
       document.head.appendChild(link);
     }
   })();
 
-  // 2) Build panel + tab (once)
-  function buildOnce() {
-    let panel = document.querySelector(PANEL_SEL);
-    if (panel) return panel;
+  // 2) Build Panel Shell + Tab (Runs immediately)
+  function buildShell() {
+    if (document.querySelector(PANEL_SEL)) return;
 
-    panel = document.createElement("aside");
+    const panel = document.createElement("aside");
     panel.className = "lux-sp-panel";
     panel.setAttribute("role", "complementary");
     panel.setAttribute("aria-label", "Self Playback");
 
-    // The “full-width” top tab. It can extend beyond the panel’s right edge.
-    const tab = document.createElement("button");
-    tab.className = "lux-sp-tab";
-    tab.type = "button";
-    tab.setAttribute("aria-controls", HOST_ID);
-    tab.setAttribute("aria-expanded", "true");
-    tab.innerHTML = `
-      <span class="lux-sp-tab-label">Self Playback</span>
-      <span class="lux-sp-tab-icon" aria-hidden="true">◀</span>
+    panel.innerHTML = `
+      <button class="lux-sp-tab" type="button" aria-expanded="false" aria-controls="${HOST_ID}">
+        <span class="lux-sp-tab-label">Self Playback</span>
+        <span class="lux-sp-tab-icon">◀</span>
+      </button>
+      <div class="lux-sp-body">
+        <div id="sp-loading-placeholder" style="padding:20px; text-align:center; color:#666; display:none;">
+           Loading Waveforms... 🌊
+        </div>
+      </div>
     `;
-    tab.addEventListener("click", () => toggle());
-
-    // Body wrapper: reserves space under the tab so controls never overlap it
-    const body = document.createElement("div");
-    body.className = "lux-sp-body";
-
-    panel.append(tab, body);
     document.body.appendChild(panel);
-    return panel;
+
+    // Wire the click to the Lazy Loader
+    const tab = panel.querySelector(".lux-sp-tab");
+    tab.addEventListener("click", handleToggle);
   }
 
-  // 3) Adopt the #selfpb-lite host into our panel body
-  function adoptHost() {
-    const host = document.getElementById(HOST_ID);
-    if (!host) return false;
+  // 3) The Lazy Load Handler
+  async function handleToggle() {
+    const panel = document.querySelector(PANEL_SEL);
+    const tab = panel.querySelector(".lux-sp-tab");
+    const loader = document.getElementById("sp-loading-placeholder");
 
-    const panel = buildOnce();
-    const body = panel.querySelector(BODY_SEL);
+    // If already open, just close it
+    if (document.documentElement.classList.contains(OPEN_CLASS)) {
+        close();
+        return;
+    }
 
-    // Let the panel control geometry (strip fixed/inline positioning from the lite module)
-    host.removeAttribute("style");
-    host.dataset.luxHidden = "0";
+    // If not loaded yet, load the heavy stuff
+    if (!isLoaded) {
+        if (isLoading) return; // Prevent double-clicks
+        isLoading = true;
+        
+        // Show spinner
+        if(loader) loader.style.display = "block";
+        tab.style.opacity = "0.7";
 
-    if (!body.contains(host)) body.appendChild(host);
+        try {
+            console.log("[Lux] Lazy-loading Self Playback...");
+            
+            // DYNAMIC IMPORT: This is where we save the CPU on page load!
+            const module = await import("./selfpb/ui.js");
+            
+            // Mount the heavy UI
+            if (module && module.mountSelfPlaybackLite) {
+                module.mountSelfPlaybackLite();
+            }
 
-    // Remove the guard so it becomes visible
-    document.getElementById(GUARD_ID)?.remove();
-    return true;
+            // Move the new host into our panel
+            const host = document.getElementById(HOST_ID);
+            const body = panel.querySelector(BODY_SEL);
+            
+            if (host && body) {
+                host.removeAttribute("style"); // Remove fixed positioning from the lite module
+                host.dataset.luxHidden = "0";
+                
+                // Ensure we don't duplicate if something weird happened
+                if (!body.contains(host)) {
+                    body.appendChild(host);
+                }
+            }
+
+            // Hydrate audio if recording already happened (nudge the waveform)
+            const audioEl = document.getElementById("playbackAudio");
+            if (audioEl && audioEl.src) {
+                 audioEl.dispatchEvent(new Event("loadedmetadata"));
+            }
+
+            isLoaded = true;
+        } catch (e) {
+            console.error("Failed to load Self Playback:", e);
+            alert("Could not load audio tools. Please refresh.");
+        } finally {
+            isLoading = false;
+            if(loader) loader.style.display = "none";
+            tab.style.opacity = "1";
+        }
+    }
+
+    open();
   }
 
-  // 4) API helpers so you can control it from console if needed
+  // 4) State Helpers
   function open() {
     document.documentElement.classList.add(OPEN_CLASS);
-    setAria(true);
+    const tab = document.querySelector(".lux-sp-tab");
+    if (tab) tab.setAttribute("aria-expanded", "true");
   }
+
   function close() {
     document.documentElement.classList.remove(OPEN_CLASS);
-    setAria(false);
-  }
-  function toggle() {
-    const willOpen = !document.documentElement.classList.contains(OPEN_CLASS);
-    document.documentElement.classList.toggle(OPEN_CLASS, willOpen);
-    setAria(willOpen);
-  }
-  function setAria(openState) {
     const tab = document.querySelector(".lux-sp-tab");
-    if (tab) tab.setAttribute("aria-expanded", String(openState));
+    if (tab) tab.setAttribute("aria-expanded", "false");
   }
 
-  // Expose a tiny control object for debugging
-  window.luxSP = Object.assign(window.luxSP || {}, { open, close, toggle });
+  // Expose control API
+  window.luxSP = Object.assign(window.luxSP || {}, { open, close, toggle: handleToggle });
 
-  // Start CLOSED by default
-  close();
-
-  // 5) Try to adopt now, otherwise wait for the lite module to create the host
-  if (!adoptHost()) {
-    const mo = new MutationObserver(() => {
-      if (adoptHost()) mo.disconnect();
-    });
-    mo.observe(document.documentElement, { childList: true, subtree: true });
+  // 5) Boot the Shell
+  if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", buildShell);
+  } else {
+      buildShell();
   }
+
 })();

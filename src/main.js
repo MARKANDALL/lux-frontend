@@ -1,6 +1,6 @@
 // src/main.js
 // The Main Entry Point: Boots the app, handles the Typewriter, and wires the Dropdown.
-// UPDATED: Now initializes the Audio Sink to power the Waveforms.
+// UPDATED: Fixed import path for peekaboo script.
 
 import { 
   wirePassageSelect, 
@@ -23,6 +23,10 @@ import {
 
 // NEW IMPORT: The Bridge for Audio/Waveforms
 import { initAudioSink } from '/app-core/audio-sink.js';
+
+// Lazy-load controller for the Self-Playback drawer
+// FIXED: Path now points to root ('/features') instead of relative ('./features')
+import "/features/features/08-selfpb-peekaboo.js";
 
 // --- VISUALS: Typewriter Effect ---
 let typewriterTimeout; 

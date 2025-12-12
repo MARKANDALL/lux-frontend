@@ -157,21 +157,6 @@
       else bootTTS();
     </script>
 
-    <script type="module">
-      import { mountSelfPlaybackLite } from "./features/features/selfpb/ui.js";
-      mountSelfPlaybackLite();
-
-      // Hydration logic for Self-Playback audio
-      const audioEl = document.getElementById("playbackAudio");
-      async function hydrate() {
-        if (!audioEl) return;
-        const src = audioEl.currentSrc || audioEl.src || audioEl.querySelector("source")?.src;
-        if (!src) return;
-      }
-      audioEl?.addEventListener("loadeddata", hydrate);
-      if (audioEl?.src) hydrate();
-    </script>
-
     <script type="module" src="./features/features/08-selfpb-peekaboo.js"></script>
     <script>window.typeWriter = window.typeWriter || function () {};</script>
   </body>
