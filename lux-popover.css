@@ -1,10 +1,21 @@
+/* lux-popover.css */
 /* ==========================================================================
    Lux DB tracking inline callout + popover (v3)
    – no hover gap
-   – popover always above site tooltips
+   – popover always above site tooltips (Moved to Modal Tier)
    – high-contrast “Copy” button
    – namespaced with .lux-* to avoid collisions
    ========================================================================== */
+
+/* ── CRITICAL CONTAINER PATCH ───────────────────────────────────────────── */
+/* We explicitly lift the parent container (#userMsg) to the Modal Tier.
+   This prevents later DOM elements (like the (?) tooltip or dropdowns)
+   from "shining through" the popover because they live in a lower layer.
+*/
+#userMsg {
+  position: relative;
+  z-index: var(--z-modal) !important; /* Tier 800: Beats standard tooltips (600) */
+}
 
 /* ── Trigger chip ───────────────────────────────────────────────────────── */
 .lux-cta {
@@ -26,7 +37,9 @@
 
   /* create own stacking context & sit above ordinary tips */
   isolation: isolate;
-  z-index: var(--z-popover); /* Treaty Compliant */
+  
+  /* Ensure the chip itself is also high in the local stack */
+  z-index: var(--z-modal); 
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -38,9 +51,9 @@
 .lux-cta:hover,
 .lux-cta:focus {
   background: #eef3ff;
-  color: #409cff; /* Moved from JS to here */
+  color: #409cff; 
   transform: translateY(-1px) scale(1.02);
-  /* CRITICAL FIX: Removed 'animation: none !important' so ring persists */
+  /* Ring persists on hover */
 }
 
 .lux-cta:focus-visible {
@@ -84,7 +97,7 @@
   will-change: opacity, transform;
 
   /* decisively above any tooltip bubbles elsewhere */
-  z-index: calc(var(--z-popover) + 1); /* Treaty Compliant */
+  z-index: calc(var(--z-modal) + 1); 
 }
 .lux-cta:hover .lux-pop,
 .lux-cta:focus-within .lux-pop,
@@ -215,7 +228,7 @@ button.lux-btn:disabled {
 /* ── NEW: Body-level tooltip used by prosody bars ──────────────────────── */
 .lux-tip {
   position: fixed;
-  z-index: calc(var(--z-popover) + 10); /* Above standard popovers */
+  z-index: calc(var(--z-modal) + 10); /* Keep consistent above modaled popover */
   pointer-events: none; /* mouse goes through */
   background: rgba(0, 0, 0, 0.88);
   color: #fff;
