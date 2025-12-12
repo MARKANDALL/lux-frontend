@@ -106,7 +106,9 @@ html.lux-tts-open body .lux-tts-panel {
   z-index: 2 !important; /* Above panel content */
   
   padding: 0 16px !important;
-  transition: background 0.2s ease, padding 0.2s ease !important;
+  
+  /* FIXED: Added 'transform 0.18s ease' here so the !important doesn't kill the movement */
+  transition: transform 0.18s ease, background 0.2s ease, padding 0.2s ease, filter 0.18s ease !important;
 }
 
 .lux-tts-tab:hover {
