@@ -7,11 +7,32 @@ import {
   renderSections,
   onShowMore,
   setShowMoreState,
+  renderEntryButtons // <--- NEW IMPORT
 } from "./ui-ai-ai-dom.js";
 
 import { fetchAIFeedback } from "../api/index.js";
 
-export async function getAIFeedback(azureResult, referenceText, firstLang) {
+/**
+ * MILESTONE 1: ENTRY POINT
+ * Instead of auto-firing, we present options.
+ */
+export function promptUserForAI(azureResult, referenceText, firstLang) {
+  // 1) Bail if no speech
+  const nb = azureResult?.NBest?.[0];
+  const saidText = (azureResult?.DisplayText || nb?.Display || "").trim();
+  if (!nb || !saidText) {
+    hideAI();
+    return;
+  }
+
+  // 2) Render the choice buttons
+  renderEntryButtons({
+    onQuick: () => getAIFeedback(azureResult, referenceText, firstLang, "simple"),
+    onDeep:  () => getAIFeedback(azureResult, referenceText, firstLang, "detailed")
+  });
+}
+
+export async function getAIFeedback(azureResult, referenceText, firstLang, mode = "detailed") {
   // --- 1) Bail if there was no real speech ---
   const nb = azureResult?.NBest?.[0];
   const saidText = (azureResult?.DisplayText || nb?.Display || "").trim();
@@ -31,10 +52,12 @@ export async function getAIFeedback(azureResult, referenceText, firstLang) {
 
   let response;
   try {
+    // Pass 'mode' to the API
     response = await fetchAIFeedback({
       referenceText,
       azureResult,
       firstLang: lang,
+      mode 
     });
   } catch (err) {
     console.error("[AI] fetchAIFeedback failed", err);
@@ -62,48 +85,31 @@ export async function getAIFeedback(azureResult, referenceText, firstLang) {
     return;
   }
 
-  // --- 3) Initial render: up to 2 sections ---
-  // Start with 2 parts visible
-  const initialCount = Math.min(2, sections.length);
-  renderSections(sections, initialCount);
-
-  // Decide if button should be shown initially
-  // If we have more sections than the initial 2, show the button
-  if (sections.length > initialCount) {
-    setShowMoreState({ visible: true, text: "Show More" });
-  } else {
-    // Fewer than 2 items? No button needed.
+  // --- 3) Render behavior based on mode ---
+  
+  if (mode === "simple") {
+    // Render all (it's usually just 1 section) and hide "Show More"
+    renderSections(sections, sections.length);
     setShowMoreState({ visible: false });
     return;
   }
 
-  // --- 4) Toggle Logic (Expand -> Expand -> Hide) ---
-  let shownCount = initialCount;
+  // detailed mode: Use pagination
+  const initialCount = Math.min(2, sections.length);
+  let { shown, moreAvailable } = renderSections(sections, initialCount);
 
+  setShowMoreState({ visible: moreAvailable });
+
+  if (!moreAvailable) {
+    return;
+  }
+
+  let shownCount = shown;
   onShowMore(() => {
-    // CASE A: We are currently showing ALL parts (Button was 'Hide Extra Parts').
-    // Action: Reset back to 2.
-    if (shownCount >= sections.length) {
-      shownCount = 2; 
-      renderSections(sections, shownCount);
-      setShowMoreState({ visible: true, text: "Show More" });
-      
-      // Scroll back to top of feedback box so user isn't lost at the bottom
-      document.getElementById("aiFeedback")?.scrollIntoView({ behavior: "smooth", block: "start" });
-      return;
-    }
-
-    // CASE B: We are expanding. Show 2 more.
     shownCount = Math.min(shownCount + 2, sections.length);
-    renderSections(sections, shownCount);
-
-    // Check if we hit the end
-    if (shownCount >= sections.length) {
-      // We just revealed the last batch. Change text to "Hide".
-      setShowMoreState({ visible: true, text: "Hide Extra Parts" });
-    } else {
-      // Still more to go. Keep text as "Show More".
-      setShowMoreState({ visible: true, text: "Show More" });
-    }
+    const res = renderSections(sections, shownCount);
+    shown = res.shown;
+    moreAvailable = res.moreAvailable;
+    setShowMoreState({ visible: moreAvailable });
   });
 }

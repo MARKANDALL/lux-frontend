@@ -1,6 +1,6 @@
 // features/recorder/index.js
 // The Orchestrator: Connects DOM <-> Media <-> API <-> State.
-// UPDATED: Allows Custom parts to be pushed to session results (for aggregation).
+// UPDATED: AI is now OPTIONAL (User must click to trigger).
 
 import { logError, debug as logDebug } from "../../app-core/lux-utils.js";
 
@@ -12,7 +12,6 @@ import * as Mic from "./media.js";
 import { 
   currentPassageKey, 
   currentPartIdx, 
-  isCustom, 
   getChosenLang, 
   currentParts,
   getSessionId,
@@ -22,7 +21,8 @@ import {
 // 3. APIs & Features
 import { assessPronunciation, saveAttempt, getUID } from "../../api/index.js";
 import { showPrettyResults } from "../results/index.js"; 
-import { getAIFeedback } from "../../ui/ui-ai-ai-logic.js";
+// CHANGE: Import the new prompting function instead of the direct getter
+import { promptUserForAI } from "../../ui/ui-ai-ai-logic.js"; 
 import { markPartCompleted } from "../passages/index.js"; 
 import { bringInputToTop } from "../../helpers/index.js"; 
 
@@ -92,8 +92,7 @@ async function handleRecordingComplete(audioBlob) {
 
     logDebug("AZURE RESULT RECEIVED", result);
 
-    // --- UPDATED: Save result even if Custom (enables aggregation) ---
-    // We check currentParts length to ensure we have a valid context
+    // --- Save result even if Custom (enables aggregation) ---
     if (currentParts && currentParts.length > 0) {
        pushPartResult(currentPartIdx, result);
     }
@@ -107,7 +106,11 @@ async function handleRecordingComplete(audioBlob) {
     bringInputToTop();
     markPartCompleted();
 
-    getAIFeedback(result, text, lang).catch(e => console.warn("AI Feedback Error:", e));
+    // --- CHANGE: AI IS NOW OPTIONAL ---
+    // Old: getAIFeedback(result, text, lang)...
+    // New: Ask the user what they want.
+    promptUserForAI(result, text, lang);
+
     saveToDatabase(result, text, lang);
 
   } catch (err) {
