@@ -1,6 +1,6 @@
 // features/recorder/index.js
 // The Orchestrator: Connects DOM <-> Media <-> API <-> State.
-// UPDATED: AI is now OPTIONAL (User must click to trigger).
+// STATUS: AI is OPTIONAL (Triggered via UI prompt, not automatic).
 
 import { logError, debug as logDebug } from "../../app-core/lux-utils.js";
 
@@ -21,12 +21,14 @@ import {
 // 3. APIs & Features
 import { assessPronunciation, saveAttempt, getUID } from "../../api/index.js";
 import { showPrettyResults } from "../results/index.js"; 
-// CHANGE: Import the new prompting function instead of the direct getter
-import { promptUserForAI } from "../../ui/ui-ai-ai-logic.js"; 
 import { markPartCompleted } from "../passages/index.js"; 
 import { bringInputToTop } from "../../helpers/index.js"; 
 
+// --- CRITICAL IMPORT: The new Logic that asks "Do you want AI?" ---
+import { promptUserForAI } from "../../ui/ui-ai-ai-logic.js"; 
+
 let isInitialized = false;
+
 // The "Hang Time" duration. Matches the CSS animation (~0.8s).
 const STOP_DELAY_MS = 800; 
 
@@ -59,16 +61,16 @@ function stopRecordingFlow() {
 
 /**
  * Called by Mic.onstop when the blob is ready.
+ * Orchestrates the handoff from Audio -> Azure -> UI -> AI Prompt
  */
 async function handleRecordingComplete(audioBlob) {
   try {
     DOM.setVisualState("analyzing"); 
 
     const text = DOM.ui.textarea ? DOM.ui.textarea.value.trim() : "";
-
     bringInputToTop();
 
-    // --- AUDIO HANDOFF ---
+    // 1. AUDIO PLAYBACK HANDOFF
     const audioEl = document.getElementById("playbackAudio");
     if (audioEl) {
         if (audioEl.src) URL.revokeObjectURL(audioEl.src);
@@ -76,13 +78,15 @@ async function handleRecordingComplete(audioBlob) {
         audioEl.src = audioUrl; 
     }
     
+    // Legacy helper hook
     if (window.__attachLearnerBlob) {
       window.__attachLearnerBlob(audioBlob);
     }
 
     DOM.setStatus("Analyzing...");
     
-    // --- API CALL ---
+    // 2. AZURE API CALL (Pronunciation Assessment)
+    // This is fast and cheap, so we do it automatically.
     const lang = getChosenLang();
     const result = await assessPronunciation({ 
       audioBlob, 
@@ -92,26 +96,30 @@ async function handleRecordingComplete(audioBlob) {
 
     logDebug("AZURE RESULT RECEIVED", result);
 
-    // --- Save result even if Custom (enables aggregation) ---
+    // 3. UPDATE STATE
     if (currentParts && currentParts.length > 0) {
        pushPartResult(currentPartIdx, result);
     }
 
+    // 4. RESET UI VISUALS
     DOM.setStatus("Not recording");
     DOM.setVisualState("idle");
 
+    // 5. SHOW BASIC RESULTS (Scores, Color-coding)
     const prettyFn = showPrettyResults || window.showPrettyResults;
     if (prettyFn) prettyFn(result);
 
     bringInputToTop();
     markPartCompleted();
 
-    // --- CHANGE: AI IS NOW OPTIONAL ---
-    // Old: getAIFeedback(result, text, lang)...
-    // New: Ask the user what they want.
-    promptUserForAI(result, text, lang);
-
+    // 6. DB SAVE
+    // We save the attempt immediately so we have the record/score.
     saveToDatabase(result, text, lang);
+
+    // 7. AI HANDOFF (OPTIONAL)
+    // Instead of automatically calling getAIFeedback, we invite the user.
+    // This function injects a specific "Ask AI" button into the results UI.
+    promptUserForAI(result, text, lang);
 
   } catch (err) {
     logError("handleRecordingComplete failed", err);

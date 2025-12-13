@@ -1,10 +1,48 @@
 // ui/ui-ai-ai-dom.js
 // Handles DOM updates for the AI feedback panel.
+// UPDATED: Automatically generates the "Show More" button if missing.
 
 function getSectionAndBox() {
   const section = document.getElementById("aiFeedbackSection");
   const box = document.getElementById("aiFeedback");
   return { section, box };
+}
+
+/**
+ * Helper: Ensures the 'Show More' button exists in the DOM.
+ * Appends it to the Section (parent), not the Box (content), so it persists.
+ */
+function getOrCreateShowMoreBtn() {
+  let btn = document.getElementById("showMoreBtn");
+  
+  if (!btn) {
+    const { section } = getSectionAndBox();
+    if (section) {
+      btn = document.createElement("button");
+      btn.id = "showMoreBtn";
+      btn.textContent = "Show Next Chunk ⬇";
+      
+      // Default Styling
+      btn.style.cssText = `
+        display: none;
+        margin: 20px auto 10px auto;
+        padding: 8px 20px;
+        background: #f1f5f9;
+        border: 1px solid #cbd5e1;
+        border-radius: 20px;
+        color: #475569;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+      `;
+      
+      btn.onmouseover = () => { btn.style.background = "#e2e8f0"; };
+      btn.onmouseout = () => { btn.style.background = "#f1f5f9"; };
+
+      section.appendChild(btn); // Add to parent container
+    }
+  }
+  return btn;
 }
 
 /* ========================================================================
@@ -17,7 +55,7 @@ export function hideAI() {
 }
 
 /**
- * MILESTONE 1: Show Entry Options (Quick vs Deep)
+ * MILESTONE 3: Show Entry Options (Quick vs Deep)
  */
 export function renderEntryButtons({ onQuick, onDeep }) {
   const { section, box } = getSectionAndBox();
@@ -162,14 +200,14 @@ export function renderSections(sections, count) {
 }
 
 export function setShowMoreState({ visible }) {
-  const btn = document.getElementById("showMoreBtn");
+  const btn = getOrCreateShowMoreBtn(); // Safer
   if (btn) {
     btn.style.display = visible ? "block" : "none";
   }
 }
 
 export function onShowMore(callback) {
-  const btn = document.getElementById("showMoreBtn");
+  const btn = getOrCreateShowMoreBtn(); // Safer
   if (btn) {
     const newBtn = btn.cloneNode(true);
     btn.parentNode.replaceChild(newBtn, btn);
@@ -178,14 +216,17 @@ export function onShowMore(callback) {
 }
 
 export function showAIFeedbackPlaceholder() { showLoading(); }
+
 export function showAIFeedbackError(msg) {
   const { box } = getSectionAndBox();
   if (box) box.innerHTML = `<div style="color:#c00; padding:10px;">Error: ${msg}</div>`;
 }
+
 export function clearAIFeedback() {
   const { box } = getSectionAndBox();
   if (box) box.innerHTML = "";
 }
+
 export function renderAIFeedbackMarkdown(md) {
   const { box } = getSectionAndBox();
   if (box) box.innerHTML = mdToHtml(md);
