@@ -1,21 +1,24 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  // Base path
+  // Base path for relative links
   base: './', 
+
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
     sourcemap: true,
     emptyOutDir: true,
   },
+
   server: {
-    port: 3000,
+    // Sets the default port. If 3000 is busy, Vite will auto-try 3001.
+    port: 3000, 
     open: true,
+    
     // THE PROXY FIX:
-    // We use a Regex to match "/api" ONLY if it does NOT end in ".js"
-    // This allows local source files (api/identity.js) to load, 
-    // while API calls (api/assess) go to the server.
+    // This tells Vite: "If a request starts with /api...
+    // ...BUT it does NOT end in .js, send it to the backend."
     proxy: {
       '^/api/(?!.*\\.js$)': {
         target: 'https://luxury-language-api.vercel.app',
