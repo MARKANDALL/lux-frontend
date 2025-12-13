@@ -1,5 +1,5 @@
 // ui/ui-ai-ai-logic.js
-// AI Feedback Logic Module: talks to backend + delegates DOM to ui-ui-ai-dom.js
+// AI Logic: Handles "Quick" vs "Deep" and manages the Chunking loop.
 
 import {
   showLoading,
@@ -7,17 +7,21 @@ import {
   renderSections,
   onShowMore,
   setShowMoreState,
-  renderEntryButtons // <--- NEW IMPORT
+  renderEntryButtons,
+  showAIFeedbackError // Added for better error handling UI
 } from "./ui-ai-ai-dom.js";
 
 import { fetchAIFeedback } from "../api/index.js";
 
+// -- State for Deep Dive Accumulation --
+let accumulatedSections = [];
+let currentChunk = 0;
+let currentArgs = null; // store args to re-fetch next chunk
+
 /**
- * MILESTONE 1: ENTRY POINT
- * Instead of auto-firing, we present options.
+ * Entry Point: Triggered by Recorder
  */
 export function promptUserForAI(azureResult, referenceText, firstLang) {
-  // 1) Bail if no speech
   const nb = azureResult?.NBest?.[0];
   const saidText = (azureResult?.DisplayText || nb?.Display || "").trim();
   if (!nb || !saidText) {
@@ -25,91 +29,109 @@ export function promptUserForAI(azureResult, referenceText, firstLang) {
     return;
   }
 
-  // 2) Render the choice buttons
+  // Reset state on new prompt
+  accumulatedSections = [];
+  currentChunk = 0;
+  
   renderEntryButtons({
-    onQuick: () => getAIFeedback(azureResult, referenceText, firstLang, "simple"),
-    onDeep:  () => getAIFeedback(azureResult, referenceText, firstLang, "detailed")
+    onQuick: () => startQuickMode(azureResult, referenceText, firstLang),
+    onDeep:  () => startDeepMode(azureResult, referenceText, firstLang)
   });
 }
 
-export async function getAIFeedback(azureResult, referenceText, firstLang, mode = "detailed") {
-  // --- 1) Bail if there was no real speech ---
-  const nb = azureResult?.NBest?.[0];
-  const saidText = (azureResult?.DisplayText || nb?.Display || "").trim();
-
-  if (!nb || !saidText) {
-    hideAI();
-    return;
-  }
-
-  // --- 2) Show loading UI ---
+// --- Quick Mode (One-shot) ---
+async function startQuickMode(azureResult, referenceText, firstLang) {
   showLoading();
+  const lang = normalizeLang(firstLang);
 
-  const lang =
-    !firstLang || !String(firstLang).trim()
-      ? "universal"
-      : String(firstLang).trim();
-
-  let response;
   try {
-    // Pass 'mode' to the API
-    response = await fetchAIFeedback({
-      referenceText,
-      azureResult,
-      firstLang: lang,
-      mode 
+    const res = await fetchAIFeedback({ 
+        azureResult, referenceText, firstLang: lang, mode: "simple" 
     });
-  } catch (err) {
-    console.error("[AI] fetchAIFeedback failed", err);
-    const box = document.getElementById("aiFeedback");
-    if (box) {
-      box.innerHTML =
-        "<span style='color:#c00;'>Could not load AI feedback.</span>";
-    }
-    setShowMoreState({ visible: false });
-    return;
-  }
-
-  const sections = Array.isArray(response?.sections)
-    ? response.sections
-    : response?.fallbackSections;
-
-  if (!Array.isArray(sections) || !sections.length) {
-    console.warn("[AI] No sections array returned", response);
-    const box = document.getElementById("aiFeedback");
-    if (box) {
-      box.innerHTML =
-        "<span style='color:#c00;'>AI did not return any feedback.</span>";
-    }
-    setShowMoreState({ visible: false });
-    return;
-  }
-
-  // --- 3) Render behavior based on mode ---
-  
-  if (mode === "simple") {
-    // Render all (it's usually just 1 section) and hide "Show More"
+    const sections = res.sections || res.fallbackSections || [];
+    
+    // Render and hide "Show More"
     renderSections(sections, sections.length);
     setShowMoreState({ visible: false });
-    return;
+
+  } catch (err) {
+    console.error(err);
+    showAIFeedbackError("Could not load Quick Tips.");
   }
-
-  // detailed mode: Use pagination
-  const initialCount = Math.min(2, sections.length);
-  let { shown, moreAvailable } = renderSections(sections, initialCount);
-
-  setShowMoreState({ visible: moreAvailable });
-
-  if (!moreAvailable) {
-    return;
-  }
-
-  let shownCount = shown;
-  onShowMore(() => {
-    shownCount = Math.min(shownCount + 2, sections.length);
-    const res = renderSections(sections, shownCount);
-    shown = res.shown;
-    moreAvailable = res.moreAvailable;
-    setShowMoreState({ visible: moreAvailable });
-  });
 }
+
+// --- Deep Mode (Chunked) ---
+async function startDeepMode(azureResult, referenceText, firstLang) {
+  const lang = normalizeLang(firstLang);
+  
+  // Store context for next chunks
+  currentArgs = { azureResult, referenceText, firstLang: lang };
+  accumulatedSections = [];
+  currentChunk = 0;
+
+  // Start with Chunk 1
+  await fetchNextChunk();
+}
+
+async function fetchNextChunk() {
+  if (currentChunk >= 3) return; // Max 3 chunks
+
+  // Only show full loading screen for first chunk
+  if (currentChunk === 0) showLoading();
+  
+  const nextChunkId = currentChunk + 1;
+
+  try {
+    // Call API for specific chunk
+    const res = await fetchAIFeedback({
+        ...currentArgs,
+        mode: "detailed",
+        chunk: nextChunkId
+    });
+
+    const newSections = res.sections || res.fallbackSections || [];
+    
+    // Add to pile
+    accumulatedSections = [...accumulatedSections, ...newSections];
+    currentChunk = nextChunkId;
+
+    // Render EVERYTHING we have so far
+    renderSections(accumulatedSections, accumulatedSections.length);
+
+    // Setup "Show More" if we haven't reached Chunk 3 yet
+    if (currentChunk < 3) {
+        setShowMoreState({ visible: true });
+        
+        // Re-bind the button for the next chunk
+        onShowMore(async (e) => {
+            // Optional: show a mini spinner on the button itself?
+            // For now, let's just disable it to prevent double-clicks
+            const btn = e.target;
+            const originalText = btn.textContent;
+            btn.textContent = "Loading...";
+            btn.disabled = true;
+            
+            await fetchNextChunk();
+            
+            // If more chunks exist, reset button state (new button is created by render usually, but just in case)
+            btn.textContent = originalText;
+            btn.disabled = false;
+        });
+    } else {
+        setShowMoreState({ visible: false });
+    }
+
+  } catch (err) {
+    console.error(err);
+    showAIFeedbackError("Could not load next section.");
+    setShowMoreState({ visible: false });
+  }
+}
+
+// --- Helper ---
+function normalizeLang(l) {
+  return !l || !String(l).trim() ? "universal" : String(l).trim();
+}
+
+// Backwards compatibility for recorder/old calls
+export const getAIFeedback = promptUserForAI;
