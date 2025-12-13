@@ -1,6 +1,6 @@
 // ui/ui-ai-ai-dom.js
 // Handles DOM updates for the AI feedback panel.
-// STATE: GOLD STANDARD FINAL (Teal Headers, No Default Emojis, Bold L1)
+// STATE: GOLD STANDARD FINAL (Teal Headers, No Default Emojis, Bold L1) + Toggle Button Logic
 
 function getSectionAndBox() {
   const section = document.getElementById("aiFeedbackSection");
@@ -118,16 +118,19 @@ export function renderSections(sections, count) {
   };
 }
 
-export function setShowMoreState({ visible }) {
+// UPDATED: Now accepts 'text' to change the button label dynamically
+export function setShowMoreState({ visible, text }) {
   const btn = document.getElementById("showMoreBtn");
   if (btn) {
     btn.style.display = visible ? "block" : "none";
+    if (text) btn.textContent = text;
   }
 }
 
 export function onShowMore(callback) {
   const btn = document.getElementById("showMoreBtn");
   if (btn) {
+    // Clone to remove old listeners
     const newBtn = btn.cloneNode(true);
     btn.parentNode.replaceChild(newBtn, btn);
     newBtn.addEventListener("click", callback);

@@ -53,9 +53,8 @@ function buildUI() {
   host.id = "selfpb-lite";
   host.innerHTML = `
     <div class="row" style="margin-bottom:6px; position:relative;">
-      <span class="meta">👂 Self Playback</span>
       <span id="spb-toast" class="pill tiny" style="display:none; position:absolute; right:0; top:0; background:#ef4444; border-color:#b91c1c; color:#fff; z-index:10; box-shadow: 0 2px 10px rgba(0,0,0,0.5);"></span>
-      <div class="spacer"></div>
+      <div class="spacer"></div> 
       <span class="pill tiny" id="spb-ref">Ref: —</span>
       <span class="pill tiny" id="spb-time">0:00 / 0:00</span>
     </div>
@@ -66,9 +65,9 @@ function buildUI() {
     </div>
 
     <div class="row" style="margin-bottom:6px">
-      <button class="btn" id="spb-back">−2.5s</button>
+      <button class="btn" id="spb-back">−2s</button>
       <input id="spb-scrub" class="scrub" type="range" min="0" max="1000" step="1" value="0" title="Seek">
-      <button class="btn" id="spb-fwd">+2.5s</button>
+      <button class="btn" id="spb-fwd">+2s</button>
     </div>
 
     <div class="row" style="margin-bottom:8px">
@@ -82,7 +81,7 @@ function buildUI() {
 
     <div class="row">
       <div class="pill ab" style="flex:1;">
-        <div id="spb-loop-tip" class="spb-bubble">Tap <b>A</b> then <b>B</b> to loop. Double-tap to clear.</div>
+        <div id="spb-loop-tip" class="spb-bubble">Tap <b>A</b> then <b>B</b> to loop.</div>
         <button class="btn" id="spb-loop-action">⟳ Set Loop A</button>
         <span class="tiny" id="spb-ab-label" style="margin-left:12px; color:#666;">Loop: Off</span>
       </div>
@@ -118,10 +117,10 @@ export function mountSelfPlaybackLite() {
   initWaveSurfer({
     learnerContainer: ui.waveLearner,
     refContainer: ui.waveRef,
-    masterAudio: audio // We sync Wavesurfer to YOUR existing audio element
+    masterAudio: audio 
   });
 
-  // --- Logic helpers (Toast, Hint, SyncButtons, etc.) match previous ---
+  // --- Logic helpers ---
   const showToast = (msg, duration = 2000) => {
     ui.toast.textContent = msg;
     ui.toast.style.display = "inline-block";
@@ -169,13 +168,17 @@ export function mountSelfPlaybackLite() {
 
   ui.mainBtn.addEventListener("click", (e) => { if (e.detail !== 2) handlePlayAction(false); });
   ui.mainBtn.addEventListener("dblclick", (e) => { e.preventDefault(); handlePlayAction(true); });
-  ui.backBtn.addEventListener("click", () => { audio.currentTime = api.clamp((audio.currentTime || 0) - 2.5, 0, audio.duration || 0); syncTime(); syncScrub(); });
-  ui.fwdBtn.addEventListener("click", () => { audio.currentTime = api.clamp((audio.currentTime || 0) + 2.5, 0, audio.duration || 0); syncTime(); syncScrub(); });
+  
+  // CHANGED: 2.0 seconds skip
+  ui.backBtn.addEventListener("click", () => { audio.currentTime = api.clamp((audio.currentTime || 0) - 2.0, 0, audio.duration || 0); syncTime(); syncScrub(); });
+  ui.fwdBtn.addEventListener("click", () => { audio.currentTime = api.clamp((audio.currentTime || 0) + 2.0, 0, audio.duration || 0); syncTime(); syncScrub(); });
+  
   ui.scrub.addEventListener("input", () => { api._setScrubbingOn(); const p = Number(ui.scrub.value) / 1000; audio.currentTime = api.clamp(p * (audio.duration || 0), 0, audio.duration || 0); syncTime(); });
   ui.scrub.addEventListener("change", () => api._setScrubbingOff());
   ui.rate.addEventListener("input", () => { const v = api.clamp(Number(ui.rate.value) || 1, 0.5, 1.5); api.setRate(v); syncRateUI(); });
+  
   ui.loopAction.addEventListener("click", handleLoopClick);
-  ui.loopAction.addEventListener("dblclick", (e) => { e.preventDefault(); api.clearAB(); syncButtons(); showToast("Loop cleared"); });
+  // REMOVED: Double-click clear listener
 
   audio.addEventListener("timeupdate", () => { syncTime(); syncScrub(); });
   audio.addEventListener("play", () => { st.playing = true; syncButtons(); });

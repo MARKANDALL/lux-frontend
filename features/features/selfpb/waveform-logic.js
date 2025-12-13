@@ -18,7 +18,8 @@ export function initWaveSurfer({ learnerContainer, refContainer, masterAudio }) 
         container: learnerContainer,
         waveColor: '#2d6cdf',
         progressColor: '#ef4444',
-        cursorColor: '#ef4444',
+        cursorColor: '#ef4444', // Red cursor
+        cursorWidth: 2,
         height: 50,
         barWidth: 3,
         barGap: 1,
@@ -28,11 +29,13 @@ export function initWaveSurfer({ learnerContainer, refContainer, masterAudio }) 
         fillParent: true
     });
 
-    // 2. Reference Instance (Gray)
+    // 2. Reference Instance (Gray) -> NOW WITH CURSOR
     wsRef = WaveSurfer.create({
         container: refContainer,
         waveColor: '#9ca3af',
         progressColor: '#4b5563',
+        cursorColor: '#ef4444', // ADDED: Red cursor (matches learner)
+        cursorWidth: 2,         // ADDED: Visible width
         height: 50,
         barWidth: 3,
         barGap: 1,

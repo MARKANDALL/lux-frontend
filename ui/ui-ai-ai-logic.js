@@ -63,26 +63,47 @@ export async function getAIFeedback(azureResult, referenceText, firstLang) {
   }
 
   // --- 3) Initial render: up to 2 sections ---
+  // Start with 2 parts visible
   const initialCount = Math.min(2, sections.length);
-  let { shown, moreAvailable } = renderSections(sections, initialCount);
+  renderSections(sections, initialCount);
 
-  // --- CRITICAL FIX: Update button state immediately ---
-  setShowMoreState({ visible: moreAvailable });
-
-  if (!moreAvailable) {
+  // Decide if button should be shown initially
+  // If we have more sections than the initial 2, show the button
+  if (sections.length > initialCount) {
+    setShowMoreState({ visible: true, text: "Show More" });
+  } else {
+    // Fewer than 2 items? No button needed.
+    setShowMoreState({ visible: false });
     return;
   }
 
-  // --- 4) Show More: reveal 2 more sections each click ---
-  let shownCount = shown;
+  // --- 4) Toggle Logic (Expand -> Expand -> Hide) ---
+  let shownCount = initialCount;
 
   onShowMore(() => {
+    // CASE A: We are currently showing ALL parts (Button was 'Hide Extra Parts').
+    // Action: Reset back to 2.
+    if (shownCount >= sections.length) {
+      shownCount = 2; 
+      renderSections(sections, shownCount);
+      setShowMoreState({ visible: true, text: "Show More" });
+      
+      // Scroll back to top of feedback box so user isn't lost at the bottom
+      document.getElementById("aiFeedback")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+
+    // CASE B: We are expanding. Show 2 more.
     shownCount = Math.min(shownCount + 2, sections.length);
-    const res = renderSections(sections, shownCount);
-    shown = res.shown;
-    moreAvailable = res.moreAvailable;
-    
-    // Update button state after click
-    setShowMoreState({ visible: moreAvailable });
+    renderSections(sections, shownCount);
+
+    // Check if we hit the end
+    if (shownCount >= sections.length) {
+      // We just revealed the last batch. Change text to "Hide".
+      setShowMoreState({ visible: true, text: "Hide Extra Parts" });
+    } else {
+      // Still more to go. Keep text as "Show More".
+      setShowMoreState({ visible: true, text: "Show More" });
+    }
   });
 }
