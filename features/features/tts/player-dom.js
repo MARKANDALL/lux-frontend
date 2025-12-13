@@ -35,48 +35,55 @@ export function renderControls(mount) {
 
   mount.innerHTML = `
       <div id="tts-wrap">
-        <div class="tts-box tts-compact">
+        <div class="tts-box tts-compact" style="padding: 10px 12px;">
           <div class="tts-head">
-            <div id="tts-note" class="tts-note" aria-live="polite" style="text-align:center; min-height:10px;"></div>
+            <div id="tts-note" class="tts-note" aria-live="polite" style="text-align:center; min-height:0;"></div>
           </div>
   
-          <label class="tts-voice" style="width:100%; text-align:center; display:block;">
-            <span style="display:block; font-weight:700; margin-bottom:6px; font-size:1.1em; color:#333;">Voice</span>
-            <select id="tts-voice" style="width:90%; margin:0 auto; display:block;">${voiceOptions}</select>
+          <label class="tts-voice" style="width:100%; display:flex !important; flex-direction:column !important; align-items:center !important; margin-bottom:4px;">
+            <span style="font-weight:700; margin-bottom:2px; font-size:1.05em; color:#333;">Voice</span>
+            <select id="tts-voice" style="width:98%; padding:4px; margin:0 auto; display:block;">${voiceOptions}</select>
           </label>
   
-          <label class="tts-speed"><span>Speed</span>
+          <label class="tts-speed" style="margin-bottom:4px; width:98%;">
+            <span style="font-size:0.9em; font-weight:600; color:#444;">Speed</span>
             <input id="tts-speed" type="range" min="0.7" max="1.3" step="0.05" value="${DEFAULT_SPEED}">
-            <span id="tts-speed-out">${DEFAULT_SPEED.toFixed(2)}×</span>
+            <span id="tts-speed-out" style="font-size:0.9em;">${DEFAULT_SPEED.toFixed(2)}×</span>
           </label>
   
-          <div class="tts-style-row">
-            <div class="tts-style-grid">
-              <label>Style
-                <select id="tts-style"><option value="">(neutral)</option></select>
-              </label>
-  
-              <label>Degree
-                <input id="tts-styledegree" type="number" min="0.1" max="2.5" step="0.1" value="2.5"/>
-              </label>
-            </div>
+          <label class="tts-style-label" style="width:100%; display:flex !important; flex-direction:column !important; align-items:center !important; margin: 2px 0 6px 0;">
+             <span style="font-weight:600; margin-bottom:2px; font-size:0.95em;">Speaking Style</span>
+             <select id="tts-style" style="width:98%; padding:4px;"><option value="">(neutral)</option></select>
+          </label>
+
+          <div class="tts-mixed-row" style="width:98%; display:flex !important; justify-content:space-between !important; align-items:end; gap:8px; margin-bottom:8px;">
+             
+             <label class="tts-pitch-col" style="flex:1; display:flex; flex-direction:column; gap:2px;">
+                <div style="display:flex; justify-content:space-between; font-size:0.85rem; font-weight:600; color:#444;">
+                   <span>Pitch</span>
+                   <span id="tts-pitch-out" style="color:#0078d7;">${DEFAULT_PITCH_ST}</span>
+                </div>
+                <input id="tts-pitch" type="range" min="-12" max="12" step="1" value="${DEFAULT_PITCH_ST}" style="width:100%; cursor:pointer;">
+             </label>
+
+             <label class="tts-degree-col" style="width:70px; display:flex; flex-direction:column; gap:2px;">
+                <span style="font-size:0.85rem; font-weight:600; color:#444; text-align:center;">Degree</span>
+                <input id="tts-styledegree" type="number" min="0.1" max="2.5" step="0.1" value="2.5" style="width:100%; padding:3px; text-align:center; border:1px solid #ccc; border-radius:6px;">
+             </label>
+
           </div>
   
           <button id="tts-main" class="tts-btn tts-btn--primary"
-            title="Click: play/pause • Double-click: restart & play">🔊 Generate & Play</button>
+            title="Click: play/pause • Double-click: restart & play" style="width:98%; margin-bottom:8px; padding: 8px;">🔊 Generate & Play</button>
   
-          <label class="tts-pitch">
-            <span>Pitch (st)</span>
-            <input id="tts-pitch" type="range" min="-12" max="12" step="1" value="${DEFAULT_PITCH_ST}">
-            <span id="tts-pitch-out">${DEFAULT_PITCH_ST}</span>
-          </label>
-  
-          <div class="tts-skip">
+          <div class="tts-skip" style="display:flex; justify-content:center; gap:10px; align-items:center;">
             <button id="tts-back" class="tts-btn tts-btn--sm" title="Back 2 seconds">↺ 2s</button>
+            
+            <a id="tts-download" class="tts-link" href="#" download="lux_tts.mp3" title="Download audio" style="font-size:1.4rem; line-height:1; text-decoration:none;">⬇️</a>
+            
             <button id="tts-fwd"  class="tts-btn tts-btn--sm" title="Forward 2 seconds">↻ 2s</button>
           </div>
   
-          <a id="tts-download" class="tts-link" href="#" download="lux_tts.mp3" title="Download last audio">⬇️</a>
         </div>
       </div>
     `;

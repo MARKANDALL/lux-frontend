@@ -1,18 +1,18 @@
-/* css/lux-layout.css (Formerly lux-main.css) */
-/* ============================================================
+/* lux-layout.css */
+/* ============================================================================
    THE LUX CONSTITUTION: Global Variables
    Single Source of Truth for Layers & Theme
-   ============================================================ */
+   ============================================================================ */
 :root {
   /* --- 1. Z-INDEX TIER SCALE (The Peace Treaty) --- 
-     Use these variables. Do not use magic numbers like 9999 or 200001. */
+     FIXED: Elevated Drawer tier to 900 to sit above the new Modal/Blue Box tier (800) */
   --z-base: 1;
   --z-ui-low: 100;    /* Result pills, generic UI */
-  --z-drawer: 500;    /* Self-Playback & TTS Drawers */
-  --z-popover: 600;   /* Database Tracking & Hover Cards */
-  --z-modal: 800;     /* Onboarding Overlay */
-  --z-toast: 900;     /* Error messages / Toasts */
-  --z-max: 1000;      /* The absolute ceiling */
+  --z-popover: 600;   /* Standard Tooltips */
+  --z-modal: 800;     /* Blue Box, Context Menus, High-Priority Cards */
+  --z-drawer: 900;    /* Self-Playback & TTS Drawers (Must slide OVER the Blue Box) */
+  --z-toast: 950;     /* Error messages / Toasts */
+  --z-max: 1000;      /* The absolute ceiling (Onboarding Overlay) */
 
   /* --- 2. GLOBAL COLORS --- */
   --lux-blue-primary: #0078d7;
@@ -268,12 +268,6 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* ============================================================
-   REMOVED DUPLICATE BLOCKS HERE:
-   (Record buttons, Score Table, Word Chips, Tooltips)
-   These are now correctly handled by features-1.css
-   ============================================================ */
-
 #prettyResult table { transition: width 0.35s ease; }
 .toggle-col { cursor: pointer; user-select: none; transition: color 0.2s; }
 .toggle-col:hover { color: #0078d7; }
@@ -333,9 +327,6 @@ table:not(.collapsed-error) td:nth-child(3) { width: 85px; opacity: 1; pointer-e
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08) inset;
 }
 
-/* ============================================================
-   Global Interactive Depth Effect (Generic)
-   ============================================================ */
 a,
 button,
 select,
