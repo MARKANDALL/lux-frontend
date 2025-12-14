@@ -1,6 +1,6 @@
 // ui/ui-ai-ai-logic.js
 // AI Logic: Handles "Quick" vs "Deep" and manages the Chunking loop.
-// UPDATED: Robust state management for Show More / Show Less.
+// UPDATED: "Show Less" steps back one chunk at a time; supports exiting to menu.
 
 import {
   showLoading,
@@ -8,14 +8,14 @@ import {
   renderSections,
   renderEntryButtons,
   updateFooterButtons,
-  showAIFeedbackError
+  showAIFeedbackError,
+  clearAIFeedback // Needed to clear footer when going back to menu
 } from "./ui-ai-ai-dom.js";
 
 import { fetchAIFeedback } from "../api/index.js";
 
-// -- State for Deep Dive --
-let accumulatedSections = [];
-let currentChunk = 0;
+// -- State Management --
+let chunkHistory = []; // Stores arrays of sections: [ [sec1, sec2], [sec3, sec4] ]
 let currentArgs = null; 
 let isFetching = false;
 
@@ -30,15 +30,18 @@ export function promptUserForAI(azureResult, referenceText, firstLang) {
     return;
   }
 
-  // Reset state
-  accumulatedSections = [];
-  currentChunk = 0;
-  isFetching = false;
+  resetState();
   
   renderEntryButtons({
     onQuick: () => startQuickMode(azureResult, referenceText, firstLang),
     onDeep:  () => startDeepMode(azureResult, referenceText, firstLang)
   });
+}
+
+function resetState() {
+  chunkHistory = [];
+  isFetching = false;
+  currentArgs = null;
 }
 
 // --- Quick Mode ---
@@ -53,8 +56,6 @@ async function startQuickMode(azureResult, referenceText, firstLang) {
     const sections = res.sections || res.fallbackSections || [];
     
     renderSections(sections, sections.length);
-    
-    // Quick mode doesn't usually have pagination, but we clear footer just in case
     updateFooterButtons({ canShowMore: false, canShowLess: false });
 
   } catch (err) {
@@ -67,10 +68,7 @@ async function startQuickMode(azureResult, referenceText, firstLang) {
 async function startDeepMode(azureResult, referenceText, firstLang) {
   const lang = normalizeLang(firstLang);
   currentArgs = { azureResult, referenceText, firstLang: lang };
-  
-  // Full reset for Deep Mode
-  accumulatedSections = [];
-  currentChunk = 0;
+  chunkHistory = []; // Start fresh
 
   // Fetch Chunk 1
   await fetchNextChunk();
@@ -78,15 +76,16 @@ async function startDeepMode(azureResult, referenceText, firstLang) {
 
 async function fetchNextChunk() {
   if (isFetching) return;
-  if (currentChunk >= 3) return; 
+  
+  // Max 3 chunks (1, 2, 3)
+  const nextChunkId = chunkHistory.length + 1;
+  if (nextChunkId > 3) return; 
 
   isFetching = true;
 
-  // If first chunk, show full loading screen. Otherwise, button shows loading.
-  if (currentChunk === 0) showLoading();
-  else refreshFooter(); 
-
-  const nextChunkId = currentChunk + 1;
+  // Visuals
+  if (nextChunkId === 1) showLoading();
+  else refreshFooter(); // Updates button to "Loading..."
 
   try {
     const res = await fetchAIFeedback({
@@ -96,10 +95,13 @@ async function fetchNextChunk() {
     });
 
     const newSections = res.sections || res.fallbackSections || [];
-    accumulatedSections = [...accumulatedSections, ...newSections];
-    currentChunk = nextChunkId;
+    
+    // Store this chunk in history
+    chunkHistory.push(newSections);
 
-    renderSections(accumulatedSections, accumulatedSections.length);
+    // Render ALL current chunks flattened
+    const allSections = chunkHistory.flat();
+    renderSections(allSections, allSections.length);
 
   } catch (err) {
     console.error(err);
@@ -111,30 +113,40 @@ async function fetchNextChunk() {
 }
 
 function handleShowLess() {
-  // Logic: Reset to just the first batch (Chunk 1) without re-fetching?
-  // Or just re-fetch chunk 1? 
-  // SAFEST: Reset state to Chunk 1 and re-render what we already have if possible.
-  // Ideally we keep the data in memory.
-  
-  // For simplicity and robustness in this Milestone:
-  // We will hide the extra sections from the DOM but keep them in memory?
-  // Actually, 'renderSections' takes a count. 
-  // Let's assume Chunk 1 had roughly 2 sections.
-  
-  // Simpler approach: Hard reset to start of Deep Mode.
-  startDeepMode(currentArgs.azureResult, currentArgs.referenceText, currentArgs.firstLang);
+  // If we have history, remove the last chunk
+  if (chunkHistory.length > 0) {
+    chunkHistory.pop();
+  }
+
+  // Check where we ended up
+  if (chunkHistory.length === 0) {
+    // We removed Chunk 1 -> Go back to Entry Buttons
+    clearAIFeedback(); // Clear the text/footer
+    renderEntryButtons({
+      onQuick: () => startQuickMode(currentArgs.azureResult, currentArgs.referenceText, currentArgs.firstLang),
+      onDeep:  () => startDeepMode(currentArgs.azureResult, currentArgs.referenceText, currentArgs.firstLang)
+    });
+  } else {
+    // We still have chunks (e.g. went from 3 -> 2, or 2 -> 1)
+    // Re-render what's left
+    const allSections = chunkHistory.flat();
+    renderSections(allSections, allSections.length);
+    refreshFooter();
+  }
 }
 
 function refreshFooter() {
-  // Logic to determine button states
-  const canShowMore = currentChunk < 3; 
-  const canShowLess = currentChunk > 1; // Can collapse if we are past chunk 1
+  const currentCount = chunkHistory.length;
 
+  // Logic: 
+  // - Show More: If we haven't reached chunk 3 yet.
+  // - Show Less: ALWAYS show if we have any chunks (even Chunk 1, to go back to menu).
+  
   updateFooterButtons({
     onShowMore: () => fetchNextChunk(),
     onShowLess: () => handleShowLess(),
-    canShowMore: canShowMore,
-    canShowLess: canShowLess,
+    canShowMore: currentCount < 3,
+    canShowLess: true, // Always allow stepping back
     isLoading: isFetching
   });
 }

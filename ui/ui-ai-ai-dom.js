@@ -1,6 +1,6 @@
 // ui/ui-ai-ai-dom.js
 // Handles DOM updates for the AI feedback panel.
-// UPDATED: Fixes "Stuck Loading" and adds "Show Less".
+// UPDATED: "Show Less" logic for stepwise navigation.
 
 function getSectionAndBox() {
   const section = document.getElementById("aiFeedbackSection");
@@ -8,9 +8,6 @@ function getSectionAndBox() {
   return { section, box };
 }
 
-/**
- * Helper: Ensures the Footer Button Container exists
- */
 function getFooterContainer() {
   const { section } = getSectionAndBox();
   if (!section) return null;
@@ -25,33 +22,23 @@ function getFooterContainer() {
   return footer;
 }
 
-/* ========================================================================
-   Public API
-   ======================================================================== */
-
 export function hideAI() {
   const { section } = getSectionAndBox();
   if (section) section.style.display = "none";
 }
 
-/**
- * Renders the "Quick vs Deep" entry buttons
- */
 export function renderEntryButtons({ onQuick, onDeep }) {
   const { section, box } = getSectionAndBox();
   if (section) section.style.display = "";
   
-  // Hide footer while making choice
   const footer = document.getElementById("aiFeedbackFooter");
   if (footer) footer.style.display = "none";
 
   if (!box) return;
 
-  // Clear previous content
   box.innerHTML = "";
   box.style.display = "block";
 
-  // Create container
   const wrap = document.createElement("div");
   wrap.style.cssText = "text-align:center; padding:10px 0;";
 
@@ -60,11 +47,9 @@ export function renderEntryButtons({ onQuick, onDeep }) {
   title.style.cssText = "margin: 0 0 12px 0; color: #334155; font-size: 1.1rem;";
   wrap.appendChild(title);
 
-  // Buttons Container
   const btnRow = document.createElement("div");
   btnRow.style.cssText = "display:flex; justify-content:center; gap:12px; flex-wrap:wrap;";
 
-  // Quick Button
   const btnQuick = document.createElement("button");
   btnQuick.innerHTML = "⚡ Quick Tips";
   btnQuick.style.cssText = `
@@ -76,7 +61,6 @@ export function renderEntryButtons({ onQuick, onDeep }) {
   btnQuick.onmouseout = () => btnQuick.style.borderColor = "#cbd5e1";
   btnQuick.onclick = onQuick;
 
-  // Deep Button
   const btnDeep = document.createElement("button");
   btnDeep.innerHTML = "🎓 Deep Dive";
   btnDeep.style.cssText = `
@@ -220,9 +204,17 @@ export function updateFooterButtons({
     footer.appendChild(btnMore);
   }
 
-  // --- Show Less Button ---
-  if (canShowLess && !isLoading) { // Don't allow collapse while loading
+  // --- Show Less / Back Button ---
+  if (canShowLess && !isLoading) {
     const btnLess = document.createElement("button");
+    
+    // UI Polish: Change text if it's the last step back
+    // If "Show More" is visible, we are on Chunk 1 or 2. 
+    // If "Show More" is hidden, we are on Chunk 3 (Max).
+    // Actually, logic.js passes canShowLess=true even for Chunk 1.
+    // We can infer context: If we can show more, "Show Less" acts as "Back".
+    
+    // Simplest consistent label:
     btnLess.textContent = "Show Less ⬆";
     
     btnLess.style.cssText = `
