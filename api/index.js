@@ -1,8 +1,9 @@
 // api/index.js
 export { assessPronunciation } from "./assess.js";
 export { fetchAIFeedback } from "./ai.js";
-export { saveAttempt } from "./attempts.js";
-export { getUID, ensureUID } from "./identity.js"; // Added ensureUID for completeness
+// UPDATE: Export fetchHistory
+export { saveAttempt, fetchHistory } from "./attempts.js";
+export { getUID, ensureUID } from "./identity.js";
 export {
   ENABLE_WIX_SAVE,
   savePronunciationResult,

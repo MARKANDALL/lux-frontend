@@ -1,6 +1,13 @@
 // api/util.js
-export const API_BASE =
-  globalThis.API_BASE || "https://luxury-language-api.vercel.app";
+const PROD_API = "https://luxury-language-api.vercel.app";
+
+export const API_BASE = (() => {
+  // If we are on localhost, return empty string to use relative path (triggering the Proxy)
+  if (typeof window !== "undefined" && window.location.hostname === "localhost") {
+    return ""; 
+  }
+  return globalThis.API_BASE || PROD_API;
+})();
 
 export function dbg(...args) {
   if (globalThis?.__DEBUG_AI ?? true) console.log("[AI]", ...args);

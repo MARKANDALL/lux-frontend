@@ -12,13 +12,13 @@ export default defineConfig({
   },
 
   server: {
-    // Sets the default port. If 3000 is busy, Vite will auto-try 3001.
     port: 3000, 
     open: true,
     
-    // THE PROXY FIX:
-    // This tells Vite: "If a request starts with /api...
-    // ...BUT it does NOT end in .js, send it to the backend."
+    // THE FIX:
+    // We use a "Negative Lookahead" Regex.
+    // It says: Match "/api/...", BUT NOT if it ends in ".js"
+    // This lets your code files load locally, while API data calls go to the cloud.
     proxy: {
       '^/api/(?!.*\\.js$)': {
         target: 'https://luxury-language-api.vercel.app',

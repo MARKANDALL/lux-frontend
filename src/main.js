@@ -1,32 +1,35 @@
 // src/main.js
 // The Main Entry Point: Boots the app, handles the Typewriter, and wires the Dropdown.
-// UPDATED: Fixed import path for peekaboo script.
 
 import { 
   wirePassageSelect, 
   wireNextBtn
-} from '/features/passages/index.js';
+} from '../features/passages/index.js';
 
 import { 
   initLuxRecorder, 
   wireRecordingButtons 
-} from '/features/recorder/index.js';
+} from '../features/recorder/index.js';
 
 import { 
   showSummary 
-} from '/features/results/index.js';
+} from '../features/results/index.js';
 
 import {
   allPartsResults,
   currentParts
-} from '/app-core/state.js';
+} from '../app-core/state.js';
 
-// NEW IMPORT: The Bridge for Audio/Waveforms
-import { initAudioSink } from '/app-core/audio-sink.js';
+import { initAudioSink } from '../app-core/audio-sink.js';
 
 // Lazy-load controller for the Self-Playback drawer
-// FIXED: Path now points to root ('/features') instead of relative ('./features')
-import "/features/features/08-selfpb-peekaboo.js";
+import "../features/features/08-selfpb-peekaboo.js";
+
+// --- RESTORED: Onboarding (This was the missing logic!) ---
+import '/ui/ui-shell-onboarding.js';
+
+// --- NEW: Import Dashboard (Relative Path) ---
+import { initDashboard } from '../features/dashboard/index.js'; 
 
 // --- VISUALS: Typewriter Effect ---
 let typewriterTimeout; 
@@ -99,7 +102,7 @@ function startTypewriter() {
 async function bootApp() {
   console.log("[Lux] Booting features...");
 
-  // 1. Initialize Audio Infrastructure (Critical for Waveforms)
+  // 1. Initialize Audio Infrastructure
   initAudioSink();
 
   // 2. Setup Passages
@@ -160,6 +163,9 @@ async function bootApp() {
       msg.classList.add('show');
     }
   }, 2500);
+
+  // 7. --- NEW: Boot Dashboard ---
+  await initDashboard();
   
   console.log("[Lux] App fully initialized.");
 }
