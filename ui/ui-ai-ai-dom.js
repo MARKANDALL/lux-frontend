@@ -1,6 +1,6 @@
 // ui/ui-ai-ai-dom.js
 // Handles DOM updates for the AI feedback panel.
-// UPDATED: Automatically generates the "Show More" button if missing.
+// UPDATED: Fixes "Stuck Loading" and adds "Show Less".
 
 function getSectionAndBox() {
   const section = document.getElementById("aiFeedbackSection");
@@ -9,40 +9,20 @@ function getSectionAndBox() {
 }
 
 /**
- * Helper: Ensures the 'Show More' button exists in the DOM.
- * Appends it to the Section (parent), not the Box (content), so it persists.
+ * Helper: Ensures the Footer Button Container exists
  */
-function getOrCreateShowMoreBtn() {
-  let btn = document.getElementById("showMoreBtn");
-  
-  if (!btn) {
-    const { section } = getSectionAndBox();
-    if (section) {
-      btn = document.createElement("button");
-      btn.id = "showMoreBtn";
-      btn.textContent = "Show Next Chunk ⬇";
-      
-      // Default Styling
-      btn.style.cssText = `
-        display: none;
-        margin: 20px auto 10px auto;
-        padding: 8px 20px;
-        background: #f1f5f9;
-        border: 1px solid #cbd5e1;
-        border-radius: 20px;
-        color: #475569;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s;
-      `;
-      
-      btn.onmouseover = () => { btn.style.background = "#e2e8f0"; };
-      btn.onmouseout = () => { btn.style.background = "#f1f5f9"; };
+function getFooterContainer() {
+  const { section } = getSectionAndBox();
+  if (!section) return null;
 
-      section.appendChild(btn); // Add to parent container
-    }
+  let footer = document.getElementById("aiFeedbackFooter");
+  if (!footer) {
+    footer = document.createElement("div");
+    footer.id = "aiFeedbackFooter";
+    footer.style.cssText = "display: flex; justify-content: center; gap: 12px; margin: 20px auto 10px auto;";
+    section.appendChild(footer);
   }
-  return btn;
+  return footer;
 }
 
 /* ========================================================================
@@ -55,11 +35,16 @@ export function hideAI() {
 }
 
 /**
- * MILESTONE 3: Show Entry Options (Quick vs Deep)
+ * Renders the "Quick vs Deep" entry buttons
  */
 export function renderEntryButtons({ onQuick, onDeep }) {
   const { section, box } = getSectionAndBox();
   if (section) section.style.display = "";
+  
+  // Hide footer while making choice
+  const footer = document.getElementById("aiFeedbackFooter");
+  if (footer) footer.style.display = "none";
+
   if (!box) return;
 
   // Clear previous content
@@ -107,9 +92,6 @@ export function renderEntryButtons({ onQuick, onDeep }) {
   btnRow.appendChild(btnDeep);
   wrap.appendChild(btnRow);
   box.appendChild(wrap);
-  
-  // Ensure "Show More" is hidden initially
-  setShowMoreState({ visible: false });
 }
 
 export function showLoading() {
@@ -199,19 +181,65 @@ export function renderSections(sections, count) {
   };
 }
 
-export function setShowMoreState({ visible }) {
-  const btn = getOrCreateShowMoreBtn(); // Safer
-  if (btn) {
-    btn.style.display = visible ? "block" : "none";
-  }
-}
+/**
+ * UPDATED: Centralized Footer Button Management
+ */
+export function updateFooterButtons({ 
+  onShowMore, 
+  onShowLess, 
+  canShowMore, 
+  canShowLess, 
+  isLoading 
+}) {
+  const footer = getFooterContainer();
+  if (!footer) return;
+  
+  footer.innerHTML = "";
+  footer.style.display = "flex";
 
-export function onShowMore(callback) {
-  const btn = getOrCreateShowMoreBtn(); // Safer
-  if (btn) {
-    const newBtn = btn.cloneNode(true);
-    btn.parentNode.replaceChild(newBtn, btn);
-    newBtn.addEventListener("click", callback);
+  // --- Show More Button ---
+  if (canShowMore) {
+    const btnMore = document.createElement("button");
+    btnMore.textContent = isLoading ? "Loading..." : "Show Next Chunk ⬇";
+    btnMore.disabled = isLoading;
+    
+    btnMore.style.cssText = `
+      padding: 8px 20px;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 20px;
+      color: #475569;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    `;
+    btnMore.onmouseover = () => { if(!btnMore.disabled) btnMore.style.background = "#e2e8f0"; };
+    btnMore.onmouseout = () => { if(!btnMore.disabled) btnMore.style.background = "#f1f5f9"; };
+    
+    if (onShowMore) btnMore.onclick = onShowMore;
+    footer.appendChild(btnMore);
+  }
+
+  // --- Show Less Button ---
+  if (canShowLess && !isLoading) { // Don't allow collapse while loading
+    const btnLess = document.createElement("button");
+    btnLess.textContent = "Show Less ⬆";
+    
+    btnLess.style.cssText = `
+      padding: 8px 20px;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      color: #64748b;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    `;
+    btnLess.onmouseover = () => { btnLess.style.color = "#ef4444"; btnLess.style.borderColor = "#fca5a5"; };
+    btnLess.onmouseout = () => { btnLess.style.color = "#64748b"; btnLess.style.borderColor = "#e2e8f0"; };
+    
+    if (onShowLess) btnLess.onclick = onShowLess;
+    footer.appendChild(btnLess);
   }
 }
 
@@ -225,6 +253,8 @@ export function showAIFeedbackError(msg) {
 export function clearAIFeedback() {
   const { box } = getSectionAndBox();
   if (box) box.innerHTML = "";
+  const footer = document.getElementById("aiFeedbackFooter");
+  if (footer) footer.innerHTML = "";
 }
 
 export function renderAIFeedbackMarkdown(md) {

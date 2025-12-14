@@ -1,22 +1,23 @@
 // ui/ui-ai-ai-logic.js
 // AI Logic: Handles "Quick" vs "Deep" and manages the Chunking loop.
+// UPDATED: Robust state management for Show More / Show Less.
 
 import {
   showLoading,
   hideAI,
   renderSections,
-  onShowMore,
-  setShowMoreState,
   renderEntryButtons,
-  showAIFeedbackError // Added for better error handling UI
+  updateFooterButtons,
+  showAIFeedbackError
 } from "./ui-ai-ai-dom.js";
 
 import { fetchAIFeedback } from "../api/index.js";
 
-// -- State for Deep Dive Accumulation --
+// -- State for Deep Dive --
 let accumulatedSections = [];
 let currentChunk = 0;
-let currentArgs = null; // store args to re-fetch next chunk
+let currentArgs = null; 
+let isFetching = false;
 
 /**
  * Entry Point: Triggered by Recorder
@@ -29,9 +30,10 @@ export function promptUserForAI(azureResult, referenceText, firstLang) {
     return;
   }
 
-  // Reset state on new prompt
+  // Reset state
   accumulatedSections = [];
   currentChunk = 0;
+  isFetching = false;
   
   renderEntryButtons({
     onQuick: () => startQuickMode(azureResult, referenceText, firstLang),
@@ -39,7 +41,7 @@ export function promptUserForAI(azureResult, referenceText, firstLang) {
   });
 }
 
-// --- Quick Mode (One-shot) ---
+// --- Quick Mode ---
 async function startQuickMode(azureResult, referenceText, firstLang) {
   showLoading();
   const lang = normalizeLang(firstLang);
@@ -50,9 +52,10 @@ async function startQuickMode(azureResult, referenceText, firstLang) {
     });
     const sections = res.sections || res.fallbackSections || [];
     
-    // Render and hide "Show More"
     renderSections(sections, sections.length);
-    setShowMoreState({ visible: false });
+    
+    // Quick mode doesn't usually have pagination, but we clear footer just in case
+    updateFooterButtons({ canShowMore: false, canShowLess: false });
 
   } catch (err) {
     console.error(err);
@@ -60,29 +63,32 @@ async function startQuickMode(azureResult, referenceText, firstLang) {
   }
 }
 
-// --- Deep Mode (Chunked) ---
+// --- Deep Mode ---
 async function startDeepMode(azureResult, referenceText, firstLang) {
   const lang = normalizeLang(firstLang);
-  
-  // Store context for next chunks
   currentArgs = { azureResult, referenceText, firstLang: lang };
+  
+  // Full reset for Deep Mode
   accumulatedSections = [];
   currentChunk = 0;
 
-  // Start with Chunk 1
+  // Fetch Chunk 1
   await fetchNextChunk();
 }
 
 async function fetchNextChunk() {
-  if (currentChunk >= 3) return; // Max 3 chunks
+  if (isFetching) return;
+  if (currentChunk >= 3) return; 
 
-  // Only show full loading screen for first chunk
+  isFetching = true;
+
+  // If first chunk, show full loading screen. Otherwise, button shows loading.
   if (currentChunk === 0) showLoading();
-  
+  else refreshFooter(); 
+
   const nextChunkId = currentChunk + 1;
 
   try {
-    // Call API for specific chunk
     const res = await fetchAIFeedback({
         ...currentArgs,
         mode: "detailed",
@@ -90,42 +96,47 @@ async function fetchNextChunk() {
     });
 
     const newSections = res.sections || res.fallbackSections || [];
-    
-    // Add to pile
     accumulatedSections = [...accumulatedSections, ...newSections];
     currentChunk = nextChunkId;
 
-    // Render EVERYTHING we have so far
     renderSections(accumulatedSections, accumulatedSections.length);
-
-    // Setup "Show More" if we haven't reached Chunk 3 yet
-    if (currentChunk < 3) {
-        setShowMoreState({ visible: true });
-        
-        // Re-bind the button for the next chunk
-        onShowMore(async (e) => {
-            // Optional: show a mini spinner on the button itself?
-            // For now, let's just disable it to prevent double-clicks
-            const btn = e.target;
-            const originalText = btn.textContent;
-            btn.textContent = "Loading...";
-            btn.disabled = true;
-            
-            await fetchNextChunk();
-            
-            // If more chunks exist, reset button state (new button is created by render usually, but just in case)
-            btn.textContent = originalText;
-            btn.disabled = false;
-        });
-    } else {
-        setShowMoreState({ visible: false });
-    }
 
   } catch (err) {
     console.error(err);
     showAIFeedbackError("Could not load next section.");
-    setShowMoreState({ visible: false });
+  } finally {
+    isFetching = false;
+    refreshFooter();
   }
+}
+
+function handleShowLess() {
+  // Logic: Reset to just the first batch (Chunk 1) without re-fetching?
+  // Or just re-fetch chunk 1? 
+  // SAFEST: Reset state to Chunk 1 and re-render what we already have if possible.
+  // Ideally we keep the data in memory.
+  
+  // For simplicity and robustness in this Milestone:
+  // We will hide the extra sections from the DOM but keep them in memory?
+  // Actually, 'renderSections' takes a count. 
+  // Let's assume Chunk 1 had roughly 2 sections.
+  
+  // Simpler approach: Hard reset to start of Deep Mode.
+  startDeepMode(currentArgs.azureResult, currentArgs.referenceText, currentArgs.firstLang);
+}
+
+function refreshFooter() {
+  // Logic to determine button states
+  const canShowMore = currentChunk < 3; 
+  const canShowLess = currentChunk > 1; // Can collapse if we are past chunk 1
+
+  updateFooterButtons({
+    onShowMore: () => fetchNextChunk(),
+    onShowLess: () => handleShowLess(),
+    canShowMore: canShowMore,
+    canShowLess: canShowLess,
+    isLoading: isFetching
+  });
 }
 
 // --- Helper ---
@@ -133,5 +144,4 @@ function normalizeLang(l) {
   return !l || !String(l).trim() ? "universal" : String(l).trim();
 }
 
-// Backwards compatibility for recorder/old calls
 export const getAIFeedback = promptUserForAI;
