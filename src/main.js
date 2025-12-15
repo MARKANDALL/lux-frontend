@@ -25,11 +25,14 @@ import { initAudioSink } from '../app-core/audio-sink.js';
 // Lazy-load controller for the Self-Playback drawer
 import "../features/features/08-selfpb-peekaboo.js";
 
-// --- RESTORED: Onboarding (This was the missing logic!) ---
+// Onboarding
 import '/ui/ui-shell-onboarding.js';
 
-// --- NEW: Import Dashboard (Relative Path) ---
+// Dashboard
 import { initDashboard } from '../features/dashboard/index.js'; 
+
+// Authentication (NEW)
+import { initAuthUI } from '../ui/auth-dom.js';
 
 // --- VISUALS: Typewriter Effect ---
 let typewriterTimeout; 
@@ -164,8 +167,11 @@ async function bootApp() {
     }
   }, 2500);
 
-  // 7. --- NEW: Boot Dashboard ---
+  // 7. Boot Dashboard
   await initDashboard();
+  
+  // 8. Boot Authentication
+  initAuthUI();
   
   console.log("[Lux] App fully initialized.");
 }

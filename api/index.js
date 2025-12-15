@@ -1,13 +1,12 @@
 // api/index.js
+// The Public API Gatekeeper
+
 export { assessPronunciation } from "./assess.js";
 export { fetchAIFeedback } from "./ai.js";
-// UPDATE: Export fetchHistory
-export { saveAttempt, fetchHistory } from "./attempts.js";
+
+// ✅ THE FIX: Export *everything* from attempts.js
+// This automatically includes saveAttempt, fetchHistory, AND updateAttempt
+export * from "./attempts.js"; 
+
 export { getUID, ensureUID } from "./identity.js";
-export {
-  ENABLE_WIX_SAVE,
-  savePronunciationResult,
-  saveToWix,
-  canSaveToWix,
-} from "./wix.js";
 export { API_BASE, dbg } from "./util.js";

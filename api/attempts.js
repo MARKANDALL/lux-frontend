@@ -1,11 +1,11 @@
 // api/attempts.js
-// UPDATED: Forces the history fetch to use the correct Admin endpoint.
+// UPDATED: Added updateAttempt() to save AI feedback
 
 import { API_BASE, dbg, jsonOrThrow } from "./util.js";
 
 const ATTEMPT_URL = `${API_BASE}/api/attempt`;
-// ⬇️ THIS IS THE CRITICAL NEW LINE
-const HISTORY_URL = `${API_BASE}/api/admin-recent`; 
+const HISTORY_URL = `${API_BASE}/api/user-recent`; 
+const UPDATE_URL  = `${API_BASE}/api/update-attempt`; // New!
 
 export async function saveAttempt({
   uid,
@@ -35,18 +35,15 @@ export async function saveAttempt({
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  return jsonOrThrow(resp);
+  
+  // We need to return the ID so we can update this record later!
+  return jsonOrThrow(resp); 
 }
 
-/**
- * Fetch user history using the admin-recent endpoint
- */
 export async function fetchHistory(uid) {
   if (!uid) throw new Error("fetchHistory: UID is required");
 
-  // ⬇️ CRITICAL: Must use HISTORY_URL, not ATTEMPT_URL
-  const url = `${HISTORY_URL}?uid=${encodeURIComponent(uid)}&limit=50`;
-  
+  const url = `${HISTORY_URL}?uid=${encodeURIComponent(uid)}`;
   dbg("GET", url);
 
   const resp = await fetch(url, {
@@ -55,6 +52,34 @@ export async function fetchHistory(uid) {
   });
   
   const json = await jsonOrThrow(resp);
-  // The admin API returns { rows: [...] }
   return json.rows || [];
+}
+
+/**
+ * Updates an existing attempt (e.g. to attach AI feedback)
+ */
+export async function updateAttempt(id, aiFeedbackData) {
+  if (!id) {
+    console.warn("updateAttempt: No ID provided, cannot save.");
+    return;
+  }
+
+  const body = {
+    id: id,
+    ai_feedback: aiFeedbackData
+  };
+
+  dbg("POST", UPDATE_URL, body);
+
+  try {
+    const resp = await fetch(UPDATE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    return jsonOrThrow(resp);
+  } catch (err) {
+    console.error("Failed to update attempt:", err);
+    // Don't throw, just log. It's not critical if saving feedback fails.
+  }
 }

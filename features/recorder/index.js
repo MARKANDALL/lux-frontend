@@ -1,14 +1,10 @@
 // features/recorder/index.js
 // The Orchestrator: Connects DOM <-> Media <-> API <-> State.
-// STATUS: AI is OPTIONAL (Triggered via UI prompt, not automatic).
+// STATUS: Complete + Quality Guardrails.
 
 import { logError, debug as logDebug } from "../../app-core/lux-utils.js";
-
-// 1. Modules (Local Siblings)
 import * as DOM from "./ui.js";
 import * as Mic from "./media.js";
-
-// 2. State & Data
 import { 
   currentPassageKey, 
   currentPartIdx, 
@@ -17,20 +13,20 @@ import {
   getSessionId,
   pushPartResult
 } from "../../app-core/state.js";
-
-// 3. APIs & Features
-import { assessPronunciation, saveAttempt, getUID } from "../../api/index.js";
+import { assessPronunciation, saveAttempt, getUID, fetchHistory } from "../../api/index.js";
 import { showPrettyResults } from "../results/index.js"; 
 import { markPartCompleted } from "../passages/index.js"; 
 import { bringInputToTop } from "../../helpers/index.js"; 
-
-// --- CRITICAL IMPORT: The new Logic that asks "Do you want AI?" ---
+import { renderHistoryRows } from "../dashboard/ui.js";
 import { promptUserForAI } from "../../ui/ui-ai-ai-logic.js"; 
 
 let isInitialized = false;
-
-// The "Hang Time" duration. Matches the CSS animation (~0.8s).
+let recordingStartTime = 0; // NEW: Track duration
 const STOP_DELAY_MS = 800; 
+
+// --- Guardrail Config ---
+const MIN_DURATION_MS = 1500; // Must record for at least 1.5s
+const MIN_SCORE_TO_SAVE = 10; // Don't save if score is < 10% (garbage audio)
 
 /* ===========================
    Workflow Logic
@@ -40,6 +36,9 @@ async function startRecordingFlow() {
   DOM.setStatus("Recording...");
   DOM.setVisualState("recording");
   
+  // Start the clock
+  recordingStartTime = Date.now();
+
   const success = await Mic.startMic(handleRecordingComplete);
   
   if (!success) {
@@ -51,6 +50,15 @@ async function startRecordingFlow() {
 }
 
 function stopRecordingFlow() {
+  // Guardrail 1: Too Short?
+  const duration = Date.now() - recordingStartTime;
+  if (duration < MIN_DURATION_MS) {
+     DOM.setStatus("Too short! Hold button longer.");
+     Mic.stopMic(); // Stop but we might need to flag it to ignore in handle? 
+     // Actually, handleRecordingComplete will fire. We check duration there too?
+     // For simplicity, we just let it stop, but we'll check valid audio in handle.
+  }
+
   DOM.setStatus("Stopping...");
   DOM.setVisualState("processing");
 
@@ -59,34 +67,31 @@ function stopRecordingFlow() {
   }, STOP_DELAY_MS);
 }
 
-/**
- * Called by Mic.onstop when the blob is ready.
- * Orchestrates the handoff from Audio -> Azure -> UI -> AI Prompt
- */
 async function handleRecordingComplete(audioBlob) {
   try {
-    DOM.setVisualState("analyzing"); 
+    // Guardrail 1 Check: Audio Size
+    if (audioBlob.size < 1000) { // < 1kb is definitely silence/error
+       DOM.setStatus("Recording too short/empty.");
+       DOM.setVisualState("idle");
+       return; // EXIT EARLY
+    }
 
+    DOM.setVisualState("analyzing"); 
     const text = DOM.ui.textarea ? DOM.ui.textarea.value.trim() : "";
     bringInputToTop();
 
-    // 1. AUDIO PLAYBACK HANDOFF
+    // 1. Audio Handoff
     const audioEl = document.getElementById("playbackAudio");
     if (audioEl) {
         if (audioEl.src) URL.revokeObjectURL(audioEl.src);
-        const audioUrl = URL.createObjectURL(audioBlob);
-        audioEl.src = audioUrl; 
+        audioEl.src = URL.createObjectURL(audioBlob); 
     }
     
-    // Legacy helper hook
-    if (window.__attachLearnerBlob) {
-      window.__attachLearnerBlob(audioBlob);
-    }
+    if (window.__attachLearnerBlob) window.__attachLearnerBlob(audioBlob);
 
     DOM.setStatus("Analyzing...");
     
-    // 2. AZURE API CALL (Pronunciation Assessment)
-    // This is fast and cheap, so we do it automatically.
+    // 2. Azure Analysis
     const lang = getChosenLang();
     const result = await assessPronunciation({ 
       audioBlob, 
@@ -96,29 +101,38 @@ async function handleRecordingComplete(audioBlob) {
 
     logDebug("AZURE RESULT RECEIVED", result);
 
-    // 3. UPDATE STATE
+    // Guardrail 2: Bad Score / No Speech Detected?
+    const score = result?.NBest?.[0]?.PronScore || 0;
+    if (score < MIN_SCORE_TO_SAVE) {
+        console.warn("[Lux] Score too low ("+score+"%). Not saving to history.");
+        DOM.setStatus("No clear speech detected. Try again!");
+        DOM.setVisualState("idle");
+        
+        // We still show results so user sees "0%" and knows why
+        const prettyFn = showPrettyResults || window.showPrettyResults;
+        if (prettyFn) prettyFn(result);
+        return; // EXIT EARLY - DO NOT SAVE
+    }
+
+    // 3. Update State
     if (currentParts && currentParts.length > 0) {
        pushPartResult(currentPartIdx, result);
     }
 
-    // 4. RESET UI VISUALS
     DOM.setStatus("Not recording");
     DOM.setVisualState("idle");
 
-    // 5. SHOW BASIC RESULTS (Scores, Color-coding)
+    // 5. Show Results
     const prettyFn = showPrettyResults || window.showPrettyResults;
     if (prettyFn) prettyFn(result);
 
     bringInputToTop();
     markPartCompleted();
 
-    // 6. DB SAVE
-    // We save the attempt immediately so we have the record/score.
-    saveToDatabase(result, text, lang);
+    // 6. DB Save & Refresh
+    await saveToDatabase(result, text, lang);
 
-    // 7. AI HANDOFF (OPTIONAL)
-    // Instead of automatically calling getAIFeedback, we invite the user.
-    // This function injects a specific "Ask AI" button into the results UI.
+    // 7. AI Trigger
     promptUserForAI(result, text, lang);
 
   } catch (err) {
@@ -128,14 +142,15 @@ async function handleRecordingComplete(audioBlob) {
   }
 }
 
-function saveToDatabase(result, text, lang) {
+async function saveToDatabase(result, text, lang) {
   try {
+    window.lastAttemptId = null; 
     const uid = getUID && getUID();
     const sessionId = getSessionId();
     const localTime = new Date().toISOString();
 
     if (uid) {
-      saveAttempt({
+      const saved = await saveAttempt({
         uid,
         passageKey: currentPassageKey,
         partIndex: currentPartIdx,
@@ -144,30 +159,32 @@ function saveToDatabase(result, text, lang) {
         l1: lang,
         sessionId,
         localTime
-      }).catch(e => console.warn("Supabase log failed", e));
+      });
+
+      if (saved && saved.id) {
+        window.lastAttemptId = saved.id;
+        console.log("[Lux] Saved Attempt ID:", window.lastAttemptId);
+
+        // REFRESH DASHBOARD
+        const freshHistory = await fetchHistory(uid);
+        renderHistoryRows(freshHistory);
+      }
     }
   } catch (e) {
     console.warn("DB Save Error", e);
   }
 }
 
-/* ===========================
-   Public Init
-   =========================== */
-
 export function initLuxRecorder() {
   if (isInitialized) return;
-
   const found = DOM.wireButtons({
     onRecord: startRecordingFlow,
     onStop: stopRecordingFlow
   });
-
   if (found) {
     DOM.setVisualState("idle");
     isInitialized = true;
     logDebug("Lux Recorder (Modular) Initialized");
   }
 }
-
 export const wireRecordingButtons = initLuxRecorder;

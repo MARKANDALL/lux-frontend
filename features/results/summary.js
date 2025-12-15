@@ -1,17 +1,21 @@
-// ui/views/summary.js
+// features/results/summary.js
 /* ============================================================================
    CANONICAL SUMMARY BUILDER (v1.5.0 ATLAS)
+   STATUS: LOCKED to Universal Blue/Yellow/Red Schema (80/60)
    ---------------------------------------------------------------------------
-   - Aggregates results from all passage parts.
-   - Identifies top error patterns (phonemes) and specific worst words.
-   - Renders the "Gold Standard" summary with the video reference restored.
-   - [Refactored] Feedback card generation moved to summary-feedback.js
 ============================================================================ */
 
 import { norm } from "../../src/data/phonemes/core.js";
 import { isCorrupt } from "../../helpers/core.js";
 import { passages } from "../../src/data/passages.js";
 import { detailedPhonemeFeedback } from "./summary-feedback.js";
+
+// --- Universal Color Helper (Inlined for safety) ---
+function getColorConfig(s) {
+  if (s >= 80) return { color: "#2563eb", bg: "#dbeafe" }; // Blue
+  if (s >= 60) return { color: "#d97706", bg: "#fef3c7" }; // Yellow
+  return { color: "#dc2626", bg: "#fee2e2" }; // Red
+}
 
 /**
  * Main Entry Point: Renders the Summary to #prettyResult.
@@ -25,7 +29,6 @@ export function showSummary({ allPartsResults, currentParts }) {
   $out.style.height = "auto";
   $out.style.overflowY = "visible";
 
-  // 1. Resolve Passage Data for Golden Standard Video
   const passageKey = allPartsResults?.[0]?.passage_key || "rainbow"; 
   const passageData = passages[passageKey];
   const youtubeId = passageData?.youtubeId;
@@ -41,8 +44,8 @@ export function showSummary({ allPartsResults, currentParts }) {
     (nb.Words || []).forEach((w) => {
       if (isCorrupt(w.Word)) return;
       
-      // Word Errors
-      if (w.AccuracyScore != null && w.AccuracyScore < 70) {
+      // Word Errors (Updated to < 60% Red Threshold)
+      if (w.AccuracyScore != null && w.AccuracyScore < 60) {
         majorIssues.push({
           part: idx + 1,
           word: w.Word,
@@ -50,7 +53,7 @@ export function showSummary({ allPartsResults, currentParts }) {
         });
       }
 
-      // Phoneme Errors
+      // Phoneme Errors (85% trigger for coaching)
       (w.Phonemes || []).forEach((p) => {
         if (p.AccuracyScore != null && p.AccuracyScore < 85) {
           const key = norm(p.Phoneme);
@@ -128,28 +131,38 @@ export function showSummary({ allPartsResults, currentParts }) {
   html += `<h3 style="color:#334155; margin-bottom:16px; font-size:1.3em;">🎯 Priority Focus Areas (Phonemes)</h3>`;
   html += detailedPhonemeFeedback(issues);
 
-  // 4. Words to Review
+  // 4. Words to Review (UPDATED: Uses Universal Color Schema)
   html += `<h3 style="color:#334155; margin:32px 0 16px 0; font-size:1.3em;">⚠️ Words to Review</h3>`;
-  html += worstErrors.length
-    ? `<div style="display:flex; flex-wrap:wrap; gap:8px;">` + 
-      worstErrors
-        .map(
-          (err) =>
-            `<span style="
-                background:#fef2f2; 
-                border:1px solid #fecaca; 
-                padding:6px 14px; 
-                border-radius:20px; 
-                color:#991b1b; 
-                font-weight:600; 
-                font-size:0.95em;
-                box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-            ">
-               ${err.word} (${err.score}%) <span style="font-weight:400; opacity:0.7; font-size:0.85em; margin-left:4px;">Pt ${err.part}</span>
-            </span>`
-        )
-        .join("") + `</div>`
-    : `<div style="color:#059669; font-style:italic; padding:10px; background:#f0fdf4; border-radius:8px; border:1px solid #bbf7d0;">No word-level scores below 70%. Excellent accuracy!</div>`;
+  
+  if (worstErrors.length) {
+    const pills = worstErrors.map(err => {
+      const { color, bg } = getColorConfig(err.score);
+      // We use the same 'border' color trick as bg but slightly darker for contrast, 
+      // or just standard border. Let's keep it clean.
+      return `
+        <span style="
+            background: ${bg}; 
+            color: ${color}; 
+            padding: 6px 14px; 
+            border-radius: 20px; 
+            font-weight: 700; 
+            font-size: 0.95em;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        ">
+           ${err.word} 
+           <span style="opacity:0.8; font-weight:400;">(${err.score}%)</span>
+           <span style="font-size:0.75em; opacity:0.6; text-transform:uppercase; letter-spacing:0.5px;">Pt ${err.part}</span>
+        </span>
+      `;
+    }).join("");
+    
+    html += `<div style="display:flex; flex-wrap:wrap; gap:8px;">${pills}</div>`;
+  } else {
+    // Perfect Blue
+    html += `<div style="color:#2563eb; font-style:italic; padding:10px; background:#dbeafe; border-radius:8px;">No word-level scores below 60%. Excellent accuracy!</div>`;
+  }
 
   $out.innerHTML = html;
 }

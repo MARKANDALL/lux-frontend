@@ -1,33 +1,28 @@
+// core/scoring/index.js
 /* ============================================================================
-   core/scoring/index.js — Canonical Scoring Gateway (v0)
-   ---------------------------------------------------------------------------
-   North-star:
-   - Pure ES-module exports only (no DOM writes).
-   - No window.* attaches here.
-   - Legacy globals may still exist elsewhere, but modern code imports from here.
-   - Prosody untouched.
+   core/scoring/index.js — Canonical Scoring Gateway
+   STATUS: LOCKED to Universal Blue/Yellow/Red Schema (80/60)
 ============================================================================ */
 
-// Format a numeric score as a percent string.
-// Example: 87 -> "87%" ; 87.3 -> "87.3%" ; null/NaN -> "–"
 export const fmtPct = (v) => {
   if (v == null || !Number.isFinite(+v)) return "–";
   const n = +v;
   return Number.isInteger(n) ? `${n}%` : `${n.toFixed(1)}%`;
 };
 
-// Map a score to a CSS class for coloring.
+// SCORING CONSTITUTION:
+// >= 80: Blue (Good)
+// >= 60: Yellow (Warn)
+// < 60:  Red (Bad)
 export const scoreClass = (s) =>
   s == null
     ? ""
-    : s >= 85
+    : s >= 80
     ? "score-good"
-    : s >= 70
+    : s >= 60
     ? "score-warn"
     : "score-bad";
 
-// Pull Azure-ish scores from the JSON in a resilient way.
-// Works with either top-level PronunciationAssessment or NBest[0].
 export function getAzureScores(data) {
   const nbest = data?.NBest?.[0] || {};
   const pa =
@@ -58,8 +53,6 @@ export function getAzureScores(data) {
   };
 }
 
-// If Azure scores are missing, derive reasonable fallbacks from word data.
-// Mirrors legacy behavior but stays importable.
 export function deriveFallbackScores(data) {
   const nbest = data?.NBest?.[0] || {};
   const words = nbest?.Words || [];
@@ -89,7 +82,6 @@ export function deriveFallbackScores(data) {
     toNum(nbest?.PronScore ?? pa?.PronunciationScore ?? pa?.PronScore) ??
     (accAvg != null ? Math.round(accAvg) : null);
 
-  // Optional legacy helper if it exists (we only READ it, never attach).
   const getSpeakingRate =
     globalThis.getSpeakingRate ||
     function () {
@@ -98,7 +90,8 @@ export function deriveFallbackScores(data) {
 
   const rate = getSpeakingRate(data);
 
-  const fluFallback = rate.label ? (rate.label === "ok" ? 85 : 70) : null;
+  // Updated fallback logic to match new 80/60 threshold
+  const fluFallback = rate.label ? (rate.label === "ok" ? 85 : 65) : null;
 
   return {
     accuracy: accAvg != null ? Math.round(accAvg) : null,
@@ -109,6 +102,4 @@ export function deriveFallbackScores(data) {
   };
 }
 
-// Back-compat default export in case anyone imports default.
-// (Named exports are the real contract.)
 export default scoreClass;

@@ -1,4 +1,7 @@
-// ui/views/summary-feedback.js
+// features/results/summary-feedback.js
+// Generates the "Priority Focus Areas" cards.
+// STATUS: Updated to color-code "Problem Words" using the Universal Schema.
+
 import { norm } from "../../src/data/phonemes/core.js";
 import { getPhonemeAssetByIPA } from "../../src/data/phonemes/assets.js";
 import {
@@ -8,9 +11,15 @@ import {
 import { isCorrupt, encouragingLine } from "../../helpers/core.js";
 import { resolveYTLink } from "./deps.js";
 
+// --- Universal Color Helper (Inlined here for safety) ---
+function getColor(s) {
+  if (s >= 80) return { color: "#2563eb", bg: "#dbeafe" }; // Blue
+  if (s >= 60) return { color: "#d97706", bg: "#fef3c7" }; // Yellow
+  return { color: "#dc2626", bg: "#fee2e2" }; // Red
+}
+
 /**
  * Generates the rich HTML for the "Most Frequent Error Patterns" section.
- * Includes Stats, Tips, Mouth Videos, and External Links (10 Data Points).
  */
 export function detailedPhonemeFeedback(issues, maxCount = 5) {
   let html = "";
@@ -21,27 +30,33 @@ export function detailedPhonemeFeedback(issues, maxCount = 5) {
     .slice(0, maxCount);
 
   if (!sorted.length) {
-    return "<div style='padding:10px; color:#059669;'>No major recurring errors found—great job!</div>";
+    // Updated: Blue success message (was Green)
+    return "<div style='padding:10px; color:#2563eb; background:#eff6ff; border-radius:8px;'>No major recurring errors found—great job!</div>";
   }
 
   sorted.forEach(([sound, obj]) => {
-    // 1. The Sound & 5. IPA
+    // 1. Setup Data
     const key = norm(sound);
     const details = phonemeDetailsByIPA[key] ?? articulatorPlacement[key] ?? {};
     const asset = getPhonemeAssetByIPA(key) || {};
-    
-    // 9. Recommendation Link (Deep Dive)
     const ytUrl = resolveYTLink(asset.ipa || sound); 
+    const encouragement = encouragingLine ? encouragingLine() : "Keep practicing!";
     
-    // 4. Examples (Top 3)
+    // 2. Color-code the "Lowest Score" text
+    const minScore = Math.min(...obj.scores);
+    const minColor = getColor(minScore).color;
+
+    // 3. Build Problem Words (Top 3) - NOW COLOR CODED 🎨
     const examples = obj.examples
         .filter((e) => !isCorrupt(e.word))
         .slice(0, 3);
-    const exStr = examples.map((e) => `<span style="white-space:nowrap; background:#f1f5f9; padding:2px 6px; border-radius:4px;">${e.word} (${e.score}%)</span>`).join(" ");
+        
+    const exStr = examples.map((e) => {
+        const { color, bg } = getColor(e.score);
+        return `<span style="white-space:nowrap; background:${bg}; color:${color}; padding:2px 8px; border-radius:4px; font-weight:600; font-size:0.9em;">${e.word} (${e.score}%)</span>`;
+    }).join(" ");
 
-    // 10. Encouragement (Random line)
-    const encouragement = encouragingLine ? encouragingLine() : "Keep practicing, you're improving!";
-
+    // 4. Build Card HTML
     html += `
         <div style="
             margin-bottom: 24px; 
@@ -58,13 +73,15 @@ export function detailedPhonemeFeedback(issues, maxCount = 5) {
              </div>
              <div style="text-align:right;">
                 <div style="font-size:0.9em; color:#64748b;"><strong>${obj.count}</strong> detections</div>
-                <div style="font-size:0.9em; color:#ef4444;">Lowest: <strong>${Math.min(...obj.scores)}%</strong></div>
+                <div style="font-size:0.9em; color:${minColor};">Lowest: <strong>${minScore}%</strong></div>
              </div>
           </div>
 
           <div style="margin-bottom:16px;">
-             <div style="font-size:0.85em; text-transform:uppercase; color:#94a3b8; font-weight:700; margin-bottom:4px;">Problem Words</div>
-             <div style="color:#334155; line-height:1.6;">${exStr || "No specific words captured."}</div>
+             <div style="font-size:0.85em; text-transform:uppercase; color:#94a3b8; font-weight:700; margin-bottom:6px;">Problem Words</div>
+             <div style="line-height:1.8; display:flex; flex-wrap:wrap; gap:6px;">
+               ${exStr || "<span style='color:#94a3b8; font-style:italic;'>No specific words captured.</span>"}
+             </div>
           </div>
 
           <div style="background:#f8fafc; padding:16px; border-radius:8px; border:1px solid #e2e8f0; margin-bottom:16px;">

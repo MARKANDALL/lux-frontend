@@ -1,6 +1,6 @@
 // ui/ui-ai-ai-dom.js
 // Handles DOM updates for the AI feedback panel.
-// UPDATED: "Show Less" logic for stepwise navigation.
+// STATUS: Complete. Preserves all functions. Adds custom "Back" label support.
 
 function getSectionAndBox() {
   const section = document.getElementById("aiFeedbackSection");
@@ -167,13 +167,15 @@ export function renderSections(sections, count) {
 
 /**
  * UPDATED: Centralized Footer Button Management
+ * Adds 'lessLabel' to allow renaming the "Show Less" button.
  */
 export function updateFooterButtons({ 
   onShowMore, 
   onShowLess, 
   canShowMore, 
   canShowLess, 
-  isLoading 
+  isLoading,
+  lessLabel = "Show Less ⬆" // Default value
 }) {
   const footer = getFooterContainer();
   if (!footer) return;
@@ -207,15 +209,7 @@ export function updateFooterButtons({
   // --- Show Less / Back Button ---
   if (canShowLess && !isLoading) {
     const btnLess = document.createElement("button");
-    
-    // UI Polish: Change text if it's the last step back
-    // If "Show More" is visible, we are on Chunk 1 or 2. 
-    // If "Show More" is hidden, we are on Chunk 3 (Max).
-    // Actually, logic.js passes canShowLess=true even for Chunk 1.
-    // We can infer context: If we can show more, "Show Less" acts as "Back".
-    
-    // Simplest consistent label:
-    btnLess.textContent = "Show Less ⬆";
+    btnLess.textContent = lessLabel; // Use the custom label
     
     btnLess.style.cssText = `
       padding: 8px 20px;

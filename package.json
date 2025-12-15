@@ -21,5 +21,8 @@
   "devDependencies": {
     "serve": "11.2.0",
     "vite": "^6.0.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.87.1"
   }
 }
