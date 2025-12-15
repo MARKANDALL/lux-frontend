@@ -1,6 +1,6 @@
 // ui/ui-ai-ai-dom.js
 // Handles DOM updates for the AI feedback panel.
-// UPDATED: Implements persistent Sidebar for Voice Selection.
+// UPDATED: Implements persistent Sidebar and SCROLLABLE content area.
 
 function getSectionAndBox() {
   const section = document.getElementById("aiFeedbackSection");
@@ -8,7 +8,7 @@ function getSectionAndBox() {
   return { section, box };
 }
 
-// --- NEW: Layout Builder (The Sidebar) ---
+// --- Layout Builder (The Sidebar + Scrollable Content) ---
 function ensureShell(box, onPersonaChange) {
   // If the shell exists, just return the content area
   const existingContent = box.querySelector(".ai-content");
@@ -46,9 +46,19 @@ function ensureShell(box, onPersonaChange) {
     sidebar.appendChild(btn);
   });
 
-  // 2. Main Content Area (Dynamic)
+  // 2. Main Content Area (Dynamic & Scrollable)
   const content = document.createElement("div");
-  content.className = "ai-content";
+  content.className = "ai-content custom-scrollbar";
+  
+  // THE FIX: Constrain height and allow scrolling
+  content.style.cssText = `
+    max-height: 450px; 
+    overflow-y: auto; 
+    padding: 20px; 
+    background: #fff; 
+    display: flex; 
+    flex-direction: column;
+  `;
 
   box.appendChild(sidebar);
   box.appendChild(content);
@@ -106,7 +116,7 @@ export function renderEntryButtons({ onQuick, onDeep, onPersonaChange }) {
   box.style.display = "grid"; // Activate CSS Grid if hidden
 
   const wrap = document.createElement("div");
-  wrap.style.cssText = "text-align:center; padding:20px 0;";
+  wrap.style.cssText = "text-align:center; padding:10px 0;";
 
   const title = document.createElement("h3");
   title.textContent = "AI Analysis";

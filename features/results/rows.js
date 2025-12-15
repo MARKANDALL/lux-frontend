@@ -1,16 +1,12 @@
 /* ============================================================================
-   ACTIVE MODULE — CANONICAL ROW BUILDER (WORDS + PHONEMES)
+   CANONICAL ROW BUILDER (WORDS + PHONEMES)
    ---------------------------------------------------------------------------
-   - Used by ui/views/render-core.js to render the main results table.
-   - [Refactored] Logic moved to rows-logic.js. This file is now View-only.
+   - REFACTORED: No longer generates internal tooltips/videos.
+   - PURE LAYOUT: Generates "dumb" chips with data-ipa attributes.
+   - This fixes the "White Space" bug by removing hidden DOM bloat.
 ============================================================================ */
 
 import { norm } from "../../src/data/phonemes/core.js";
-import { getPhonemeAssetByIPA } from "../../src/data/phonemes/assets.js";
-import {
-  phonemeDetailsByIPA,
-  articulatorPlacement,
-} from "../../src/data/phonemes/details.js";
 import { buildYouglishUrl } from "../../helpers/core.js";
 import { scoreClass } from "../../core/scoring/index.js";
 
@@ -23,7 +19,7 @@ import { renderProsodyRibbon } from "./deps.js";
 export function buildRows(words, timings, med) {
   return (words || [])
     .map((word, i) => {
-      // 1. Calculate Stats (Logic)
+      // 1. Calculate Stats
       const { 
         penalty, 
         adjScore, 
@@ -31,41 +27,43 @@ export function buildRows(words, timings, med) {
         rawScore 
       } = calculateWordStats(word, i, timings, med);
 
-      // 2. Render Components (View)
+      // 2. Render Components
       const ribbon =
         typeof renderProsodyRibbon === "function"
           ? renderProsodyRibbon(i, words, timings, med)
           : "";
 
+      // 3. Render Phonemes (CLEAN VERSION)
+      // We do NOT render .tooltiptext or <video> here anymore.
+      // We just render the trigger chip with data attributes.
       const phonemesHtml = (word.Phonemes || [])
         .map((ph) => {
-          const k = norm(ph.Phoneme);
-          const res = getPhonemeAssetByIPA(k) || {};
-          const details =
-            phonemeDetailsByIPA[k] ?? articulatorPlacement[k] ?? {};
+          // Normalize the IPA symbol so the chips system can find it later
+          const ipaRaw = ph.Phoneme;
+          const ipaNorm = norm(ipaRaw);
+          
+          // Color class based on score
+          const colorCls = scoreClass(ph.AccuracyScore);
+          
+          // Note: We use 'phoneme-chip' for styling.
+          // We DO NOT add 'tooltip' class here if that class triggers CSS-based popups.
+          // The JS-based global hover will handle it.
           return `
-          <span class="tooltip ${scoreClass(ph.AccuracyScore)} phoneme-chip">
-            ${res.ipa || ph.Phoneme}
-            <span class="tooltiptext">
-              ${res.ipa ? `<b>IPA:</b> ${res.ipa}<br>` : ""}
-              ${details.tip ? `${details.tip}<br>` : ""}
-              ${
-                res.img
-                  ? `<img src='${res.img}' style='width:110px;margin-top:6px;'>`
-                  : ""
-              }
-              ${
-                res.video
-                  ? `<br><video src='${res.video}' controls width='280' style='margin-top:6px;border-radius:8px;'></video>`
-                  : ""
-              }
+          <span 
+            class="phoneme-chip ${colorCls}" 
+            data-ipa="${ipaNorm}"
+            data-score="${ph.AccuracyScore}"
+            style="cursor: pointer;"
+          >
+            ${ipaRaw /* Display the raw symbol from Azure, usually safest */}
+            <span style="font-size: 0.8em; opacity: 0.7; margin-left: 2px;">
+                (${ph.AccuracyScore}%)
             </span>
-            (${ph.AccuracyScore}%)
           </span>`;
         })
-        .join(", ");
+        .join(" "); // Space separated for cleaner wrapping
 
-      // 3. Assemble Row
+      // 4. Assemble Row
       return `
         <tr>
           <td class="word-cell">
@@ -87,7 +85,11 @@ export function buildRows(words, timings, med) {
               : "–"
           }</td>
           <td>${errText || ""}</td>
-          <td>${phonemesHtml}</td>
+          <td>
+            <div style="display:flex; flex-wrap:wrap; gap:6px; justify-content:center;">
+              ${phonemesHtml}
+            </div>
+          </td>
         </tr>`;
     })
     .join("");

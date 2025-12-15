@@ -1,11 +1,9 @@
 /* ============================================================================
-   MODERN HEADER BUILDER — PHONEME HELP RESTORED (CORRECT LAYOUT)
+   MODERN HEADER BUILDER
    ---------------------------------------------------------------------------
-   - Uses core/scoring/index.js for authoritative score extraction.
-   - RESTORES the "Your Results" dashboard (Score Chips).
-   - RESTORES the Prosody Legend (Toggle + Slide-out Panel).
-   - RESTORES the Phoneme Help Tooltip (?) as a sibling to the pill.
-   - UPDATED: Table container fixed to prevent "White Space" ghosting.
+   - Fixed White Space Issue (Bottom of results).
+   - Unified Phoneme Tooltips (Using shared Global logic).
+   - Sticky Header + Contained Scroll.
 ============================================================================ */
 
 import {
@@ -20,18 +18,10 @@ const TOOLTIPS = {
   Fluency: "How smooth and natural your speech was.",
   Completeness: "Did you say all the words in the reference?",
   Pronunciation: "Overall pronunciation quality.",
-  Prosody: "Stress, intonation, rhythm, and pacing. Captures phrasing, word stress, and natural flow.",
+  Prosody: "Stress, intonation, rhythm, and pacing.",
   Phoneme: "The smallest possible sound in a language." 
 };
 
-/**
- * renderResultsHeaderModern
- * -------------------------
- * Returns HTML for:
- * 1. The Score Summary (Chips)
- * 2. The Sliding Prosody Legend (Hidden by default)
- * 3. The Main Table (Scrollable, Sticky Header, No Ghost Space)
- */
 export function renderResultsHeaderModern(data) {
   // 1. SCORING LOGIC
   let scores = getAzureScores(data);
@@ -64,10 +54,8 @@ export function renderResultsHeaderModern(data) {
       `;
   };
 
-  // 4. "WHAT YOU SAID"
   const saidText = data?.DisplayText || nbest?.Display || "(No speech detected)";
 
-  // 5. HEADER ATTRIBUTES
   const headerScoreClass = overall != null ? scoreClass(overall) : "";
   const scoreHeaderAttrs = [
     'id="scoreHeader"',
@@ -75,7 +63,7 @@ export function renderResultsHeaderModern(data) {
     `data-overall-score="${overall || 0}"`
   ].join(" ");
 
-  // 6. PROSODY LEGEND HTML
+  // 4. PROSODY LEGEND
   const legendHtml = `
     <div id="prosodyLegend" class="prosody-legend prosody-legend--side hidden" role="note" aria-live="polite">
       <div class="legend-row">
@@ -84,47 +72,23 @@ export function renderResultsHeaderModern(data) {
             <span class="pr-seg pr-gap ok" style="width:12px"></span>
             <span class="pr-seg pr-tempo ok" style="width:28px"></span>
           </div>
-          <span class="label">Normal pause & tempo</span>
+          <span class="label">Normal</span>
         </div>
         <div class="sample">
           <div class="prosody-ribbon">
             <span class="pr-seg pr-gap missing" style="width:20px"></span>
             <span class="pr-seg pr-tempo ok" style="width:28px"></span>
           </div>
-          <span class="label">Phrase break (medium pause)</span>
-        </div>
-        <div class="sample">
-          <div class="prosody-ribbon">
-            <span class="pr-seg pr-gap unexpected" style="width:30px"></span>
-            <span class="pr-seg pr-tempo ok" style="width:28px"></span>
-          </div>
-          <span class="label">Long / unexpected pause</span>
-        </div>
-        <div class="sample">
-          <div class="prosody-ribbon">
-            <span class="pr-seg pr-gap ok" style="width:12px"></span>
-            <span class="pr-seg pr-tempo fast" style="width:16px"></span>
-          </div>
-          <span class="label">Fast word</span>
-        </div>
-        <div class="sample">
-          <div class="prosody-ribbon">
-            <span class="pr-seg pr-gap ok" style="width:12px"></span>
-            <span class="pr-seg pr-tempo slow" style="width:42px"></span>
-          </div>
-          <span class="label">Slow word</span>
+          <span class="label">Pause</span>
         </div>
       </div>
-      <div class="note">
-        Left mini segment = <b>pause before the word</b>. Right bar = <b>word length</b> (tempo).
-        <i>Color</i> = status, <i>width</i> = how big the effect is.
-      </div>
+      <div class="note">Bars show pause (left) and tempo (right).</div>
     </div>
   `;
 
-  // 7. FINAL ASSEMBLY
-  // FIX: Removed 'flex: 1', added 'width: 100%' and 'display: block' to prevent white space stretching.
-  // Sticky header remains to help with long lists.
+  // 5. FINAL ASSEMBLY
+  // FIX: Styles specifically tuned to kill white space and scrolling issues.
+  // display: block; height: auto; flex: none; -> Forces container to shrink to content.
   return `
     <div id="resultHeader" style="margin-bottom: 20px;">
       <div style="margin-bottom: 12px; font-size: 1.1em;">
@@ -144,39 +108,31 @@ export function renderResultsHeaderModern(data) {
       </div>
     </div>
 
-    <div class="results-flex">
+    <div class="results-flex" style="display:block; width:100%;">
       ${legendHtml}
 
-      <div class="table-scroll-container custom-scrollbar" style="width: 100%; display: block; max-height: 500px; overflow-y: auto; overflow-x: hidden; border: 1px solid #e2e8f0; border-radius: 8px; position: relative; background: #fff;">
+      <div class="table-scroll-container custom-scrollbar" 
+           style="
+             display: block; 
+             width: 100%; 
+             height: auto; 
+             max-height: 500px; 
+             overflow-y: auto; 
+             overflow-x: hidden; 
+             border: 1px solid #e2e8f0; 
+             border-radius: 8px; 
+             background: #fff;
+             flex: 0 1 auto; /* Prevent growing */
+           ">
         <table class="score-table collapsed-score collapsed-error" style="border: none; margin: 0; width: 100%;">
           <thead style="position: sticky; top: 0; z-index: 20; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
             <tr>
-              <th id="wordHeader">
-                <span class="word-chip clickable">Word</span>
-                
-                <span id="prosodyLegendToggle" class="tooltip result-tip tip-ProsodyBars" style="margin-left:8px;">
-                  (?) <span class="tooltiptext">
-                    These bars show <b>pause</b> (left) and <b>word length</b> (right). Click to show a quick legend.
-                  </span>
-                </span>
-              </th>
-
-              <th ${scoreHeaderAttrs}>
-                Score ▸
-              </th>
-              <th id="errorHeader" class="toggle-col">
-                Error ▸
-              </th>
-
+              <th id="wordHeader"><span class="word-chip clickable">Word</span></th>
+              <th ${scoreHeaderAttrs}>Score ▸</th>
+              <th id="errorHeader" class="toggle-col">Error ▸</th>
               <th id="phonemeHeader">
-                <span class="word-chip phoneme-chip clickable" id="phonemeTitle">
-                  Phoneme
-                </span>
-                
-                <span class="tooltip result-tip tip-Phoneme" style="margin-left: 8px;">
-                   (?)
-                   <span class="tooltiptext">${TOOLTIPS.Phoneme}</span>
-                </span>
+                <span class="word-chip phoneme-chip clickable" id="phonemeTitle">Phoneme</span>
+                <span class="tooltip result-tip tip-Phoneme" style="margin-left: 8px;">(?)<span class="tooltiptext">${TOOLTIPS.Phoneme}</span></span>
               </th>
             </tr>
           </thead>
