@@ -1,4 +1,4 @@
-/* css/lux-results.css (Formerly features-2.css + cue-styles.js) */
+/* css/lux-results.css */
 
 /* ============================================================
    Collapsible Score & Error columns
@@ -97,19 +97,16 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
    UNIFIED "GHOST EMOJI" LOGIC (Word + Phoneme)
    ============================================================ */
 
-/* 1. Base relative positioning for both */
 #wordHeader .word-chip,
 #phonemeHeader .phoneme-chip {
   position: relative !important;
 }
 
-/* 2. Hide old internal icons so we don't get double speakers */
 #wordHeader > .audio-hint,
 #phonemeHeader .audio-hint {
   display: none !important;
 }
 
-/* 3. The Ghost Emoji ::after (Shared Style) */
 #wordHeader .word-chip::after,
 #phonemeHeader .phoneme-chip::after {
   content: "🔊";
@@ -124,7 +121,6 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   transition: opacity 0.18s, transform 0.25s;
 }
 
-/* 4. Hover/Focus State (Appear + Rock + Breathe) */
 #wordHeader .word-chip:hover::after,
 #wordHeader .word-chip:focus-visible::after,
 #phonemeHeader .phoneme-chip:hover::after,
@@ -135,16 +131,13 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
     wordAudioPulse 1.2s ease-in-out 0.7s infinite alternate;
 }
 
-/* 5. Playing State (Lit Up + Breathe) */
 #wordHeader .word-chip.is-playing::after,
 #phonemeHeader .phoneme-chip.is-playing::after {
   opacity: 1;
   filter: drop-shadow(0 0 2px #ffd54f) brightness(1.3);
-  /* Keep breathing while playing, skip the initial nudge */
   animation: wordAudioPulse 1.2s ease-in-out 0s infinite alternate; 
 }
 
-/* --- Shared Keyframes --- */
 @keyframes wordAudioPulse {
   from { transform: translateX(-50%) scale(1); }
   to { transform: translateX(-50%) scale(1.17) translateY(-1px); }
@@ -157,7 +150,6 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   100% { transform: translateX(-50%) scale(1.05) rotate(0deg); }
 }
 
-/* Tooltip play state glow */
 #prettyResult .tooltip.is-playing {
   filter: brightness(1.25);
   animation: pulseGlow 1s ease-in-out infinite alternate;
@@ -174,7 +166,6 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
 .pr-seg { display: inline-block; height: 8px; border-radius: 3px; transition: transform 0.15s ease, filter 0.15s ease; }
 .pr-seg:hover { transform: scaleY(1.35); filter: brightness(0.9); }
 
-/* Legend Side Panel */
 #prettyResult .results-flex { display: flex; align-items: flex-start; gap: 16px; width: 100%; }
 #prettyResult .results-flex > table.score-table { flex: 1 1 auto; min-width: 420px; }
 
@@ -202,11 +193,11 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
 }
 
 /* ============================================================
-   AI Feedback panel
+   OLD AI Panel Styles (Legacy support)
    ============================================================ */
-#aiFeedback {
+/* We target :not(.ai-grid-container) to avoid conflicts */
+#aiFeedback:not(.ai-grid-container) {
   background: #eef7fe; padding: 1.1em 1em; border: 1px solid #c9e2ff; border-radius: 1em; 
-  /* UPDATED: Reduced margin to close the gap */
   margin-top: 12px;
   font-size: 1.14em; line-height: 1.68; color: #223; box-shadow: 0 2px 16px rgba(60, 90, 155, 0.06);
 }
@@ -224,7 +215,6 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
 #aiFeedback li { margin: 0.14em 0; }
 #aiFeedback em { color: #296aac; }
 
-/* AI feedback loading bar (slider) */
 .ai-progress {
   position: relative; height: 4px; margin-top: 8px; background: #cfe5ff; overflow: hidden; border-radius: 2px;
 }
@@ -238,7 +228,6 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   to { left: 100%; }
 }
 
-/* Single small button */
 .toggle-en-btn {
   margin: 0.5em 0; padding: 0.35em 1em; font-size: 0.97em; cursor: pointer;
   background: #f6f6f6; border: 1px solid #ddd; border-radius: 6px; font-weight: 600; color: #222;
@@ -246,29 +235,21 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
 }
 .toggle-en-btn:hover { background: #e0e0e0; }
 
-/* ============================================================
-   Pronunciation result container quick fix
-   ============================================================ */
 #prettyResult {
   overflow-x: auto; overflow-y: visible !important; overflow: visible !important;
   max-height: none !important; height: auto !important; 
-  /* UPDATED: Minimized bottom padding */
   padding-bottom: 4px;
 }
 
 /* ============================================================
-   FORMER JS INJECTIONS (Rescued from cue-styles.js)
+   Cue Styles
    ============================================================ */
-
-/* Prosody Legend Transitions */
 #prosodyLegend {
   overflow: hidden; 
   width: 0 !important; 
   min-width: 0 !important; 
   flex: 0 0 0 !important;
-  /* CRITICAL FIX: Ensure height collapses when hidden to prevent empty gap */
   height: 0 !important; 
-  
   padding: 0 !important; margin: 0 !important; border: 0 !important; opacity: 0;
   transform: translateX(-10px);
   transition: width .28s ease, flex-basis .28s ease, opacity .28s ease, transform .28s ease, padding .28s ease, margin .28s ease;
@@ -278,16 +259,13 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   width: 280px !important; 
   min-width: 280px !important; 
   flex: 0 0 280px !important;
-  /* CRITICAL FIX: Restore height when opened */
   height: auto !important;
-  
   padding-right: 10px !important; margin-right: 0 !important; border-left: 0 !important;
   opacity: 1; transform: translateX(0);
 }
 
 .results-flex.legend-open { gap: 12px; }
 
-/* Legend Toggle "Ping" Ring */
 #prosodyLegendToggle { position: relative; isolation: isolate; cursor: pointer; }
 #prosodyLegendToggle.cue-legend::after {
   content: ""; position: absolute; left: 50%; top: 50%; width: 22px; height: 22px;
@@ -300,7 +278,6 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   70%, 100% { transform: scale(1.9); opacity: 0; }
 }
 
-/* Legend "Peek" Tab */
 #legendPeek {
   position: absolute; top: 44px; width: 12px; height: 40px;
   border-radius: 8px 0 0 8px; background: linear-gradient(180deg, #9fd2ff, #0078d7);
@@ -322,7 +299,6 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
 .results-flex.show-peek #legendPeek { opacity: .95; transform: translateX(0); }
 .results-flex.legend-open #legendPeek { display: none; }
 
-/* Tooltip adjustments for Prosody Bar tip */
 .tip-ProsodyBars .tooltiptext { padding-bottom: 14px; }
 .tip-ProsodyBars .tooltiptext::before {
   content: ""; position: absolute; left: 10px; right: 10px; bottom: 6px;
@@ -338,10 +314,169 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   to { right: calc(100% + 18px); }
 }
 
-/* Chip Tap Feedback (Flash effect) */
 #resultBody .phoneme-chip.tap-flash { animation: chipTap .22s ease-out 1; }
 @keyframes chipTap {
   0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(64, 156, 255, 0); }
   50% { transform: scale(.965); box-shadow: 0 0 0 6px rgba(64, 156, 255, .28); }
   100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(64, 156, 255, 0); }
+}
+
+/* ============================================================
+   AI COACHING SIDEBAR LAYOUT (Polished)
+   ============================================================ */
+
+/* The Container (Grid) - overrides ID style via specificity/!important */
+.ai-grid-container {
+  display: grid;
+  grid-template-columns: 80px 1fr; /* Fixed sidebar width */
+  min-height: 220px;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #c9e2ff;
+  box-shadow: 0 2px 16px rgba(60, 90, 155, 0.06);
+  margin-top: 25px;
+  overflow: hidden; /* Contains the sidebar background */
+  padding: 0 !important; /* Kill legacy padding */
+}
+
+/* 1. The Sidebar (Left) */
+.ai-sidebar {
+  background: #f1f5f9;
+  border-right: 1px solid #cbd5e1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 6px;
+  gap: 8px;
+}
+
+.ai-sidebar-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 800;
+  color: #64748b;
+  margin-bottom: 4px;
+  text-align: center;
+  width: 100%;
+}
+
+/* Sidebar Buttons */
+.ai-voice-btn {
+  appearance: none;
+  border: 1px solid transparent;
+  background: #fff;
+  border-color: #cbd5e1;
+  border-radius: 8px;
+  width: 100%;
+  padding: 10px 4px;
+  cursor: pointer;
+  
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  
+  color: #64748b;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+
+.ai-voice-btn span:first-child { 
+  font-size: 1.5rem; 
+  line-height: 1; 
+} 
+.ai-voice-btn span:last-child { 
+  font-size: 0.7rem; 
+  font-weight: 700; 
+}
+
+/* Hover State */
+.ai-voice-btn:hover {
+  transform: translateY(-1px);
+  border-color: #94a3b8;
+  color: #334155;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+/* Active Selected State */
+.ai-voice-btn.active {
+  background: #fff;
+  border-color: #0078d7;
+  color: #0078d7;
+  box-shadow: 0 0 0 1px #0078d7 inset, 0 4px 8px rgba(0, 120, 215, 0.15);
+}
+
+/* 2. The Content Area (Right) */
+.ai-content {
+  padding: 20px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Action Buttons (Quick / Deep) inside the content */
+.ai-action-btn {
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+  font-size: 0.95rem;
+}
+
+.ai-action-btn.secondary {
+  background: #fff;
+  border-color: #cbd5e1;
+  color: #334155;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.ai-action-btn.secondary:hover {
+  border-color: #94a3b8;
+  background: #f8fafc;
+}
+
+.ai-action-btn.primary {
+  background: #0078d7;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(0, 120, 215, 0.25);
+}
+.ai-action-btn.primary:hover {
+  background: #006bbd;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 120, 215, 0.35);
+}
+
+/* Mobile Responsive: Stack the sidebar on top */
+@media (max-width: 550px) {
+  .ai-grid-container {
+    grid-template-columns: 1fr; /* 1 column */
+    grid-template-rows: auto auto;
+  }
+  
+  .ai-sidebar {
+    flex-direction: row; /* Horizontal row of buttons */
+    border-right: none;
+    border-bottom: 1px solid #cbd5e1;
+    overflow-x: auto; /* Scroll if too many personas */
+    padding: 8px 12px;
+  }
+  
+  .ai-sidebar-label {
+    width: auto;
+    margin-right: 8px;
+    margin-bottom: 0;
+  }
+  
+  .ai-voice-btn {
+    width: auto;
+    min-width: 70px;
+    flex-direction: row; /* Icon left of text */
+    padding: 6px 10px;
+  }
+  
+  .ai-voice-btn span:first-child { 
+    font-size: 1.1rem; 
+  }
 }

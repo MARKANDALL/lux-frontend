@@ -22,6 +22,9 @@ import {
 
 import { initAudioSink } from '../app-core/audio-sink.js';
 
+// NEW: Import the language change handler for auto-updates
+import { onLanguageChanged } from '../ui/ui-ai-ai-logic.js';
+
 // Lazy-load controller for the Self-Playback drawer
 import "../features/features/08-selfpb-peekaboo.js";
 
@@ -116,6 +119,16 @@ async function bootApp() {
   const passageSelect = document.getElementById('passageSelect');
   const textInput = document.getElementById('referenceText');
   
+  // --- NEW: Wire up the Language Selector for Auto-Updates ---
+  const langSelect = document.getElementById('l1Select');
+  if (langSelect) {
+      langSelect.addEventListener('change', (e) => {
+          // Tell the AI logic that language changed immediately
+          onLanguageChanged(e.target.value);
+      });
+  }
+  // ----------------------------------------------------------
+
   if (passageSelect && textInput) {
       passageSelect.addEventListener('change', (e) => {
           const val = e.target.value;
