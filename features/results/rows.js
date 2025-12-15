@@ -3,7 +3,7 @@
    ---------------------------------------------------------------------------
    - REFACTORED: No longer generates internal tooltips/videos.
    - PURE LAYOUT: Generates "dumb" chips with data-ipa attributes.
-   - This fixes the "White Space" bug by removing hidden DOM bloat.
+   - UPDATED: Added 'tooltip' class back to restore hover animations.
 ============================================================================ */
 
 import { norm } from "../../src/data/phonemes/core.js";
@@ -45,23 +45,22 @@ export function buildRows(words, timings, med) {
           // Color class based on score
           const colorCls = scoreClass(ph.AccuracyScore);
           
-          // Note: We use 'phoneme-chip' for styling.
-          // We DO NOT add 'tooltip' class here if that class triggers CSS-based popups.
-          // The JS-based global hover will handle it.
+          // NOTE: We added 'tooltip' class back so it bulges/darkens on hover
+          // per your existing CSS, but we DO NOT put content inside it.
           return `
           <span 
-            class="phoneme-chip ${colorCls}" 
+            class="phoneme-chip tooltip ${colorCls}" 
             data-ipa="${ipaNorm}"
             data-score="${ph.AccuracyScore}"
             style="cursor: pointer;"
           >
-            ${ipaRaw /* Display the raw symbol from Azure, usually safest */}
+            ${ipaRaw}
             <span style="font-size: 0.8em; opacity: 0.7; margin-left: 2px;">
                 (${ph.AccuracyScore}%)
             </span>
           </span>`;
         })
-        .join(" "); // Space separated for cleaner wrapping
+        .join(" "); 
 
       // 4. Assemble Row
       return `

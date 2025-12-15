@@ -2,7 +2,7 @@
    MODERN HEADER BUILDER
    ---------------------------------------------------------------------------
    - Fixed White Space Issue (Bottom of results).
-   - Unified Phoneme Tooltips (Using shared Global logic).
+   - Unified Phoneme Tooltips.
    - Sticky Header + Contained Scroll.
 ============================================================================ */
 
@@ -87,8 +87,6 @@ export function renderResultsHeaderModern(data) {
   `;
 
   // 5. FINAL ASSEMBLY
-  // FIX: Styles specifically tuned to kill white space and scrolling issues.
-  // display: block; height: auto; flex: none; -> Forces container to shrink to content.
   return `
     <div id="resultHeader" style="margin-bottom: 20px;">
       <div style="margin-bottom: 12px; font-size: 1.1em;">
@@ -127,11 +125,23 @@ export function renderResultsHeaderModern(data) {
         <table class="score-table collapsed-score collapsed-error" style="border: none; margin: 0; width: 100%;">
           <thead style="position: sticky; top: 0; z-index: 20; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
             <tr>
-              <th id="wordHeader"><span class="word-chip clickable">Word</span></th>
+              <th id="wordHeader">
+                <span class="word-chip clickable">Word</span>
+                
+                <span id="prosodyLegendToggle" class="tooltip result-tip tip-ProsodyBars" style="margin-left:8px;">
+                  (?) <span class="tooltiptext">
+                    These bars show <b>pause</b> (left) and <b>word length</b> (right). Click to show a quick legend.
+                  </span>
+                </span>
+              </th>
+
               <th ${scoreHeaderAttrs}>Score ▸</th>
               <th id="errorHeader" class="toggle-col">Error ▸</th>
               <th id="phonemeHeader">
-                <span class="word-chip phoneme-chip clickable" id="phonemeTitle">Phoneme</span>
+                <span class="word-chip phoneme-chip clickable" id="phonemeTitle">
+                  Phoneme
+                  <span id="phonemeAudioBtn" class="audio-hint audio-hint--phoneme" title="Toggle Phoneme video sound">🔊</span>
+                </span>
                 <span class="tooltip result-tip tip-Phoneme" style="margin-left: 8px;">(?)<span class="tooltiptext">${TOOLTIPS.Phoneme}</span></span>
               </th>
             </tr>
