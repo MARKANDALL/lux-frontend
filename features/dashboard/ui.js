@@ -1,6 +1,7 @@
 // features/dashboard/ui.js
 // Handles the DOM for the User History / Dashboard.
 // STATUS: LOCKED to Universal Blue/Yellow/Red Schema (80/60).
+// UPDATED: Added sticky header, max-height container, and custom scrollbar.
 
 export function renderDashboard(targetId) {
   const container = document.getElementById(targetId);
@@ -32,17 +33,27 @@ export function renderHistoryRows(attempts) {
     return;
   }
 
-  // 1. Build Table
+  // 1. Build the Scrollable Container
+  // We wrap the table in this div to enforce height limits
+  const scrollWrapper = document.createElement("div");
+  scrollWrapper.className = "custom-scrollbar";
+  scrollWrapper.style.cssText = "max-height: 400px; overflow-y: auto; position: relative;";
+
+  // 2. Build Table
   const table = document.createElement("table");
   table.style.cssText = "width: 100%; border-collapse: collapse; text-align: left;";
   
+  // Sticky Header Style
+  // We apply sticky to the th elements to ensure they stay put
+  const stickyHeaderStyle = "position: sticky; top: 0; z-index: 10; background: #f8fafc; color: #475569; font-weight: 600; font-size: 0.85rem; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);";
+
   table.innerHTML = `
-    <thead style="background: #f8fafc; color: #475569; font-weight: 600; font-size: 0.85rem; text-transform: uppercase;">
+    <thead>
       <tr>
-        <th style="padding: 12px 16px;">Date</th>
-        <th style="padding: 12px 16px;">Passage</th>
-        <th style="padding: 12px 16px;">Score</th>
-        <th style="padding: 12px 16px;">Details</th>
+        <th style="${stickyHeaderStyle} padding: 12px 16px;">Date</th>
+        <th style="${stickyHeaderStyle} padding: 12px 16px;">Passage</th>
+        <th style="${stickyHeaderStyle} padding: 12px 16px;">Score</th>
+        <th style="${stickyHeaderStyle} padding: 12px 16px;">Details</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -50,7 +61,7 @@ export function renderHistoryRows(attempts) {
 
   const tbody = table.querySelector("tbody");
 
-  // 2. Generate Rows
+  // 3. Generate Rows
   attempts.forEach(attempt => {
     const tr = document.createElement("tr");
     tr.style.borderBottom = "1px solid #e2e8f0";
@@ -80,7 +91,7 @@ export function renderHistoryRows(attempts) {
       <td style="padding: 12px 16px; color: #64748b;">${dateStr}</td>
       <td style="padding: 12px 16px; font-weight: 500; color: #334155;">${shortText}</td>
       <td style="padding: 12px 16px;">
-        <span style="background: ${bg}; color: ${color}; padding: 4px 8px; border-radius: 99px; font-weight: 700; font-size: 0.85rem;">
+        <span style="background: ${bg}; color: ${color}; padding: 4px 8px; border-radius: 999px; font-weight: 700; font-size: 0.85rem;">
           ${Math.round(score)}%
         </span>
         ${aiIcon}
@@ -96,8 +107,9 @@ export function renderHistoryRows(attempts) {
     tbody.appendChild(tr);
   });
 
+  scrollWrapper.appendChild(table);
   listEl.innerHTML = "";
-  listEl.appendChild(table);
+  listEl.appendChild(scrollWrapper);
 }
 
 export function renderError(msg) {

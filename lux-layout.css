@@ -268,6 +268,12 @@ button:disabled {
   cursor: not-allowed;
 }
 
+/* ============================================================
+   REMOVED DUPLICATE BLOCKS HERE:
+   (Record buttons, Score Table, Word Chips, Tooltips)
+   These are now correctly handled by features-1.css
+   ============================================================ */
+
 #prettyResult table { transition: width 0.35s ease; }
 .toggle-col { cursor: pointer; user-select: none; transition: color 0.2s; }
 .toggle-col:hover { color: #0078d7; }
@@ -327,6 +333,9 @@ table:not(.collapsed-error) td:nth-child(3) { width: 85px; opacity: 1; pointer-e
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08) inset;
 }
 
+/* ============================================================
+   Global Interactive Depth Effect (Generic)
+   ============================================================ */
 a,
 button,
 select,
@@ -427,3 +436,33 @@ input[type="radio"]:focus-visible,
   transition: background 0.18s;
 }
 .toggle-en-btn:hover { background: #e0e0e0; }
+
+/* ============================================================
+   CUSTOM SCROLLBAR (Sleek Blue/Grey)
+   ============================================================ */
+/* Webkit (Chrome, Safari, Edge) */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px; /* Horizontal scrollbar height */
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f5f9; /* Light slate grey track */
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1; /* Soft blue-grey thumb */
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8; /* Darker on hover */
+}
+
+/* Firefox */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
