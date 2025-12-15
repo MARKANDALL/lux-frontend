@@ -1,7 +1,7 @@
 // ui/ui-ai-ai-logic.js
 // AI Logic: Handles "Quick" vs "Deep", manages the Chunking loop, and saves to DB.
-// STATUS: Phase C Complete (Persistent AI Feedback).
-// UPDATED: Now supports "Back" button for Quick Tips.
+// STATUS: Phase F Complete (Personas + Structure).
+// UPDATED: Wires up the Persona Selector to the API.
 
 import {
   showLoading,
@@ -34,9 +34,10 @@ export function promptUserForAI(azureResult, referenceText, firstLang) {
 
   resetState();
   
+  // Pass the chosen persona from the UI into the start functions
   renderEntryButtons({
-    onQuick: () => startQuickMode(azureResult, referenceText, firstLang),
-    onDeep:  () => startDeepMode(azureResult, referenceText, firstLang)
+    onQuick: (persona) => startQuickMode(azureResult, referenceText, firstLang, persona),
+    onDeep:  (persona) => startDeepMode(azureResult, referenceText, firstLang, persona)
   });
 }
 
@@ -60,16 +61,20 @@ function persistFeedbackToDB(sections) {
 }
 
 // --- Quick Mode ---
-async function startQuickMode(azureResult, referenceText, firstLang) {
+async function startQuickMode(azureResult, referenceText, firstLang, persona) {
   showLoading();
   const lang = normalizeLang(firstLang);
   
   // Set context so we can restart if needed
-  currentArgs = { azureResult, referenceText, firstLang: lang };
+  currentArgs = { azureResult, referenceText, firstLang: lang, persona };
 
   try {
     const res = await fetchAIFeedback({ 
-        azureResult, referenceText, firstLang: lang, mode: "simple" 
+        azureResult, 
+        referenceText, 
+        firstLang: lang, 
+        mode: "simple",
+        persona // <--- PASSED TO API
     });
     const sections = res.sections || res.fallbackSections || [];
     
@@ -97,9 +102,10 @@ async function startQuickMode(azureResult, referenceText, firstLang) {
 }
 
 // --- Deep Mode ---
-async function startDeepMode(azureResult, referenceText, firstLang) {
+async function startDeepMode(azureResult, referenceText, firstLang, persona) {
   const lang = normalizeLang(firstLang);
-  currentArgs = { azureResult, referenceText, firstLang: lang };
+  // Store persona in context for chunking loops
+  currentArgs = { azureResult, referenceText, firstLang: lang, persona };
   chunkHistory = []; // Start fresh
 
   // Fetch Chunk 1
@@ -120,9 +126,9 @@ async function fetchNextChunk() {
   else refreshFooter(); // Updates button to "Loading..."
 
   try {
-    // 1. Fetch from AI
+    // 1. Fetch from AI (using stored persona)
     const res = await fetchAIFeedback({
-        ...currentArgs,
+        ...currentArgs, // includes persona
         mode: "detailed",
         chunk: nextChunkId
     });
@@ -158,9 +164,12 @@ function handleShowLess() {
   if (chunkHistory.length === 0) {
     // We removed Chunk 1 -> Go back to Entry Buttons
     clearAIFeedback(); 
+    
+    // Re-render buttons, ensuring we pass the *new* persona choice if clicked again
+    // (We use currentArgs to restore the original data context)
     renderEntryButtons({
-      onQuick: () => startQuickMode(currentArgs.azureResult, currentArgs.referenceText, currentArgs.firstLang),
-      onDeep:  () => startDeepMode(currentArgs.azureResult, currentArgs.referenceText, currentArgs.firstLang)
+      onQuick: (p) => startQuickMode(currentArgs.azureResult, currentArgs.referenceText, currentArgs.firstLang, p),
+      onDeep:  (p) => startDeepMode(currentArgs.azureResult, currentArgs.referenceText, currentArgs.firstLang, p)
     });
   } else {
     // We still have chunks (e.g. went from 3 -> 2)

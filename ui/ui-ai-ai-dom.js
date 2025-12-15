@@ -1,6 +1,6 @@
 // ui/ui-ai-ai-dom.js
 // Handles DOM updates for the AI feedback panel.
-// STATUS: Complete. Preserves all functions. Adds custom "Back" label support.
+// STATUS: Complete. Includes Persona Selector & Custom "Back" label support.
 
 function getSectionAndBox() {
   const section = document.getElementById("aiFeedbackSection");
@@ -47,6 +47,24 @@ export function renderEntryButtons({ onQuick, onDeep }) {
   title.style.cssText = "margin: 0 0 12px 0; color: #334155; font-size: 1.1rem;";
   wrap.appendChild(title);
 
+  // --- PERSONA SELECTOR ---
+  const personaRow = document.createElement("div");
+  personaRow.style.cssText = "margin-bottom: 14px; display: flex; justify-content: center; align-items: center; gap: 8px;";
+  
+  personaRow.innerHTML = `
+    <label style="font-size: 0.9em; color: #64748b; font-weight: 600;">Coach Style:</label>
+    <select id="lux-persona-select" style="
+        padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 6px; 
+        font-size: 0.9em; background: #fff; color: #334155; cursor: pointer;
+    ">
+        <option value="tutor" selected>🧑‍🏫 Tutor (Supportive)</option>
+        <option value="drill">👮 Drill Sergeant (Direct)</option>
+        <option value="linguist">🧐 Linguist (Technical)</option>
+    </select>
+  `;
+  wrap.appendChild(personaRow);
+  // ------------------------
+
   const btnRow = document.createElement("div");
   btnRow.style.cssText = "display:flex; justify-content:center; gap:12px; flex-wrap:wrap;";
 
@@ -59,7 +77,12 @@ export function renderEntryButtons({ onQuick, onDeep }) {
   `;
   btnQuick.onmouseover = () => btnQuick.style.borderColor = "#94a3b8";
   btnQuick.onmouseout = () => btnQuick.style.borderColor = "#cbd5e1";
-  btnQuick.onclick = onQuick;
+  
+  // Pass the selected persona
+  btnQuick.onclick = () => {
+      const p = document.getElementById("lux-persona-select").value;
+      if (onQuick) onQuick(p);
+  };
 
   const btnDeep = document.createElement("button");
   btnDeep.innerHTML = "🎓 Deep Dive";
@@ -70,7 +93,12 @@ export function renderEntryButtons({ onQuick, onDeep }) {
   `;
   btnDeep.onmouseover = () => btnDeep.style.background = "#006bbd";
   btnDeep.onmouseout = () => btnDeep.style.background = "#0078d7";
-  btnDeep.onclick = onDeep;
+  
+  // Pass the selected persona
+  btnDeep.onclick = () => {
+      const p = document.getElementById("lux-persona-select").value;
+      if (onDeep) onDeep(p);
+  };
 
   btnRow.appendChild(btnQuick);
   btnRow.appendChild(btnDeep);
@@ -166,8 +194,7 @@ export function renderSections(sections, count) {
 }
 
 /**
- * UPDATED: Centralized Footer Button Management
- * Adds 'lessLabel' to allow renaming the "Show Less" button.
+ * Centralized Footer Button Management
  */
 export function updateFooterButtons({ 
   onShowMore, 
