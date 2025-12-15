@@ -5,7 +5,7 @@
    - RESTORES the "Your Results" dashboard (Score Chips).
    - RESTORES the Prosody Legend (Toggle + Slide-out Panel).
    - RESTORES the Phoneme Help Tooltip (?) as a sibling to the pill.
-   - UPDATED: Table now has a max-height and sticky header.
+   - UPDATED: Table container fixed to prevent "White Space" ghosting.
 ============================================================================ */
 
 import {
@@ -30,7 +30,7 @@ const TOOLTIPS = {
  * Returns HTML for:
  * 1. The Score Summary (Chips)
  * 2. The Sliding Prosody Legend (Hidden by default)
- * 3. The Main Table (Scrollable & Sticky)
+ * 3. The Main Table (Scrollable, Sticky Header, No Ghost Space)
  */
 export function renderResultsHeaderModern(data) {
   // 1. SCORING LOGIC
@@ -123,8 +123,8 @@ export function renderResultsHeaderModern(data) {
   `;
 
   // 7. FINAL ASSEMBLY
-  // IMPORTANT: The table wrapper now has height limits and scroll
-  // The THEAD has Sticky Positioning
+  // FIX: Removed 'flex: 1', added 'width: 100%' and 'display: block' to prevent white space stretching.
+  // Sticky header remains to help with long lists.
   return `
     <div id="resultHeader" style="margin-bottom: 20px;">
       <div style="margin-bottom: 12px; font-size: 1.1em;">
@@ -147,7 +147,7 @@ export function renderResultsHeaderModern(data) {
     <div class="results-flex">
       ${legendHtml}
 
-      <div class="table-scroll-container custom-scrollbar" style="flex: 1; max-height: 500px; overflow-y: auto; overflow-x: hidden; border: 1px solid #e2e8f0; border-radius: 8px; position: relative;">
+      <div class="table-scroll-container custom-scrollbar" style="width: 100%; display: block; max-height: 500px; overflow-y: auto; overflow-x: hidden; border: 1px solid #e2e8f0; border-radius: 8px; position: relative; background: #fff;">
         <table class="score-table collapsed-score collapsed-error" style="border: none; margin: 0; width: 100%;">
           <thead style="position: sticky; top: 0; z-index: 20; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
             <tr>

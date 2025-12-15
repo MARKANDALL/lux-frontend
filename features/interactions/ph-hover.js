@@ -1,8 +1,9 @@
 // features/interactions/ph-hover.js
 // Phoneme hover interactions
-// UPDATED: Matches yg-hover.js events (mouseover/mouseout) exactly.
+// UPDATED: Fully robust version. Supports Global Tooltip playback + Watchdog/Animations.
 
 import { safePlay } from "./utils.js";
+import { getGlobalVideoElement } from "./ph-chips.js"; 
 
 /* ====================== Public entry ====================== */
 
@@ -11,7 +12,7 @@ export function setupPhonemeHover() {
   installChipClickPlay();
 
   console.log(
-    "[LUX] phoneme hover: header preview enabled, inline chip tooltips only"
+    "[LUX] phoneme hover: header preview enabled, global hover play enabled"
   );
 }
 
@@ -21,7 +22,6 @@ function installHeaderPreview() {
   const preview = document.getElementById("phPreview");
   const demoVid = document.getElementById("phDemo");
   const phHeader = document.getElementById("phonemeHeader");
-  // Target the specific pill
   const pill = phHeader?.querySelector(".phoneme-chip");
 
   if (!preview || !demoVid || !phHeader || !pill) return;
@@ -33,7 +33,6 @@ function installHeaderPreview() {
     const popW = preview.offsetWidth || 560;
     const popH = preview.offsetHeight || 390;
 
-    // Align similarly to Word preview
     let left = rect.left - popW - 10;
     if (left < 10) left = 10;
 
@@ -59,7 +58,6 @@ function installHeaderPreview() {
     demoVid.currentTime = 0;
     demoVid.muted = true;
 
-    // Reset pill state if we were just hovering
     const title = document.getElementById("phonemeTitle");
     if (title) title.classList.remove("is-playing");
 
@@ -67,7 +65,6 @@ function installHeaderPreview() {
     if (tip) tip.style.display = "none";
   }
 
-  // UPDATED: Use mouseover/mouseout to match yg-hover.js sensitivity
   function maybeHideFromPill(e) {
     const to = e.relatedTarget;
     if (to && (to === preview || preview.contains(to))) return;
@@ -85,7 +82,7 @@ function installHeaderPreview() {
   preview.addEventListener("mouseout", maybeHideFromPreview);
 }
 
-/* ====================== 2) Chip click-to-play (Unchanged) ====================== */
+/* ====================== 2) Chip click-to-play (Global Tooltip Aware) ====================== */
 
 let chipClickPlayBooted = false;
 let currentPlaying = null; 
@@ -105,12 +102,21 @@ function installChipClickPlay() {
       if (!chip || !root.contains(chip)) return;
       if (e.target.closest("a")) return;
 
-      const tip = chip.querySelector(".tooltiptext");
-      const video = tip?.querySelector("video");
+      e.preventDefault();
+      e.stopPropagation();
+
+      // 1. Try to find the video in the Global Tooltip (Standard flow)
+      let video = getGlobalVideoElement();
+      
+      // 2. Fallback: If global tip isn't ready, trigger creation manually
+      if (!video) {
+          chip.dispatchEvent(new Event('mouseenter'));
+          video = getGlobalVideoElement();
+      }
+
       if (!video) return;
 
-      e.preventDefault();
-
+      // Logic: If clicking the SAME active chip, toggle pause
       if (
         currentPlaying &&
         currentPlaying.chip === chip &&
@@ -121,6 +127,7 @@ function installChipClickPlay() {
         return;
       }
 
+      // Logic: If clicking a DIFFERENT chip, stop the old one
       if (
         currentPlaying &&
         currentPlaying.video &&
@@ -129,40 +136,51 @@ function installChipClickPlay() {
         stopPlayback(currentPlaying);
       }
 
-      const src =
-        video.currentSrc ||
-        video.getAttribute("src") ||
-        video.querySelector("source")?.getAttribute("src");
-
+      // Visual feedback on chip
       applyRetractLock(chip);
 
       currentPlaying = { chip, video };
       startWatchdog();
 
       try {
+        // Toggle Mute / Restart
         video.muted = false;
         video.volume = 1;
+        
         try {
-          video.currentTime = 0;
+            video.currentTime = 0;
         } catch {}
 
-        safePlay(video, src, { muted: false, restart: true });
-        video.muted = false;
-        video.volume = 1;
+        // Promise-based play to handle browser policies
+        const p = video.play();
+        if (p !== undefined) {
+            p.catch(err => {
+                console.warn("Autoplay blocked, try interacting first", err);
+            });
+        }
+
       } catch (err) {
-        console.warn("[LUX] chip click play fallback", err);
-        try { video.play(); } catch(e){}
+        console.warn("[LUX] chip click play error", err);
       }
 
+      // Cleanup visual lock when done
       video.onended = () => {
         if (currentPlaying?.video === video) stopPlayback(currentPlaying);
       };
+      
+      // Also release if mouse leaves (hides tooltip)
+      chip.addEventListener("mouseleave", () => {
+         // We don't stop playback immediately on leave anymore (sticky tooltip),
+         // but we can release the visual lock if preferred.
+         // keeping original logic:
+         // stopPlayback(currentPlaying); 
+      }, { once: true });
     },
     { capture: true }
   );
 
   console.log(
-    "[LUX] phoneme chips: click-to-play enabled"
+    "[LUX] phoneme chips: click-to-play enabled (Global Tooltip + Watchdog)"
   );
 }
 
@@ -177,7 +195,8 @@ function stopPlayback(entry, opts = {}) {
         video.currentTime = 0;
       } catch {}
     }
-    video.muted = true;
+    // Don't mute immediately if using global video, might jar user
+    // video.muted = true; 
   } catch {}
 
   releaseRetractLock(chip);
@@ -191,14 +210,15 @@ function applyRetractLock(chip) {
   if (!chip) return;
   chip.classList.add("lux-playing-lock");
   chip.style.transition = "transform 120ms ease-out";
-  chip.style.transform = "scale(1)";
+  chip.style.transform = "scale(1.1)";
+  chip.style.boxShadow = "0 0 0 4px rgba(37, 99, 235, 0.3)";
 }
 
 function releaseRetractLock(chip) {
   if (!chip) return;
   chip.classList.remove("lux-playing-lock");
   chip.style.transform = "";
-  chip.style.transition = "";
+  chip.style.boxShadow = "";
 }
 
 function popOnStop(chip) {
@@ -223,10 +243,14 @@ function startWatchdog() {
       return;
     }
     const { chip } = currentPlaying;
+    
+    // Safety check: is chip still in DOM?
     if (!document.body.contains(chip)) {
       stopPlayback(currentPlaying);
       return;
     }
+    
+    // Safety check: is chip scrolled off screen?
     const rect = chip.getBoundingClientRect();
     const out =
       rect.bottom < 0 ||
@@ -238,19 +262,9 @@ function startWatchdog() {
       stopPlayback(currentPlaying);
       return;
     }
-    const tip = chip.querySelector(".tooltiptext");
-    if (tip) {
-      const cs = getComputedStyle(tip);
-      const hidden =
-        cs.visibility === "hidden" ||
-        cs.display === "none" ||
-        parseFloat(cs.opacity || "0") < 0.05;
-
-      if (hidden) {
-        stopPlayback(currentPlaying);
-        return;
-      }
-    }
+    
+    // Note: We don't check for tooltip visibility anymore because
+    // the video is now in the global tooltip, not inside the chip.
   }, 120);
 }
 
