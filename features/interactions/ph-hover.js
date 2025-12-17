@@ -3,6 +3,7 @@
 // UPDATED:
 // 1. Header Audio: Hover shows box, but CLICK has exclusive control over audio.
 // 2. PiP Fix: Added 'disablePictureInPicture' attribute to video tags.
+// 3. IDEMPOTENT: Prevents duplicate event listeners if booted twice.
 
 import { safePlay } from "./utils.js";
 
@@ -12,11 +13,20 @@ let globalTooltip = null;
 let currentChip = null;
 let watchdogId = null;
 let hideTimeout = null; 
+let isInitialized = false; // ✅ FIX #4: State flag to prevent double-boot
 
 export function setupPhonemeHover() {
+  // ✅ FIX #4: Guard clause. If already running, stop immediately.
+  if (isInitialized) {
+    console.warn("[LUX] Phoneme Hover System already active. Skipping re-init.");
+    return;
+  }
+
   ensureGlobalTooltip();
   installChipEvents();
   installHeaderPreview(); 
+  
+  isInitialized = true; // ✅ Mark as active
   console.log("[LUX] Phoneme Hover System Active (Robust Mode)");
 }
 

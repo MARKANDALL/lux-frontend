@@ -29,32 +29,48 @@
            </select>
         </div>
 
+        <div class="info-display">
+            <h3 id="passageLabel" class="hidden">Passage:</h3>
+            <p id="partProgress" class="part-indicator"></p>
+            <div id="suggestedSentence" class="suggested-text"></div>
+            
+            <div id="partsInfoTip" class="info-icon hidden">
+                ℹ️
+                <span class="tooltiptext"></span>
+            </div>
+        </div>
+
+        <div class="navigation-controls">
+            <button id="nextPartBtn" class="lux-btn secondary-btn hidden">Next Part</button>
+            <span id="nextPartMsg" class="next-msg hidden"></span>
+            <button id="showSummaryBtn" class="lux-btn accent-btn hidden">Show Summary</button>
+        </div>
+
         <div class="text-input-container">
           <textarea id="referenceText" class="lux-textarea" placeholder="Or type text here..."></textarea>
           
           <div class="controls">
             <button id="record" class="lux-btn primary-btn">Record</button>
             <button id="stop" class="lux-btn danger-btn" disabled>Stop</button>
+            <button id="showMoreBtn" class="lux-btn secondary-btn hidden" style="margin-left: 10px;">Show Details</button>
           </div>
         </div>
       </section>
 
       <div id="status" class="status-message"></div>
+      
+      <div id="aiFeedback" class="ai-feedback-box" style="display:none;"></div>
 
       <div id="prettyResult" class="results-container"></div>
 
     </main>
   </div>
 
-  <div id="selfpb-lite" class="drawer-bottom hidden">
-  </div>
-
-  <div id="tts-controls" class="drawer-bottom hidden">
-  </div>
+  <div id="selfpb-lite" class="drawer-bottom hidden"></div>
+  <div id="tts-controls" class="drawer-bottom hidden"></div>
 
   <div id="dashboard-overlay" class="modal-overlay hidden">
-    <div id="dashboard-modal" class="modal-content">
-    </div>
+    <div id="dashboard-modal" class="modal-content"></div>
   </div>
 
   <div id="lux-balloon-container"></div>
