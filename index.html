@@ -3,69 +3,55 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lux Pronunciation</title>
-  
-  <link rel="stylesheet" href="./app-core/lux-main.css" />
-  <link rel="stylesheet" href="./app-core/lux-layout.css" />
-  
+  <title>Lux Pronunciation Lab</title>
+
+  <!-- Canonical global styles (these files exist in your repo root) -->
+  <link rel="stylesheet" href="./lux-layout.css" />
+  <link rel="stylesheet" href="./lux-results.css" />
+  <link rel="stylesheet" href="./lux-widgets.css" />
+  <link rel="stylesheet" href="./lux-popover.css" />
+  <link rel="stylesheet" href="./lux-onboarding.css" />
+
+  <!-- Feature styles -->
   <link rel="stylesheet" href="./features/balloon/balloon.css" />
   <link rel="stylesheet" href="./features/features/self-playback.css" />
   <link rel="stylesheet" href="./features/features/tts.css" />
   <link rel="stylesheet" href="./features/features/tts-peekaboo.css" />
 </head>
-<body>
 
+<body>
   <div id="app">
     <header class="lux-header">
       <h1>Lux Pronunciation Lab</h1>
     </header>
 
     <main class="lux-container">
-      
       <section id="input-section">
         <div class="passage-selector-container">
-           <select id="passageSelect" class="lux-select">
-             <option value="" disabled selected>Select a passage...</option>
-           </select>
-        </div>
-
-        <div class="info-display">
-            <h3 id="passageLabel" class="hidden">Passage:</h3>
-            <p id="partProgress" class="part-indicator"></p>
-            <div id="suggestedSentence" class="suggested-text"></div>
-            
-            <div id="partsInfoTip" class="info-icon hidden">
-                ℹ️
-                <span class="tooltiptext"></span>
-            </div>
-        </div>
-
-        <div class="navigation-controls">
-            <button id="nextPartBtn" class="lux-btn secondary-btn hidden">Next Part</button>
-            <span id="nextPartMsg" class="next-msg hidden"></span>
-            <button id="showSummaryBtn" class="lux-btn accent-btn hidden">Show Summary</button>
+          <select id="passageSelect" class="lux-select">
+            <option value="" disabled selected>Select a passage...</option>
+          </select>
         </div>
 
         <div class="text-input-container">
           <textarea id="referenceText" class="lux-textarea" placeholder="Or type text here..."></textarea>
-          
+
           <div class="controls">
             <button id="record" class="lux-btn primary-btn">Record</button>
             <button id="stop" class="lux-btn danger-btn" disabled>Stop</button>
-            <button id="showMoreBtn" class="lux-btn secondary-btn hidden" style="margin-left: 10px;">Show Details</button>
           </div>
+
+          <div id="recordingError" class="status-message hidden"></div>
         </div>
       </section>
 
       <div id="status" class="status-message"></div>
-      
-      <div id="aiFeedback" class="ai-feedback-box" style="display:none;"></div>
 
       <div id="prettyResult" class="results-container"></div>
-
     </main>
   </div>
 
+  <!-- Drawers / overlays -->
   <div id="selfpb-lite" class="drawer-bottom hidden"></div>
   <div id="tts-controls" class="drawer-bottom hidden"></div>
 
@@ -76,6 +62,5 @@
   <div id="lux-balloon-container"></div>
 
   <script type="module" src="./src/main.js"></script>
-
 </body>
 </html>

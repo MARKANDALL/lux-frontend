@@ -21,6 +21,13 @@ const ui = {
   get showMore() { return qs("#showMoreBtn"); },
 };
 
+// Internal "wire once" flags (prevents duplicate listeners)
+const wired = {
+  select: false,
+  input: false,
+  next: false,
+};
+
 /* --- Read --- */
 
 export function getSelectValue() {
@@ -42,7 +49,7 @@ export function isSelectCustom() {
 export function ensureCustomOptionInDOM() {
   const sel = ui.select;
   if (!sel) return;
-  
+
   if (!sel.querySelector('option[value="custom"]')) {
     const opt = document.createElement("option");
     opt.value = "custom";
@@ -58,7 +65,7 @@ export function forceSelectCustom() {
 export function renderInfoTip({ visible, textHTML }) {
   const t = ui.tip;
   if (!t) return;
-  
+
   if (!visible) {
     t.classList.add("hidden");
   } else {
@@ -67,34 +74,41 @@ export function renderInfoTip({ visible, textHTML }) {
   }
 }
 
-export function renderPartState({ 
-  text, 
-  progressText, 
-  labelText, 
-  showLabel, 
-  preserveInput 
+export function renderPartState({
+  text,
+  progressText,
+  labelText,
+  showLabel,
+  preserveInput,
 }) {
-  if (ui.suggested) ui.suggested.textContent = text; 
+  if (ui.suggested) ui.suggested.textContent = text;
   if (ui.input && !preserveInput) ui.input.value = text;
   if (ui.progress) ui.progress.textContent = progressText;
-  
+
   if (ui.label) {
     setVisible(ui.label, showLabel);
     setText(ui.label, labelText);
   }
 }
 
-export function updateNavVisibility({ showNext, enableNext, nextMsgText, nextMsgColor, showSummary, customMode }) {
+export function updateNavVisibility({
+  showNext,
+  enableNext,
+  nextMsgText,
+  nextMsgColor,
+  showSummary,
+  customMode,
+}) {
   if (ui.nextBtn) {
     setVisible(ui.nextBtn, showNext);
     ui.nextBtn.disabled = !enableNext;
-    
+
     if (customMode) {
-        ui.nextBtn.textContent = "➕ Add Another Section";
-        ui.nextBtn.style.backgroundColor = "#0f766e"; // Teal
+      ui.nextBtn.textContent = "➕ Add Another Section";
+      ui.nextBtn.style.backgroundColor = "#0f766e"; // Teal
     } else {
-        ui.nextBtn.textContent = "Next Part"; 
-        ui.nextBtn.style.backgroundColor = ""; 
+      ui.nextBtn.textContent = "Next Part";
+      ui.nextBtn.style.backgroundColor = "";
     }
   }
 
@@ -103,21 +117,21 @@ export function updateNavVisibility({ showNext, enableNext, nextMsgText, nextMsg
     setVisible(ui.nextMsg, !!nextMsgText);
     if (nextMsgColor) ui.nextMsg.style.color = nextMsgColor;
     if (nextMsgText) {
-        ui.nextMsg.style.display = "inline-block";
-        ui.nextMsg.style.marginLeft = "10px";
+      ui.nextMsg.style.display = "inline-block";
+      ui.nextMsg.style.marginLeft = "10px";
     }
   }
 
   if (ui.summaryBtn) {
     if (showSummary !== undefined) {
-        setVisible(ui.summaryBtn, showSummary);
-        ui.summaryBtn.disabled = !showSummary;
-        
-        if (customMode) {
-            ui.summaryBtn.textContent = "Finish & View Summary";
-        } else {
-            ui.summaryBtn.textContent = "Show Summary";
-        }
+      setVisible(ui.summaryBtn, showSummary);
+      ui.summaryBtn.disabled = !showSummary;
+
+      if (customMode) {
+        ui.summaryBtn.textContent = "Finish & View Summary";
+      } else {
+        ui.summaryBtn.textContent = "Show Summary";
+      }
     }
   }
 }
@@ -134,21 +148,37 @@ export function clearResultsUI() {
 
 /* --- Events --- */
 
-export function wireSelectEvents({ onChange, onClick }) {
-  if (ui.select) {
-    ui.select.addEventListener("change", (e) => onChange(e.target.value));
-    ui.select.addEventListener("click", onClick);
+export function wireSelectEvents({ onChange, onClick } = {}) {
+  const sel = ui.select;
+  if (!sel || wired.select) return;
+  wired.select = true;
+
+  if (typeof onChange === "function") {
+    sel.addEventListener("change", (e) => onChange(e.target.value));
+  }
+
+  // onClick is optional
+  if (typeof onClick === "function") {
+    sel.addEventListener("click", onClick);
   }
 }
 
-export function wireInputEvents({ onInput }) {
-  if (ui.input) {
-    ui.input.addEventListener("input", (e) => onInput(e.target.value));
+export function wireInputEvents({ onInput } = {}) {
+  const input = ui.input;
+  if (!input || wired.input) return;
+  wired.input = true;
+
+  if (typeof onInput === "function") {
+    input.addEventListener("input", (e) => onInput(e.target.value));
   }
 }
 
 export function wireNextBtnEvent(onNext) {
-  if (ui.nextBtn) {
-    ui.nextBtn.addEventListener("click", onNext);
+  const btn = ui.nextBtn;
+  if (!btn || wired.next) return;
+  wired.next = true;
+
+  if (typeof onNext === "function") {
+    btn.addEventListener("click", onNext);
   }
 }

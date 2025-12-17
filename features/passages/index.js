@@ -22,16 +22,14 @@ const TIPS = {
   curated: `These built-in texts were designed to cover most English sounds. 
 Practicing them gives a balanced baseline and helps reveal strengths & weaknesses.`,
   custom: `Type anything you want to practice. We’ll score words & phonemes and add prosody feedback. 
-Tip: shorter sentences (≈10–15 s) give the clearest results.`
+Tip: shorter sentences (≈10–15 s) give the clearest results.`,
 };
 
 const MAX_CUSTOM_PARTS = 15;
 
 export function ensureCustomOption() {
   DOM.ensureCustomOptionInDOM();
-  if (isCustom) {
-    DOM.forceSelectCustom();
-  }
+  if (isCustom) DOM.forceSelectCustom();
 }
 
 export function isCustomMode() {
@@ -46,7 +44,7 @@ export function updatePartsInfoTip() {
 
   DOM.renderInfoTip({
     visible: hasText || hasSelection,
-    textHTML: custom ? TIPS.custom : TIPS.curated
+    textHTML: custom ? TIPS.custom : TIPS.curated,
   });
 }
 
@@ -54,12 +52,14 @@ export function togglePartNav(enabled) {
   const total = Array.isArray(currentParts) ? currentParts.length : 0;
   const isMulti = enabled && total > 1;
 
-  if (!isMulti && !isCustom) {
+  // Curated single-part: no Next, show Summary
+  if (!isMulti && !isCustomMode()) {
     DOM.updateNavVisibility({
       showNext: false,
       enableNext: false,
       nextMsgText: "",
-      showSummary: true
+      nextMsgColor: "",
+      showSummary: true,
     });
     return;
   }
@@ -71,7 +71,7 @@ export function togglePartNav(enabled) {
     enableNext: !atLast,
     nextMsgText: !atLast ? "Record to continue." : "",
     nextMsgColor: "#666",
-    showSummary: false
+    showSummary: false,
   });
 }
 
@@ -80,7 +80,7 @@ export function togglePartNav(enabled) {
 export function showCurrentPart({ preserveExistingInput = false } = {}) {
   const total = Array.isArray(currentParts) ? currentParts.length : 0;
 
-  if (isCustom) {
+  if (isCustomMode()) {
     const txt = currentParts?.[currentPartIdx] ?? "";
 
     DOM.renderPartState({
@@ -88,31 +88,33 @@ export function showCurrentPart({ preserveExistingInput = false } = {}) {
       progressText: `Custom Part ${currentPartIdx + 1}`,
       labelText: "Your text:",
       showLabel: true,
-      preserveInput: preserveExistingInput
+      preserveInput: preserveExistingInput,
     });
 
-    // Custom: Fill based on count vs MAX (15)
+    // Custom: Fill based on count vs MAX
     updateBalloon(currentParts.length, MAX_CUSTOM_PARTS);
 
+    // Custom nav typically managed by markPartCompleted()
     togglePartNav(false);
-  } else {
-    const text = currentParts[currentPartIdx];
-    const name = passages[currentPassageKey]?.name || "Passage";
-
-    DOM.renderPartState({
-      text: text,
-      progressText: `Part ${currentPartIdx + 1} of ${total}`,
-      labelText: `${name}:`,
-      showLabel: currentPartIdx === 0,
-      preserveInput: false
-    });
-
-    // Curated: Fill based on current index vs Total Parts
-    // We add 1 to index so it starts partially full (Part 1 of 12)
-    updateBalloon(currentPartIdx, total);
-
-    togglePartNav(total > 1);
+    return;
   }
+
+  // Curated
+  const text = currentParts[currentPartIdx] ?? "";
+  const name = passages[currentPassageKey]?.name || "Passage";
+
+  DOM.renderPartState({
+    text,
+    progressText: `Part ${currentPartIdx + 1} of ${total}`,
+    labelText: `${name}:`,
+    showLabel: currentPartIdx === 0,
+    preserveInput: false,
+  });
+
+  // Curated: progress should start at 1 on part 1
+  updateBalloon(currentPartIdx + 1, total);
+
+  togglePartNav(total > 1);
 }
 
 export function setPassage(key, { clearInputForCustom = false } = {}) {
@@ -120,7 +122,7 @@ export function setPassage(key, { clearInputForCustom = false } = {}) {
   setPassageKey(key);
   setPartIdx(0);
 
-  if (isCustom) {
+  if (isCustomMode()) {
     const nextText = clearInputForCustom ? "" : DOM.getInputValue();
     setParts([nextText]);
     showCurrentPart({ preserveExistingInput: !clearInputForCustom });
@@ -134,9 +136,11 @@ export function setPassage(key, { clearInputForCustom = false } = {}) {
 }
 
 export function goToNextPart() {
-  if (isCustom) {
+  if (isCustomMode()) {
     if (currentParts.length >= MAX_CUSTOM_PARTS) {
-      alert(`Memory Full! You have reached the limit of ${MAX_CUSTOM_PARTS} recordings. Please view your summary now.`);
+      alert(
+        `Memory Full! You have reached the limit of ${MAX_CUSTOM_PARTS} recordings. Please view your summary now.`
+      );
       return;
     }
 
@@ -162,17 +166,18 @@ export function goToNextPart() {
 export function markPartCompleted() {
   const total = Array.isArray(currentParts) ? currentParts.length : 0;
 
-  if (isCustom) {
+  if (isCustomMode()) {
     const isFull = currentParts.length >= MAX_CUSTOM_PARTS;
+
     DOM.updateNavVisibility({
       showNext: !isFull,
       enableNext: !isFull,
       nextMsgText: isFull ? "Memory Full (Limit 15)" : "",
       nextMsgColor: isFull ? "#ef4444" : "",
       showSummary: true,
-      customMode: true
+      customMode: true,
     });
-    // Custom: update count
+
     updateBalloon(currentParts.length, MAX_CUSTOM_PARTS);
     return;
   }
@@ -187,91 +192,92 @@ export function markPartCompleted() {
       enableNext: true,
       nextMsgText: "Finished: Ready for your next one?",
       nextMsgColor: "#15803d",
-      showSummary: false
+      showSummary: false,
     });
-    // Curated: Update progress (current part finished)
+
     updateBalloon(currentPartIdx + 1, total);
   } else {
     DOM.updateNavVisibility({
       showNext: false,
       enableNext: false,
       nextMsgText: "",
-      showSummary: true
+      nextMsgColor: "",
+      showSummary: true,
     });
-    // Curated: Full!
+
     updateBalloon(total, total);
   }
 }
 
 /* ---------------- Wiring ---------------- */
 
-// REPLACED: wirePassageSelect now uses the Interceptor Pattern (command vs data values)
 export function wirePassageSelect() {
-  // FIX #3: Changed selector to match HTML ID (#passageSelect)
-  const passageSelect = document.querySelector("#passageSelect");
-  if (!passageSelect) return;
+  // Idempotent guard: prevents double-wiring if boot happens twice
+  if (wirePassageSelect._wired) return;
+  wirePassageSelect._wired = true;
 
-  // Wire the select events (single source of truth lives here)
+  // NOTE: DOM module already targets #passageSelect internally. :contentReference[oaicite:2]{index=2}
   DOM.wireSelectEvents({
     onChange: (val) => {
-      // INTERCEPTOR: Handle "Command" values vs "Data" values
+      // Interceptor: command values vs data values
 
-      // 1) "write-own" is a UI command to enter custom mode (do not forcibly clear)
+      // UI command: enter custom mode
       if (val === "write-own") {
         setPassage("custom", { clearInputForCustom: false });
         updatePartsInfoTip();
         return;
       }
 
-      // 2) "clear" is a UI command to reset the custom input
+      // UI command: clear custom input
       if (val === "clear") {
         setPassage("custom", { clearInputForCustom: true });
-        // Force the dropdown to visually show "custom" immediately
         DOM.forceSelectCustom();
         updatePartsInfoTip();
         return;
       }
 
-      // 3) Normal Path: Value is a valid passage ID (including "custom" if you use it)
+      // Normal path: curated key or "custom"
       setPassage(val, { clearInputForCustom: val === "custom" });
       updatePartsInfoTip();
     },
+
     onClick: () => {
       const el = document.querySelector("#suggestedSentence");
       const empty = !el?.textContent?.trim();
-      if (empty && !isCustom) showCurrentPart();
-    }
+      if (empty && !isCustomMode()) showCurrentPart();
+    },
   });
 
-  // Keep existing input wiring behavior (typing forces custom mode)
   DOM.wireInputEvents({
     onInput: (val) => {
-      if (!isCustom) {
+      // Typing forces custom mode (but does not clear)
+      if (!isCustomMode()) {
         DOM.forceSelectCustom();
         setPassage("custom", { clearInputForCustom: false });
       }
 
-      const updatedParts = [...currentParts];
+      const updatedParts = Array.isArray(currentParts) ? [...currentParts] : [""];
       updatedParts[currentPartIdx] = val;
       setParts(updatedParts);
 
+      // Keep label/progress correct while typing
       DOM.renderPartState({
         text: "",
         progressText: `Custom Part ${currentPartIdx + 1}`,
         labelText: "Your text:",
         showLabel: true,
-        preserveInput: true
+        preserveInput: true,
       });
+
       updatePartsInfoTip();
-    }
+    },
   });
 
-  // GLOBAL POP HANDLER (For both modes)
+  // Balloon pop on Summary button (guarded to avoid duplicate listeners)
   const summaryBtn = document.getElementById("showSummaryBtn");
-  if (summaryBtn) {
-    summaryBtn.addEventListener("click", () => {
-      popBalloon();
-    });
+  if (summaryBtn && !summaryBtn.dataset.balloonWired) {
+    summaryBtn.dataset.balloonWired = "1";
+    summaryBtn.addEventListener("click", () => popBalloon());
   }
 }
 
