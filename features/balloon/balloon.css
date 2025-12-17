@@ -7,7 +7,7 @@
   right: 40px;
   width: 100px;
   height: 180px; 
-  z-index: 9999;
+  z-index: var(--z-toast);
   pointer-events: none;
   
   /* CHAOTIC FLOAT: Prime numbers (7s, 5s) prevent sync */

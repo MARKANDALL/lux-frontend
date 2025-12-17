@@ -7,7 +7,7 @@
 #onboardingOverlay {
   position: fixed;
   inset: 0;
-  z-index: 99999;
+  z-index: var(--z-max);
 }
 #onboardingOverlay .ob-backdrop {
   position: absolute;

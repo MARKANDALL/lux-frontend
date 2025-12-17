@@ -31,7 +31,7 @@ function ensureGlobalTooltip() {
   // 1. Basic Styles
   globalTooltip.style.cssText = `
     position: fixed; 
-    z-index: 2147483647; 
+    z-index: var(--z-popover); 
     visibility: hidden; 
     opacity: 0; 
     transition: opacity 0.15s ease, transform 0.15s ease;

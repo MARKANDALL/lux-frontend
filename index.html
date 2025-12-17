@@ -1,162 +1,64 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Lux Pronunciation Tool</title>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lux Pronunciation</title>
+  
+  <link rel="stylesheet" href="./app-core/lux-main.css" />
+  <link rel="stylesheet" href="./app-core/lux-layout.css" />
+  
+  <link rel="stylesheet" href="./features/balloon/balloon.css" />
+  <link rel="stylesheet" href="./features/features/self-playback.css" />
+  <link rel="stylesheet" href="./features/features/tts.css" />
+  <link rel="stylesheet" href="./features/features/tts-peekaboo.css" />
+</head>
+<body>
 
-    <link rel="stylesheet" href="lux-layout.css" />   <link rel="stylesheet" href="lux-onboarding.css" />
-    <link rel="stylesheet" href="lux-popover.css" />
-    
-    <link rel="stylesheet" href="lux-widgets.css" />  <link rel="stylesheet" href="lux-results.css" />  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet" />
+  <div id="app">
+    <header class="lux-header">
+      <h1>Lux Pronunciation Lab</h1>
+      </header>
 
-    <link rel="stylesheet" href="./features/features/tts.css" />
-    <link rel="stylesheet" href="./features/features/tts-peekaboo.css" />
-    <link rel="stylesheet" href="./features/features/tts/tts-overlay.css" />
-    <link rel="stylesheet" href="./features/features/self-playback.css" />
-    <link rel="stylesheet" href="./features/features/selfpb-peekaboo.css" />
-
-    <style id="lux-tts-guard-style">
-      #tts-controls { display: none !important; }
-    </style>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/7.8.11/wavesurfer.min.js"></script>
-
-    <script type="importmap">
-      {
-        "imports": {
-          "ai.js": "./api/ai.js",
-          "./api.js": "./api/index.js"
-        }
-      }
-    </script>
-
-    <script src="lux-popover.js" defer></script>
-  </head>
-  <body>
-    <div id="container">
-      <h2>Pronunciation Test</h2>
-
-      <div id="userMsg">
-        <ol>
-          <li>We use and measure for standard American accents. Hear what it should sound like:</li>
-          <li>The more recordings you make, the better the feedback will be 🤔 💭 💡 😮:
-            <span class="lux-cta" tabindex="0" aria-haspopup="dialog" aria-expanded="false">
-              database tracking
-              <span class="lux-pop" role="dialog" aria-label="Database tracking details">
-                <strong style="display: block; margin-bottom: 6px">How tracking helps</strong>
-                <p style="margin: 0 0 8px; color: #444; font-size: 13px">
-                  We save summaries of your practice so feedback improves over time.
-                </p>
-                <div class="lux-uidrow">
-                  <span>Your UID:</span>
-                  <code id="lux-uid">…</code>
-                  <button id="lux-copy" class="lux-btn" type="button">Copy</button>
-                  <small id="lux-copied" class="lux-copied" aria-live="polite"></small>
-                </div>
-                <div class="lux-links">
-                  <a id="lux-link-attempts" target="_blank" rel="noopener">Attempts (admin)</a>
-                  <a id="lux-link-progress" target="_blank" rel="noopener">User Progress (admin)</a>
-                  <a id="lux-link-cohort" target="_blank" rel="noopener">Cohort (admin)</a>
-                </div>
-                <small class="lux-note">Admin token required for those pages.</small>
-              </span>
-            </span>.
-          </li>
-          <li>Remember—mistakes are a necessary part of learning! :)</li>
-        </ol>
-      </div>
-
-      <label>
-        Select Passage:
-        <select id="passageSelect">
-          <option value="" disabled selected>Select Passage...</option>
-          <option value="rainbow">Rainbow Passage</option>
-          <option value="grandfather">Grandfather Passage</option>
-          <option value="minLR">Phoneme Test: L vs R</option>
-          <option value="minEEIH">Phoneme Test: EE vs IH</option>
-          <option value="minAUAH">Phoneme Test: A vs U</option>
-          <option value="wordList">Challenging Word List</option>
-          <option value="sentences">Challenging Sentences</option>
-          <option value="shortStory">Short Story Practice</option>
-          <option disabled>-------------------</option>
-          <option value="write-own">Write Your Own...</option>
-          <option value="clear">Clear Text</option>
-        </select>
-        <span id="partsInfoTip" class="tooltip" style="margin-left: 10px; cursor: pointer; display: inline-block !important;"> 
-            (?) 
-            <span class="tooltiptext">These texts are designed to cover most sounds in English.</span>
-        </span>
-      </label>
-
-      <label style="display: block; margin-top: 14px">
-        First language:
-        <select id="l1Select" name="l1Select">
-          <option value="universal" selected>Universal (English-only)</option>
-          <option value="ar">Arabic – العربية</option>
-          <option value="zh">Chinese – 中文</option>
-          <option value="fr">French – Français</option>
-          <option value="de">German – Deutsch</option>
-          <option value="hi">Hindi – हिन्दी</option>
-          <option value="ja">Japanese – 日本語</option>
-          <option value="ko">Korean – 한국어</option>
-          <option value="mr">Marathi – मराठी</option>
-          <option value="pt">Portuguese – Português</option>
-          <option value="ru">Russian – Русский</option>
-          <option value="es">Spanish – Español</option>
-        </select>
-      </label>
-
-      <span id="suggestedSentence" style="display: none"></span>
-      <label style="margin-top: 20px">
-        <span id="typewriterMsg" style="display: block; margin-bottom: 0.7em"></span>
-        <textarea id="referenceText" placeholder="Paste or type everything you’ll read here." rows="3"></textarea>
-      </label>
-
-      <div id="ghostControls">
-        <button id="nextPartBtn">Next Part</button>
-        <span id="nextPartMsg"></span>
-        <button id="showSummaryBtn">Show Summary</button>
-        <span id="passageLabel"></span>
-        <span id="partProgress"></span>
-      </div>
-
-      <div class="btn-group">
-        <button id="record">Record</button>
-        <button id="stop" disabled>Stop</button>
-      </div>
-
-      <button id="playbackBtn" style="display: none">▶ Play</button>
-      <audio id="playbackAudio" hidden></audio>
-
-      <p id="status">Not recording</p>
-      <div id="prettyResult"></div>
+    <main class="lux-container">
       
-      <div id="aiFeedbackSection"><div id="aiFeedback"></div></div>
-      <button id="showMoreBtn" style="display: none; margin: 1em auto; padding: 0.7em 1.3em; font-size: 1em;">Show More</button>
-      
-      <div id="ygPreview">
-        <video id="ygDemo" src="https://video.wixstatic.com/video/0d5d6f_5ae77fc4972248b38eb63ea25e5068fb/720p/mp4/file.mp4" style="width: 100%; height: 100%; display: block; object-fit: cover" muted playsinline loop autoplay></video>
-        <div id="unmuteTip" style="display:none;">🔊 Click to unmute</div>
-      </div>
-      
-      <div id="phPreview">
-        <video id="phDemo" src="https://video.wixstatic.com/video/0d5d6f_e100780f16524e51bd9c8e49f1c8c71c/480p/mp4/file.mp4" style="width: 100%; height: 100%; display: block; object-fit: contain; background: #000;" muted playsinline loop preload="metadata"></video>
-        <div id="phUnmuteTip" style="display:none;">🔊 Click to toggle audio</div>
-      </div>
+      <section id="input-section">
+        <div class="passage-selector-container">
+           <select id="passageSelect" class="lux-select">
+             <option value="" disabled selected>Select a passage...</option>
+             </select>
+        </div>
+
+        <div class="text-input-container">
+          <textarea id="typewriterInput" class="lux-textarea" placeholder="Or type text here..."></textarea>
+          <div class="controls">
+            <button id="recordBtn" class="lux-btn primary-btn">Record</button>
+            <button id="stopBtn" class="lux-btn danger-btn" disabled>Stop</button>
+          </div>
+        </div>
+      </section>
+
+      <div id="statusMsg" class="status-message"></div>
+
+      <div id="prettyResult" class="results-container"></div>
+
+    </main>
+  </div>
+
+  <div id="selfpb-lite" class="drawer-bottom hidden">
     </div>
 
-    <div id="tts-controls" data-luxHidden="1"></div>
+  <div id="tts-controls" class="drawer-bottom hidden">
+    </div>
 
-    <script type="module" src="./src/main.js"></script>
+  <div id="dashboard-overlay" class="modal-overlay hidden">
+    <div id="dashboard-modal" class="modal-content">
+      </div>
+  </div>
 
-    <script type="module">
-      import { bootTTS } from './features/features/tts/boot-tts.js';
-      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootTTS);
-      else bootTTS();
-    </script>
+  <div id="lux-balloon-container"></div>
 
-    <script type="module" src="./features/features/08-selfpb-peekaboo.js"></script>
-    <script>window.typeWriter = window.typeWriter || function () {};</script>
-  </body>
+  <script type="module" src="./src/main.js"></script>
+
+</body>
 </html>

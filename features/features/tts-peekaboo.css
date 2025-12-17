@@ -27,7 +27,7 @@
 .lux-tts-panel {
   position: fixed;
   inset: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) auto auto !important;
-  z-index: 9999;
+  z-index: var(--z-drawer);
   height: auto !important;
   min-height: 0 !important;
   max-height: var(--lux-tts-panel-max-h);
@@ -65,7 +65,7 @@
   position: fixed;
   top: 14px;
   right: 20px;
-  z-index: 10000;
+  z-index: calc(var(--z-drawer) + 1);
   display: inline-flex;
   align-items: center;
   justify-content: center;
