@@ -207,7 +207,8 @@ export function markPartCompleted() {
 
 // REPLACED: wirePassageSelect now uses the Interceptor Pattern (command vs data values)
 export function wirePassageSelect() {
-  const passageSelect = document.querySelector("#passage-select");
+  // FIX #3: Changed selector to match HTML ID (#passageSelect)
+  const passageSelect = document.querySelector("#passageSelect");
   if (!passageSelect) return;
 
   // Wire the select events (single source of truth lives here)

@@ -18,7 +18,7 @@
   <div id="app">
     <header class="lux-header">
       <h1>Lux Pronunciation Lab</h1>
-      </header>
+    </header>
 
     <main class="lux-container">
       
@@ -26,19 +26,20 @@
         <div class="passage-selector-container">
            <select id="passageSelect" class="lux-select">
              <option value="" disabled selected>Select a passage...</option>
-             </select>
+           </select>
         </div>
 
         <div class="text-input-container">
-          <textarea id="typewriterInput" class="lux-textarea" placeholder="Or type text here..."></textarea>
+          <textarea id="referenceText" class="lux-textarea" placeholder="Or type text here..."></textarea>
+          
           <div class="controls">
-            <button id="recordBtn" class="lux-btn primary-btn">Record</button>
-            <button id="stopBtn" class="lux-btn danger-btn" disabled>Stop</button>
+            <button id="record" class="lux-btn primary-btn">Record</button>
+            <button id="stop" class="lux-btn danger-btn" disabled>Stop</button>
           </div>
         </div>
       </section>
 
-      <div id="statusMsg" class="status-message"></div>
+      <div id="status" class="status-message"></div>
 
       <div id="prettyResult" class="results-container"></div>
 
@@ -46,14 +47,14 @@
   </div>
 
   <div id="selfpb-lite" class="drawer-bottom hidden">
-    </div>
+  </div>
 
   <div id="tts-controls" class="drawer-bottom hidden">
-    </div>
+  </div>
 
   <div id="dashboard-overlay" class="modal-overlay hidden">
     <div id="dashboard-modal" class="modal-content">
-      </div>
+    </div>
   </div>
 
   <div id="lux-balloon-container"></div>

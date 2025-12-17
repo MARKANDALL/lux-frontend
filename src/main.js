@@ -1,26 +1,42 @@
-/* ==========================================================================
-   LUX MAIN ENTRY POINT
-   Single Source of Truth for App Boot
-   ========================================================================== */
+// src/main.js
+// Canonical app boot (Vite).
+// Single source of truth: wire every top-level feature exactly once from here.
 
-// 1. Core Logic & Feature Imports
-import { wirePassageSelect } from './features/passages/index.js';
-import './features/interactions/boot.js'; // Boots generic interaction handlers
+import {
+  ensureCustomOption,
+  wirePassageSelect,
+  wireNextBtn,
+  showCurrentPart,
+} from "../features/passages/index.js";
 
-// 2. Side-Effect Imports (Self-contained features that self-boot)
-import './features/features/08-selfpb-peekaboo.js'; 
+import { initLuxRecorder } from "../features/recorder/index.js";
+import { bootInteractions } from "../features/interactions/boot.js";
+import { bootTTS } from "../features/features/tts/boot-tts.js";
 
-document.addEventListener('DOMContentLoaded', async () => {
-  console.log("🚀 Lux: Main boot sequence initiated.");
+// Lazy drawers (self-playback)
+import "../features/features/08-selfpb-peekaboo.js";
 
-  // 3. Initialize Passage Logic (Single Source of Truth)
-  // We delegate all passage/input handling to the passages module.
-  // This prevents the "Double-Firing Event" bug.
-  if (typeof wirePassageSelect === 'function') {
-    await wirePassageSelect();
-  } else {
-    console.error("❌ Lux Critical: wirePassageSelect is not a function.");
-  }
+function boot() {
+  // 1) Global interaction handlers
+  bootInteractions();
 
-  console.log("✅ Lux: Boot sequence complete.");
-});
+  // 2) Passage wiring
+  ensureCustomOption();
+  wirePassageSelect();
+  wireNextBtn();
+  showCurrentPart({ preserveExistingInput: true });
+
+  // 3) Recorder + results rendering
+  initLuxRecorder();
+
+  // 4) TTS drawer
+  bootTTS();
+
+  console.info("[LUX] boot complete");
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", boot, { once: true });
+} else {
+  boot();
+}
