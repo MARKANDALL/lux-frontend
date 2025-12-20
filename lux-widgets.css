@@ -51,11 +51,15 @@
 
 /* 2a) Phoneme header pill hover effect */
 #prettyResult th .phoneme-chip {
-  transition: transform 0.18s ease, filter 0.18s ease;
+  transition: box-shadow 0.18s ease, transform 0.16s ease, filter 0.18s ease;
 }
 #prettyResult th#phonemeHeader .phoneme-chip:hover {
-  transform: none;
-  filter: none;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.28);
+}
+#prettyResult th#phonemeHeader .phoneme-chip:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 /* 3) Input and (?) tip */
