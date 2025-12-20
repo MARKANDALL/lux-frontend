@@ -26,6 +26,8 @@ export function setupYGHover() {
     demoVid.pause();
     demoVid.currentTime = 0;
     demoVid.muted = true;
+    if (unmuteUI) unmuteUI.style.display = "none";
+    wordPill.classList.remove("is-playing");
   }
   function maybeHideFromPill(e) {
     const to = e.relatedTarget;
