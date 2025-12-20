@@ -53,9 +53,9 @@
 #prettyResult th .phoneme-chip {
   transition: transform 0.18s ease, filter 0.18s ease;
 }
-#prettyResult th .phoneme-chip:hover {
-  transform: scale(1.12);
-  filter: brightness(0.85);
+#prettyResult th#phonemeHeader .phoneme-chip:hover {
+  transform: none;
+  filter: none;
 }
 
 /* 3) Input and (?) tip */
