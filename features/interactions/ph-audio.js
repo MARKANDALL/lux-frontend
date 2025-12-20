@@ -1,7 +1,7 @@
 // ui/interactions/ph-audio.js
 export function initPhonemeAudio() {
   const btn = document.getElementById("phonemeAudioBtn");
-  const pill = document.getElementById("phonemeTitle");
+  const pill = document.querySelector("#phonemeHeader .phoneme-chip");
   const vid = document.getElementById("phDemo");
   const tip = document.getElementById("phUnmuteTip");
   if (!vid) return;

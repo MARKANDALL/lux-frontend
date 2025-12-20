@@ -229,33 +229,6 @@ function installHeaderPreview() {
     hidePreview();
   });
 
-  // CLICK: toggle audio ON/OFF (reliable + correct logic)
-  pill.addEventListener("click", () => {
-    // Ensure preview is open so the user hears something immediately.
-    if (preview.style.display !== "block") showPreview();
-
-    headerAudioOn = !headerAudioOn;
-
-    demoVid.muted = !headerAudioOn;
-    demoVid.volume = 1.0;
-
-    pill.classList.toggle("is-playing", headerAudioOn);
-
-    // If audio is ON, ensure playback is running
-    if (headerAudioOn && demoVid.paused) {
-      demoVid.play().catch((err) => console.warn(err));
-    }
-
-    // Feedback tip
-    if (tip) {
-      tip.textContent = headerAudioOn ? "Audio ON 🔊" : "Muted";
-      tip.style.display = "block";
-      if (tip._tm) clearTimeout(tip._tm);
-      tip._tm = setTimeout(() => {
-        tip.style.display = "none";
-      }, 1500);
-    }
-  });
 }
 
 /* ====================== 4. Tooltip Render ====================== */
