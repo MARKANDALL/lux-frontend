@@ -8,6 +8,8 @@ export function setupYGHover() {
   const wordHdr = document.getElementById("wordHeader");
   const wordPill = wordHdr && wordHdr.querySelector(".word-chip");
   if (!preview || !demoVid || !wordHdr || !wordPill) return;
+  if (wordPill._ygBound) return;
+  wordPill._ygBound = true;
 
   function showPreview() {
     const rect = wordPill.getBoundingClientRect();
