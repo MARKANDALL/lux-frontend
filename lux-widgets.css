@@ -5,8 +5,6 @@
 #prettyResult a {
   text-decoration: none !important;
   font-weight: 700;
-  /* Allow the class (score-good/warn/bad) to set the color */
-  transition: opacity 0.2s;
 }
 
 #prettyResult a:visited,
@@ -16,10 +14,9 @@
   /* color: inherit !important;  <-- REMOVED so score colors work */
 }
 
+/* Hover must NOT darken or change opacity/color; interaction is handled below */
 #prettyResult a:hover {
-  text-decoration: underline dotted;
-  opacity: 0.8;
-  color: #0078d7; /* Fallback hover color */
+  text-decoration: none !important;
 }
 
 /* ============================================================
@@ -37,19 +34,29 @@
 /* ============================================================
                            Global interactive hover cues
                            ============================================================ */
-/* 2) Word links & phoneme symbols */
+/* Result-row word links + tooltip trigger: lift+shadow only */
 #prettyResult a,
 #prettyResult .tooltip {
   display: inline-block;
-  transition: transform 0.18s ease, filter 0.18s ease;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 #prettyResult a:hover,
 #prettyResult .tooltip:hover {
-  transform: scale(1.12);
-  filter: brightness(0.85);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.28);
+}
+#prettyResult a:active,
+#prettyResult .tooltip:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-/* 2a) Phoneme header pill hover effect */
+/* If row word pills use .word-chip, ensure no filter transition leaks in */
+#prettyResult tbody a.word-chip {
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+/* 2a) Phoneme header pill hover effect (keep header unchanged) */
 #prettyResult th .phoneme-chip {
   transition: box-shadow 0.18s ease, transform 0.16s ease, filter 0.18s ease;
 }
@@ -65,27 +72,22 @@
 /* 3) Input and (?) tip */
 #referenceText,
 #partsInfoTip {
-  transition: transform 0.18s ease, box-shadow 0.18s ease; 
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 #referenceText:hover,
 #partsInfoTip:hover {
-  transform: translateY(-2px); 
-  filter: none; 
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.28); 
+  transform: translateY(-2px);
+  filter: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.28);
 }
 
-/* 4) Any other tooltip trigger */
+/* 4) Any other tooltip trigger (structural only; interaction handled above) */
 .tooltip {
   position: relative;
   display: inline-block;
   cursor: pointer;
   margin-left: 3px;
   border-bottom: none !important;
-  transition: transform 0.18s ease, filter 0.18s ease;
-}
-.tooltip:hover {
-  transform: scale(1.12);
-  filter: brightness(0.85);
 }
 .result-tip {
   border-bottom: none !important;
@@ -253,21 +255,21 @@
 }
 
 /* >= 80% (Royal Blue) */
-.score-good { 
-  color: #2563eb; 
-  background: #dbeafe; 
+.score-good {
+  color: #2563eb;
+  background: #dbeafe;
 }
 
 /* 60% - 79% (Dark Amber) */
-.score-warn { 
-  color: #d97706; 
-  background: #fef3c7; 
+.score-warn {
+  color: #d97706;
+  background: #fef3c7;
 }
 
 /* < 60% (Red) */
-.score-bad { 
-  color: #dc2626; 
-  background: #fee2e2; 
+.score-bad {
+  color: #dc2626;
+  background: #fee2e2;
 }
 
 .score-good::before, .score-warn::before, .score-bad::before {
@@ -300,10 +302,10 @@
   left: 50%;
   top: 99%;
   transform: translateX(-50%);
-  
-  background: #444; 
+
+  background: #444;
   color: #fff;
-  
+
   padding: 10px;
   border-radius: 5px;
   min-width: 240px;
@@ -312,9 +314,9 @@
   white-space: normal;
   word-wrap: break-word;
   overflow: hidden;
-  
+
   /* UPDATED: Use Treaty Variable */
-  z-index: var(--z-popover); 
+  z-index: var(--z-popover);
 }
 .tooltip:hover .tooltiptext {
   visibility: visible;
@@ -330,6 +332,7 @@
 #prettyResult .score-table th:nth-child(4) {
   overflow: visible !important;
 }
+
 /* ===== Smooth fades for hint/suggestions ===== */
 .fade-vis {
   opacity: 1;
