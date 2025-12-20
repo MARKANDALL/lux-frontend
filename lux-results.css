@@ -74,6 +74,19 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
 #prettyResult .tooltip .phoneme-chip { display: inline-block; transition: transform 0.18s ease, filter 0.18s ease; }
 #prettyResult .tooltip:hover .phoneme-chip { transform: scale(1.12); filter: brightness(0.85); }
 
+/* Row phoneme chips: match link bulge + darken without touching header pills */
+#prettyResult tbody .phoneme-chip[data-hydrated],
+#resultBody .phoneme-chip[data-hydrated] {
+  transition: transform 0.18s ease, filter 0.18s ease;
+}
+#prettyResult tbody .phoneme-chip[data-hydrated]:hover,
+#prettyResult tbody .phoneme-chip[data-hydrated]:active,
+#resultBody .phoneme-chip[data-hydrated]:hover,
+#resultBody .phoneme-chip[data-hydrated]:active {
+  transform: scale(1.12);
+  filter: brightness(0.85);
+}
+
 /* ============================================================
    Previews & Popovers
    ============================================================ */
