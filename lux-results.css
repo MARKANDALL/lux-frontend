@@ -43,6 +43,40 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
 /* ============================================================
    Header cells and pills (Word / Phoneme)
    ============================================================ */
+.lux-col-toggle {
+  position: absolute;
+  top: 6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 1px solid #cbd5e1;
+  background: #e2e8f0;
+  color: #475569;
+  font-size: 12px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  z-index: 2;
+  transition: transform 0.3s ease, background 0.15s ease;
+}
+.lux-col-toggle:hover { background: #d8e2ef; }
+.lux-col-toggle:focus-visible { outline: 2px solid #1976d2; outline-offset: 2px; }
+#prettyResult th#wordHeader .lux-col-toggle { left: 6px; right: auto; }
+#prettyResult th#phonemeHeader .lux-col-toggle { right: 6px; left: auto; transform: rotate(180deg); }
+#prettyResult table.collapsed-word th#wordHeader .lux-col-toggle {
+  right: 6px;
+  left: auto;
+  transform: rotate(180deg);
+}
+#prettyResult table.collapsed-phoneme th#phonemeHeader .lux-col-toggle {
+  left: 6px;
+  right: auto;
+  transform: rotate(0deg);
+}
+
 #wordHeader, #phonemeHeader {
   background: #f3f7fa; border: 1px solid #bbb; padding: 18px 0;
   display: flex; justify-content: center; align-items: center;
@@ -140,6 +174,26 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
 #wordHeader .word-chip,
 #phonemeHeader .phoneme-chip {
   position: relative !important;
+}
+
+/* Collapsible Word/Phoneme columns */
+#prettyResult table.collapsed-word th#wordHeader,
+#prettyResult table.collapsed-phoneme th#phonemeHeader {
+  width: 30px !important; min-width: 30px !important; max-width: 30px !important;
+  padding-left: 0 !important; padding-right: 0 !important;
+  transform: none !important;
+}
+#prettyResult table.collapsed-word td:nth-child(1),
+#prettyResult table.collapsed-phoneme td:nth-child(4) {
+  width: 0 !important; min-width: 0 !important; max-width: 0 !important;
+  padding: 0 !important;
+  overflow: hidden; opacity: 0.15; pointer-events: none;
+  transform: none !important;
+}
+#prettyResult table.collapsed-word #wordHeader .word-chip,
+#prettyResult table.collapsed-phoneme #phonemeHeader .phoneme-chip,
+#prettyResult table.collapsed-phoneme #phonemeHeader .tooltip {
+  display: none;
 }
 
 #wordHeader > .audio-hint,
