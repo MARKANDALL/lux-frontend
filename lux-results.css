@@ -5,7 +5,13 @@
    ============================================================ */
 #prettyResult table { transition: width 0.35s ease; }
 
-#scoreHeader, #errorHeader { width: 34px; text-align: center; position: relative; cursor: pointer; user-select: none; }
+#scoreHeader, #errorHeader {
+  width: 34px;
+  text-align: center;
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+}
 
 .toggle-col { cursor: pointer; user-select: none; transition: color 0.2s; }
 .toggle-col:hover { color: #0078d7; }
@@ -21,12 +27,24 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
 #prettyResult table.collapsed-score td:nth-child(2),
 #prettyResult table.collapsed-error th#errorHeader,
 #prettyResult table.collapsed-error td:nth-child(3) {
-  width: 26px !important; min-width: 26px !important; max-width: 26px !important;
-  padding-left: 0 !important; padding-right: 0 !important; opacity: 0.2; pointer-events: auto !important; cursor: pointer;
+  width: 26px !important;
+  min-width: 26px !important;
+  max-width: 26px !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  opacity: 0.2;
+  pointer-events: auto !important;
+  cursor: pointer;
 }
+
 #prettyResult table.collapsed-score td:nth-child(2),
 #prettyResult table.collapsed-error td:nth-child(3) {
-  width: 0; min-width: 0; max-width: 0; overflow: hidden; opacity: 0.15; pointer-events: none;
+  width: 0;
+  min-width: 0;
+  max-width: 0;
+  overflow: hidden;
+  opacity: 0.15;
+  pointer-events: none;
 }
 
 /* Open States */
@@ -34,11 +52,85 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
 #prettyResult table:not(.collapsed-score) td:nth-child(2),
 #prettyResult table:not(.collapsed-error) th#errorHeader,
 #prettyResult table:not(.collapsed-error) td:nth-child(3) {
-  width: 110px; min-width: 80px; max-width: 160px; padding-left: 10px; padding-right: 10px; opacity: 1;
+  width: 110px;
+  min-width: 80px;
+  max-width: 160px;
+  padding-left: 10px;
+  padding-right: 10px;
+  opacity: 1;
 }
 
 #prettyResult .score-table td:nth-child(2),
 #prettyResult .score-table td:nth-child(3) { cursor: pointer; }
+
+/* ============================================================
+   Collapsible Word & Phoneme columns (NEW)
+   - Triggered ONLY by the dedicated header buttons (.lux-col-toggle)
+   - Does not change Score/Error collapse behavior
+   ============================================================ */
+
+#prettyResult .lux-col-toggle {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #334155;
+  font-size: 12px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  z-index: 6; /* above chips/tooltips */
+  user-select: none;
+
+  /* base transform so rotation doesn’t fight other rules */
+  transform: rotate(0deg);
+}
+
+#prettyResult .lux-col-toggle:hover { background: #e2e8f0; }
+#prettyResult .lux-col-toggle:focus-visible { outline: 2px solid #1976d2; outline-offset: 2px; }
+
+/* Optional “direction” cue: rotate when expanded */
+#prettyResult table:not(.collapsed-word) th#wordHeader .lux-col-toggle[data-col="word"],
+#prettyResult table:not(.collapsed-phoneme) th#phonemeHeader .lux-col-toggle[data-col="phoneme"] {
+  transform: rotate(180deg);
+}
+
+/* Collapsed header width (keep thin so button remains clickable) */
+#prettyResult table.collapsed-word th#wordHeader,
+#prettyResult table.collapsed-phoneme th#phonemeHeader {
+  width: 30px !important;
+  min-width: 30px !important;
+  max-width: 30px !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* Collapse the body cells */
+#prettyResult table.collapsed-word td:nth-child(1),
+#prettyResult table.collapsed-phoneme td:nth-child(4) {
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  overflow: hidden !important;
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+/* Hide header content when collapsed (leave the button visible) */
+#prettyResult table.collapsed-word th#wordHeader .word-chip { display: none !important; }
+
+#prettyResult table.collapsed-phoneme th#phonemeHeader .phoneme-chip,
+#prettyResult table.collapsed-phoneme th#phonemeHeader .tooltip { display: none !important; }
+
 
 /* ============================================================
    Header cells and pills (Word / Phoneme)
