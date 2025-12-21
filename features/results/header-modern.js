@@ -127,10 +127,14 @@ export function renderResultsHeaderModern(data) {
         <table class="score-table collapsed-score collapsed-error" style="border: none; margin: 0; width: 100%;">
           <thead style="position: sticky; top: 0; z-index: 20; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
             <tr>
-              <th id="wordHeader"><span class="word-chip clickable">Word</span></th>
+              <th id="wordHeader">
+                <button class="lux-col-toggle" type="button" data-col="word" aria-label="Collapse/expand Word column" title="Collapse/expand Word column">▸</button>
+                <span class="word-chip clickable">Word</span>
+              </th>
               <th ${scoreHeaderAttrs}>Score ▸</th>
               <th id="errorHeader" class="toggle-col">Error ▸</th>
               <th id="phonemeHeader">
+                <button class="lux-col-toggle" type="button" data-col="phoneme" aria-label="Collapse/expand Phoneme column" title="Collapse/expand Phoneme column">▸</button>
                 <span class="word-chip phoneme-chip clickable" id="phonemeTitle">Phoneme</span>
                 <span class="tooltip result-tip tip-Phoneme" style="margin-left: 8px;">(?)<span class="tooltiptext">${TOOLTIPS.Phoneme}</span></span>
               </th>
