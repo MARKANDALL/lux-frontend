@@ -64,13 +64,20 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
 }
 .lux-col-toggle:hover { background: #d8e2ef; }
 .lux-col-toggle:focus-visible { outline: 2px solid #1976d2; outline-offset: 2px; }
+
 #prettyResult th#wordHeader .lux-col-toggle { left: 6px; right: auto; }
+
+/* Phoneme open: on exterior RIGHT but points inward (rotate 180) */
 #prettyResult th#phonemeHeader .lux-col-toggle { right: 6px; left: auto; transform: rotate(180deg); }
+
+/* Word collapsed: move to interior RIGHT edge and point outward (rotate 180) */
 #prettyResult table.collapsed-word th#wordHeader .lux-col-toggle {
   right: 6px;
   left: auto;
   transform: rotate(180deg);
 }
+
+/* Phoneme collapsed: move to interior LEFT edge and point outward (no rotate) */
 #prettyResult table.collapsed-phoneme th#phonemeHeader .lux-col-toggle {
   left: 6px;
   right: auto;
@@ -329,9 +336,13 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
 }
 .toggle-en-btn:hover { background: #e0e0e0; }
 
+/* Keep the result container permissive for hover/popovers */
 #prettyResult {
-  overflow-x: auto; overflow-y: visible !important; overflow: visible !important;
-  max-height: none !important; height: auto !important;
+  overflow-x: auto;
+  overflow-y: visible !important;
+  overflow: visible !important;
+  max-height: none !important;
+  height: auto !important;
   padding-bottom: 4px;
 }
 
@@ -419,22 +430,19 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
 /* ============================================================
    AI COACHING SIDEBAR LAYOUT (Polished)
    ============================================================ */
-
-/* The Container (Grid) - overrides ID style via specificity/!important */
 .ai-grid-container {
   display: grid;
-  grid-template-columns: 80px 1fr; /* Fixed sidebar width */
+  grid-template-columns: 80px 1fr;
   min-height: 220px;
   background: #fff;
   border-radius: 12px;
   border: 1px solid #c9e2ff;
   box-shadow: 0 2px 16px rgba(60, 90, 155, 0.06);
   margin-top: 25px;
-  overflow: hidden; /* Contains the sidebar background */
-  padding: 0 !important; /* Kill legacy padding */
+  overflow: hidden;
+  padding: 0 !important;
 }
 
-/* 1. The Sidebar (Left) */
 .ai-sidebar {
   background: #f1f5f9;
   border-right: 1px solid #cbd5e1;
@@ -456,7 +464,6 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   width: 100%;
 }
 
-/* Sidebar Buttons */
 .ai-voice-btn {
   appearance: none;
   border: 1px solid transparent;
@@ -486,7 +493,6 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   font-weight: 700;
 }
 
-/* Hover State */
 .ai-voice-btn:hover {
   transform: translateY(-1px);
   border-color: #94a3b8;
@@ -494,7 +500,6 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   box-shadow: 0 4px 6px rgba(0,0,0,0.05);
 }
 
-/* Active Selected State */
 .ai-voice-btn.active {
   background: #fff;
   border-color: #0078d7;
@@ -502,7 +507,6 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   box-shadow: 0 0 0 1px #0078d7 inset, 0 4px 8px rgba(0, 120, 215, 0.15);
 }
 
-/* 2. The Content Area (Right) */
 .ai-content {
   padding: 20px;
   background: #fff;
@@ -510,7 +514,6 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   flex-direction: column;
 }
 
-/* Action Buttons (Quick / Deep) inside the content */
 .ai-action-btn {
   padding: 10px 18px;
   border-radius: 8px;
@@ -543,18 +546,17 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   box-shadow: 0 4px 12px rgba(0, 120, 215, 0.35);
 }
 
-/* Mobile Responsive: Stack the sidebar on top */
 @media (max-width: 550px) {
   .ai-grid-container {
-    grid-template-columns: 1fr; /* 1 column */
+    grid-template-columns: 1fr;
     grid-template-rows: auto auto;
   }
 
   .ai-sidebar {
-    flex-direction: row; /* Horizontal row of buttons */
+    flex-direction: row;
     border-right: none;
     border-bottom: 1px solid #cbd5e1;
-    overflow-x: auto; /* Scroll if too many personas */
+    overflow-x: auto;
     padding: 8px 12px;
   }
 
@@ -567,7 +569,7 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   .ai-voice-btn {
     width: auto;
     min-width: 70px;
-    flex-direction: row; /* Icon left of text */
+    flex-direction: row;
     padding: 6px 10px;
   }
 
