@@ -152,9 +152,6 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
 
 /* -----------------------------
    Word / Phoneme collapse behavior
-   IMPORTANT:
-   - NO translateX for Word. That’s what created the big white gap.
-   - We shrink the column like Phoneme does, but with the button on the exterior.
 ------------------------------ */
 
 /* Collapsed header stubs (keep button clickable) */
@@ -167,7 +164,7 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   padding-right: 0 !important;
   opacity: 0.55;
   cursor: pointer;
-  transform: none !important; /* hard-kill any old translate rules */
+  transform: none !important;
 }
 
 /* Collapsed body cells (actual shrink, no shifting) */
@@ -180,13 +177,18 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   overflow: hidden !important;
   opacity: 0;
   pointer-events: none;
-  transform: none !important; /* hard-kill any old translate rules */
+  transform: none !important;
 }
 
-/* Hide header pill content when collapsed (button stays visible) */
-#prettyResult table.collapsed-word th#wordHeader .word-chip { display: none !important; }
+/* ZOOM FIX: Use opacity/scale instead of display:none to allow transitions */
+#prettyResult table.collapsed-word th#wordHeader .word-chip,
 #prettyResult table.collapsed-phoneme th#phonemeHeader .phoneme-chip,
-#prettyResult table.collapsed-phoneme th#phonemeHeader .tooltip { display: none !important; }
+#prettyResult table.collapsed-phoneme th#phonemeHeader .tooltip { 
+  opacity: 0 !important;
+  transform: scale(0.4) !important;
+  pointer-events: none !important;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
 
 /* -----------------------------
    Header cells + pills
@@ -216,7 +218,6 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   z-index: var(--lux-z-ui);
 }
 
-/* Clickable header backgrounds (NO scale on the TH to avoid blur seams) */
 #wordHeader.clickable {
   cursor: pointer;
   box-shadow: 0 1.5px 5px rgba(40, 120, 255, 0.08);
@@ -228,7 +229,6 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   box-shadow: 0 5px 24px rgba(20, 90, 220, 0.14), 0 1.5px 5px rgba(40, 120, 255, 0.08);
 }
 
-/* Prevent any header-cell hover transform (stops clipping/weird seams) */
 #prettyResult th#wordHeader:hover,
 #prettyResult th#phonemeHeader:hover {
   transform: none !important;
@@ -236,7 +236,7 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
 }
 
 #wordHeader .word-chip:focus-visible { outline: 2.5px solid #1976d2; outline-offset: 2px; }
-#wordHeader .word-chip { display: inline-block; }
+#wordHeader .word-chip { display: inline-block; transition: opacity 0.25s ease, transform 0.25s ease; }
 
 /* -----------------------------
    Chip hover contract (lift + shadow only)
@@ -290,7 +290,6 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   transform-origin: center center;
 }
 
-/* Header phoneme pill sometimes uses both classes */
 .word-chip.phoneme-chip {
   display: inline-flex !important;
   align-items: center;
@@ -360,7 +359,6 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   100% { transform: translateX(-50%) scale(1.05) rotate(0deg); }
 }
 
-/* Tooltip playing state: pulse box-shadow only */
 #prettyResult .tooltip.is-playing {
   animation: pulseGlow 1s ease-in-out infinite alternate;
 }
@@ -369,7 +367,6 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   to   { box-shadow: 0 0 12px rgba(30, 144, 255, 0.55); }
 }
 
-/* Tap flash: box-shadow only */
 #resultBody .phoneme-chip.tap-flash { animation: chipTap .22s ease-out 1; }
 @keyframes chipTap {
   0%   { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); }
@@ -394,7 +391,6 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
 
 #prettyResult .results-flex > table.score-table { flex: 1 1 auto; min-width: 420px; }
 
-/* Side legend panel (collapsed by default; opens via .legend-open) */
 #prosodyLegend {
   overflow: hidden;
   width: 0 !important;
@@ -445,7 +441,6 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
 .prosody-legend .label { font-weight: 600; color: #355; }
 .prosody-legend .note { font-size: 0.95em; color: #556; }
 
-/* Legend toggle cue */
 #prosodyLegendToggle { position: relative; isolation: isolate; cursor: pointer; }
 #prosodyLegendToggle.cue-legend::after {
   content: "";
@@ -465,7 +460,6 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   70%, 100% { transform: scale(1.9); opacity: 0; }
 }
 
-/* Peek handle */
 #legendPeek {
   position: absolute;
   top: 44px;
@@ -498,7 +492,6 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
 .results-flex.show-peek #legendPeek { opacity: .95; transform: translateX(0); }
 .results-flex.legend-open #legendPeek { display: none; }
 
-/* Prosody tooltip extra hint */
 .tip-ProsodyBars .tooltiptext { padding-bottom: 14px; }
 .tip-ProsodyBars .tooltiptext::before {
   content: "";
@@ -528,7 +521,6 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   to   { right: calc(100% + 18px); }
 }
 
-/* Responsive legend layout */
 @media (max-width: 900px) {
   #prettyResult .results-flex { flex-direction: column; }
   #prettyResult .results-flex > table.score-table { min-width: 0; }
@@ -580,12 +572,10 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   width: 100%;
   padding: 10px 4px;
   cursor: pointer;
-
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 5px;
-
   color: #64748b;
   transition: all 0.15s ease;
   box-shadow: 0 1px 2px rgba(0,0,0,0.04);
@@ -647,13 +637,11 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   box-shadow: 0 4px 12px rgba(0, 120, 215, 0.35);
 }
 
-/* Mobile responsive: stack sidebar on top */
 @media (max-width: 550px) {
   .ai-grid-container {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto;
   }
-
   .ai-sidebar {
     flex-direction: row;
     border-right: none;
@@ -661,20 +649,8 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
     overflow-x: auto;
     padding: 8px 12px;
   }
-
-  .ai-sidebar-label {
-    width: auto;
-    margin-right: 8px;
-    margin-bottom: 0;
-  }
-
-  .ai-voice-btn {
-    width: auto;
-    min-width: 70px;
-    flex-direction: row;
-    padding: 6px 10px;
-  }
-
+  .ai-sidebar-label { width: auto; margin-right: 8px; margin-bottom: 0; }
+  .ai-voice-btn { width: auto; min-width: 70px; flex-direction: row; padding: 6px 10px; }
   .ai-voice-btn span:first-child { font-size: 1.1rem; }
 }
 
