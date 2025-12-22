@@ -1,10 +1,57 @@
-/* css/lux-results.css */
-
-/* ============================================================
-   Collapsible Score & Error columns
+/* css/lux-results.css
+   ============================================================
+   LUX RESULTS TABLE
+   - Score/Error collapse (standard)
+   - Word/Phoneme collapse (mirrored buttons; NO shifting/gaps)
+   - Header pills + unified ghost speaker emoji
+   - Preview popovers (YouGlish / phoneme video)
+   - Prosody legend (side panel + peek cue)
+   - AI coaching grid + legacy AI panel support
    ============================================================ */
-#prettyResult table { transition: width 0.35s ease; }
 
+/* -----------------------------
+   Base / Safety Defaults
+------------------------------ */
+:root {
+  --lux-blue: #0078d7;
+  --lux-z-ui: 100;
+  --lux-z-popover: 9999;
+
+  --col-stub: 30px;         /* collapsed header stub width */
+  --score-open-w: 110px;    /* open score/error width */
+  --score-open-min: 80px;
+  --score-open-max: 160px;
+}
+
+#prettyResult {
+  overflow-x: auto;
+  overflow-y: visible !important;
+  max-height: none !important;
+  height: auto !important;
+  padding-bottom: 4px;
+}
+
+/* Table layout */
+#prettyResult table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  transition: width 0.35s ease;
+}
+
+#prettyResult table th,
+#prettyResult table td {
+  transition:
+    width 0.35s ease,
+    min-width 0.35s ease,
+    max-width 0.35s ease,
+    padding 0.35s ease,
+    opacity 0.20s ease;
+}
+
+/* -----------------------------
+   Score / Error collapse
+------------------------------ */
 #scoreHeader, #errorHeader {
   width: 34px;
   text-align: center;
@@ -13,8 +60,9 @@
   user-select: none;
 }
 
+/* little chevron indicator (legacy) */
 .toggle-col { cursor: pointer; user-select: none; transition: color 0.2s; }
-.toggle-col:hover { color: #0078d7; }
+.toggle-col:hover { color: var(--lux-blue); }
 .toggle-col::after { content: "▸"; display: inline-block; transition: transform 0.35s ease; }
 
 table:not(.collapsed-score) #scoreHeader::after,
@@ -22,39 +70,39 @@ table:not(.collapsed-error) #errorHeader::after { transform: rotate(90deg); }
 table:not(.collapsed-score) th#scoreHeader::after,
 table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
 
-/* Collapsed States */
+/* Collapsed header stubs */
 #prettyResult table.collapsed-score th#scoreHeader,
-#prettyResult table.collapsed-score td:nth-child(2),
-#prettyResult table.collapsed-error th#errorHeader,
-#prettyResult table.collapsed-error td:nth-child(3) {
+#prettyResult table.collapsed-error th#errorHeader {
   width: 26px !important;
   min-width: 26px !important;
   max-width: 26px !important;
   padding-left: 0 !important;
   padding-right: 0 !important;
-  opacity: 0.2;
+  opacity: 0.25;
   pointer-events: auto !important;
   cursor: pointer;
 }
 
+/* Collapsed body cells */
 #prettyResult table.collapsed-score td:nth-child(2),
 #prettyResult table.collapsed-error td:nth-child(3) {
-  width: 0;
-  min-width: 0;
-  max-width: 0;
-  overflow: hidden;
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
   opacity: 0.15;
   pointer-events: none;
 }
 
-/* Open States */
+/* Open states */
 #prettyResult table:not(.collapsed-score) th#scoreHeader,
 #prettyResult table:not(.collapsed-score) td:nth-child(2),
 #prettyResult table:not(.collapsed-error) th#errorHeader,
 #prettyResult table:not(.collapsed-error) td:nth-child(3) {
-  width: 110px;
-  min-width: 80px;
-  max-width: 160px;
+  width: var(--score-open-w);
+  min-width: var(--score-open-min);
+  max-width: var(--score-open-max);
   padding-left: 10px;
   padding-right: 10px;
   opacity: 1;
@@ -63,16 +111,13 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
 #prettyResult .score-table td:nth-child(2),
 #prettyResult .score-table td:nth-child(3) { cursor: pointer; }
 
-/* ============================================================
-   Collapsible Word & Phoneme columns (NEW)
-   - Triggered ONLY by the dedicated header buttons (.lux-col-toggle)
-   - Does not change Score/Error collapse behavior
-   ============================================================ */
-
+/* -----------------------------
+   Word / Phoneme collapse buttons
+   (mirrored placement; arrow points inward)
+------------------------------ */
 #prettyResult .lux-col-toggle {
   position: absolute;
   top: 6px;
-  right: 6px;
   width: 18px;
   height: 18px;
   border-radius: 4px;
@@ -86,149 +131,181 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   justify-content: center;
   cursor: pointer;
   padding: 0;
-  z-index: 6; /* above chips/tooltips */
+  z-index: calc(var(--lux-z-ui) + 5);
   user-select: none;
-
-  /* base transform so rotation doesn’t fight other rules */
   transform: rotate(0deg);
+  transition: transform 0.3s ease, background 0.15s ease;
 }
 
 #prettyResult .lux-col-toggle:hover { background: #e2e8f0; }
 #prettyResult .lux-col-toggle:focus-visible { outline: 2px solid #1976d2; outline-offset: 2px; }
 
-/* Optional “direction” cue: rotate when expanded */
-#prettyResult table:not(.collapsed-word) th#wordHeader .lux-col-toggle[data-col="word"],
+/* Mirror placement */
+#prettyResult th#wordHeader   .lux-col-toggle { left: 6px; right: auto; }     /* exterior LEFT */
+#prettyResult th#phonemeHeader .lux-col-toggle { right: 6px; left: auto; }   /* exterior RIGHT */
+
+/* Optional rotate cue: rotate when expanded */
+#prettyResult table:not(.collapsed-word)   th#wordHeader   .lux-col-toggle[data-col="word"],
 #prettyResult table:not(.collapsed-phoneme) th#phonemeHeader .lux-col-toggle[data-col="phoneme"] {
   transform: rotate(180deg);
 }
 
-/* Collapsed header width (keep thin so button remains clickable) */
+/* -----------------------------
+   Word / Phoneme collapse behavior
+   IMPORTANT:
+   - NO translateX for Word. That’s what created the big white gap.
+   - We shrink the column like Phoneme does, but with the button on the exterior.
+------------------------------ */
+
+/* Collapsed header stubs (keep button clickable) */
 #prettyResult table.collapsed-word th#wordHeader,
 #prettyResult table.collapsed-phoneme th#phonemeHeader {
-  width: 30px !important;
-  min-width: 30px !important;
-  max-width: 30px !important;
+  width: var(--col-stub) !important;
+  min-width: var(--col-stub) !important;
+  max-width: var(--col-stub) !important;
   padding-left: 0 !important;
   padding-right: 0 !important;
+  opacity: 0.55;
+  cursor: pointer;
+  transform: none !important; /* hard-kill any old translate rules */
 }
 
-/* Collapse the body cells */
+/* Collapsed body cells (actual shrink, no shifting) */
 #prettyResult table.collapsed-word td:nth-child(1),
 #prettyResult table.collapsed-phoneme td:nth-child(4) {
   width: 0 !important;
   min-width: 0 !important;
   max-width: 0 !important;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
+  padding: 0 !important;
   overflow: hidden !important;
-  opacity: 0.15;
+  opacity: 0;
   pointer-events: none;
+  transform: none !important; /* hard-kill any old translate rules */
 }
 
-/* Hide header content when collapsed (leave the button visible) */
+/* Hide header pill content when collapsed (button stays visible) */
 #prettyResult table.collapsed-word th#wordHeader .word-chip { display: none !important; }
-
 #prettyResult table.collapsed-phoneme th#phonemeHeader .phoneme-chip,
 #prettyResult table.collapsed-phoneme th#phonemeHeader .tooltip { display: none !important; }
 
-
-/* ============================================================
-   Header cells and pills (Word / Phoneme)
-   ============================================================ */
-#wordHeader, #phonemeHeader {
-  background: #f3f7fa; border: 1px solid #bbb; padding: 18px 0;
-  display: flex; justify-content: center; align-items: center;
-  position: relative; perspective: 700px; overflow: visible !important; z-index: 5;
-}
+/* -----------------------------
+   Header cells + pills
+------------------------------ */
 #prettyResult .score-table th {
-  color: #223; text-align: center; font-weight: 700; vertical-align: middle;
-  font-size: 1.14em; padding: 14px 0 12px 0;
-  transition: background 0.16s, box-shadow 0.18s, transform 0.14s;
+  color: #223;
+  text-align: center;
+  font-weight: 700;
+  vertical-align: middle;
+  font-size: 1.14em;
+  padding: 14px 0 12px 0;
+  position: relative;
+  overflow: visible !important;
+  z-index: var(--lux-z-ui);
 }
 
-/* Clickable Header Backgrounds */
-#wordHeader.clickable { cursor: pointer; box-shadow: 0 1.5px 5px rgba(40, 120, 255, 0.08); position: relative; z-index: 1; }
+#wordHeader, #phonemeHeader {
+  background: #f3f7fa;
+  border: 1px solid #bbb;
+  padding: 18px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  perspective: 700px;
+  overflow: visible !important;
+  z-index: var(--lux-z-ui);
+}
+
+/* Clickable header backgrounds (NO scale on the TH to avoid blur seams) */
+#wordHeader.clickable {
+  cursor: pointer;
+  box-shadow: 0 1.5px 5px rgba(40, 120, 255, 0.08);
+}
 #wordHeader.clickable:hover,
 #wordHeader.clickable:focus {
-  background: #e0f2fd; color: #1662b0;
+  background: #e0f2fd;
+  color: #1662b0;
   box-shadow: 0 5px 24px rgba(20, 90, 220, 0.14), 0 1.5px 5px rgba(40, 120, 255, 0.08);
-  transform: scale(1.05);
+}
+
+/* Prevent any header-cell hover transform (stops clipping/weird seams) */
+#prettyResult th#wordHeader:hover,
+#prettyResult th#phonemeHeader:hover {
+  transform: none !important;
+  filter: none !important;
 }
 
 #wordHeader .word-chip:focus-visible { outline: 2.5px solid #1976d2; outline-offset: 2px; }
 #wordHeader .word-chip { display: inline-block; }
 
-/* Stop scaling the whole tooltip box on header hover */
-#prettyResult th#wordHeader:hover,
-#prettyResult th#phonemeHeader:hover { transform: none !important; filter: none !important; }
-
-/* Tooltip phoneme chip: match header-pill contract (lift+shadow hover, press active) */
-#prettyResult .tooltip .phoneme-chip {
-  display: inline-block;
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
-}
-#prettyResult .tooltip:hover .phoneme-chip {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.28);
-}
-#prettyResult .tooltip:active .phoneme-chip {
-  transform: translateY(0);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-/* Row phoneme chips: match header-pill contract (NO scale/brightness) */
+/* -----------------------------
+   Chip hover contract (lift + shadow only)
+------------------------------ */
+#prettyResult .tooltip .phoneme-chip,
 #prettyResult tbody .phoneme-chip[data-hydrated],
-#resultBody .phoneme-chip[data-hydrated] {
+#resultBody .phoneme-chip[data-hydrated],
+#prettyResult tbody a {
   display: inline-block;
   transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
-#prettyResult tbody .phoneme-chip[data-hydrated]:hover,
-#resultBody .phoneme-chip[data-hydrated]:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.28);
-}
-#prettyResult tbody .phoneme-chip[data-hydrated]:active,
-#resultBody .phoneme-chip[data-hydrated]:active {
-  transform: translateY(0);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
 
-/* Row word pills: lift + shadow only (NO darken) */
-#prettyResult tbody a {
-  transition: transform 140ms ease, box-shadow 140ms ease;
-}
+#prettyResult .tooltip:hover .phoneme-chip,
+#prettyResult tbody .phoneme-chip[data-hydrated]:hover,
+#resultBody .phoneme-chip[data-hydrated]:hover,
 #prettyResult tbody a:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.28);
 }
+
+#prettyResult .tooltip:active .phoneme-chip,
+#prettyResult tbody .phoneme-chip[data-hydrated]:active,
+#resultBody .phoneme-chip[data-hydrated]:active,
 #prettyResult tbody a:active {
   transform: translateY(0);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.20);
 }
 
-/* ============================================================
-   Previews & Popovers
-   ============================================================ */
+/* -----------------------------
+   Preview popovers
+------------------------------ */
 #ygPreview, #phPreview {
-  position: fixed; width: 560px; height: 390px; display: none; z-index: 9999;
-  border: 1px solid #ccc; border-radius: 6px; background: #000;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25); overflow: hidden;
-}
-#phPreview > video {
-  width: 100% !important; height: 100% !important; object-fit: contain !important;
-  background: #000; transform: scale(0.96); transform-origin: center center;
+  position: fixed;
+  width: 560px;
+  height: 390px;
+  display: none;
+  z-index: var(--lux-z-popover);
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #000;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
 }
 
-.word-chip.phoneme-chip {
-  display: inline-flex !important; align-items: center; gap: 4px;
-  white-space: nowrap; overflow: visible !important; min-width: 0; padding: 4px 12px;
+#phPreview > video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  background: #000;
+  transform: scale(0.96);
+  transform-origin: center center;
 }
+
+/* Header phoneme pill sometimes uses both classes */
+.word-chip.phoneme-chip {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  overflow: visible !important;
+  min-width: 0;
+  padding: 4px 12px;
+}
+
 #phonemeHeader { max-width: none; min-width: 150px; }
 
-/* ============================================================
-   UNIFIED "GHOST EMOJI" LOGIC (Word + Phoneme)
-   ============================================================ */
-
+/* -----------------------------
+   Unified “ghost emoji” speaker logic
+------------------------------ */
 #wordHeader .word-chip,
 #phonemeHeader .phoneme-chip {
   position: relative !important;
@@ -244,11 +321,11 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   content: "🔊";
   position: absolute;
   left: 50%;
-  top: -14px;
+  top: -16px;
   transform: translateX(-50%) scale(1);
   font-size: 1.1em;
   color: #205080;
-  opacity: 0; /* Hidden by default */
+  opacity: 0;
   pointer-events: none;
   transition: opacity 0.18s, transform 0.25s;
 }
@@ -272,17 +349,18 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
 
 @keyframes wordAudioPulse {
   from { transform: translateX(-50%) scale(1); }
-  to { transform: translateX(-50%) scale(1.17) translateY(-1px); }
+  to   { transform: translateX(-50%) scale(1.17) translateY(-1px); }
 }
+
 @keyframes wordAudioNudge {
-  0% { transform: translateX(-50%) scale(1) rotate(0deg); }
-  25% { transform: translateX(-50%) scale(1.25) rotate(-10deg); }
-  50% { transform: translateX(-50%) scale(1) rotate(0deg); }
-  75% { transform: translateX(-50%) scale(1.2) rotate(8deg); }
+  0%   { transform: translateX(-50%) scale(1) rotate(0deg); }
+  25%  { transform: translateX(-50%) scale(1.25) rotate(-10deg); }
+  50%  { transform: translateX(-50%) scale(1) rotate(0deg); }
+  75%  { transform: translateX(-50%) scale(1.2) rotate(8deg); }
   100% { transform: translateX(-50%) scale(1.05) rotate(0deg); }
 }
 
-/* Tooltip playing state: NO brightness/scale; pulse box-shadow only */
+/* Tooltip playing state: pulse box-shadow only */
 #prettyResult .tooltip.is-playing {
   animation: pulseGlow 1s ease-in-out infinite alternate;
 }
@@ -291,19 +369,72 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   to   { box-shadow: 0 0 12px rgba(30, 144, 255, 0.55); }
 }
 
-/* ============================================================
-   Prosody Ribbons & Legend
-   ============================================================ */
+/* Tap flash: box-shadow only */
+#resultBody .phoneme-chip.tap-flash { animation: chipTap .22s ease-out 1; }
+@keyframes chipTap {
+  0%   { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); }
+  50%  { box-shadow: 0 0 0 6px rgba(64, 156, 255, .28); }
+  100% { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); }
+}
+
+/* -----------------------------
+   Prosody ribbons + legend
+------------------------------ */
 .prosody-ribbon { display: inline-flex; align-items: center; gap: 4px; margin-right: 8px; }
 .pr-seg { display: inline-block; height: 8px; border-radius: 3px; transition: transform 0.15s ease, filter 0.15s ease; }
 .pr-seg:hover { transform: scaleY(1.35); filter: brightness(0.9); }
 
-#prettyResult .results-flex { display: flex; align-items: flex-start; gap: 16px; width: 100%; }
+#prettyResult .results-flex {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
+  position: relative;
+}
+
 #prettyResult .results-flex > table.score-table { flex: 1 1 auto; min-width: 420px; }
 
+/* Side legend panel (collapsed by default; opens via .legend-open) */
+#prosodyLegend {
+  overflow: hidden;
+  width: 0 !important;
+  min-width: 0 !important;
+  flex: 0 0 0 !important;
+  height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  opacity: 0;
+  transform: translateX(-10px);
+  transition:
+    width .28s ease,
+    flex-basis .28s ease,
+    opacity .28s ease,
+    transform .28s ease,
+    padding .28s ease,
+    margin .28s ease;
+}
+
+.results-flex.legend-open #prosodyLegend {
+  width: 280px !important;
+  min-width: 280px !important;
+  flex: 0 0 280px !important;
+  height: auto !important;
+  padding-right: 10px !important;
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.results-flex.legend-open { gap: 12px; }
+
 .prosody-legend {
-  margin: 8px auto 12px; max-width: 950px; padding: 8px 10px; border-radius: 10px;
-  background: #f7fbff; border: 1px solid #d9ebff; color: #234;
+  margin: 8px auto 12px;
+  max-width: 950px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #f7fbff;
+  border: 1px solid #d9ebff;
+  color: #234;
 }
 .prosody-legend .legend-row { display: flex; flex-wrap: wrap; gap: 14px 18px; align-items: center; margin-bottom: 6px; }
 .prosody-legend .sample {
@@ -314,165 +445,111 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
 .prosody-legend .label { font-weight: 600; color: #355; }
 .prosody-legend .note { font-size: 0.95em; color: #556; }
 
-#prettyResult .prosody-legend--side {
-  margin: 0; max-width: 260px; width: 260px; flex: 0 0 260px; position: sticky; top: 8px;
-}
-
-@media (max-width: 900px) {
-  #prettyResult .results-flex { flex-direction: column; }
-  #prettyResult .prosody-legend--side { position: static; width: 100%; max-width: 100%; margin: 8px 0 12px; }
-  #prettyResult .results-flex > table.score-table { min-width: 0; }
-}
-
-/* ============================================================
-   OLD AI Panel Styles (Legacy support)
-   ============================================================ */
-/* We target :not(.ai-grid-container) to avoid conflicts */
-#aiFeedback:not(.ai-grid-container) {
-  background: #eef7fe; padding: 1.1em 1em; border: 1px solid #c9e2ff; border-radius: 1em;
-  margin-top: 12px;
-  font-size: 1.14em; line-height: 1.68; color: #223; box-shadow: 0 2px 16px rgba(60, 90, 155, 0.06);
-}
-#aiFeedback h2, #aiFeedback h3, #aiFeedback strong {
-  color: #096; display: block; margin-top: 0.7em; margin-bottom: 0.25em; font-size: 1.1em;
-  position: relative; overflow: hidden;
-}
-#aiFeedback h2::after, #aiFeedback h3::after, #aiFeedback strong::after {
-  content: ""; position: absolute; bottom: 0; left: 0; height: 2px; width: 100%;
-  background: currentColor; transform: scaleX(0); transform-origin: left; transition: transform 1.5s ease;
-}
-.underline-start::after { transform: scaleX(1); }
-
-#aiFeedback ul { margin: 0.2em 0 1em 1.5em; padding: 0; list-style: disc inside; }
-#aiFeedback li { margin: 0.14em 0; }
-#aiFeedback em { color: #296aac; }
-
-.ai-progress {
-  position: relative; height: 4px; margin-top: 8px; background: #cfe5ff; overflow: hidden; border-radius: 2px;
-}
-.ai-progress::before {
-  content: ""; position: absolute; inset: 0; width: 40%;
-  background: linear-gradient(90deg, #0078d7 0%, #44a8ff 50%, #0078d7 100%);
-  animation: aiLoad 1.2s linear infinite;
-}
-@keyframes aiLoad {
-  from { left: -40%; }
-  to { left: 100%; }
-}
-
-.toggle-en-btn {
-  margin: 0.5em 0; padding: 0.35em 1em; font-size: 0.97em; cursor: pointer;
-  background: #f6f6f6; border: 1px solid #ddd; border-radius: 6px; font-weight: 600; color: #222;
-  transition: background 0.18s;
-}
-.toggle-en-btn:hover { background: #e0e0e0; }
-
-#prettyResult {
-  overflow-x: auto; overflow-y: visible !important; overflow: visible !important;
-  max-height: none !important; height: auto !important;
-  padding-bottom: 4px;
-}
-
-/* ============================================================
-   Cue Styles
-   ============================================================ */
-#prosodyLegend {
-  overflow: hidden;
-  width: 0 !important;
-  min-width: 0 !important;
-  flex: 0 0 0 !important;
-  height: 0 !important;
-  padding: 0 !important; margin: 0 !important; border: 0 !important; opacity: 0;
-  transform: translateX(-10px);
-  transition: width .28s ease, flex-basis .28s ease, opacity .28s ease, transform .28s ease, padding .28s ease, margin .28s ease;
-}
-
-.results-flex.legend-open #prosodyLegend {
-  width: 280px !important;
-  min-width: 280px !important;
-  flex: 0 0 280px !important;
-  height: auto !important;
-  padding-right: 10px !important; margin-right: 0 !important; border-left: 0 !important;
-  opacity: 1; transform: translateX(0);
-}
-
-.results-flex.legend-open { gap: 12px; }
-
+/* Legend toggle cue */
 #prosodyLegendToggle { position: relative; isolation: isolate; cursor: pointer; }
 #prosodyLegendToggle.cue-legend::after {
-  content: ""; position: absolute; left: 50%; top: 50%; width: 22px; height: 22px;
-  margin: -11px 0 0 -11px; border-radius: 50%;
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  border-radius: 50%;
   border: 2px solid rgba(0, 120, 215, .55);
-  animation: legendPing 1.6s ease-out infinite; pointer-events: none;
+  animation: legendPing 1.6s ease-out infinite;
+  pointer-events: none;
 }
 @keyframes legendPing {
   0% { transform: scale(.7); opacity: .9; }
   70%, 100% { transform: scale(1.9); opacity: 0; }
 }
 
+/* Peek handle */
 #legendPeek {
-  position: absolute; top: 44px; width: 12px; height: 40px;
-  border-radius: 8px 0 0 8px; background: linear-gradient(180deg, #9fd2ff, #0078d7);
+  position: absolute;
+  top: 44px;
+  width: 12px;
+  height: 40px;
+  border-radius: 8px 0 0 8px;
+  background: linear-gradient(180deg, #9fd2ff, #0078d7);
   box-shadow: 0 3px 10px rgba(0, 0, 0, .22);
-  opacity: 0; transform: translateX(10px);
+  opacity: 0;
+  transform: translateX(10px);
   transition: opacity .24s ease, transform .24s ease;
-  pointer-events: auto; cursor: pointer; z-index: 6;
+  pointer-events: auto;
+  cursor: pointer;
+  z-index: calc(var(--lux-z-ui) + 6);
 }
 #legendPeek::after {
-  content: ""; position: absolute; inset: 0;
+  content: "";
+  position: absolute;
+  inset: 0;
   background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .95), rgba(255, 255, 255, 0));
-  background-size: 220% 100%; animation: legendLine 1.3s linear infinite; opacity: .5;
+  background-size: 220% 100%;
+  animation: legendLine 1.3s linear infinite;
+  opacity: .5;
 }
 @keyframes legendLine {
   from { background-position: 200% 0; }
-  to { background-position: 0% 0; }
+  to   { background-position: 0% 0; }
 }
 
 .results-flex.show-peek #legendPeek { opacity: .95; transform: translateX(0); }
 .results-flex.legend-open #legendPeek { display: none; }
 
+/* Prosody tooltip extra hint */
 .tip-ProsodyBars .tooltiptext { padding-bottom: 14px; }
 .tip-ProsodyBars .tooltiptext::before {
-  content: ""; position: absolute; left: 10px; right: 10px; bottom: 6px;
-  height: 2px; background: #ffffff66; border-radius: 2px;
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 6px;
+  height: 2px;
+  background: #ffffff66;
+  border-radius: 2px;
 }
 .tip-ProsodyBars .tooltiptext::after {
-  content: ""; position: absolute; bottom: 2px; right: -18px; width: 0; height: 0;
-  border-right: 10px solid #fff; border-top: 6px solid transparent; border-bottom: 6px solid transparent;
-  opacity: .9; animation: legendArrow 1.7s linear infinite;
+  content: "";
+  position: absolute;
+  bottom: 2px;
+  right: -18px;
+  width: 0;
+  height: 0;
+  border-right: 10px solid #fff;
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+  opacity: .9;
+  animation: legendArrow 1.7s linear infinite;
 }
 @keyframes legendArrow {
   from { right: -18px; }
-  to { right: calc(100% + 18px); }
+  to   { right: calc(100% + 18px); }
 }
 
-/* Tap flash: box-shadow only (NO scale transform) */
-#resultBody .phoneme-chip.tap-flash { animation: chipTap .22s ease-out 1; }
-@keyframes chipTap {
-  0%   { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); }
-  50%  { box-shadow: 0 0 0 6px rgba(64, 156, 255, .28); }
-  100% { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); }
+/* Responsive legend layout */
+@media (max-width: 900px) {
+  #prettyResult .results-flex { flex-direction: column; }
+  #prettyResult .results-flex > table.score-table { min-width: 0; }
 }
 
-/* ============================================================
-   AI COACHING SIDEBAR LAYOUT (Polished)
-   ============================================================ */
-
-/* The Container (Grid) - overrides ID style via specificity/!important */
+/* -----------------------------
+   AI coaching grid (modern)
+------------------------------ */
 .ai-grid-container {
   display: grid;
-  grid-template-columns: 80px 1fr; /* Fixed sidebar width */
+  grid-template-columns: 80px 1fr;
   min-height: 220px;
   background: #fff;
   border-radius: 12px;
   border: 1px solid #c9e2ff;
   box-shadow: 0 2px 16px rgba(60, 90, 155, 0.06);
   margin-top: 25px;
-  overflow: hidden; /* Contains the sidebar background */
-  padding: 0 !important; /* Kill legacy padding */
+  overflow: hidden;
+  padding: 0 !important;
 }
 
-/* 1. The Sidebar (Left) */
 .ai-sidebar {
   background: #f1f5f9;
   border-right: 1px solid #cbd5e1;
@@ -494,7 +571,6 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   width: 100%;
 }
 
-/* Sidebar Buttons */
 .ai-voice-btn {
   appearance: none;
   border: 1px solid transparent;
@@ -515,16 +591,9 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   box-shadow: 0 1px 2px rgba(0,0,0,0.04);
 }
 
-.ai-voice-btn span:first-child {
-  font-size: 1.5rem;
-  line-height: 1;
-}
-.ai-voice-btn span:last-child {
-  font-size: 0.7rem;
-  font-weight: 700;
-}
+.ai-voice-btn span:first-child { font-size: 1.5rem; line-height: 1; }
+.ai-voice-btn span:last-child  { font-size: 0.7rem; font-weight: 700; }
 
-/* Hover State */
 .ai-voice-btn:hover {
   transform: translateY(-1px);
   border-color: #94a3b8;
@@ -532,15 +601,13 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   box-shadow: 0 4px 6px rgba(0,0,0,0.05);
 }
 
-/* Active Selected State */
 .ai-voice-btn.active {
   background: #fff;
-  border-color: #0078d7;
-  color: #0078d7;
-  box-shadow: 0 0 0 1px #0078d7 inset, 0 4px 8px rgba(0, 120, 215, 0.15);
+  border-color: var(--lux-blue);
+  color: var(--lux-blue);
+  box-shadow: 0 0 0 1px var(--lux-blue) inset, 0 4px 8px rgba(0, 120, 215, 0.15);
 }
 
-/* 2. The Content Area (Right) */
 .ai-content {
   padding: 20px;
   background: #fff;
@@ -548,7 +615,6 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   flex-direction: column;
 }
 
-/* Action Buttons (Quick / Deep) inside the content */
 .ai-action-btn {
   padding: 10px 18px;
   border-radius: 8px;
@@ -571,7 +637,7 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
 }
 
 .ai-action-btn.primary {
-  background: #0078d7;
+  background: var(--lux-blue);
   color: #fff;
   box-shadow: 0 2px 6px rgba(0, 120, 215, 0.25);
 }
@@ -581,18 +647,18 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   box-shadow: 0 4px 12px rgba(0, 120, 215, 0.35);
 }
 
-/* Mobile Responsive: Stack the sidebar on top */
+/* Mobile responsive: stack sidebar on top */
 @media (max-width: 550px) {
   .ai-grid-container {
-    grid-template-columns: 1fr; /* 1 column */
+    grid-template-columns: 1fr;
     grid-template-rows: auto auto;
   }
 
   .ai-sidebar {
-    flex-direction: row; /* Horizontal row of buttons */
+    flex-direction: row;
     border-right: none;
     border-bottom: 1px solid #cbd5e1;
-    overflow-x: auto; /* Scroll if too many personas */
+    overflow-x: auto;
     padding: 8px 12px;
   }
 
@@ -605,11 +671,87 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   .ai-voice-btn {
     width: auto;
     min-width: 70px;
-    flex-direction: row; /* Icon left of text */
+    flex-direction: row;
     padding: 6px 10px;
   }
 
-  .ai-voice-btn span:first-child {
-    font-size: 1.1rem;
-  }
+  .ai-voice-btn span:first-child { font-size: 1.1rem; }
 }
+
+/* -----------------------------
+   Legacy AI panel support
+------------------------------ */
+#aiFeedback:not(.ai-grid-container) {
+  background: #eef7fe;
+  padding: 1.1em 1em;
+  border: 1px solid #c9e2ff;
+  border-radius: 1em;
+  margin-top: 12px;
+  font-size: 1.14em;
+  line-height: 1.68;
+  color: #223;
+  box-shadow: 0 2px 16px rgba(60, 90, 155, 0.06);
+}
+
+#aiFeedback h2, #aiFeedback h3, #aiFeedback strong {
+  color: #096;
+  display: block;
+  margin-top: 0.7em;
+  margin-bottom: 0.25em;
+  font-size: 1.1em;
+  position: relative;
+  overflow: hidden;
+}
+
+#aiFeedback h2::after, #aiFeedback h3::after, #aiFeedback strong::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 1.5s ease;
+}
+.underline-start::after { transform: scaleX(1); }
+
+#aiFeedback ul { margin: 0.2em 0 1em 1.5em; padding: 0; list-style: disc inside; }
+#aiFeedback li { margin: 0.14em 0; }
+#aiFeedback em { color: #296aac; }
+
+.ai-progress {
+  position: relative;
+  height: 4px;
+  margin-top: 8px;
+  background: #cfe5ff;
+  overflow: hidden;
+  border-radius: 2px;
+}
+.ai-progress::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background: linear-gradient(90deg, #0078d7 0%, #44a8ff 50%, #0078d7 100%);
+  animation: aiLoad 1.2s linear infinite;
+}
+@keyframes aiLoad {
+  from { left: -40%; }
+  to   { left: 100%; }
+}
+
+.toggle-en-btn {
+  margin: 0.5em 0;
+  padding: 0.35em 1em;
+  font-size: 0.97em;
+  cursor: pointer;
+  background: #f6f6f6;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-weight: 600;
+  color: #222;
+  transition: background 0.18s;
+}
+.toggle-en-btn:hover { background: #e0e0e0; }
