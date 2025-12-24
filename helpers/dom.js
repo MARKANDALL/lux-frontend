@@ -56,21 +56,6 @@ export function showClickHint(targetEl, msg, { delay = 1000 } = {}) {
   }, delay + visibleMs);
 }
 
-export function initScoreErrorCollapse(
-  container = document.getElementById("prettyResult")
-) {
-  const box = container;
-  if (!box || box.dataset.collapseInit) return;
-  box.dataset.collapseInit = "yes";
-  box.addEventListener("click", (e) => {
-    const cell = e.target.closest("td,th");
-    const table = cell?.closest("table");
-    if (!cell || !table) return;
-    if (cell.cellIndex === 1) table.classList.toggle("collapsed-score");
-    else if (cell.cellIndex === 2) table.classList.toggle("collapsed-error");
-  });
-}
-
 /** Placeholder to avoid errors if somebody calls it. */
 export function keepTooltipInView(_el, _padding = 8) {
   console.warn("keepTooltipInView placeholder triggered");

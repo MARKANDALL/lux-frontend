@@ -12,7 +12,6 @@ export {
   bringInputToTop,
   initUnderlineObserver,
   showClickHint,
-  initScoreErrorCollapse,
   keepTooltipInView,
 } from "./dom.js";
 
