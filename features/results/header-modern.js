@@ -93,11 +93,11 @@ export function renderResultsHeaderModern(data) {
       <div style="margin-bottom: 12px; font-size: 1.1em;">
         <b>Your Results:</b><br>
         <div style="margin-top:8px; line-height: 2.2;">
-           ${renderChip("Prosody", prosody, "Prosody", rateStr)} | 
-           ${renderChip("Accuracy", accuracy, "Accuracy")} | 
-           ${renderChip("Fluency", fluency, "Fluency")} | 
-           ${renderChip("Completeness", completeness, "Completeness")} | 
-           ${renderChip("Pronunciation", overall, "Pronunciation")}
+            ${renderChip("Prosody", prosody, "Prosody", rateStr)} | 
+            ${renderChip("Accuracy", accuracy, "Accuracy")} | 
+            ${renderChip("Fluency", fluency, "Fluency")} | 
+            ${renderChip("Completeness", completeness, "Completeness")} | 
+            ${renderChip("Pronunciation", overall, "Pronunciation")}
         </div>
       </div>
 
@@ -107,23 +107,11 @@ export function renderResultsHeaderModern(data) {
       </div>
     </div>
 
-    <div class="results-flex" style="display:block; width:100%;">
+    <div class="results-flex">
       ${legendHtml}
 
-      <div class="table-scroll-container custom-scrollbar" 
-           style="
-             display: block; 
-             width: 100%; 
-             height: auto; 
-             max-height: 500px; 
-             overflow-y: auto; 
-             overflow-x: hidden; 
-             border: 1px solid #e2e8f0; 
-             border-radius: 8px; 
-             background: #fff;
-             flex: 0 1 auto; /* Prevent growing */
-           ">
-        <table class="score-table collapsed-score collapsed-error" style="border: none; margin: 0; width: 100%;">
+      <div class="table-scroll-container custom-scrollbar">
+        <table class="score-table collapsed-score collapsed-error">
           <thead style="position: sticky; top: 0; z-index: 20; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
             <tr>
               <th id="wordHeader">

@@ -5,7 +5,7 @@
    ============================================================================ */
 :root {
   /* --- 1. Z-INDEX TIER SCALE (The Peace Treaty) --- 
-     FIXED: Elevated Drawer tier to 900 to sit above the new Modal/Blue Box tier (800) */
+      FIXED: Elevated Drawer tier to 900 to sit above the new Modal/Blue Box tier (800) */
   --z-base: 1;
   --z-ui-low: 100;    /* Result pills, generic UI */
   --z-popover: 600;   /* Standard Tooltips */
@@ -104,7 +104,8 @@ button,
 #nextPartBtn {
   transition: background 0.15s, transform 0.18s ease, filter 0.18s ease;
 }
-button:hover:not(:disabled),
+/* EDITED: Added :not(.lux-col-toggle) to prevent conflict with rotation transforms */
+button:hover:not(:disabled):not(.lux-col-toggle),
 #nextPartBtn:hover:not(:disabled) {
   transform: scale(1.12);
   filter: brightness(0.85);
@@ -290,64 +291,7 @@ button:disabled {
    These are now correctly handled by features-1.css
    ============================================================ */
 
-#prettyResult table { transition: width 0.35s ease; }
-.toggle-col { cursor: pointer; user-select: none; transition: color 0.2s; }
-.toggle-col:hover { color: #0078d7; }
-
-#scoreHeader, #errorHeader { width: 34px; text-align: center; position: relative; cursor: pointer; user-select: none; }
-.toggle-col::after { content: "▸"; display: inline-block; transition: transform 0.35s ease; }
-
-#prettyResult table.collapsed-score td:nth-child(2),
-#prettyResult table.collapsed-score th#scoreHeader,
-#prettyResult table.collapsed-error td:nth-child(3),
-#prettyResult table.collapsed-error th#errorHeader {
-  max-width: 70px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
-}
-#prettyResult table.collapsed-score td:nth-child(2),
-#prettyResult table.collapsed-error td:nth-child(3) {
-  width: 0; min-width: 0; max-width: 0; padding-left: 0; padding-right: 0; overflow: hidden; opacity: 0.15; pointer-events: none;
-}
-table:not(.collapsed-score) #scoreHeader::after,
-table:not(.collapsed-error) #errorHeader::after { transform: rotate(90deg); }
-table:not(.collapsed-score) td:nth-child(2),
-table:not(.collapsed-error) td:nth-child(3) { width: 85px; opacity: 1; pointer-events: auto; }
-
-#wordHeader {
-  background: #f3f7fa;
-  border: 1px solid #bbb;
-  padding: 18px 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-  perspective: 700px;
-  overflow: visible;
-  z-index: 5;
-}
-#wordHeader.clickable { cursor: pointer; box-shadow: 0 1.5px 5px rgba(40, 120, 255, 0.08); position: relative; z-index: 1; }
-#wordHeader.clickable:hover,
-#wordHeader.clickable:focus {
-  background: #e0f2fd; color: #1662b0; box-shadow: 0 5px 24px rgba(20, 90, 220, 0.14), 0 1.5px 5px rgba(40, 120, 255, 0.08); transform: scale(1.05);
-}
-
-#prettyResult th#wordHeader:hover,
-#prettyResult th#phonemeHeader:hover { transform: none !important; filter: none !important; }
-#prettyResult .tooltip .phoneme-chip { display: inline-block; transition: transform 0.18s ease, filter 0.18s ease; }
-#prettyResult .tooltip:hover .phoneme-chip { transform: scale(1.12); filter: brightness(0.85); }
-#prettyResult .score-table td:nth-child(4), #prettyResult .score-table th:nth-child(4) { overflow: visible !important; }
-
-#prettyResult .pr-gap.ok { background: #d1fae5; }
-#prettyResult .pr-gap.missing { background: #fde68a; }
-#prettyResult .pr-gap.unexpected { background: #fecaca; }
-#prettyResult .pr-tempo.ok { background: #dbeafe; }
-#prettyResult .pr-tempo.fast { background: #fca5a5; }
-#prettyResult .pr-tempo.slow { background: #fcd34d; }
-#prettyResult .pr-seg.fast,
-#prettyResult .pr-seg.slow,
-#prettyResult .pr-seg.missing,
-#prettyResult .pr-seg.unexpected {
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08) inset;
-}
+/* Duplicate results-collapse block removed as requested */
 
 /* ============================================================
    Global Interactive Depth Effect (Generic)

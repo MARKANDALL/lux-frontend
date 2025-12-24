@@ -17,36 +17,258 @@
   --lux-z-ui: 100;
   --lux-z-popover: 9999;
 
-  --col-stub: 30px;         /* collapsed header stub width */
-  --score-open-w: 110px;    /* open score/error width */
-  --score-open-min: 80px;
-  --score-open-max: 160px;
+  /* Change 1: Replace open width variables with percentage-based logic */
+  --w-word: 28%;
+  --w-score: 12%;
+  --w-error: 14%;
+  --w-phoneme: 46%;
+  --col-stub: 30px;
+  --col-stub-score: 26px;
+}
+
+/* Edit C: Modern scroll container (Vertical Only) */
+#prettyResult .table-scroll-container {
+  display: block;
+  width: 100%;
+  max-height: 500px;
+  overflow-y: auto;
+  overflow-x: hidden; /* never sideways */
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  box-sizing: border-box;
+  /* Maintain flex-child behavior for parent .results-flex */
+  flex: 1 1 auto;
+  min-width: 0;
+  transition: max-height 0.35s ease;
 }
 
 #prettyResult {
-  overflow-x: auto;
+  overflow-x: visible;
   overflow-y: visible !important;
   max-height: none !important;
   height: auto !important;
   padding-bottom: 4px;
 }
 
-/* Table layout */
-#prettyResult table {
-  width: 100%;
+/* Change 2: Open-state widths become percent-based (Always fit table to container) */
+#prettyResult table.score-table {
+  width: 100% !important;
   table-layout: fixed;
+  margin: 0 !important;
+  border: none;
   border-collapse: collapse;
+  border-spacing: 0 !important;
   transition: width 0.35s ease;
+  height: auto;
 }
 
-#prettyResult table th,
-#prettyResult table td {
+/* Change 4: Force wrapping and prevent inflation of scrollWidth */
+#prettyResult table.score-table th,
+#prettyResult table.score-table td {
+  min-width: 0 !important; /* critical for allowing shrink/wrap */
+  overflow: hidden; /* prevents children from inflating scrollWidth */
   transition:
     width 0.35s ease,
     min-width 0.35s ease,
     max-width 0.35s ease,
     padding 0.35s ease,
     opacity 0.20s ease;
+}
+
+/* Change 4: Word cell: allow wrapping too */
+#prettyResult table.score-table td:nth-child(1) {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* ============================================================
+   MODEL B (No horizontal scroll): Word | Score | Error | Phoneme
+   Goals:
+   - table width is always 100%
+   - collapsed columns never affect row height
+   - stubs are fixed px; open columns take remaining space
+   ============================================================ */
+
+/* Scroll container: Y scroll only, never X */
+#prettyResult .table-scroll-container {
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 500px;
+  transition: max-height 0.35s ease;
+}
+
+/* All-collapsed accordion line */
+#prettyResult .table-scroll-container.results-all-collapsed {
+  max-height: 16px !important;
+  height: 16px;
+  overflow: hidden !important;
+  cursor: pointer;
+  position: relative;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+}
+#prettyResult .table-scroll-container.results-all-collapsed::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 50%;
+  height: 4px;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  background: rgba(0,0,0,0.12);
+}
+#prettyResult .table-scroll-container.results-all-collapsed::after {
+  content: "Results (click to expand)";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 12px;
+  color: rgba(0,0,0,0.45);
+  pointer-events: none;
+}
+
+/* Keep table alive (DON’T display:none). We'll hide it visually in all-collapsed */
+#prettyResult table.score-table {
+  width: 100% !important;
+  table-layout: fixed;
+  border-collapse: collapse;
+  border-spacing: 0 !important;
+  margin: 0 !important;
+}
+
+/* Force true table cells (prevents flex weirdness inside table layout) */
+#prettyResult table.score-table th,
+#prettyResult table.score-table td {
+  display: table-cell !important;
+  box-sizing: border-box;
+  vertical-align: middle;
+  overflow: hidden; /* helps, but does NOT solve row height alone */
+}
+
+/* ---- Width engine (CSS-only) ---- */
+#prettyResult table.score-table {
+  --stub-mini: 26px;   /* score/error collapsed stub */
+  --stub-major: 30px;  /* word/phoneme collapsed stub */
+
+  /* open widths for compact columns */
+  --score-open: 70px;
+  --error-open: 140px;
+
+  /* default (open) */
+  --scoreW: var(--score-open);
+  --errorW: var(--error-open);
+
+  /* major stubs default to 0 unless collapsed */
+  --wordStubW: 0px;
+  --phonemeStubW: 0px;
+
+  /* remaining width for major columns */
+  --majorW: calc(100% - (var(--scoreW) + var(--errorW) + var(--wordStubW) + var(--phonemeStubW)));
+
+  /* default split when both majors open */
+  --w-word: calc(var(--majorW) * 0.40);
+  --w-phoneme: calc(var(--majorW) * 0.60);
+}
+
+#prettyResult table.score-table.collapsed-score  { --scoreW: var(--stub-mini); }
+#prettyResult table.score-table.collapsed-error  { --errorW: var(--stub-mini); }
+#prettyResult table.score-table.collapsed-word   { --wordStubW: var(--stub-major); }
+#prettyResult table.score-table.collapsed-phoneme{ --phonemeStubW: var(--stub-major); }
+
+/* If only one major is open, it gets ALL remaining width */
+#prettyResult table.score-table:not(.collapsed-word).collapsed-phoneme {
+  --w-word: var(--majorW);
+  --w-phoneme: var(--stub-major);
+}
+#prettyResult table.score-table.collapsed-word:not(.collapsed-phoneme) {
+  --w-word: var(--stub-major);
+  --w-phoneme: var(--majorW);
+}
+#prettyResult table.score-table.collapsed-word.collapsed-phoneme {
+  --w-word: var(--stub-major);
+  --w-phoneme: var(--stub-major);
+}
+
+/* Apply widths by column index */
+#prettyResult table.score-table th:nth-child(1),
+#prettyResult table.score-table td:nth-child(1) { width: var(--w-word); }
+
+#prettyResult table.score-table th:nth-child(2),
+#prettyResult table.score-table td:nth-child(2) { width: var(--scoreW); }
+
+#prettyResult table.score-table th:nth-child(3),
+#prettyResult table.score-table td:nth-child(3) { width: var(--errorW); }
+
+#prettyResult table.score-table th:nth-child(4),
+#prettyResult table.score-table td:nth-child(4) { width: var(--w-phoneme); }
+
+/* ---- Collapse behavior: remove padding + STOP content from inflating rows ---- */
+#prettyResult table.score-table.collapsed-score th:nth-child(2),
+#prettyResult table.score-table.collapsed-score td:nth-child(2),
+#prettyResult table.score-table.collapsed-error th:nth-child(3),
+#prettyResult table.score-table.collapsed-error td:nth-child(3),
+#prettyResult table.score-table.collapsed-word th:nth-child(1),
+#prettyResult table.score-table.collapsed-word td:nth-child(1),
+#prettyResult table.score-table.collapsed-phoneme th:nth-child(4),
+#prettyResult table.score-table.collapsed-phoneme td:nth-child(4) {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* CRITICAL FIX: hide score/error BODY content so it CANNOT wrap vertically */
+#prettyResult table.score-table.collapsed-score td:nth-child(2),
+#prettyResult table.score-table.collapsed-error td:nth-child(3) {
+  font-size: 0 !important;
+  line-height: 0 !important;
+  color: transparent !important;
+}
+
+/* Optional: also hide word/phoneme body content when collapsed */
+#prettyResult table.score-table.collapsed-word td:nth-child(1),
+#prettyResult table.score-table.collapsed-phoneme td:nth-child(4) {
+  font-size: 0 !important;
+  line-height: 0 !important;
+  color: transparent !important;
+}
+
+/* Header ghost hints as OVERLAY (doesn't affect layout) */
+#prettyResult table.score-table.collapsed-score th:nth-child(2),
+#prettyResult table.score-table.collapsed-error th:nth-child(3) {
+  position: relative;
+}
+
+#prettyResult table.score-table.collapsed-score th:nth-child(2)::after {
+  content: "S";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: rgba(0,0,0,0.22);
+  pointer-events: none;
+}
+
+#prettyResult table.score-table.collapsed-error th:nth-child(3)::after {
+  content: "E";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: rgba(0,0,0,0.22);
+  pointer-events: none;
+}
+
+/* In all-collapsed mode, hide the table visually but keep it in DOM */
+#prettyResult .table-scroll-container.results-all-collapsed table.score-table {
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* -----------------------------
@@ -70,42 +292,17 @@ table:not(.collapsed-error) #errorHeader::after { transform: rotate(90deg); }
 table:not(.collapsed-score) th#scoreHeader::after,
 table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
 
-/* Collapsed header stubs */
+/* Change 3: Keep collapse stubs as pixels (consistent variables) */
 #prettyResult table.collapsed-score th#scoreHeader,
 #prettyResult table.collapsed-error th#errorHeader {
-  width: 26px !important;
-  min-width: 26px !important;
-  max-width: 26px !important;
+  width: var(--col-stub-score) !important;
+  min-width: var(--col-stub-score) !important;
+  max-width: var(--col-stub-score) !important;
   padding-left: 0 !important;
   padding-right: 0 !important;
   opacity: 0.25;
   pointer-events: auto !important;
   cursor: pointer;
-}
-
-/* Collapsed body cells */
-#prettyResult table.collapsed-score td:nth-child(2),
-#prettyResult table.collapsed-error td:nth-child(3) {
-  width: 0 !important;
-  min-width: 0 !important;
-  max-width: 0 !important;
-  padding: 0 !important;
-  overflow: hidden !important;
-  opacity: 0.15;
-  pointer-events: none;
-}
-
-/* Open states */
-#prettyResult table:not(.collapsed-score) th#scoreHeader,
-#prettyResult table:not(.collapsed-score) td:nth-child(2),
-#prettyResult table:not(.collapsed-error) th#errorHeader,
-#prettyResult table:not(.collapsed-error) td:nth-child(3) {
-  width: var(--score-open-w);
-  min-width: var(--score-open-min);
-  max-width: var(--score-open-max);
-  padding-left: 10px;
-  padding-right: 10px;
-  opacity: 1;
 }
 
 #prettyResult .score-table td:nth-child(2),
@@ -117,7 +314,9 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
 ------------------------------ */
 #prettyResult .lux-col-toggle {
   position: absolute;
-  top: 6px;
+  /* EDITED: Centered vertically */
+  top: 50%;
+  margin-top: -9px; /* half of 18px height */
   width: 18px;
   height: 18px;
   border-radius: 4px;
@@ -137,7 +336,12 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   transition: transform 0.3s ease, background 0.15s ease;
 }
 
-#prettyResult .lux-col-toggle:hover { background: #e2e8f0; }
+#prettyResult .lux-col-toggle:hover,
+#prettyResult .lux-col-toggle:active {
+  transform: none !important;
+  background: #e2e8f0;
+}
+
 #prettyResult .lux-col-toggle:focus-visible { outline: 2px solid #1976d2; outline-offset: 2px; }
 
 /* Mirror placement */
@@ -154,7 +358,7 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
    Word / Phoneme collapse behavior
 ------------------------------ */
 
-/* Collapsed header stubs (keep button clickable) */
+/* Change 3: Keep collapse stubs as pixels (consistent variables) */
 #prettyResult table.collapsed-word th#wordHeader,
 #prettyResult table.collapsed-phoneme th#phonemeHeader {
   width: var(--col-stub) !important;
@@ -167,28 +371,28 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   transform: none !important;
 }
 
-/* Collapsed body cells (actual shrink, no shifting) */
-#prettyResult table.collapsed-word td:nth-child(1),
-#prettyResult table.collapsed-phoneme td:nth-child(4) {
-  width: 0 !important;
+/* Layout collapse for header contents to prevent ghost width */
+#prettyResult table.collapsed-word th#wordHeader,
+#prettyResult table.collapsed-phoneme th#phonemeHeader {
+  overflow: hidden !important;
+}
+#prettyResult table.collapsed-word th#wordHeader > :not(button.lux-col-toggle),
+#prettyResult table.collapsed-phoneme th#phonemeHeader > :not(button.lux-col-toggle) {
+  opacity: 0 !important;
+  pointer-events: none !important;
   min-width: 0 !important;
   max-width: 0 !important;
+  margin: 0 !important;
   padding: 0 !important;
   overflow: hidden !important;
-  opacity: 0;
-  pointer-events: none;
-  transform: none !important;
+  flex: 0 0 0 !important;
+  transition: opacity 0.20s ease;
 }
 
-/* ZOOM FIX: Use opacity/scale instead of display:none to allow transitions */
-#prettyResult table.collapsed-word th#wordHeader .word-chip,
-#prettyResult table.collapsed-phoneme th#phonemeHeader .phoneme-chip,
-#prettyResult table.collapsed-phoneme th#phonemeHeader .tooltip { 
-  opacity: 0 !important;
-  transform: scale(0.4) !important;
-  pointer-events: none !important;
-  transition: opacity 0.25s ease, transform 0.25s ease;
-}
+/* Edit E: Inward transform origins for collapse behavior */
+#prettyResult th#wordHeader .word-chip { transform-origin: right center; }
+#prettyResult th#phonemeHeader .phoneme-chip,
+#prettyResult th#phonemeHeader .tooltip { transform-origin: left center; }
 
 /* -----------------------------
    Header cells + pills
@@ -209,6 +413,8 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   background: #f3f7fa;
   border: 1px solid #bbb;
   padding: 18px 0;
+  padding-left: 28px !important;  /* Added room for toggle buttons */
+  padding-right: 28px !important; /* Added room for toggle buttons */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -216,6 +422,18 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   perspective: 700px;
   overflow: visible !important;
   z-index: var(--lux-z-ui);
+  /* Change 5: Prevent header text from pushing wider than own column */
+  min-width: 0 !important;
+}
+
+/* Change 5: Prevent header pills from feeling bigger than column */
+#wordHeader .word-chip, #phonemeHeader .phoneme-chip {
+  display: inline-block;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  max-width: calc(100% - 52px); /* leaves room for toggle + padding */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 #wordHeader.clickable {
@@ -236,7 +454,6 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
 }
 
 #wordHeader .word-chip:focus-visible { outline: 2.5px solid #1976d2; outline-offset: 2px; }
-#wordHeader .word-chip { display: inline-block; transition: opacity 0.25s ease, transform 0.25s ease; }
 
 /* -----------------------------
    Chip hover contract (lift + shadow only)
@@ -299,8 +516,6 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   min-width: 0;
   padding: 4px 12px;
 }
-
-#phonemeHeader { max-width: none; min-width: 150px; }
 
 /* -----------------------------
    Unified “ghost emoji” speaker logic
@@ -389,7 +604,11 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   position: relative;
 }
 
-#prettyResult .results-flex > table.score-table { flex: 1 1 auto; min-width: 420px; }
+/* The scroll container is the flex child, not the table */
+#prettyResult .results-flex .table-scroll-container {
+  flex: 1 1 auto;
+  min-width: 0; /* CRITICAL in flex layouts so overflow-x works correctly */
+}
 
 #prosodyLegend {
   overflow: hidden;
