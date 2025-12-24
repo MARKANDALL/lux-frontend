@@ -46,7 +46,7 @@ function startTypewriter() {
 
   const phrases = [
     "Paste or type everything you’ll read here...",
-    "Try the Rainbow Passage to test all phonemes...",
+    "Try the Rainbow Passage to test all phonemes (sounds)...",
     "Focus on difficult words you struggle with...",
     "Select a passage from the menu above...",
     "Practice your elevator pitch...",
@@ -63,7 +63,12 @@ function startTypewriter() {
     "Read a news headline...",
     "Practice explaining a complex idea simple...",
     "Work on your 'R' and 'L' sounds...",
-    "Slow down and enunciate every syllable..."
+    "Slow down and enunciate every syllable...",
+    "Audio note: “Schedule a sales demo for 10am”",
+    "Phone message: “Hi, this is Mark — please call me back”",
+    "Interview intro: “Thanks for having me…”",
+    "Tricky phrase: “third thorough thought”",
+    "Speech closer: “In short, here’s why…”"
   ];
   
   let i = 0;

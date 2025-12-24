@@ -183,30 +183,6 @@ function setupOverlayControls(overlay) {
   });
 }
 
-/* --------------- Cooperative placeholder sample rotator ------------------ */
-// Note: this stops automatically the moment your real typewriter attaches.
-function installCooperativeRotator() {
-  const ph = $("#typewriterMsg");
-  if (!ph || ph.dataset.typingAttached === "true") return;
-
-  const examples = [
-    "Audio note: “Schedule a sales demo for 10am”",
-    "Phone message: “Hi, this is Mark — please call me back”",
-    "Interview intro: “Thanks for having me…”",
-    "Tricky phrase: “third thorough thought”",
-    "Speech closer: “In short, here’s why…”",
-  ];
-  let i = 0;
-  const timer = setInterval(() => {
-    if (ph.dataset.typingAttached === "true") {
-      clearInterval(timer);
-      return;
-    }
-    if (ph.offsetParent !== null)
-      ph.textContent = examples[i++ % examples.length];
-  }, 2400);
-}
-
 /* ------------------------------- Public API ------------------------------ */
 let didInit = false;
 export function initOnboarding() {
@@ -216,7 +192,6 @@ export function initOnboarding() {
   hydrateUidAndLinks();
   // ensureUserMsgVisible(); // <--- DISABLED: Let boot.js handle the timing
   installPlaceholderFade();
-  installCooperativeRotator();
 
   const overlay = $("#onboardingOverlay");
   if (overlay) setupOverlayControls(overlay);
