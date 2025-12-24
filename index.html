@@ -146,6 +146,58 @@
       </div>
     </div>
 
+    <!-- Onboarding overlay (required by ui/ui-shell-onboarding.js) -->
+    <div id="onboardingOverlay" class="ob-hidden" aria-hidden="true">
+      <div class="ob-backdrop"></div>
+
+      <div class="ob-card" role="dialog" aria-modal="true" aria-label="Welcome">
+        <button id="obCloseBtn" class="ob-close" type="button" aria-label="Close">×</button>
+
+        <section class="ob-slide">
+          <h2>Welcome</h2>
+          <div class="ob-body">
+            <p class="ob-note">Quick tour to get you started.</p>
+          </div>
+        </section>
+
+        <section class="ob-slide ob-hidden">
+          <h2>Microphone</h2>
+          <div class="ob-body">
+            <button id="obEnableMic" class="ob-cta ob-cta--secondary" type="button">Enable Mic</button>
+            <div id="obMicStatus" class="ob-note" aria-live="polite"></div>
+          </div>
+        </section>
+
+        <section class="ob-slide ob-hidden">
+          <h2>Enter text</h2>
+          <div class="ob-body">
+            <button id="obFocusText" class="ob-cta ob-cta--secondary" type="button">Go to text box</button>
+          </div>
+        </section>
+
+        <section class="ob-slide ob-hidden">
+          <h2>Record</h2>
+          <div class="ob-body">
+            <button id="obStartRecording" class="ob-cta" type="button">Start recording</button>
+          </div>
+        </section>
+
+        <div class="ob-footer">
+          <button id="obPrev" class="ob-nav ob-nav--prev" type="button">Prev</button>
+
+          <div class="ob-dots">
+            <button class="ob-dot" type="button" data-go="1" aria-current="false"></button>
+            <button class="ob-dot" type="button" data-go="2" aria-current="false"></button>
+            <button class="ob-dot" type="button" data-go="3" aria-current="false"></button>
+            <button class="ob-dot" type="button" data-go="4" aria-current="false"></button>
+          </div>
+
+          <button id="obNext" class="ob-nav ob-nav--next" type="button">Next</button>
+          <button id="obDone" class="ob-cta ob-cta--secondary" type="button">Done</button>
+        </div>
+      </div>
+    </div>
+
     <div id="tts-controls" data-luxHidden="1"></div>
 
     <script type="module" src="./src/main.js"></script>
