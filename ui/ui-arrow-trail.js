@@ -365,9 +365,6 @@ export function initArrowTrail(opts = {}) {
 
     const len = Math.max(1, Math.hypot(dx, dy));
 
-    // Distance-based duration => "leaf drift" (slow)
-    const flyMs = clamp(flyMsBase + len * flyMsPerPx, flyMsMin, flyMsMax);
-
     // Perpendicular unit vector for swirly drift
     const px = (-dy / len);
     const py = (dx / len);
@@ -384,6 +381,19 @@ export function initArrowTrail(opts = {}) {
     const steps = 16; // more steps => smoother drift
     const freq = 2.1;
 
+    // --- NEW: per-launch randomness (subtle) ---
+    const rand = (min, max) => min + Math.random() * (max - min);
+
+    // Slightly vary the path each time
+    const freqJ = freq + rand(-0.35, 0.35);          // frequency jitter
+    const ampJ  = amp * rand(0.85, 1.15);            // amplitude jitter
+    const phase = rand(0, Math.PI * 2);              // phase offset
+    const floatJ = rand(6, 14);                      // float intensity
+    const gust = rand(0.85, 1.15);                   // duration wobble feel
+
+    // Distance-based duration => "leaf drift" (slow)
+    const flyMs = clamp((flyMsBase + len * flyMsPerPx) * gust, flyMsMin, flyMsMax);
+
     for (let i = 0; i <= steps; i++) {
       const t = i / steps;
 
@@ -391,10 +401,10 @@ export function initArrowTrail(opts = {}) {
       const decay = (1 - t);
 
       // Side-to-side drift (perpendicular)
-      const wobble = Math.sin((t * Math.PI * 2) * freq) * amp * decay;
+      const wobble = Math.sin((t * Math.PI * 2) * freqJ + phase) * ampJ * decay;
 
       // A tiny vertical float (feels like wind)
-      const float = Math.cos((t * Math.PI * 2) * (freq * 0.8)) * 10 * decay;
+      const float = Math.cos((t * Math.PI * 2) * (freqJ * 0.8) + phase * 0.6) * floatJ * decay;
 
       const x = dx * t + px * wobble;
       const y = dy * t + py * wobble + float;
@@ -412,7 +422,7 @@ export function initArrowTrail(opts = {}) {
 
     flyAnim = flyEl.animate(frames, {
       duration: flyMs,
-      easing: "linear",
+      easing: "ease-in-out",
       fill: "forwards"
     });
 
