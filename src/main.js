@@ -37,6 +37,9 @@ import { initDashboard } from '../features/dashboard/index.js';
 // Authentication (NEW)
 import { initAuthUI } from '../ui/auth-dom.js';
 
+// Arrow trail (NEW)
+import { initArrowTrail } from "../ui/ui-arrow-trail.js";
+
 // --- VISUALS: Typewriter Effect ---
 let typewriterTimeout; 
 
@@ -51,24 +54,25 @@ function startTypewriter() {
     "Select a passage from the menu above...",
     "Practice your elevator pitch...",
     "Rehearse your upcoming presentation script...",
+    "Tricky phrase: “third thorough thought”",
     "Read an email draft out loud to check the tone...",
     "Prepare for a job interview answer...",
     "Practice your Zoom meeting introduction...",
+    "Interview intro: “Thanks for having me...”",
     "Read your favorite poem aloud...",
     "Practice a movie monologue...",
+    "Phone message: “Hi, this is Mark — please call me back”",
     "Try a difficult tongue twister...",
     "Read a recipe instruction clearly...",
     "Tell a short story...",
     "Practice ordering coffee clearly...",
     "Read a news headline...",
+    "Audio note: “Schedule a sales demo for 10am”",
     "Practice explaining a complex idea simple...",
     "Work on your 'R' and 'L' sounds...",
     "Slow down and enunciate every syllable...",
-    "Audio note: “Schedule a sales demo for 10am”",
-    "Phone message: “Hi, this is Mark — please call me back”",
-    "Interview intro: “Thanks for having me…”",
-    "Tricky phrase: “third thorough thought”",
-    "Speech closer: “In short, here’s why…”"
+    "Go over exactly what you'll say when you propose...",
+    "Speech closer: “In short, here’s why...”"
   ];
   
   let i = 0;
@@ -177,6 +181,14 @@ async function bootApp() {
 
   // 6. Start Visuals
   startTypewriter();
+
+  // 6.5 Arrow trail (NEW)
+  initArrowTrail({
+    targetSelector: "aside.lux-tts-panel > button.lux-tts-tab",
+    autoRunMs: 7000,
+    autoRunOnce: true
+    // debug: true, // optional for 30 seconds
+  });
 
   setTimeout(() => {
     const msg = document.getElementById('userMsg');
