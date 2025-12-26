@@ -25,8 +25,10 @@ function ensurePanel() {
     // UPDATED: HTML structure to match Self Playback (Icon + Text)
     // Icon matches the "pull" direction (Left for a right-side panel)
     tab.innerHTML = `
-      <span class="lux-tts-tab-icon">◀</span>
-      <span class="lux-tts-tab-label">Text-to-Speech</span>
+      <span class="lux-tts-tab-inner">
+        <span class="lux-tts-tab-icon">◀</span>
+        <span class="lux-tts-tab-label">Text-to-Speech</span>
+      </span>
     `;
     tab.setAttribute("aria-expanded", "false");
     tab.setAttribute("aria-controls", "tts-controls");

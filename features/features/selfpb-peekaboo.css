@@ -114,6 +114,28 @@
   z-index: 2;
 }
 
+/* Keep label visible when the tab is “peeking” (panel closed) */
+.lux-sp-tab {
+  overflow: hidden; /* important for the inner slide */
+}
+
+.lux-sp-tab-inner{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  white-space: nowrap;
+  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: transform;
+}
+
+/* OPEN => centered */
+html.lux-sp-open .lux-sp-tab-inner { transform: translateX(0); }
+
+/* CLOSED => shift content toward the visible side (right side of the peeking tab) */
+html:not(.lux-sp-open) .lux-sp-tab-inner { transform: translateX(calc(42% - 10px)); }
+
 .lux-sp-tab:hover {
   background: var(--lux-sp-tab-bg-hover);
 }
@@ -145,4 +167,20 @@
 
 @media print {
   .lux-sp-panel, .lux-sp-tab { display: none !important; }
+}
+/* --- Arrow direction fix (Self Playback) --- */
+.lux-sp-tab-icon{
+  display: inline-block;
+  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: transform;
+}
+
+/* OPEN: arrow should point inward (left) */
+html.lux-sp-open .lux-sp-tab-icon{
+  transform: rotate(0deg) !important;     /* ◀ */
+}
+
+/* CLOSED: arrow should point outward (right) */
+html:not(.lux-sp-open) .lux-sp-tab-icon{
+  transform: rotate(180deg) !important;   /* ▶ */
 }

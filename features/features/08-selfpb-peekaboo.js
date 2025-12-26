@@ -35,8 +35,10 @@
 
     panel.innerHTML = `
       <button class="lux-sp-tab" type="button" aria-expanded="false" aria-controls="${HOST_ID}">
-        <span class="lux-sp-tab-label">Self Playback</span>
-        <span class="lux-sp-tab-icon">◀</span>
+        <span class="lux-sp-tab-inner">
+          <span class="lux-sp-tab-label">Self Playback</span>
+          <span class="lux-sp-tab-icon">◀</span>
+        </span>
       </button>
       <div class="lux-sp-body">
         <div id="sp-loading-placeholder" style="padding:20px; text-align:center; color:#666; display:none;">
