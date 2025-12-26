@@ -19,6 +19,16 @@
   --lux-sp-tab-ink: #fff;
 }
 
+:root{
+  --lux-drawer-dur: 440ms;
+  --lux-tab-dur: 420ms;
+  --lux-arrow-dur: 420ms;
+  --lux-arrow-delay: 90ms;
+
+  --lux-ease-drawer: cubic-bezier(0.18, 0.9, 0.2, 1);
+  --lux-ease-pop: cubic-bezier(0.18, 1.25, 0.2, 1);
+}
+
 /* ───────────────── Panel ───────────────── */
 .lux-sp-panel {
   position: fixed;
@@ -44,7 +54,7 @@
 
   /* Closed State: Tucked left, but leaving 'peek' pixels visible */
   transform: translate3d(calc(-100% + var(--lux-sp-tab-peek)), 0, 0);
-  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: transform var(--lux-drawer-dur) var(--lux-ease-drawer);
 }
 
 /* Open State */
@@ -126,15 +136,17 @@
   gap: 8px;
   width: 100%;
   white-space: nowrap;
-  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: transform var(--lux-tab-dur) var(--lux-ease-pop);
   will-change: transform;
+  box-sizing: border-box;
+  padding: 0 18px;            /* NEW: keeps icon/text away from hard edge */
 }
 
 /* OPEN => centered */
 html.lux-sp-open .lux-sp-tab-inner { transform: translateX(0); }
 
 /* CLOSED => shift content toward the visible side (right side of the peeking tab) */
-html:not(.lux-sp-open) .lux-sp-tab-inner { transform: translateX(calc(42% - 10px)); }
+html:not(.lux-sp-open) .lux-sp-tab-inner { transform: translateX(calc(44% - 22px)); }
 
 .lux-sp-tab:hover {
   background: var(--lux-sp-tab-bg-hover);
@@ -147,13 +159,34 @@ html:not(.lux-sp-open) .lux-sp-tab-inner { transform: translateX(calc(42% - 10px
 .lux-sp-tab-label {
   pointer-events: none;
 }
-.lux-sp-tab-icon {
+.lux-sp-tab-icon{
   display: inline-block;
-  transition: transform 0.25s ease;
+  will-change: transform;
+  transform-origin: 50% 50%;
 }
 
-.lux-sp-open .lux-sp-tab-icon {
+@keyframes luxSPArrowOpen {
+  0%   { transform: rotate(180deg); }
+  60%  { transform: rotate(-40deg); }  /* tiny overshoot */
+  100% { transform: rotate(0deg); }
+}
+@keyframes luxSPArrowClose {
+  0%   { transform: rotate(0deg); }
+  60%  { transform: rotate(220deg); }  /* tiny overshoot */
+  100% { transform: rotate(180deg); }
+}
+
+/* Left-side drawer:
+   CLOSED = ▶ (180deg), OPEN = ◀ (0deg) */
+html.lux-sp-open .lux-sp-tab-icon{
+  transform: rotate(0deg);
+  animation: luxSPArrowOpen var(--lux-arrow-dur) var(--lux-ease-pop) both;
+  animation-delay: var(--lux-arrow-delay);
+}
+html:not(.lux-sp-open) .lux-sp-tab-icon{
   transform: rotate(180deg);
+  animation: luxSPArrowClose var(--lux-arrow-dur) var(--lux-ease-pop) both;
+  animation-delay: var(--lux-arrow-delay);
 }
 
 @media (max-width: 560px) {
@@ -168,19 +201,13 @@ html:not(.lux-sp-open) .lux-sp-tab-inner { transform: translateX(calc(42% - 10px
 @media print {
   .lux-sp-panel, .lux-sp-tab { display: none !important; }
 }
-/* --- Arrow direction fix (Self Playback) --- */
-.lux-sp-tab-icon{
-  display: inline-block;
-  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
-  will-change: transform;
-}
 
-/* OPEN: arrow should point inward (left) */
-html.lux-sp-open .lux-sp-tab-icon{
-  transform: rotate(0deg) !important;     /* ◀ */
-}
-
-/* CLOSED: arrow should point outward (right) */
-html:not(.lux-sp-open) .lux-sp-tab-icon{
-  transform: rotate(180deg) !important;   /* ▶ */
+@media (prefers-reduced-motion: reduce){
+  .lux-tts-panel, .lux-sp-panel,
+  .lux-tts-tab-inner, .lux-sp-tab-inner{
+    transition: none !important;
+  }
+  .lux-tts-tab-icon, .lux-sp-tab-icon{
+    animation: none !important;
+  }
 }

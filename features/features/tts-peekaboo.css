@@ -19,6 +19,14 @@
   --lux-tts-tab-bg: #1082ff;
   --lux-tts-tab-bg-hover: #0d6ad1;
   --lux-tts-tab-ink: #ffffff;
+
+  --lux-drawer-dur: 440ms;
+  --lux-tab-dur: 420ms;
+  --lux-arrow-dur: 420ms;
+  --lux-arrow-delay: 90ms;
+
+  --lux-ease-drawer: cubic-bezier(0.18, 0.9, 0.2, 1);
+  --lux-ease-pop: cubic-bezier(0.18, 1.25, 0.2, 1);
 }
 
 /* ==========================================================================
@@ -40,7 +48,7 @@
   box-shadow: var(--lux-tts-shadow);
   overflow: hidden;
   transform: translate3d(110%, 0, 0);
-  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: transform var(--lux-drawer-dur) var(--lux-ease-drawer);
   will-change: transform;
 }
 
@@ -97,15 +105,47 @@
   gap: 8px;
   width: 100%;
   white-space: nowrap;
-  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: transform var(--lux-tab-dur) var(--lux-ease-pop);
   will-change: transform;
+  box-sizing: border-box;
+  padding: 0 18px;            /* NEW */
 }
 
 /* OPEN => centered */
 html.lux-tts-open .lux-tts-tab-inner { transform: translateX(0); }
 
 /* CLOSED => shift content toward the visible side (left side of the peeking tab) */
-html:not(.lux-tts-open) .lux-tts-tab-inner { transform: translateX(calc(-42% + 10px)); }
+html:not(.lux-tts-open) .lux-tts-tab-inner { transform: translateX(calc(-44% + 22px)); }
+
+.lux-tts-tab-icon{
+  display: inline-block;
+  will-change: transform;
+  transform-origin: 50% 50%;
+}
+
+@keyframes luxTTSArrowOpen {
+  0%   { transform: rotate(0deg); }
+  60%  { transform: rotate(220deg); }  /* tiny overshoot */
+  100% { transform: rotate(180deg); }
+}
+@keyframes luxTTSArrowClose {
+  0%   { transform: rotate(180deg); }
+  60%  { transform: rotate(-40deg); }  /* tiny overshoot */
+  100% { transform: rotate(0deg); }
+}
+
+/* Right-side drawer:
+   CLOSED = ◀ (0deg), OPEN = ▶ (180deg) */
+html.lux-tts-open .lux-tts-tab-icon{
+  transform: rotate(180deg);
+  animation: luxTTSArrowOpen var(--lux-arrow-dur) var(--lux-ease-pop) both;
+  animation-delay: var(--lux-arrow-delay);
+}
+html:not(.lux-tts-open) .lux-tts-tab-icon{
+  transform: rotate(0deg);
+  animation: luxTTSArrowClose var(--lux-arrow-dur) var(--lux-ease-pop) both;
+  animation-delay: var(--lux-arrow-delay);
+}
 
 .lux-tts-tab:hover,
 .lux-tts-tab:focus-visible {
@@ -138,6 +178,16 @@ html:not(.lux-tts-open) .lux-tts-tab-inner { transform: translateX(calc(-42% + 1
 }
 .lux-tts-tab.lux-tts-nudge {
   animation: luxTTSGlow 1.4s ease-in-out, luxTTSWiggle 0.7s ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce){
+  .lux-tts-panel, .lux-sp-panel,
+  .lux-tts-tab-inner, .lux-sp-tab-inner{
+    transition: none !important;
+  }
+  .lux-tts-tab-icon, .lux-sp-tab-icon{
+    animation: none !important;
+  }
 }
 
 /* Responsive */
