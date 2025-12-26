@@ -1,5 +1,24 @@
 /* features/balloon/balloon.css */
 
+/* Enable smooth animation of CSS variables (Chromium/Safari). */
+@property --scale {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 1;
+}
+
+@property --balloonL {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 25%;
+}
+
+@property --inflateDur {
+  syntax: "<time>";
+  inherits: true;
+  initial-value: 0.9s;
+}
+
 /* Container: Drifts BROADLY across the screen */
 #lux-balloon-wrapper {
   position: fixed;
@@ -15,50 +34,67 @@
     wanderX 7s ease-in-out infinite alternate,
     wanderY 5s ease-in-out infinite alternate;
   
-  transition: bottom 0.5s ease; 
+  transition: bottom var(--inflateDur) ease;
 }
 
-/* --- The Balloon (Sphere) --- */
+/* --- The Balloon (Outer = SCALE / inflate) --- */
 #lux-balloon {
-  /* Default Scale Variable (Modified by JS) */
   --scale: 1;
-  
+  --scale-prev: 1;
+  --inflateDur: 0.9s;
+
   width: 50px;
   height: 62px;
-  border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
-  
-  /* 3D Shading */
-  background: radial-gradient(circle at 35% 35%, 
-              rgba(255,255,255,0.8) 0%, 
-              rgba(255,255,255,0.2) 20%, 
-              transparent 50%);
-              
-  box-shadow: 
-    inset -5px -5px 15px rgba(0,0,0,0.4), 
-    inset 2px 2px 5px rgba(255,255,255,0.4), 
-    2px 8px 15px rgba(0,0,0,0.3); 
-    
+
   pointer-events: auto;
-  
+
   /* CURSOR: Tack 📌 */
   cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' style='font-size:24px'><text y='24'>📌</text></svg>") 0 20, pointer;
-  
-  /* Apply the scale variable here so transitions work */
-  transform: scale(var(--scale));
-  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-  
+
   position: absolute;
-  top: 20%; 
+  top: 20%;
   left: 50%;
-  margin-left: -25px; 
-  margin-top: -31px;  
-  
-  /* Wobble uses the variable to preserve size */
+  margin-left: -25px;
+  margin-top: -31px;
+
+  transform: scale(var(--scale));
+  will-change: transform;
+}
+
+/* One-shot “inflate” each step */
+#lux-balloon.lux-balloon-inflating {
+  animation: inflateBounce var(--inflateDur) cubic-bezier(0.34, 1.56, 0.64, 1) 1;
+}
+
+/* Inner = VISUALS + wobble rotate (no scaling here) */
+#lux-balloon-core {
+  width: 100%;
+  height: 100%;
+  border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+
+  /* 3D Shading */
+  background: radial-gradient(circle at 35% 35%,
+              rgba(255,255,255,0.8) 0%,
+              rgba(255,255,255,0.2) 20%,
+              transparent 50%);
+
+  box-shadow:
+    inset -5px -5px 15px rgba(0,0,0,0.4),
+    inset 2px 2px 5px rgba(255,255,255,0.4),
+    2px 8px 15px rgba(0,0,0,0.3);
+
+  position: relative;
+
+  /* Wobble lives here now */
+  transform-origin: 50% 80%;
   animation: balloonWobble 6s ease-in-out infinite alternate;
+
+  /* Smooth color shifts */
+  transition: background-color 0.9s ease-in-out;
 }
 
 /* Shine */
-#lux-balloon::before {
+#lux-balloon-core::before {
   content: "";
   position: absolute;
   top: 15%;
@@ -72,7 +108,7 @@
 }
 
 /* --- THE STRING (Randomized & White) --- */
-#lux-balloon::after {
+#lux-balloon-core::after {
   content: "";
   position: absolute;
   top: 96%; /* Attached to bottom */
@@ -99,8 +135,25 @@
 
 /* Balloon Wobble: MUST INCLUDE SCALE VARIABLE */
 @keyframes balloonWobble {
-  0% { transform: scale(var(--scale)) rotate(-3deg); }
-  100% { transform: scale(var(--scale)) rotate(3deg); }
+  0% { transform: rotate(-3deg); }
+  100% { transform: rotate(3deg); }
+}
+
+@keyframes inflateBounce {
+  0% {
+    transform: scale(var(--scale-prev));
+  }
+  45% {
+    /* slight vertical “pressurize” stretch */
+    transform: scaleX(calc(var(--scale) * 0.985)) scaleY(calc(var(--scale) * 1.045));
+  }
+  75% {
+    /* a touch of overshoot */
+    transform: scaleX(calc(var(--scale) * 1.06)) scaleY(calc(var(--scale) * 0.995));
+  }
+  100% {
+    transform: scale(var(--scale));
+  }
 }
 
 /* Drastic Side-to-Side (80px Range) */

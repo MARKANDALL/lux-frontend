@@ -3,6 +3,7 @@
 
 let wrapper = null;
 let balloon = null;
+let core = null;
 let tip = null;
 
 function ensureDOM() {
@@ -22,6 +23,10 @@ function ensureDOM() {
   balloon.id = "lux-balloon";
   balloon.title = "Click to Pop!";
   balloon.addEventListener("click", popAnimation);
+
+  core = document.createElement("div");
+  core.id = "lux-balloon-core";
+  balloon.appendChild(core);
   
   tip = document.createElement("div");
   tip.id = "lux-balloon-tip";
@@ -40,18 +45,34 @@ export function updateVisuals(count, max) {
   const ratio = Math.min(Math.max(count, 0) / safeMax, 1.0);
 
   // Swell: 1.0 -> 2.2
-  const scale = 1.0 + (ratio * 1.2);
-  
-  // FIX: Set CSS Variable so animation preserves it
-  balloon.style.setProperty('--scale', scale);
+  const nextScale = 1.0 + (ratio * 1.2);
 
-  // Lift: Keep string visible
+  // Compute delta so bigger jumps inflate slower
+  const curScale = parseFloat(getComputedStyle(balloon).getPropertyValue("--scale")) || 1.0;
+  const delta = Math.abs(nextScale - curScale);
+  const durBase = Math.min(1.4, Math.max(0.65, 0.55 + delta * 0.9));
+  const dur = Math.min(1.8, durBase * 1.3); // slower, capped
+  const durStr = `${dur.toFixed(2)}s`;
+
+  // Set previous + next scale for the inflate keyframes
+  balloon.style.setProperty("--inflateDur", durStr);
+  balloon.style.setProperty("--scale-prev", curScale.toFixed(3));
+  balloon.style.setProperty("--scale", nextScale.toFixed(3));
+
+  // Retrigger the one-shot inflate animation each step
+  balloon.classList.remove("lux-balloon-inflating");
+  void balloon.offsetWidth; // force reflow
+  balloon.classList.add("lux-balloon-inflating");
+
+  // Lift: keep string visible (match duration)
+  wrapper.style.transitionDuration = durStr;
   const lift = 40 + (ratio * 60);
   wrapper.style.bottom = `${lift}px`;
 
-  // Color: Crimson -> Bright Red
+  // Color: Crimson -> Bright Red (apply to the CORE; match duration)
+  if (core) core.style.transitionDuration = durStr;
   const lightness = 25 + (ratio * 35);
-  balloon.style.backgroundColor = `hsl(0, 90%, ${lightness}%)`;
+  if (core) core.style.backgroundColor = `hsl(0, 90%, ${lightness}%)`;
 
   // Tooltip
   if (ratio >= 1) {
@@ -66,6 +87,8 @@ export function updateVisuals(count, max) {
 
 export function popAnimation() {
   if (!balloon || !wrapper) return;
+
+  balloon.classList.remove("lux-balloon-inflating");
 
   // 1. Vanish Balloon
   balloon.style.transition = "transform 0.05s";
@@ -106,6 +129,7 @@ export function popAnimation() {
     if(wrapper) wrapper.remove();
     wrapper = null;
     balloon = null;
+    core = null;
     tip = null;
   }, 2500);
 }
