@@ -1,0 +1,100 @@
+.lux-arrow-trail{
+  display: inline-flex;
+  gap: 6px;
+  margin-left: 6px;
+  vertical-align: middle;
+  user-select: none;
+  white-space: nowrap;
+  position: relative;
+}
+
+.lux-arrow{
+  display: inline-block;
+  will-change: transform, opacity;
+  transform: translateY(0) scale(1);
+}
+
+/* Main sweep (always running) */
+.lux-arrow-trail.is-animating .lux-arrow{
+  animation: luxArrowHead var(--luxTrailDur, 2.8s) linear infinite;
+  animation-delay: var(--luxDelay, 0s);
+}
+
+/* Inner glyph so hover wave can animate translateY without fighting the sweep */
+.lux-arrow-glyph{
+  display: inline-block;
+  will-change: transform;
+  transform: translateY(0);
+}
+
+/* Hover-only wave (left→right ripple) */
+.lux-arrow-trail:hover .lux-arrow-glyph{
+  animation: luxArrowWave var(--luxWaveDur, 1.4s) ease-in-out infinite;
+  animation-delay: var(--luxWaveDelay, 0s);
+}
+
+/* Last arrow baseline emphasis (STATIC only — no extra animation => no flash) */
+.lux-arrow.is-last{
+  opacity: 0.45 !important;
+}
+
+/* When the last arrow “launches”, we hide its in-trail copy */
+.lux-arrow.is-launched{
+  visibility: hidden !important;
+}
+
+/* The flying arrow (fixed to viewport so getBoundingClientRect coords are easy) */
+.lux-arrow-fly{
+  position: fixed;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  user-select: none;
+  z-index: 9999;
+  will-change: transform, opacity;
+  opacity: 0.95;
+}
+
+/* Faint pop ring at landing point */
+.lux-arrow-pop{
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 10px;
+  height: 10px;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  border: 2px solid rgba(0,0,0,0.18);
+  pointer-events: none;
+  z-index: 9999;
+  animation: luxPopRing 520ms ease-out forwards;
+  will-change: transform, opacity;
+  opacity: 0.8;
+}
+
+@keyframes luxArrowHead{
+  0%   { opacity: 0.22; transform: translateY(0) scale(1); }
+  35%  { opacity: 0.78; transform: translateY(-0.5px) scale(1.03); }
+  70%  { opacity: 0.28; transform: translateY(0) scale(1); }
+  100% { opacity: 0.22; transform: translateY(0) scale(1); }
+}
+
+@keyframes luxArrowWave{
+  0%,100% { transform: translateY(0); }
+  50%     { transform: translateY(-2px); }
+}
+
+@keyframes luxPopRing{
+  0%   { opacity: 0.65; transform: translate(-50%, -50%) scale(0.6); }
+  70%  { opacity: 0.25; transform: translate(-50%, -50%) scale(2.4); }
+  100% { opacity: 0;    transform: translate(-50%, -50%) scale(3.0); }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce){
+  .lux-arrow-trail.is-animating .lux-arrow,
+  .lux-arrow-trail:hover .lux-arrow-glyph{
+    animation: none !important;
+  }
+}
