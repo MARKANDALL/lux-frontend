@@ -122,6 +122,34 @@ export function initArrowTrail(opts = {}) {
     cleanupFlight();
   });
 
+  // --- Click-triggered launch (click ANY arrow => launch last arrow) ---
+  host.addEventListener("click", (e) => {
+    if (prefersReducedMotion) return;
+    if (inFlight) return;
+
+    // Only trigger when the click lands on an arrow (or its inner glyph)
+    const hit = e.target && e.target.closest ? e.target.closest(".lux-arrow") : null;
+    if (!hit) return;
+
+    // If you do NOT want this click to also toggle/open something else upstream,
+    // keep these. If you *do* want parent click handlers to run, delete these two lines.
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Cancel pending hover/auto launches so we don't double-fire
+    clearTimeout(hoverTimer);
+    hoverTimer = null;
+    launchedThisHover = true;
+
+    if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; }
+    autoHasRun = true;
+
+    const lastArrow = host.querySelector(".lux-arrow.is-last");
+    if (!lastArrow) return;
+
+    launchLastArrow(lastArrow);
+  });
+
   // NEW: Auto-run once after init, even without hover
   if (!prefersReducedMotion) {
     const autoRunMs = Number.isFinite(opts.autoRunMs) ? opts.autoRunMs : 7000;

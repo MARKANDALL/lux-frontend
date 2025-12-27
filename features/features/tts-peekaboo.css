@@ -135,17 +135,19 @@ html:not(.lux-tts-open) .lux-tts-tab-inner { transform: translateX(calc(-44% + 2
 }
 
 /* Right-side drawer:
-   CLOSED = ◀ (0deg), OPEN = ▶ (180deg) */
-html.lux-tts-open .lux-tts-tab-icon{
+   CLOSED = ◀ (0deg), OPEN = ▶ (180deg)
+   Drive the arrow animation off aria-expanded so it always re-triggers. */
+.lux-tts-tab[aria-expanded="true"] .lux-tts-tab-icon{
   transform: rotate(180deg);
   animation: luxTTSArrowOpen var(--lux-arrow-dur) var(--lux-ease-pop) both;
   animation-delay: var(--lux-arrow-delay);
 }
-html:not(.lux-tts-open) .lux-tts-tab-icon{
+.lux-tts-tab[aria-expanded="false"] .lux-tts-tab-icon{
   transform: rotate(0deg);
   animation: luxTTSArrowClose var(--lux-arrow-dur) var(--lux-ease-pop) both;
   animation-delay: var(--lux-arrow-delay);
 }
+
 
 .lux-tts-tab:hover,
 .lux-tts-tab:focus-visible {

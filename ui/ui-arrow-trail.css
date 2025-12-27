@@ -7,6 +7,13 @@
   white-space: nowrap;
   position: relative;
 }
+/* Click affordance */
+.lux-arrow-trail,
+.lux-arrow-trail .lux-arrow,
+.lux-arrow-trail .lux-arrow-glyph{
+  cursor: pointer;
+}
+
 
 .lux-arrow{
   display: inline-block;
