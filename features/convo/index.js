@@ -92,14 +92,18 @@ export function bootConvo() {
 
   const rightBody = el("div", "lux-body k");
 
-  const toneSel = mkSelect("Tone", ["friendly","neutral","playful","formal","flirty"]);
-  const stressSel = mkSelect("Stress", ["low","medium","high"]);
-  const paceSel = mkSelect("Pace", ["slow","normal","fast"]);
+  const toneSel = mkSelect("Tone", ["friendly", "neutral", "playful", "formal", "flirty"]);
+  const stressSel = mkSelect("Stress", ["low", "medium", "high"]);
+  const paceSel = mkSelect("Pace", ["slow", "normal", "fast"]);
 
   rightBody.append(toneSel.wrap, stressSel.wrap, paceSel.wrap);
-  rightBody.append(el("div", "small",
-    "Feedback stays hidden during the conversation. We log each spoken turn silently, then summarize at the end."
-  ));
+  rightBody.append(
+    el(
+      "div",
+      "small",
+      "Feedback stays hidden during the conversation. We log each spoken turn silently, then summarize at the end."
+    )
+  );
   right.append(rightBody);
 
   root.append(left, mid, right);
@@ -121,7 +125,7 @@ export function bootConvo() {
 
     // show current + neighbors (lightweight stack)
     const idx = state.scenarioIdx;
-    const show = [idx, idx+1, idx+2].filter(i => i < SCENARIOS.length);
+    const show = [idx, idx + 1, idx + 2].filter((i) => i < SCENARIOS.length);
 
     show.forEach((i) => {
       const s = SCENARIOS[i];
@@ -177,9 +181,9 @@ export function bootConvo() {
   stressSel.sel.value = state.knobs.stress;
   paceSel.sel.value = state.knobs.pace;
 
-  toneSel.sel.addEventListener("change", () => state.knobs.tone = toneSel.sel.value);
-  stressSel.sel.addEventListener("change", () => state.knobs.stress = stressSel.sel.value);
-  paceSel.sel.addEventListener("change", () => state.knobs.pace = paceSel.sel.value);
+  toneSel.sel.addEventListener("change", () => (state.knobs.tone = toneSel.sel.value));
+  stressSel.sel.addEventListener("change", () => (state.knobs.stress = stressSel.sel.value));
+  paceSel.sel.addEventListener("change", () => (state.knobs.pace = paceSel.sel.value));
 
   // --- Scenario start ---
   async function startScenario() {
@@ -195,7 +199,7 @@ export function bootConvo() {
     const rsp = await convoTurn({
       scenario: { id: s.id, title: s.title, desc: s.desc },
       knobs: state.knobs,
-      messages: []
+      messages: [],
     });
 
     if (rsp?.assistant) state.messages.push({ role: "assistant", content: rsp.assistant });
@@ -227,7 +231,9 @@ export function bootConvo() {
       recBtn.textContent = "🎙 Record";
 
       state.recorder.onstop = () => {
-        try { state.stream?.getTracks()?.forEach(t => t.stop()); } catch {}
+        try {
+          state.stream?.getTracks()?.forEach((t) => t.stop());
+        } catch {}
         const blob = new Blob(state.chunks, { type: "audio/webm" });
         resolve(blob);
       };
@@ -247,10 +253,12 @@ export function bootConvo() {
     renderMessages();
     input.value = "";
 
-    // Azure assessment (silent)
+    // Azure assessment (silent) - only if we actually have audio
     let azureResult = null;
     try {
-      azureResult = await assessPronunciation({ audioBlob, text: userText });
+      if (audioBlob && audioBlob.size > 0) {
+        azureResult = await assessPronunciation({ audioBlob, text: userText });
+      }
     } catch (e) {
       console.error("[Convo] assess failed", e);
     }
@@ -277,7 +285,7 @@ export function bootConvo() {
     const rsp = await convoTurn({
       scenario: { id: s.id, title: s.title, desc: s.desc },
       knobs: state.knobs,
-      messages: state.messages.slice(-24)
+      messages: state.messages.slice(-24),
     });
 
     if (rsp?.assistant) state.messages.push({ role: "assistant", content: rsp.assistant });
@@ -296,9 +304,8 @@ export function bootConvo() {
   });
 
   sendBtn.addEventListener("click", async () => {
-    // allow “type-only” send (no assessment)
-    const fake = new Blob([], { type: "audio/webm" });
-    await sendTurn({ audioBlob: fake });
+    // type-only send => no assessment
+    await sendTurn({ audioBlob: null });
   });
 
   endBtn.addEventListener("click", () => {
