@@ -98,6 +98,7 @@ export function bootConvo() {
     recorder: null,
     stream: null,
     chunks: [],
+    busy: false,
   };
 
   // --- Layout ---
@@ -138,10 +139,8 @@ export function bootConvo() {
   input.className = "lux-in";
   input.placeholder = "Type or click a suggestion, then record your reply…";
 
-  const recBtn = el("button", "btn", "🎙 Record");
-  const sendBtn = el("button", "btn primary", "Send →");
-
-  compose.append(input, recBtn, sendBtn);
+  const talkBtn = el("button", "btn primary", "🎙 Record");
+  compose.append(input, talkBtn);
   mid.append(msgs, sugs, compose);
 
   // Right: knobs
@@ -271,7 +270,8 @@ export function bootConvo() {
   async function startRecording() {
     if (state.isRecording) return;
     state.isRecording = true;
-    recBtn.textContent = "■ Stop";
+    talkBtn.textContent = "■ Stop & Send";
+    root.classList.add("is-recording");
 
     state.chunks = [];
     state.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -288,7 +288,8 @@ export function bootConvo() {
     return new Promise((resolve) => {
       if (!state.recorder || !state.isRecording) return resolve(null);
       state.isRecording = false;
-      recBtn.textContent = "🎙 Record";
+      talkBtn.textContent = "🎙 Record";
+      root.classList.remove("is-recording");
 
       state.recorder.onstop = () => {
         try {
@@ -354,18 +355,30 @@ export function bootConvo() {
   }
 
   // --- Buttons ---
-  recBtn.addEventListener("click", async () => {
-    if (!state.isRecording) {
-      await startRecording();
-    } else {
-      const blob = await stopRecordingAndGetBlob();
-      if (blob) await sendTurn({ audioBlob: blob });
-    }
-  });
+  talkBtn.addEventListener("click", async () => {
+    if (state.busy) return;
 
-  sendBtn.addEventListener("click", async () => {
-    // type-only send => no assessment
-    await sendTurn({ audioBlob: null });
+    // If we're currently recording, STOP and SEND
+    if (state.isRecording) {
+      state.busy = true;
+      try {
+        const blob = await stopRecordingAndGetBlob();
+        if (blob) await sendTurn({ audioBlob: blob });
+      } finally {
+        state.busy = false;
+      }
+      return;
+    }
+
+    // Not recording yet: require text before recording (since assess needs reference text)
+    const userText = (input.value || "").trim();
+    if (!userText) {
+      alert("Type (or click) your reply first, then press Record.");
+      input.focus();
+      return;
+    }
+
+    await startRecording();
   });
 
   endBtn.addEventListener("click", async () => {
