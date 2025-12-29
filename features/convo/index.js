@@ -2,6 +2,7 @@
 import { SCENARIOS } from "./scenarios.js";
 import { convoTurn } from "../../api/convo.js";
 import { assessPronunciation } from "../../api/assess.js";
+import { convoReport } from "../../api/convo-report.js";
 import { saveAttempt, ensureUID } from "../../api/index.js";
 
 function uid() {
@@ -24,9 +25,68 @@ function nowIso() {
   return new Date().toISOString();
 }
 
+function escapeHtml(s) {
+  return String(s)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function showConvoReportOverlay(report) {
+  let host = document.getElementById("luxConvoReportOverlay");
+  if (!host) {
+    host = document.createElement("div");
+    host.id = "luxConvoReportOverlay";
+    host.style.cssText = `
+      position: fixed; inset: 0; z-index: 99999;
+      background: rgba(0,0,0,0.55);
+      display: flex; align-items: center; justify-content: center;
+      padding: 18px;
+    `;
+    document.body.appendChild(host);
+  }
+
+  const pretty = escapeHtml(JSON.stringify(report, null, 2));
+  host.innerHTML = `
+    <div style="
+      width: min(920px, 96vw);
+      max-height: min(84vh, 900px);
+      overflow: auto;
+      background: #0b1220;
+      color: #e5e7eb;
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 20px 70px rgba(0,0,0,0.55);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.35;
+    ">
+      <div style="display:flex; gap:12px; align-items:center; justify-content:space-between; margin-bottom:10px;">
+        <div style="font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; font-size:14px; font-weight:600;">
+          Convo Report (pron: ${report?.scores?.pron ?? "?"})
+        </div>
+        <button id="luxConvoReportClose" style="
+          background:#111827; color:#e5e7eb; border:1px solid rgba(255,255,255,0.10);
+          border-radius:10px; padding:8px 10px; cursor:pointer;
+        ">Close</button>
+      </div>
+      <pre style="white-space: pre-wrap; margin: 0;">${pretty}</pre>
+    </div>
+  `;
+
+  host.querySelector("#luxConvoReportClose")?.addEventListener("click", () => host.remove());
+}
+
 export function bootConvo() {
   const root = document.getElementById("convoApp");
   if (!root) return;
+
+  // Prevent duplicate listeners on hot reload
+  if (root.dataset.luxBooted === "1") return;
+  root.dataset.luxBooted = "1";
 
   const state = {
     sessionId: newSessionId(),
@@ -308,9 +368,46 @@ export function bootConvo() {
     await sendTurn({ audioBlob: null });
   });
 
-  endBtn.addEventListener("click", () => {
-    // MVP: end session without showing feedback (yet)
-    alert("Session ended. Turns saved. Next step: generate the delayed summary report.");
+  endBtn.addEventListener("click", async () => {
+    try {
+      const s = SCENARIOS[state.scenarioIdx];
+
+      const payload = {
+        uid: uid(),
+        sessionId: state.sessionId,
+        passageKey: `convo:${s.id}`,
+      };
+
+      console.log("[Convo] convo-report payload", payload);
+
+      const report = await convoReport(payload);
+
+      console.log("[Convo] convo-report result", report);
+
+      showConvoReportOverlay(report);
+
+      // Quick on-screen dump so you *see* it tonight
+      let pre = document.getElementById("luxConvoReportDump");
+      if (!pre) {
+        pre = document.createElement("pre");
+        pre.id = "luxConvoReportDump";
+        pre.style.whiteSpace = "pre-wrap";
+        pre.style.maxHeight = "35vh";
+        pre.style.overflow = "auto";
+        pre.style.marginTop = "12px";
+        pre.style.padding = "12px";
+        pre.style.border = "1px solid rgba(255,255,255,0.12)";
+        pre.style.borderRadius = "10px";
+
+        // Append somewhere sensible (fallback to body)
+        (document.getElementById("convoApp") || document.body).appendChild(pre);
+      }
+
+      pre.textContent = JSON.stringify(report, null, 2);
+    } catch (e) {
+      console.error("[Convo] convo-report failed", e);
+      alert(`End Session report failed: ${e?.message || e}`);
+    }
   });
 
   // boot

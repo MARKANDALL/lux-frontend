@@ -2,11 +2,8 @@
 const PROD_API = "https://luxury-language-api.vercel.app";
 
 export const API_BASE = (() => {
-  // If we are on localhost, return empty string to use relative path (triggering the Proxy)
-  if (typeof window !== "undefined" && window.location.hostname === "localhost") {
-    return ""; 
-  }
-  return globalThis.API_BASE || PROD_API;
+  const API_BASE = globalThis.API_BASE || import.meta.env.VITE_API_BASE || PROD_API;
+  return API_BASE;
 })();
 
 export function dbg(...args) {
