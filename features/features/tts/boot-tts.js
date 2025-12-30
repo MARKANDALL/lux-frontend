@@ -18,7 +18,7 @@ function ensurePanel() {
   }
 
   // 2. CRITICAL FIX: Ensure Tab Exists (Even if panel was already there)
-  let tab = document.querySelector(".lux-tts-tab"); // IMPORTANT: NOT panel.querySelector
+  let tab = document.querySelector(".lux-tts-tab");
   if (!tab) {
     tab = document.createElement("button");
     tab.className = "lux-tts-tab";
@@ -33,7 +33,7 @@ function ensurePanel() {
     tab.setAttribute("aria-expanded", "false");
     tab.setAttribute("aria-controls", "tts-controls");
     
-    // ✅ KEY: tab must be OUTSIDE the transformed panel
+    // Insert tab as a sibling of the panel (always reachable)
     panel.parentNode.insertBefore(tab, panel);
     
     // Wire Toggle Logic
@@ -51,7 +51,7 @@ function ensurePanel() {
 
   // 4. Cleanup Guard & Show Loading
   document.getElementById(GUARD_ID)?.remove();
-  host.setAttribute("data-luxHidden", "0");
+  host.dataset.luxHidden = "0";
   
   if (!host.firstElementChild) {
     const ph = document.createElement("div");
