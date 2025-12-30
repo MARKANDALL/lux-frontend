@@ -5,10 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Lux — AI Conversations</title>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/7.8.11/wavesurfer.min.js"></script>
+
+    <link rel="stylesheet" href="lux-layout.css" />
     <link rel="stylesheet" href="lux-convo.css" />
+    <link rel="stylesheet" href="./features/features/tts-peekaboo.css" />
+    <link rel="stylesheet" href="./features/features/selfpb-peekaboo.css" />
+    <link rel="stylesheet" href="./features/features/self-playback.css" />
+    <link rel="stylesheet" href="./features/features/tts.css" />
   </head>
 
   <body>
+    <audio id="playbackAudio" hidden></audio>
+    <div id="tts-controls" data-luxHidden="1"></div>
+    <div id="self-playback-drawer-target"></div>
+
     <div id="convoApp"></div>
     <script type="module" src="./src/convo.js"></script>
   </body>

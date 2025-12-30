@@ -92,8 +92,8 @@ export function bootConvo() {
     sessionId: newSessionId(),
     scenarioIdx: 0,
     knobs: { tone: "friendly", stress: "low", pace: "normal" },
-    messages: [],      // {role:"user"|"assistant", content:string}
-    turns: [],         // {turn, userText, azureResult, attemptId?}
+    messages: [], // {role:"user"|"assistant", content:string}
+    turns: [], // {turn, userText, azureResult, attemptId?}
     isRecording: false,
     recorder: null,
     stream: null,
@@ -308,6 +308,15 @@ export function bootConvo() {
     const s = SCENARIOS[state.scenarioIdx];
     const userText = (input.value || "").trim();
     if (!userText) return;
+
+    // Hand the finished learner audio to the Self Playback drawer (if present)
+    if (audioBlob) {
+      // This global function is created by 08-selfpb-peekaboo.js
+      // It tells the right drawer: "Here is the new audio to play back"
+      if (window.__attachLearnerBlob) {
+        window.__attachLearnerBlob(audioBlob);
+      }
+    }
 
     // show user msg in chat immediately (natural flow)
     state.messages.push({ role: "user", content: userText });
