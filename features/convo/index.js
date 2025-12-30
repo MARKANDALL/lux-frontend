@@ -21,10 +21,6 @@ function el(tag, cls, text) {
   return n;
 }
 
-function nowIso() {
-  return new Date().toISOString();
-}
-
 function escapeHtml(s) {
   return String(s)
     .replaceAll("&", "&amp;")
@@ -36,48 +32,58 @@ function escapeHtml(s) {
 
 function showConvoReportOverlay(report) {
   let host = document.getElementById("luxConvoReportOverlay");
+  const pretty = escapeHtml(JSON.stringify(report, null, 2));
+
   if (!host) {
     host = document.createElement("div");
     host.id = "luxConvoReportOverlay";
     host.style.cssText = `
       position: fixed; inset: 0; z-index: 99999;
-      background: rgba(0,0,0,0.55);
-      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.45);
+      display:flex; align-items:center; justify-content:center;
       padding: 18px;
     `;
-    document.body.appendChild(host);
+
+    host.innerHTML = `
+      <div style="
+        width: min(980px, 96vw);
+        max-height: min(80vh, 720px);
+        overflow: auto;
+        border-radius: 18px;
+        background: rgba(20,20,30,0.92);
+        border: 1px solid rgba(255,255,255,0.10);
+        padding: 14px;
+        backdrop-filter: blur(12px);
+      ">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap: 12px; margin-bottom: 10px;">
+          <div style="font-weight: 650;">
+            Convo Report (pron: ${escapeHtml(String(report?.scores?.pron ?? "?"))})
+          </div>
+          <button id="luxConvoReportClose" style="
+            background:#111827; color:#e5e7eb; border:1px solid rgba(255,255,255,0.10);
+            border-radius:10px; padding:8px 10px; cursor:pointer;
+          ">Close</button>
+        </div>
+        <pre id="luxConvoReportPre" style="
+          white-space: pre-wrap;
+          margin: 0;
+          font-size: 12px;
+          line-height: 1.35;
+          color: rgba(255,255,255,0.88);
+          background: rgba(0,0,0,0.22);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 12px;
+          padding: 12px;
+        ">${pretty}</pre>
+      </div>
+    `;
+
+    host.querySelector("#luxConvoReportClose")?.addEventListener("click", () => host.remove());
+  } else {
+    host.querySelector("#luxConvoReportPre").textContent = JSON.stringify(report, null, 2);
   }
 
-  const pretty = escapeHtml(JSON.stringify(report, null, 2));
-  host.innerHTML = `
-    <div style="
-      width: min(920px, 96vw);
-      max-height: min(84vh, 900px);
-      overflow: auto;
-      background: #0b1220;
-      color: #e5e7eb;
-      border: 1px solid rgba(255,255,255,0.10);
-      border-radius: 14px;
-      padding: 14px;
-      box-shadow: 0 20px 70px rgba(0,0,0,0.55);
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size: 12px;
-      line-height: 1.35;
-    ">
-      <div style="display:flex; gap:12px; align-items:center; justify-content:space-between; margin-bottom:10px;">
-        <div style="font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; font-size:14px; font-weight:600;">
-          Convo Report (pron: ${report?.scores?.pron ?? "?"})
-        </div>
-        <button id="luxConvoReportClose" style="
-          background:#111827; color:#e5e7eb; border:1px solid rgba(255,255,255,0.10);
-          border-radius:10px; padding:8px 10px; cursor:pointer;
-        ">Close</button>
-      </div>
-      <pre style="white-space: pre-wrap; margin: 0;">${pretty}</pre>
-    </div>
-  `;
-
-  host.querySelector("#luxConvoReportClose")?.addEventListener("click", () => host.remove());
+  document.body.appendChild(host);
 }
 
 export function bootConvo() {
@@ -91,114 +97,252 @@ export function bootConvo() {
   const state = {
     sessionId: newSessionId(),
     scenarioIdx: 0,
+    mode: "intro", // intro | picker | chat
+    knobsOpen: false,
     knobs: { tone: "friendly", stress: "low", pace: "normal" },
+
     messages: [], // {role:"user"|"assistant", content:string}
     turns: [], // {turn, userText, azureResult, attemptId?}
+
     isRecording: false,
-    recorder: null,
     stream: null,
+    recorder: null,
     chunks: [],
+
     busy: false,
   };
 
-  // --- Layout ---
+  // --- Layout (single stage) ---
   root.innerHTML = "";
+  root.dataset.mode = state.mode;
+  root.dataset.side = "left";
 
-  // Left: scenarios
-  const left = el("div", "lux-panel");
-  const leftHd = el("div", "lux-hd");
-  leftHd.append(el("div", null, "Scenarios"));
-  leftHd.append(el("div", "lux-sub", "Pick one to start"));
-  left.append(leftHd);
+  const atmo = el("div", "lux-atmo");
+  atmo.innerHTML = `
+    <div class="lux-atmo-layer a"></div>
+    <div class="lux-atmo-layer b"></div>
 
-  const leftBody = el("div", "lux-body");
-  const stack = el("div", "lux-cardstack");
-  const dots = el("div", "lux-dots");
-  leftBody.append(stack);
-  leftBody.append(dots);
-  left.append(leftBody);
+    <div class="lux-scene-cards" aria-hidden="true">
+      <div class="lux-scene-card c1"></div>
+      <div class="lux-scene-card c2"></div>
+      <div class="lux-scene-card c3"></div>
+    </div>
 
-  // Center: chat
+    <div class="lux-atmo-fog"></div>
+  `;
+
+  const ui = el("div", "lux-ui");
+
+  // Intro overlay
+  const intro = el("div", "lux-intro");
+  const hero = el("div", "lux-heroCard");
+  hero.append(
+    el("div", "lux-heroBrand", "Lux"),
+    el("div", "lux-heroTitle", "AI Conversations"),
+    el(
+      "div",
+      "lux-heroSub",
+      "Pick a dialogue. Record your reply. We assess each turn silently and give you a session report at the end."
+    )
+  );
+  const heroNext = el("button", "lux-heroNext", "Next");
+  hero.append(heroNext);
+  intro.append(hero);
+
+  // Picker overlay (Edge deck)
+  const picker = el("div", "lux-picker");
+  const deck = el("div", "lux-deck");
+  const deckActive = el("div", "lux-deck-card is-active");
+  const deckPreview = el("div", "lux-deck-card is-preview");
+  deck.append(deckActive, deckPreview);
+
+  const thumbs = el("div", "lux-thumbs");
+  const nav = el("div", "lux-deckNav");
+  const backBtn = el("button", "lux-navArrow", "←");
+  const nextBtn = el("button", "lux-navNext", "Next →");
+  nav.append(backBtn, nextBtn);
+  picker.append(deck, thumbs, nav);
+
+  // Chat panel (single centered)
+  const chatWrap = el("div", "lux-chatwrap");
   const mid = el("div", "lux-panel lux-chat");
+
   const midHd = el("div", "lux-hd");
   const titleWrap = el("div");
   const title = el("div", "lux-title", "AI Conversation");
   const sub = el("div", "lux-sub", `Session: ${state.sessionId}`);
   titleWrap.append(title, sub);
-  midHd.append(titleWrap);
 
+  const actions = el("div", "lux-actions");
+  const scenBtn = el("button", "btn ghost", "Scenarios");
+  const knobsBtn = el("button", "btn ghost", "Knobs");
   const endBtn = el("button", "btn danger", "End Session");
-  midHd.append(endBtn);
-  mid.append(midHd);
+  actions.append(scenBtn, knobsBtn, endBtn);
+
+  midHd.append(titleWrap, actions);
 
   const msgs = el("div", "lux-msgs");
   const sugs = el("div", "lux-sugs");
-  const compose = el("div", "lux-compose");
 
+  const compose = el("div", "lux-compose");
   const input = document.createElement("textarea");
   input.className = "lux-in";
   input.placeholder = "Type or click a suggestion, then record your reply…";
 
   const talkBtn = el("button", "btn primary", "🎙 Record");
   compose.append(input, talkBtn);
-  mid.append(msgs, sugs, compose);
 
-  // Right: knobs
-  const right = el("div", "lux-panel");
-  const rightHd = el("div", "lux-hd");
-  rightHd.append(el("div", "lux-title", "Scene knobs"));
-  right.append(rightHd);
+  mid.append(midHd, msgs, sugs, compose);
+  chatWrap.append(mid);
 
-  const rightBody = el("div", "lux-body k");
+  // Knobs drawer
+  const drawer = el("div", "lux-drawer");
+  const drawerHd = el("div", "lux-drawerHd");
+  drawerHd.append(el("div", "lux-title", "Scene knobs"));
+  const closeDrawer = el("button", "btn ghost", "Close");
+  drawerHd.append(closeDrawer);
 
+  const drawerBody = el("div", "lux-body k");
   const toneSel = mkSelect("Tone", ["friendly", "neutral", "playful", "formal", "flirty"]);
   const stressSel = mkSelect("Stress", ["low", "medium", "high"]);
   const paceSel = mkSelect("Pace", ["slow", "normal", "fast"]);
-
-  rightBody.append(toneSel.wrap, stressSel.wrap, paceSel.wrap);
-  rightBody.append(
+  drawerBody.append(toneSel.wrap, stressSel.wrap, paceSel.wrap);
+  drawerBody.append(
     el(
       "div",
-      "small",
+      "lux-sub",
       "Feedback stays hidden during the conversation. We log each spoken turn silently, then summarize at the end."
     )
   );
-  right.append(rightBody);
 
-  root.append(left, mid, right);
+  drawer.append(drawerHd, drawerBody);
 
-  // --- Render scenarios (simple “Edge-ish” stack) ---
-  function renderScenarios() {
-    stack.innerHTML = "";
-    dots.innerHTML = "";
+  const scrim = el("div", "lux-scrim");
 
+  ui.append(intro, picker, chatWrap, drawer, scrim);
+  root.append(atmo, ui);
+
+  // --- Scene visuals / parallax ---
+  function applySceneVisuals() {
+    const hue = (185 + state.scenarioIdx * 34) % 360;
+    root.style.setProperty("--lux-hue", String(hue));
+    root.dataset.side = state.scenarioIdx % 2 === 0 ? "left" : "right";
+  }
+
+  window.addEventListener(
+    "mousemove",
+    (e) => {
+      const nx = (e.clientX / window.innerWidth - 0.5) * 2; // stronger
+      const ny = (e.clientY / window.innerHeight - 0.5) * 2;
+      root.style.setProperty("--lux-mx", nx.toFixed(4));
+      root.style.setProperty("--lux-my", ny.toFixed(4));
+    },
+    { passive: true }
+  );
+
+  function setMode(mode) {
+    state.mode = mode;
+    root.dataset.mode = mode;
+  }
+
+  function setKnobs(open) {
+    state.knobsOpen = !!open;
+    root.classList.toggle("knobs-open", state.knobsOpen);
+  }
+
+  // Intro click => picker
+  intro.addEventListener("click", () => setMode("picker"));
+  heroNext.addEventListener("click", (e) => {
+    e.stopPropagation();
+    setMode("picker");
+  });
+
+  // Chat header buttons
+  scenBtn.addEventListener("click", () => setMode("picker"));
+  knobsBtn.addEventListener("click", () => setKnobs(true));
+  closeDrawer.addEventListener("click", () => setKnobs(false));
+  scrim.addEventListener("click", () => setKnobs(false));
+
+  // Knob wiring
+  toneSel.sel.value = state.knobs.tone;
+  stressSel.sel.value = state.knobs.stress;
+  paceSel.sel.value = state.knobs.pace;
+
+  toneSel.sel.addEventListener("change", () => (state.knobs.tone = toneSel.sel.value));
+  stressSel.sel.addEventListener("change", () => (state.knobs.stress = stressSel.sel.value));
+  paceSel.sel.addEventListener("change", () => (state.knobs.pace = paceSel.sel.value));
+
+  // --- Picker deck ---
+  function renderThumbs() {
+    thumbs.innerHTML = "";
     SCENARIOS.forEach((s, i) => {
-      const dot = el("button", "lux-dot" + (i === state.scenarioIdx ? " is-active" : ""));
-      dot.title = s.title;
-      dot.addEventListener("click", () => {
+      const b = el("button", "lux-thumb" + (i === state.scenarioIdx ? " is-active" : ""));
+      b.title = s.title;
+      b.textContent = (s.title || "?").trim().slice(0, 1).toUpperCase();
+      b.addEventListener("click", () => {
         state.scenarioIdx = i;
-        renderScenarios();
+        renderDeck();
       });
-      dots.append(dot);
-    });
-
-    // show current + neighbors (lightweight stack)
-    const idx = state.scenarioIdx;
-    const show = [idx, idx + 1, idx + 2].filter((i) => i < SCENARIOS.length);
-
-    show.forEach((i) => {
-      const s = SCENARIOS[i];
-      const b = el("button", "lux-cardbtn" + (i === idx ? " is-active" : ""));
-      b.innerHTML = `<div class="t">${s.title}</div><div class="d">${s.desc}</div>`;
-      b.addEventListener("click", async () => {
-        state.scenarioIdx = i;
-        renderScenarios();
-        await startScenario();
-      });
-      stack.append(b);
+      thumbs.append(b);
     });
   }
 
+  function fillDeckCard(host, scenario, isActive) {
+    host.innerHTML = "";
+
+    host.append(
+      el("div", "lux-pill", "DIALOGUE"),
+      el("div", "lux-deckTitle", scenario.title),
+      el("div", "lux-deckDesc", scenario.desc)
+    );
+
+    if (isActive) {
+      const cta = el("button", "lux-deckCta", "Practice this dialogue");
+      cta.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        await beginScenario();
+      });
+      host.append(cta);
+
+      host.onclick = () => beginScenario().catch(console.error);
+    } else {
+      host.onclick = null;
+    }
+  }
+
+  async function beginScenario() {
+    setMode("chat");
+    await startScenario(); // fetch opening line + suggested replies
+  }
+
+  function renderDeck() {
+    applySceneVisuals();
+    const idx = state.scenarioIdx;
+    const next = (idx + 1) % SCENARIOS.length;
+
+    fillDeckCard(deckActive, SCENARIOS[idx], true);
+    fillDeckCard(deckPreview, SCENARIOS[next], false);
+
+    renderThumbs();
+  }
+
+  backBtn.addEventListener("click", () => {
+    state.scenarioIdx = (state.scenarioIdx - 1 + SCENARIOS.length) % SCENARIOS.length;
+    renderDeck();
+  });
+
+  nextBtn.addEventListener("click", () => {
+    state.scenarioIdx = (state.scenarioIdx + 1) % SCENARIOS.length;
+    renderDeck();
+  });
+
+  // Preview click behaves like Next (Edge feel)
+  deckPreview.addEventListener("click", () => {
+    state.scenarioIdx = (state.scenarioIdx + 1) % SCENARIOS.length;
+    renderDeck();
+  });
+
+  // --- Chat rendering ---
   function renderMessages() {
     msgs.innerHTML = "";
     for (const m of state.messages) {
@@ -221,30 +365,6 @@ export function bootConvo() {
     });
   }
 
-  function mkSelect(label, options) {
-    const wrap = el("div");
-    const lab = el("label", null, label);
-    const sel = document.createElement("select");
-    options.forEach((o) => {
-      const opt = document.createElement("option");
-      opt.value = o;
-      opt.textContent = o;
-      sel.append(opt);
-    });
-    wrap.append(lab, sel);
-    return { wrap, sel };
-  }
-
-  // --- Knob wiring ---
-  toneSel.sel.value = state.knobs.tone;
-  stressSel.sel.value = state.knobs.stress;
-  paceSel.sel.value = state.knobs.pace;
-
-  toneSel.sel.addEventListener("change", () => (state.knobs.tone = toneSel.sel.value));
-  stressSel.sel.addEventListener("change", () => (state.knobs.stress = stressSel.sel.value));
-  paceSel.sel.addEventListener("change", () => (state.knobs.pace = paceSel.sel.value));
-
-  // --- Scenario start ---
   async function startScenario() {
     // reset convo
     state.messages = [];
@@ -266,13 +386,8 @@ export function bootConvo() {
     renderSuggestions(rsp?.suggested_replies || []);
   }
 
-  // --- Recording helpers (per-turn) ---
+  // --- Recording helpers ---
   async function startRecording() {
-    if (state.isRecording) return;
-    state.isRecording = true;
-    talkBtn.textContent = "■ Stop & Send";
-    root.classList.add("is-recording");
-
     state.chunks = [];
     state.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     state.recorder = new MediaRecorder(state.stream);
@@ -286,24 +401,26 @@ export function bootConvo() {
 
   async function stopRecordingAndGetBlob() {
     return new Promise((resolve) => {
-      if (!state.recorder || !state.isRecording) return resolve(null);
-      state.isRecording = false;
-      talkBtn.textContent = "🎙 Record";
-      root.classList.remove("is-recording");
+      if (!state.recorder) return resolve(null);
 
-      state.recorder.onstop = () => {
+      const rec = state.recorder;
+      rec.onstop = () => {
         try {
           state.stream?.getTracks()?.forEach((t) => t.stop());
-        } catch {}
-        const blob = new Blob(state.chunks, { type: "audio/webm" });
+        } catch (_) {}
+        state.stream = null;
+
+        const blob = new Blob(state.chunks, { type: rec.mimeType || "audio/webm" });
+        state.chunks = [];
+        state.recorder = null;
         resolve(blob);
       };
 
-      state.recorder.stop();
+      rec.stop();
     });
   }
 
-  // --- Send turn: (1) Azure assess silently, (2) save attempt, (3) get next AI reply ---
+  // --- Turn send (assess -> attempt -> convoTurn) ---
   async function sendTurn({ audioBlob }) {
     const s = SCENARIOS[state.scenarioIdx];
     const userText = (input.value || "").trim();
@@ -311,11 +428,7 @@ export function bootConvo() {
 
     // Hand the finished learner audio to the Self Playback drawer (if present)
     if (audioBlob) {
-      // This global function is created by 08-selfpb-peekaboo.js
-      // It tells the right drawer: "Here is the new audio to play back"
-      if (window.__attachLearnerBlob) {
-        window.__attachLearnerBlob(audioBlob);
-      }
+      if (window.__attachLearnerBlob) window.__attachLearnerBlob(audioBlob);
     }
 
     // show user msg in chat immediately (natural flow)
@@ -333,7 +446,7 @@ export function bootConvo() {
       console.error("[Convo] assess failed", e);
     }
 
-    // Save attempt (silent)
+    // save attempt (always)
     try {
       const saved = await saveAttempt({
         uid: uid(),
@@ -341,9 +454,8 @@ export function bootConvo() {
         partIndex: state.turns.length,
         text: userText,
         azureResult,
-        l1: "universal",
         sessionId: state.sessionId,
-        localTime: nowIso(),
+        localTime: new Date().toISOString(),
       });
       state.turns.push({ turn: state.turns.length, userText, azureResult, attemptId: saved?.id });
     } catch (e) {
@@ -370,61 +482,72 @@ export function bootConvo() {
     // If we're currently recording, STOP and SEND
     if (state.isRecording) {
       state.busy = true;
+      talkBtn.disabled = true;
       try {
         const blob = await stopRecordingAndGetBlob();
+        state.isRecording = false;
+        root.classList.remove("is-recording");
+        talkBtn.textContent = "🎙 Record";
         if (blob) await sendTurn({ audioBlob: blob });
       } finally {
         state.busy = false;
+        talkBtn.disabled = false;
       }
       return;
     }
 
-    // Not recording yet: require text before recording (since assess needs reference text)
+    // Not recording yet => start (only if input has text)
     const userText = (input.value || "").trim();
-    if (!userText) {
-      alert("Type (or click) your reply first, then press Record.");
-      input.focus();
-      return;
-    }
+    if (!userText) return;
 
-    await startRecording();
+    state.busy = true;
+    talkBtn.disabled = true;
+    try {
+      await startRecording();
+      state.isRecording = true;
+      root.classList.add("is-recording");
+      talkBtn.textContent = "■ Stop & Send";
+    } catch (e) {
+      console.error("[Convo] start recording failed", e);
+      alert(`Recording failed: ${e?.message || e}`);
+    } finally {
+      state.busy = false;
+      talkBtn.disabled = false;
+    }
   });
 
   endBtn.addEventListener("click", async () => {
     try {
       const s = SCENARIOS[state.scenarioIdx];
-
-      const payload = {
+      const report = await convoReport({
         uid: uid(),
         sessionId: state.sessionId,
         passageKey: `convo:${s.id}`,
-      };
-
-      console.log("[Convo] convo-report payload", payload);
-
-      const report = await convoReport(payload);
+      });
 
       console.log("[Convo] convo-report result", report);
-
       showConvoReportOverlay(report);
 
-      // Quick on-screen dump so you *see* it tonight
+      // Keep the old debug dump too (harmless + useful)
       let pre = document.getElementById("luxConvoReportDump");
       if (!pre) {
         pre = document.createElement("pre");
         pre.id = "luxConvoReportDump";
-        pre.style.whiteSpace = "pre-wrap";
-        pre.style.maxHeight = "35vh";
-        pre.style.overflow = "auto";
-        pre.style.marginTop = "12px";
-        pre.style.padding = "12px";
-        pre.style.border = "1px solid rgba(255,255,255,0.12)";
-        pre.style.borderRadius = "10px";
-
-        // Append somewhere sensible (fallback to body)
+        pre.style.cssText = `
+          position: fixed; left: 12px; bottom: 12px; z-index: 99998;
+          max-width: min(520px, 92vw);
+          max-height: min(320px, 38vh);
+          overflow: auto;
+          white-space: pre-wrap;
+          background: rgba(0,0,0,0.55);
+          color: #e5e7eb;
+          border: 1px solid rgba(255,255,255,0.10);
+          border-radius: 12px;
+          padding: 10px;
+          font-size: 11px;
+        `;
         (document.getElementById("convoApp") || document.body).appendChild(pre);
       }
-
       pre.textContent = JSON.stringify(report, null, 2);
     } catch (e) {
       console.error("[Convo] convo-report failed", e);
@@ -432,7 +555,22 @@ export function bootConvo() {
     }
   });
 
+  function mkSelect(label, options) {
+    const wrap = el("div");
+    const lab = el("label", null, label);
+    const sel = document.createElement("select");
+    options.forEach((o) => {
+      const opt = document.createElement("option");
+      opt.value = o;
+      opt.textContent = o;
+      sel.append(opt);
+    });
+    wrap.append(lab, sel);
+    return { wrap, sel };
+  }
+
   // boot
-  renderScenarios();
-  startScenario().catch(console.error);
+  applySceneVisuals();
+  renderDeck();
+  setMode("intro");
 }
