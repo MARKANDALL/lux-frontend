@@ -18,7 +18,7 @@ function ensurePanel() {
   }
 
   // 2. CRITICAL FIX: Ensure Tab Exists (Even if panel was already there)
-  let tab = document.querySelector(".lux-tts-tab");
+  let tab = panel.querySelector(".lux-tts-tab");
   if (!tab) {
     tab = document.createElement("button");
     tab.className = "lux-tts-tab";
@@ -33,8 +33,8 @@ function ensurePanel() {
     tab.setAttribute("aria-expanded", "false");
     tab.setAttribute("aria-controls", "tts-controls");
     
-    // Insert tab as a sibling of the panel (always reachable)
-    panel.parentNode.insertBefore(tab, panel);
+    // Insert tab at the start of the panel
+    panel.prepend(tab); 
     
     // Wire Toggle Logic
     tab.addEventListener("click", () => {

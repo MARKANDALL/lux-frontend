@@ -136,16 +136,19 @@ html:not(.lux-tts-open) .lux-tts-tab-inner { transform: translateX(calc(-44% + 2
 
 /* Right-side drawer:
    CLOSED = ◀ (0deg), OPEN = ▶ (180deg)
-   Drive the arrow animation off aria-expanded so it always re-triggers. */
+   Force both directions to animate (wins against other rules). */
+html.lux-tts-open .lux-tts-tab .lux-tts-tab-icon,
 .lux-tts-tab[aria-expanded="true"] .lux-tts-tab-icon{
-  transform: rotate(180deg);
-  animation: luxTTSArrowOpen var(--lux-arrow-dur) var(--lux-ease-pop) both;
-  animation-delay: var(--lux-arrow-delay);
+  transform: rotate(180deg) !important;
+  animation: luxTTSArrowOpen var(--lux-arrow-dur) var(--lux-ease-pop) both !important;
+  animation-delay: var(--lux-arrow-delay) !important;
 }
+
+html:not(.lux-tts-open) .lux-tts-tab .lux-tts-tab-icon,
 .lux-tts-tab[aria-expanded="false"] .lux-tts-tab-icon{
-  transform: rotate(0deg);
-  animation: luxTTSArrowClose var(--lux-arrow-dur) var(--lux-ease-pop) both;
-  animation-delay: var(--lux-arrow-delay);
+  transform: rotate(0deg) !important;
+  animation: luxTTSArrowClose var(--lux-arrow-dur) var(--lux-ease-pop) both !important;
+  animation-delay: var(--lux-arrow-delay) !important;
 }
 
 
