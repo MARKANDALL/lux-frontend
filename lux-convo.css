@@ -28,14 +28,7 @@ body{
   right: 0;
   z-index: 20000;
   overflow: visible;
-  pointer-events: none; /* let clicks pass through except the panel */
-}
-
-/* Re-enable interaction on the actual TTS panel */
-#tts-controls .lux-tts-panel,
-#tts-controls .lux-tts-peekaboo,
-#tts-controls [data-tts-panel]{
-  pointer-events: auto;
+  pointer-events: auto; /* keep whatever positioning you want */
 }
 
 /* ============================================================
