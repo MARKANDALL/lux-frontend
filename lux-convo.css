@@ -21,6 +21,46 @@ body{
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 }
 
+/* ============================================================
+   DRAWER LAYOUT FIX: SPB (Left) & TTS (Right)
+   Ensures drawers float above the AI Conversation grid.
+   ============================================================ */
+
+/* 1. Global Drawer Depth */
+.lux-tts-panel, 
+.lux-sp-panel {
+    z-index: 9999 !important;
+    display: block !important;
+}
+
+/* 2. Self-Playback (Left Side) */
+.lux-sp-panel {
+    left: 0 !important;
+    right: auto !important;
+}
+.lux-sp-tab {
+    left: 20px !important;
+    right: auto !important;
+}
+
+/* 3. Text-to-Speech (Right Side) */
+.lux-tts-panel {
+    right: 0 !important;
+    left: auto !important;
+}
+.lux-tts-tab {
+    right: 20px !important;
+    left: auto !important;
+}
+
+/* 4. Visibility Guard: Force the TTS drawer back on screen if hidden */
+html.lux-tts-open .lux-tts-panel {
+    transform: translate3d(0, 0, 0) !important;
+}
+html.lux-sp-open .lux-sp-panel {
+    transform: translate3d(0, 0, 0) !important;
+}
+
 #convoApp{
   max-width: 1200px;
   margin: 0 auto;
