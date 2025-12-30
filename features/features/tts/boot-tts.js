@@ -18,7 +18,7 @@ function ensurePanel() {
   }
 
   // 2. CRITICAL FIX: Ensure Tab Exists (Even if panel was already there)
-  let tab = document.querySelector(".lux-tts-tab");
+  let tab = document.querySelector(".lux-tts-tab"); // IMPORTANT: NOT panel.querySelector
   if (!tab) {
     tab = document.createElement("button");
     tab.className = "lux-tts-tab";
@@ -33,9 +33,8 @@ function ensurePanel() {
     tab.setAttribute("aria-expanded", "false");
     tab.setAttribute("aria-controls", "tts-controls");
     
-    // IMPORTANT: tab must NOT be inside the transformed panel,
-    // or position:fixed becomes relative to the panel and disappears offscreen.
-    document.body.appendChild(tab);
+    // ✅ KEY: tab must be OUTSIDE the transformed panel
+    panel.parentNode.insertBefore(tab, panel);
     
     // Wire Toggle Logic
     tab.addEventListener("click", () => {
@@ -44,9 +43,6 @@ function ensurePanel() {
       tab.setAttribute("aria-expanded", String(willOpen));
     });
   }
-
-  // If an older hot-reload build left the tab inside the panel, yank it out.
-  if (panel.contains(tab)) document.body.appendChild(tab);
 
   // 3. Move host into panel if not already there
   if (!panel.contains(host)) {
