@@ -114,8 +114,8 @@
 /* OPEN => centered */
 html.lux-tts-open .lux-tts-tab-inner { transform: translateX(0); }
 
-/* CLOSED => shift content toward the visible side (left side of the peeking tab) */
-html:not(.lux-tts-open) .lux-tts-tab-inner { transform: translateX(calc(-44% + 22px)); }
+/* CLOSED => no shift (prevents clipping “Text-to-Speech”) */
+html:not(.lux-tts-open) .lux-tts-tab-inner { transform: translateX(0); }
 
 .lux-tts-tab-icon{
   display: inline-block;
