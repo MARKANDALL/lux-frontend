@@ -220,7 +220,10 @@ select {
   display: flex;
   justify-content: center;
   position: relative;
-  z-index: 10; /* stay above nearby UI */
+  z-index: 10;
+
+  /* more space between CTA and the blue box (#userMsg) */
+  margin-bottom: 16px;
 }
 
 .lux-toplink{
@@ -255,64 +258,103 @@ select {
   opacity: 0.75;
 }
 
-/* Siri-style animated rainbow edge (ONLY while hovering/focus) */
-.lux-toplink-cta::before,
-.lux-toplink-cta::after{
+/* ===========================
+   Apple-style flowing edge (hover only)
+   - No mask-composite (fixes the weird ribbon/loop)
+   - Flowing gradient sweep + soft glow
+   =========================== */
+
+.lux-toplink-cta{
+  position: relative;
+  isolation: isolate;
+
+  /* default (no rainbow) */
+  border: 1px solid rgba(0,0,0,0.08);
+  background: rgba(255,255,255,0.92);
+}
+
+/* Soft glow layer behind the button (only visible on hover/focus) */
+.lux-toplink-cta::before{
   content: "";
   position: absolute;
-  inset: -6px;
+  inset: -14px;
   border-radius: inherit;
+  z-index: -1;
   pointer-events: none;
+
   opacity: 0;
   transition: opacity 160ms ease;
-  background: conic-gradient(
-    from 0deg,
-    #ff375f,
-    #ff9f0a,
-    #ffd60a,
-    #32d74b,
-    #64d2ff,
-    #0a84ff,
-    #bf5af2,
-    #ff2d55,
-    #ff375f
+
+  background: linear-gradient(
+    90deg,
+    rgba(255, 55, 95, 0.55),
+    rgba(255, 159, 10, 0.50),
+    rgba(255, 214, 10, 0.45),
+    rgba(50, 215, 75, 0.45),
+    rgba(100, 210, 255, 0.50),
+    rgba(10, 132, 255, 0.55),
+    rgba(191, 90, 242, 0.55),
+    rgba(255, 55, 95, 0.55)
   );
-
-  /* Make it a ring (not a fill) */
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  padding: 3px;
+  background-size: 320% 100%;
+  background-position: 0% 50%;
+  filter: blur(14px);
 }
 
-.lux-toplink-cta::before{
-  filter: blur(12px);
-  inset: -10px;
-  padding: 6px;
+/* Hover/focus: turn on a flowing gradient BORDER (not a spinning wheel) */
+.lux-toplink-cta:hover,
+.lux-toplink-cta:focus-visible{
+  border: 2px solid transparent;
+
+  /* inner fill + outer flowing border */
+  background:
+    linear-gradient(rgba(255,255,255,0.92), rgba(255,255,255,0.92)) padding-box,
+    linear-gradient(
+      90deg,
+      #ff375f,
+      #ff9f0a,
+      #ffd60a,
+      #32d74b,
+      #64d2ff,
+      #0a84ff,
+      #bf5af2,
+      #ff2d55,
+      #ff375f
+    ) border-box;
+
+  background-size: auto, 320% 100%;
+  background-position: 0 0, 0% 50%;
+
+  animation: luxSiriFlow 1.25s linear infinite;
 }
 
+/* Hover/focus: glow flows too (and gently “breathes”) */
 .lux-toplink-cta:hover::before,
-.lux-toplink-cta:hover::after,
-.lux-toplink-cta:focus-visible::before,
-.lux-toplink-cta:focus-visible::after{
+.lux-toplink-cta:focus-visible::before{
   opacity: 1;
-  animation: luxSiriEdgeSpin 1.25s linear infinite;
+  animation: luxSiriGlowFlow 1.25s linear infinite, luxSiriBreath 2.6s ease-in-out infinite;
 }
 
-.lux-toplink-cta:hover{
-  transform: translateY(-1px);
-  box-shadow: 0 16px 36px rgba(0,0,0,0.14);
+@keyframes luxSiriFlow{
+  to { background-position: 0 0, 320% 50%; }
 }
 
-@keyframes luxSiriEdgeSpin{
-  to { transform: rotate(360deg); }
+@keyframes luxSiriGlowFlow{
+  to { background-position: 320% 50%; }
+}
+
+@keyframes luxSiriBreath{
+  0%, 100% { filter: blur(14px); opacity: 0.78; }
+  50%      { filter: blur(18px); opacity: 0.98; }
 }
 
 @media (prefers-reduced-motion: reduce){
+  .lux-toplink-cta:hover,
+  .lux-toplink-cta:focus-visible{
+    animation: none;
+  }
   .lux-toplink-cta:hover::before,
-  .lux-toplink-cta:hover::after,
-  .lux-toplink-cta:focus-visible::before,
-  .lux-toplink-cta:focus-visible::after{
+  .lux-toplink-cta:focus-visible::before{
     animation: none;
   }
 }
