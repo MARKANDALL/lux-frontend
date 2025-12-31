@@ -261,13 +261,14 @@ export function bootConvo() {
     // Parallax is ONLY for the intro screen.
     if (state.mode !== "intro" || root.dataset.parallax !== "on") return;
 
-    const BOOST = 2.4;
+    const BOOST = 2.0; // slightly calmer / more “Edge-like”
 
     const nx = (e.clientX / window.innerWidth - 0.5) * 2;
     const ny = (e.clientY / window.innerHeight - 0.5) * 2;
 
-    root.style.setProperty("--lux-mx", String(clamp(nx, -1, 1) * BOOST));
-    root.style.setProperty("--lux-my", String(clamp(ny, -1, 1) * BOOST));
+    par.tx = clamp(nx, -1, 1) * BOOST;
+    par.ty = clamp(ny, -1, 1) * BOOST;
+    parKick();
   }
 
   window.addEventListener("pointermove", parSetFromEvent, { passive: true });
@@ -352,11 +353,25 @@ export function bootConvo() {
     root.classList.toggle("knobs-open", state.knobsOpen);
   }
 
-  // Intro click => picker
-  intro.addEventListener("click", () => setMode("picker"));
+  function warpToPicker() {
+    if (state.mode !== "intro") return setMode("picker");
+    if (root.classList.contains("lux-warp")) return;
+
+    root.classList.add("lux-warp");
+
+    window.setTimeout(() => {
+      root.classList.remove("lux-warp");
+      setMode("picker");
+      root.classList.add("lux-arrive");
+      window.setTimeout(() => root.classList.remove("lux-arrive"), 420);
+    }, 360);
+  }
+
+  // Intro click => picker (Edge-like “push”)
+  intro.addEventListener("click", warpToPicker);
   heroNext.addEventListener("click", (e) => {
     e.stopPropagation();
-    setMode("picker");
+    warpToPicker();
   });
 
   // Chat header buttons
@@ -567,7 +582,7 @@ export function bootConvo() {
         azureResult,
         sessionId: state.sessionId,
         localTime: new Date().toISOString(),
-        });
+      });
       state.turns.push({ turn: state.turns.length, userText, azureResult, attemptId: saved?.id });
     } catch (e) {
       console.error("[Convo] saveAttempt failed", e);
