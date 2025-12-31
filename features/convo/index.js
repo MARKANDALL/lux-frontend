@@ -163,7 +163,7 @@ export function bootConvo() {
 
   const thumbs = el("div", "lux-thumbs");
   const nav = el("div", "lux-deckNav");
-  const backBtn = el("button", "lux-navArrow", "←");
+  const backBtn = el("button", "lux-navArrow", "← Back");
   const nextBtn = el("button", "lux-navNext", "Next →");
   nav.append(backBtn, nextBtn);
   picker.append(deck, thumbs, nav);
@@ -258,20 +258,16 @@ export function bootConvo() {
   }
 
   function parSetFromEvent(e) {
-    if (state.mode === "picker") return;
+    // Parallax is ONLY for the intro screen.
+    if (state.mode !== "intro" || root.dataset.parallax !== "on") return;
 
-    const cx = window.innerWidth / 2;
-    const cy = window.innerHeight / 2;
+    const BOOST = 2.4;
 
-    const nx = (e.clientX - cx) / (window.innerWidth / 2);
-    const ny = (e.clientY - cy) / (window.innerHeight / 2);
+    const nx = (e.clientX / window.innerWidth - 0.5) * 2;
+    const ny = (e.clientY / window.innerHeight - 0.5) * 2;
 
-    // Boost overall travel (Edge moves more)
-    const BOOST = 1.75;
-
-    par.tx = clamp(nx * BOOST, -1.75, 1.75);
-    par.ty = clamp(ny * BOOST, -1.75, 1.75);
-    parKick();
+    root.style.setProperty("--lux-mx", String(clamp(nx, -1, 1) * BOOST));
+    root.style.setProperty("--lux-my", String(clamp(ny, -1, 1) * BOOST));
   }
 
   window.addEventListener("pointermove", parSetFromEvent, { passive: true });
@@ -308,12 +304,47 @@ export function bootConvo() {
     }
   }
 
-  function setMode(mode) {
+  const VALID_MODES = new Set(["intro", "picker", "chat"]);
+
+  function normalizeMode(m) {
+    const s = (m ?? "").toString().replace(/^#/, "");
+    return VALID_MODES.has(s) ? s : null;
+  }
+
+  function syncHistory(mode, push) {
+    try {
+      const url = `${location.pathname}${location.search}#${mode}`;
+      const st = { luxConvo: 1, mode };
+      if (push) history.pushState(st, "", url);
+      else history.replaceState(st, "", url);
+    } catch (_) {}
+  }
+
+  function render() {}
+
+  function setMode(mode, opts = {}) {
+    const changed = state.mode !== mode;
+
     state.mode = mode;
     root.dataset.mode = mode;
 
-    // Parallax only in intro + chat (OFF in picker)
-    setParallaxEnabled(mode !== "picker");
+    // Used by lux-convo.css to gate drawers (TTS + SelfPB) until chat mode.
+    document.documentElement.dataset.luxConvoMode = mode;
+
+    // Parallax ONLY on intro screen.
+    setParallaxEnabled(mode === "intro");
+
+    // Keep knobs overlay from bleeding into intro/picker.
+    if (mode !== "chat") setKnobs(false);
+
+    // Browser back/forward steps: intro -> picker -> chat
+    if (opts.replace) {
+      syncHistory(mode, false);
+    } else if (opts.push !== false && changed) {
+      syncHistory(mode, true);
+    }
+
+    render();
   }
 
   function setKnobs(open) {
@@ -643,5 +674,16 @@ export function bootConvo() {
   // boot
   applySceneVisuals();
   renderDeck();
-  setMode("intro");
+
+  // Initial mode: hash (if present) wins, otherwise intro.
+  const initialMode =
+    normalizeMode(history.state?.luxConvo ? history.state.mode : location.hash) || "intro";
+
+  setMode(initialMode, { replace: true, push: false });
+
+  window.addEventListener("popstate", (e) => {
+    const m = normalizeMode(e.state?.luxConvo ? e.state.mode : location.hash);
+    if (!m) return;
+    setMode(m, { push: false });
+  });
 }

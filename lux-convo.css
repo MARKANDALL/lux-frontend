@@ -67,6 +67,16 @@ html, body{ height: 100%; }
 html.lux-tts-open .lux-tts-panel{ transform: translate3d(0,0,0) !important; }
 html.lux-sp-open  .lux-sp-panel { transform: translate3d(0,0,0) !important; }
 
+/* Gate global drawers until we're in the actual chat UI */
+html:not([data-lux-convo-mode="chat"]) #tts-controls,
+html:not([data-lux-convo-mode="chat"]) .lux-tts-tab,
+html:not([data-lux-convo-mode="chat"]) .lux-tts-panel,
+html:not([data-lux-convo-mode="chat"]) #self-playback-drawer-target,
+html:not([data-lux-convo-mode="chat"]) .lux-sp-tab,
+html:not([data-lux-convo-mode="chat"]) .lux-sp-panel{
+  display: none !important;
+}
+
 
 /* ============================================================
    Stage wrapper
@@ -142,6 +152,14 @@ html.lux-sp-open  .lux-sp-panel { transform: translate3d(0,0,0) !important; }
 /* Picker should be a clean deck: no moving background */
 #convoApp[data-mode="picker"] .lux-atmo{
   display: none !important;
+}
+
+#convoApp[data-mode="chat"] .lux-atmo{
+  display: none !important;
+}
+
+#convoApp[data-mode="chat"]{
+  background: var(--convo-card) !important;
 }
 
 .lux-atmo-layer{
@@ -405,6 +423,28 @@ html.lux-sp-open  .lux-sp-panel { transform: translate3d(0,0,0) !important; }
 
   transform-style: preserve-3d;
 }
+
+/* Picker sizing bump (bigger foreground + background cards) */
+#convoApp[data-mode="picker"] .lux-deck{
+  width: min(1120px, 96vw);
+  height: 520px;
+}
+
+#convoApp[data-mode="picker"] .lux-deck-card{
+  width: min(820px, 94vw);
+}
+
+#convoApp[data-mode="picker"] .lux-deckTitle{ font-size: 32px; }
+#convoApp[data-mode="picker"] .lux-deckDesc{ font-size: 15px; }
+
+#convoApp[data-mode="picker"] .lux-navArrow,
+#convoApp[data-mode="picker"] .lux-navNext{
+  font-size: 16px;
+  padding: 12px 18px;
+}
+
+/* The ← Back label needs a little more room */
+#convoApp[data-mode="picker"] .lux-navArrow{ min-width: 108px; }
 
 .lux-deck-card{
   position: absolute;
@@ -772,6 +812,30 @@ html.lux-sp-open  .lux-sp-panel { transform: translate3d(0,0,0) !important; }
   font-size: 12px;
   color: var(--convo-muted);
   line-height: 1.35;
+}
+
+/* Chat typography bump (bigger text everywhere in the actual conversation) */
+#convoApp[data-mode="chat"] .lux-title{ font-size: 20px; }
+#convoApp[data-mode="chat"] .lux-sub{ font-size: 14px; }
+
+#convoApp[data-mode="chat"] .lux-actions .btn{
+  font-size: 1.05rem;
+  padding: 10px 12px;
+}
+
+#convoApp[data-mode="chat"] .msg{
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+#convoApp[data-mode="chat"] .sug{
+  font-size: 14px;
+  padding: 8px 12px;
+}
+
+#convoApp[data-mode="chat"] .lux-in{
+  font-size: 1.1rem;
+  padding: 12px 12px;
 }
 
 
