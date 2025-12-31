@@ -1,6 +1,12 @@
 // features/convo/scenarios.js
 export const SCENARIOS = [
-  { id: "coffee", title: "Order Coffee", desc: "Quick small talk + ordering under mild time pressure.", img: "./convo-img/coffee.png", thumb: "./convo-img/coffee.png" },
+  {
+    id: "coffee",
+    title: "Order Coffee",
+    desc: "Quick small talk + ordering under mild time pressure.",
+    img: "/convo-img/coffee.webp",
+    thumb: "/convo-img/coffee.webp",
+  },
   { id: "doctor", title: "Doctor Visit", desc: "Explain symptoms, answer follow-ups, confirm instructions." },
   { id: "job", title: "Job Interview", desc: "Tell your story, strengths, and handle tricky questions." },
   { id: "landlord", title: "Call Your Landlord", desc: "Report an issue, ask for a repair schedule, be polite." },

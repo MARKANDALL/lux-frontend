@@ -231,7 +231,7 @@ html:not([data-lux-convo-mode="chat"]) .lux-sp-panel{
 .lux-scene-card.c1{
   width: 360px; height: 230px;
   left: -90px; top: 90px;
-  --img: url("./convo-img/coffee.png");
+--img: url("/convo-img/coffee.webp");
   transform: translate3d(calc(var(--lux-mxS) * 24px), calc(var(--lux-myS) * 16px), 0) rotate(-10deg);
 }
 .lux-scene-card.c2{
