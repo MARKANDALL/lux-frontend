@@ -1,8 +1,13 @@
 // core.js
 // Normalization helpers and sequence coalescing (from original data.js)
 // Canonical IPA truth lives here.
+//
+// ALIGNMENT UPDATE (assets-compatible):
+// - Adds aliases for any asset keys you use (e.g., schwa, u_short).
+// - Keeps ALL existing mappings unchanged (safe).
+// - Slightly hardens norm(): trim + lowercases underscore/hyphen codes too.
+// - Keeps affricate/tie-bar handling as before.
 
-/* ---------- Azure/legacy-to-Canonical phoneme aliases ---------- */
 const phonemeAlias = {
   // ---------------------------
   // VOWELS (Azure → canonical IPA)
@@ -24,6 +29,12 @@ const phonemeAlias = {
   aw: "aʊ",
   ow: "oʊ",
   oy: "ɔɪ",
+
+  // ---------------------------
+  // VOWEL LABELS USED IN ASSETS / UI (project-friendly)
+  // ---------------------------
+  schwa: "ə",
+  u_short: "ʊ",
 
   // ---------------------------
   // CONSONANTS (Azure/ASCII → canonical IPA)
@@ -67,6 +78,7 @@ const phonemeAlias = {
 
   // ---------------------------
   // Already-IPA passthrough (no change, but harmless if seen)
+  // (Includes everything core already covered + the extra asset symbol ɳ.)
   // ---------------------------
   "ŋ": "ŋ",
   "ɹ": "ɹ",
@@ -79,6 +91,9 @@ const phonemeAlias = {
   "ʒ": "ʒ",
   "tʃ": "tʃ",
   "dʒ": "dʒ",
+
+  // Extras present in assets.js (safe to include; does not affect Azure outputs)
+  "ɳ": "ɳ",
 };
 
 // combining tie-bars, ZWJ, etc.
@@ -90,18 +105,21 @@ const LEGACY = { "ʧ": "tʃ", "ʤ": "dʒ" };
 /** Normalize any phoneme symbol to the canonical form used everywhere. */
 export function norm(sym) {
   if (!sym) return sym;
-  let s = String(sym).normalize("NFC");
 
-  // Lowercase pure ASCII codes (keeps IPA intact)
-  if (/^[A-Za-z]+$/.test(s)) s = s.toLowerCase();
+  let s = String(sym).normalize("NFC").trim();
+  if (!s) return s;
+
+  // Lowercase ASCII-ish codes (letters, digits, underscores, hyphens).
+  // Keeps IPA intact because IPA symbols are non-ASCII.
+  if (/^[A-Za-z0-9_-]+$/.test(s)) s = s.toLowerCase();
 
   // Legacy single-codepoint affricates first
   if (LEGACY[s]) s = LEGACY[s];
 
   // Replace explicit tie-bar affricates
   s = s
-    .replace(/t[\u0361\u035C]?ʃ/, "tʃ")
-    .replace(/d[\u0361\u035C]?ʒ/, "dʒ");
+    .replace(/t[\u0361\u035C]?ʃ/g, "tʃ")
+    .replace(/d[\u0361\u035C]?ʒ/g, "dʒ");
 
   // Strip any leftover tie bars / ZWJ
   s = s.replace(TIE, "");
@@ -120,6 +138,7 @@ export function norm(sym) {
 export function normalizePhoneSequence(seq) {
   if (!Array.isArray(seq)) return [];
   const out = [];
+
   for (let i = 0; i < seq.length; i++) {
     const cur = norm(seq[i]);
     const next = norm(seq[i + 1]);
@@ -131,8 +150,8 @@ export function normalizePhoneSequence(seq) {
       continue;
     }
 
-    // If Azure already gave axr / ɚ, norm() already handled it.
     out.push(cur);
   }
+
   return out;
 }
