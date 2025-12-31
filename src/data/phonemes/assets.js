@@ -1,11 +1,18 @@
 // assets.js
 // Phoneme asset map (ipa + video) and lookup. Uses norm from core.
+//
+// COMPATIBILITY EDITION (pull-up strategy):
+// - Keeps ALL your original keys exactly as-is (zero break risk for any code
+//   that references phonemeAssets["u_short"], phonemeAssets["schwa"], etc.).
+// - Adds extra alias keys (Azure-friendly codes like iy/uw/ax/ey/...) that
+//   point to the SAME assets, so more inputs resolve to the same videos.
+// - Builds an O(1) canonical lookup by IPA (assetsByIPA) and always uses norm().
 
 import { norm } from "./core.js";
 
 /* ---------------------------------------------------------
-           Azure-code → { ipa, video }
-           ------------------------------------------------------ */
+           Original map (unchanged keys)
+   --------------------------------------------------------- */
 const phonemeAssets = {
   /* Original batch */
   r: {
@@ -262,20 +269,63 @@ const phonemeAssets = {
   },
 };
 
-/* Build O(1) lookup by canonical IPA */
-const assetsByIPA = {};
+/* ---------------------------------------------------------
+   Compatibility aliases (additive; points to existing entries)
+   - Adds Azure-friendly codes that your core.js already knows about
+     without changing any of your original keys.
+   - If a key already exists, we DO NOT overwrite it.
+   --------------------------------------------------------- */
+function addAliasKey(newKey, existingKey) {
+  if (!phonemeAssets[newKey] && phonemeAssets[existingKey]) {
+    phonemeAssets[newKey] = phonemeAssets[existingKey];
+  }
+}
+
+// Vowels (Azure -> existing keys you already use)
+addAliasKey("iy", "i");
+addAliasKey("ax", "schwa");
+addAliasKey("uw", "u");
+addAliasKey("aa", "ah"); // /ɑ/
+addAliasKey("ao", "aw"); // /ɔ/
+addAliasKey("ey", "eɪ");
+addAliasKey("ay", "aɪ");
+addAliasKey("oy", "ɔɪ");
+addAliasKey("ow", "oʊ");
+
+// Consonants (Azure -> existing)
+addAliasKey("ng", "ŋ");
+addAliasKey("ch", "tʃ");
+addAliasKey("jh", "dʒ");
+addAliasKey("dx", "ɾ");
+addAliasKey("wh", "ʍ");
+addAliasKey("q", "ʔ");
+addAliasKey("y", "j");
+
+// Also accept direct IPA keys for convenience (without changing anything)
+addAliasKey("ɹ", "r");
+addAliasKey("θ", "th");
+addAliasKey("ð", "dh");
+
+/* ---------------------------------------------------------
+   Build O(1) lookup by canonical IPA
+   - We normalize before indexing to prevent drift.
+   --------------------------------------------------------- */
+const assetsByIPA = Object.create(null);
+
 Object.values(phonemeAssets).forEach((a) => {
-  if (a?.ipa) assetsByIPA[a.ipa] = a;
+  if (!a?.ipa || !a?.video) return;
+  const ipa = norm(a.ipa);
+  if (!assetsByIPA[ipa]) assetsByIPA[ipa] = { ipa, video: a.video };
 });
 
-/* HOTFIX: give ɚ a fallback asset if not explicitly present */
-if (!assetsByIPA["ɚ"]) {
-  assetsByIPA["ɚ"] = { ipa: "ɚ", video: assetsByIPA["ɹ"]?.video };
+/* Defensive fallback: if ɚ ever goes missing, reuse the ɹ clip (better than null). */
+if (!assetsByIPA["ɚ"] && assetsByIPA["ɹ"]?.video) {
+  assetsByIPA["ɚ"] = { ipa: "ɚ", video: assetsByIPA["ɹ"].video };
 }
 
 /** Fast lookup by IPA (or Azure code—both normalized). */
-export function getPhonemeAssetByIPA(ipaSymbol) {
-  return assetsByIPA[norm(ipaSymbol)] || null;
+export function getPhonemeAssetByIPA(symbol) {
+  return assetsByIPA[norm(symbol)] || null;
 }
 
 export { phonemeAssets };
