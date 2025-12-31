@@ -380,7 +380,13 @@ export function bootConvo() {
     SCENARIOS.forEach((s, i) => {
       const b = el("button", "lux-thumb" + (i === state.scenarioIdx ? " is-active" : ""));
       b.title = s.title;
-      b.textContent = (s.title || "?").trim().slice(0, 1).toUpperCase();
+      if (s.thumb) {
+        b.classList.add("has-img");
+        b.style.backgroundImage = `url("${s.thumb}")`;
+        b.textContent = "";
+      } else {
+        b.textContent = (s.title || "?").trim().slice(0, 1).toUpperCase();
+      }
       b.addEventListener("click", () => {
         state.scenarioIdx = i;
         renderDeck();
@@ -391,6 +397,9 @@ export function bootConvo() {
 
   function fillDeckCard(host, scenario, isActive) {
     host.innerHTML = "";
+    host.classList.toggle("has-img", !!scenario.img);
+    if (scenario.img) host.style.setProperty("--lux-card-img", `url("${scenario.img}")`);
+    else host.style.removeProperty("--lux-card-img");
 
     host.append(
       el("div", "lux-pill", "DIALOGUE"),

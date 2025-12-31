@@ -231,7 +231,7 @@ html:not([data-lux-convo-mode="chat"]) .lux-sp-panel{
 .lux-scene-card.c1{
   width: 360px; height: 230px;
   left: -90px; top: 90px;
-  --img: linear-gradient(135deg, rgba(0,120,215,0.30), rgba(255,255,255,0));
+  --img: url("./convo-img/coffee.png");
   transform: translate3d(calc(var(--lux-mxS) * 24px), calc(var(--lux-myS) * 16px), 0) rotate(-10deg);
 }
 .lux-scene-card.c2{
@@ -455,6 +455,8 @@ html:not([data-lux-convo-mode="chat"]) .lux-sp-panel{
   transform: translateX(-50%);
 
   border-radius: 26px;
+  overflow: hidden;
+  isolation: isolate;
   background: rgba(255,255,255,0.88);
   border: 1px solid rgba(0,0,0,0.08);
   box-shadow: var(--convo-shadow);
@@ -465,6 +467,24 @@ html:not([data-lux-convo-mode="chat"]) .lux-sp-panel{
   transition: transform 520ms cubic-bezier(0.18, 0.9, 0.2, 1),
               filter 520ms cubic-bezier(0.18, 0.9, 0.2, 1),
               opacity 520ms cubic-bezier(0.18, 0.9, 0.2, 1);
+}
+
+/* Deck card image background (subtle, behind content) */
+.lux-deck-card.has-img::before{
+  content:"";
+  position:absolute;
+  inset:-10%;
+  background-image: var(--lux-card-img);
+  background-size: cover;
+  background-position: center;
+  opacity: 0.28;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.lux-deck-card.has-img > *{
+  position: relative;
+  z-index: 1;
 }
 
 .lux-deck-card.is-active{
