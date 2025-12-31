@@ -10,6 +10,9 @@
     <link rel="stylesheet" href="lux-layout.css" />
     <link rel="stylesheet" href="lux-convo.css" />
 
+    <!-- Match main page typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet" />
+
     <link rel="stylesheet" href="./features/features/tts-peekaboo.css" />
     <link rel="stylesheet" href="./features/features/tts/tts-overlay.css" />
     <link rel="stylesheet" href="./features/features/tts.css" />
@@ -27,8 +30,21 @@
     <div id="tts-controls" data-luxHidden="1"></div>
     <div id="self-playback-drawer-target"></div>
 
-    <div id="convoApp"></div>
+    <!-- Match primary page layout structure -->
+    <div id="container">
+      <h2>AI Conversations</h2>
+      <div class="lux-toplinks">
+        <a class="lux-toplink" href="./index.html">← Pronunciation Test</a>
+      </div>
 
+      <div id="convoApp"></div>
+    </div>
+
+    <script type="module">
+      import { bootTTS } from "./features/features/tts/boot-tts.js";
+      if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", bootTTS);
+      else bootTTS();
+    </script>
 
     <script type="module" src="./src/convo.js"></script>
   </body>

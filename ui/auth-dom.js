@@ -13,14 +13,15 @@ function renderAuthButton() {
   const btn = document.createElement("button");
   btn.id = "lux-auth-btn";
   
-  btn.style.cssText = `
-    position: absolute; top: 16px; right: 16px;
-    z-index: 900; padding: 8px 16px;
-    background: #fff; border: 1px solid #cbd5e1; border-radius: 20px;
-    color: #475569; font-size: 0.85rem; font-weight: 700;
-    cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    transition: all 0.2s; display: flex; align-items: center; gap: 6px;
-  `;
+btn.style.cssText = `
+  position: fixed; top: 16px; right: 16px;
+  z-index: 900; padding: 8px 16px;
+  background: #fff; border: 1px solid #cbd5e1; border-radius: 20px;
+  color: #475569; font-size: 0.85rem; font-weight: 700;
+  cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+`;
+
   
   btn.onmouseover = () => { btn.style.transform = "translateY(-1px)"; btn.style.boxShadow = "0 4px 8px rgba(0,0,0,0.1)"; };
   btn.onmouseout = () => { btn.style.transform = "translateY(0)"; btn.style.boxShadow = "0 2px 5px rgba(0,0,0,0.05)"; };
