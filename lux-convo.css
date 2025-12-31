@@ -79,7 +79,10 @@ html.lux-sp-open  .lux-sp-panel { transform: translate3d(0,0,0) !important; }
   overflow: hidden;
 
   border-radius: var(--convo-radius-lg);
-  background: var(--convo-card);
+  background:
+    radial-gradient(circle at 28% 22%, rgba(0,120,215,0.10), rgba(255,255,255,0) 58%),
+    radial-gradient(circle at 78% 62%, rgba(124,77,255,0.08), rgba(255,255,255,0) 60%),
+    var(--convo-card);
   box-shadow: var(--convo-shadow-soft);
 
   /* Parallax driver vars set by JS */
@@ -120,23 +123,104 @@ html.lux-sp-open  .lux-sp-panel { transform: translate3d(0,0,0) !important; }
   transform: translate3d(calc(var(--lux-mx) * -16px), calc(var(--lux-my) * -12px), 0);
 }
 
-/* Small “scene cards” in the background (pure decoration) */
+/* Floating “Edge-like” tiles (image-ready + parallax) */
 .lux-scene-cards{
   position: absolute;
   inset: 0;
-  opacity: 0.35;
+  opacity: 0.82;                 /* <- make them actually visible */
+  transition: opacity 400ms ease;
 }
+
+/* keep them subtle during chat */
+#convoApp[data-mode="chat"] .lux-scene-cards{ opacity: 0.18; }
+
 .lux-scene-card{
   position: absolute;
   border-radius: 18px;
-  background: rgba(255,255,255,0.70);
+  overflow: hidden;
+
+  background: rgba(255,255,255,0.62);
   border: 1px solid rgba(0,0,0,0.06);
-  box-shadow: 0 18px 50px rgba(0,0,0,0.08);
-  backdrop-filter: blur(10px);
+  box-shadow: 0 22px 60px rgba(0,0,0,0.10);
+  backdrop-filter: blur(12px);
+
+  will-change: transform;
+  transition: transform 420ms cubic-bezier(0.18, 0.9, 0.2, 1);
 }
-.lux-scene-card.c1{ width: 220px; height: 140px; left: 8%;  top: 18%; transform: rotate(-8deg); }
-.lux-scene-card.c2{ width: 260px; height: 160px; right: 10%; top: 26%; transform: rotate(7deg); }
-.lux-scene-card.c3{ width: 300px; height: 180px; left: 18%; bottom: 16%; transform: rotate(5deg); }
+
+/* “Image layer”
+   Swap --img: linear-gradient(...) => --img: url("/convo/your-file.jpg") when ready. */
+.lux-scene-card::before{
+  content:"";
+  position:absolute;
+  inset:-12%;
+
+  background: var(--img, linear-gradient(135deg, rgba(0,120,215,0.22), rgba(124,77,255,0.14)));
+  background-size: cover;
+  background-position: center;
+
+  transform: translate3d(calc(var(--lux-mx) * -18px), calc(var(--lux-my) * -14px), 0) scale(1.08);
+  filter: saturate(1.05) contrast(1.02);
+}
+
+/* Positions (peek off-screen like Edge) */
+.lux-scene-card.c1{
+  width: 360px; height: 230px;
+  left: -90px; top: 90px;
+  --img: linear-gradient(135deg, rgba(0,120,215,0.30), rgba(255,255,255,0));
+  transform: translate3d(calc(var(--lux-mx) * 24px), calc(var(--lux-my) * 16px), 0) rotate(-10deg);
+}
+.lux-scene-card.c2{
+  width: 380px; height: 240px;
+  right: -110px; top: 140px;
+  --img: linear-gradient(135deg, rgba(124,77,255,0.26), rgba(255,255,255,0));
+  transform: translate3d(calc(var(--lux-mx) * -26px), calc(var(--lux-my) * 18px), 0) rotate(9deg);
+}
+.lux-scene-card.c3{
+  width: 420px; height: 260px;
+  left: -120px; bottom: 120px;
+  --img: linear-gradient(135deg, rgba(0,200,160,0.18), rgba(0,120,215,0.18));
+  transform: translate3d(calc(var(--lux-mx) * 30px), calc(var(--lux-my) * -22px), 0) rotate(6deg);
+}
+.lux-scene-card.c4{
+  width: 360px; height: 230px;
+  right: -90px; bottom: 110px;
+  --img: linear-gradient(135deg, rgba(255,160,0,0.16), rgba(124,77,255,0.14));
+  transform: translate3d(calc(var(--lux-mx) * -24px), calc(var(--lux-my) * -18px), 0) rotate(-6deg);
+}
+.lux-scene-card.c5{
+  width: 300px; height: 190px;
+  left: 8%; top: 56%;
+  --img: linear-gradient(135deg, rgba(0,0,0,0.06), rgba(0,120,215,0.16));
+  transform: translate3d(calc(var(--lux-mx) * 16px), calc(var(--lux-my) * -14px), 0) rotate(-4deg);
+}
+.lux-scene-card.c6{
+  width: 320px; height: 200px;
+  right: 10%; top: 58%;
+  --img: linear-gradient(135deg, rgba(0,0,0,0.06), rgba(124,77,255,0.16));
+  transform: translate3d(calc(var(--lux-mx) * -18px), calc(var(--lux-my) * -14px), 0) rotate(5deg);
+}
+.lux-scene-card.c7{
+  width: 260px; height: 170px;
+  left: 18%; top: 8%;
+  --img: linear-gradient(135deg, rgba(255,255,255,0), rgba(0,120,215,0.18));
+  transform: translate3d(calc(var(--lux-mx) * 14px), calc(var(--lux-my) * 12px), 0) rotate(3deg);
+}
+.lux-scene-card.c8{
+  width: 260px; height: 170px;
+  right: 18%; bottom: 6%;
+  --img: linear-gradient(135deg, rgba(255,255,255,0), rgba(124,77,255,0.18));
+  transform: translate3d(calc(var(--lux-mx) * -14px), calc(var(--lux-my) * -12px), 0) rotate(-3deg);
+}
+
+/* If user prefers reduced motion */
+@media (prefers-reduced-motion: reduce){
+  .lux-scene-card,
+  .lux-scene-card::before{
+    transition: none !important;
+    transform: none !important;
+  }
+}
 
 .lux-atmo-fog{
   position: absolute;
@@ -144,7 +228,7 @@ html.lux-sp-open  .lux-sp-panel { transform: translate3d(0,0,0) !important; }
   background:
     radial-gradient(circle at 50% 0%, rgba(0,120,215,0.10), rgba(255,255,255,0) 55%),
     linear-gradient(180deg, rgba(255,255,255,0.86), rgba(255,255,255,0.96));
-  opacity: 1;
+  opacity: 0.62;
 }
 
 
@@ -226,6 +310,10 @@ html.lux-sp-open  .lux-sp-panel { transform: translate3d(0,0,0) !important; }
   padding: 26px 24px;
   backdrop-filter: blur(10px);
   cursor: pointer;
+
+  transform: translate3d(calc(var(--lux-mx) * -10px), calc(var(--lux-my) * -8px), 0);
+  transition: transform 260ms cubic-bezier(0.18, 0.9, 0.2, 1);
+  will-change: transform;
 }
 
 .lux-heroBrand{
