@@ -249,8 +249,9 @@ html:not([data-lux-convo-mode="chat"]) .lux-sp-panel{
   border-radius: 22px;
   overflow: hidden;
 
-  background: #ffffff; /* opaque => no see-through between tiles */
-  border: 1px solid rgba(0,0,0,0.10);
+  /* Full-bleed tiles (Edge-like): no “white frame” base */
+  background: transparent;
+  border: 0;
   box-shadow: 0 28px 80px rgba(0,0,0,0.22);
 
   /* backdrop-filter is expensive (especially during motion) */
@@ -261,8 +262,8 @@ html:not([data-lux-convo-mode="chat"]) .lux-sp-panel{
 
 /* Intro: make tiles feel like Edge (more “real”, higher contrast) */
 #convoApp[data-mode="intro"] .lux-scene-card{
-  background: #ffffff; /* still opaque in intro */
-  border: 1px solid rgba(0,0,0,0.12);
+  background: transparent;
+  border: 0;
   box-shadow: 0 34px 110px rgba(0,0,0,0.48);
 }
 
@@ -272,13 +273,14 @@ html:not([data-lux-convo-mode="chat"]) .lux-sp-panel{
 .lux-scene-card::before{
   content:"";
   position:absolute;
-  inset:-12%;
+  inset:0; /* full-bleed: always fill the tile */
 
   background: var(--img, linear-gradient(135deg, #2b84ff, #7a4dff)); /* opaque fallback */
   background-size: cover;
   background-position: center;
 
-  transform: translate3d(calc(var(--lux-mxI) * -18px), calc(var(--lux-myI) * -14px), 0) scale(1.12);
+  /* Kill the “viewport” effect: don’t slide the image inside the tile */
+  transform: scale(1.01);
 
   /* Avoid filter work during parallax; Edge images look “finished” already */
   filter: none;
@@ -300,52 +302,53 @@ html:not([data-lux-convo-mode="chat"]) .lux-sp-panel{
 .lux-scene-card.c2{
   width: 460px; height: 290px;
   right: 2%; top: 118px;
-  --img: linear-gradient(135deg, #6f4cff, #1d2c3a);
+  --img: url("/convo-img/doctor.webp");
   z-index: 5;
   transform: translate3d(calc(var(--lux-mxS) * -26px), calc(var(--lux-myS) * 18px), 0) rotate(9deg);
 }
 .lux-scene-card.c3{
   width: 520px; height: 320px;
   left: 3%; bottom: 86px;
-  --img: linear-gradient(135deg, #1dd6b0, #0b6bd3);
+  --img: url("/convo-img/job.webp");
   z-index: 4;
   transform: translate3d(calc(var(--lux-mxS) * 30px), calc(var(--lux-myS) * -22px), 0) rotate(6deg);
 }
 .lux-scene-card.c4{
   width: 480px; height: 300px;
   right: 3%; bottom: 74px;
-  --img: linear-gradient(135deg, #ffb14a, #7a4dff);
+  --img: url("/convo-img/landlord.webp");
   z-index: 3;
   transform: translate3d(calc(var(--lux-mxS) * -24px), calc(var(--lux-myS) * -18px), 0) rotate(-6deg);
 }
 .lux-scene-card.c5{
   width: 380px; height: 240px;
   left: 24%; top: 56%;
-  --img: linear-gradient(135deg, #232a31, #2b84ff);
+  --img: url("/convo-img/airport.webp");
   z-index: 7;
   transform: translate3d(calc(var(--lux-mxS) * 16px), calc(var(--lux-myS) * -14px), 0) rotate(-4deg);
 }
 .lux-scene-card.c6{
   width: 400px; height: 250px;
   right: 24%; top: 58%;
-  --img: linear-gradient(135deg, #232a31, #7a4dff);
+  --img: url("/convo-img/restaurant.webp");
   z-index: 2;
   transform: translate3d(calc(var(--lux-mxS) * -18px), calc(var(--lux-myS) * -14px), 0) rotate(5deg);
 }
 .lux-scene-card.c7{
   width: 360px; height: 230px;
   left: calc(50% - 620px); top: 40px;  /* pulls tiles toward center band */
-  --img: linear-gradient(135deg, #2b84ff, #0b2a2b);
+  --img: url("/convo-img/school.webp");
   z-index: 1;
   transform: translate3d(calc(var(--lux-mxS) * 14px), calc(var(--lux-myS) * 12px), 0) rotate(3deg);
 }
 .lux-scene-card.c8{
   width: 360px; height: 230px;
   left: calc(50% + 260px); bottom: 34px; /* another “center-ish” tile */
-  --img: linear-gradient(135deg, #7a4dff, #0a1f2a);
+  --img: url("/convo-img/network.webp");
   z-index: 8;
   transform: translate3d(calc(var(--lux-mxS) * -14px), calc(var(--lux-myS) * -12px), 0) rotate(-3deg);
 }
+
 
 /* If user prefers reduced motion */
 @media (prefers-reduced-motion: reduce){
