@@ -209,6 +209,114 @@ select {
   margin: 0.3rem auto 1rem;
 }
 
+/* ===========================
+   Top link CTA (index.html)
+   =========================== */
+.lux-toplinks{
+  margin: 8px 0 10px;
+}
+
+.lux-toplinks-cta{
+  display: flex;
+  justify-content: center;
+  position: relative;
+  z-index: 10; /* stay above nearby UI */
+}
+
+.lux-toplink{
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.lux-toplink-cta{
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 12px 20px;
+  border-radius: 999px;
+
+  font-size: 15px;
+  letter-spacing: 0.2px;
+
+  color: #1f2a37;
+  background: rgba(255,255,255,0.92);
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow: 0 12px 26px rgba(0,0,0,0.10);
+
+  transform: translateY(0);
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+
+.lux-toplink-beta{
+  font-weight: 800;
+  opacity: 0.75;
+}
+
+/* Siri-style animated rainbow edge (ONLY while hovering/focus) */
+.lux-toplink-cta::before,
+.lux-toplink-cta::after{
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 160ms ease;
+  background: conic-gradient(
+    from 0deg,
+    #ff375f,
+    #ff9f0a,
+    #ffd60a,
+    #32d74b,
+    #64d2ff,
+    #0a84ff,
+    #bf5af2,
+    #ff2d55,
+    #ff375f
+  );
+
+  /* Make it a ring (not a fill) */
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  padding: 3px;
+}
+
+.lux-toplink-cta::before{
+  filter: blur(12px);
+  inset: -10px;
+  padding: 6px;
+}
+
+.lux-toplink-cta:hover::before,
+.lux-toplink-cta:hover::after,
+.lux-toplink-cta:focus-visible::before,
+.lux-toplink-cta:focus-visible::after{
+  opacity: 1;
+  animation: luxSiriEdgeSpin 1.25s linear infinite;
+}
+
+.lux-toplink-cta:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 16px 36px rgba(0,0,0,0.14);
+}
+
+@keyframes luxSiriEdgeSpin{
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .lux-toplink-cta:hover::before,
+  .lux-toplink-cta:hover::after,
+  .lux-toplink-cta:focus-visible::before,
+  .lux-toplink-cta:focus-visible::after{
+    animation: none;
+  }
+}
+
 #userMsg {
   background: #e7f2fb;
   color: #134e6f;
@@ -217,10 +325,12 @@ select {
   opacity: 0;
   transform: translateY(-40px);
   transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.47, 1.64, 0.41, 0.8);
+  pointer-events: none; /* <-- IMPORTANT: don't block clicks while hidden */
 }
 #userMsg.show {
   opacity: 1;
   transform: translateY(0);
+  pointer-events: auto; /* <-- allow database tracking click once visible */
 }
 #userMsg ol {
   margin: 0;
