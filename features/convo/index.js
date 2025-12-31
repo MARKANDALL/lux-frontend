@@ -126,6 +126,11 @@ export function bootConvo() {
       <div class="lux-scene-card c1"></div>
       <div class="lux-scene-card c2"></div>
       <div class="lux-scene-card c3"></div>
+      <div class="lux-scene-card c4"></div>
+      <div class="lux-scene-card c5"></div>
+      <div class="lux-scene-card c6"></div>
+      <div class="lux-scene-card c7"></div>
+      <div class="lux-scene-card c8"></div>
     </div>
 
     <div class="lux-atmo-fog"></div>
@@ -229,16 +234,57 @@ export function bootConvo() {
     root.dataset.side = state.scenarioIdx % 2 === 0 ? "left" : "right";
   }
 
-  window.addEventListener(
-    "mousemove",
-    (e) => {
-      const nx = (e.clientX / window.innerWidth - 0.5) * 2; // stronger
-      const ny = (e.clientY / window.innerHeight - 0.5) * 2;
-      root.style.setProperty("--lux-mx", nx.toFixed(4));
-      root.style.setProperty("--lux-my", ny.toFixed(4));
+  // --- Parallax driver (Edge-like: stage-relative + eased + recenters on leave) ---
+  const par = { tx: 0, ty: 0, x: 0, y: 0, raf: 0 };
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+  function parTick() {
+    // Ease gives that “float / inertia” feel
+    par.x += (par.tx - par.x) * 0.12;
+    par.y += (par.ty - par.y) * 0.12;
+
+    root.style.setProperty("--lux-mx", par.x.toFixed(4));
+    root.style.setProperty("--lux-my", par.y.toFixed(4));
+
+    const done = Math.abs(par.tx - par.x) < 0.001 && Math.abs(par.ty - par.y) < 0.001;
+    if (done) {
+      par.raf = 0;
+      return;
+    }
+    par.raf = requestAnimationFrame(parTick);
+  }
+  function parKick() {
+    if (!par.raf) par.raf = requestAnimationFrame(parTick);
+  }
+
+  function parSetFromEvent(e) {
+    const r = root.getBoundingClientRect();
+    const cx = r.left + r.width / 2;
+    const cy = r.top + r.height / 2;
+
+    const nx = clamp((e.clientX - cx) / (r.width / 2), -1, 1);
+    const ny = clamp((e.clientY - cy) / (r.height / 2), -1, 1);
+
+    par.tx = nx;
+    par.ty = ny;
+    parKick();
+  }
+
+  root.addEventListener("pointermove", parSetFromEvent, { passive: true });
+  root.addEventListener("pointerdown", parSetFromEvent, { passive: true });
+  root.addEventListener(
+    "pointerleave",
+    () => {
+      par.tx = 0;
+      par.ty = 0;
+      parKick();
     },
     { passive: true }
   );
+
+  // ensure neutral at boot
+  root.style.setProperty("--lux-mx", "0");
+  root.style.setProperty("--lux-my", "0");
 
   function setMode(mode) {
     state.mode = mode;
