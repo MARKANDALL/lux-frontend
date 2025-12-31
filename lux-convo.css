@@ -53,7 +53,7 @@ html, body{ height: 100%; }
 .lux-tts-panel,
 .lux-sp-panel{
   z-index: var(--z-drawer) !important;
-  display: block !important;
+  /* IMPORTANT: do not force display here; mode rules handle visibility */
 }
 
 /* Self-Playback (Left) */
@@ -89,16 +89,59 @@ html.lux-sp-open  .lux-sp-panel { transform: translate3d(0,0,0) !important; }
   --lux-hue: 210;
   --lux-mx: 0;
   --lux-my: 0;
+
+  /* Parallax strength knobs (Edge-like) */
+  --lux-par-bg: 2.8;
+  --lux-par-img: 3.2;
+  --lux-mxS: calc(var(--lux-mx) * var(--lux-par-bg));
+  --lux-myS: calc(var(--lux-my) * var(--lux-par-bg));
+  --lux-mxI: calc(var(--lux-mx) * var(--lux-par-img));
+  --lux-myI: calc(var(--lux-my) * var(--lux-par-img));
 }
+
+/* Full-bleed “Edge-like” stage for intro + picker (chat stays boxed) */
+#convoApp[data-mode="intro"],
+#convoApp[data-mode="picker"]{
+  width: 100vw;
+  max-width: none;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  overflow: visible;
+
+  --lux-par-bg: 7.5;
+  --lux-par-img: 9.0;
+}
+
+/* Keep chat calmer */
+#convoApp[data-mode="chat"]{
+  --lux-par-bg: 2.4;
+  --lux-par-img: 2.8;
+}
+
 
 /* ============================================================
    Atmosphere (subtle, light)
    ============================================================ */
 .lux-atmo{
-  position: absolute;
-  inset: -80px;
+  position: fixed;
+  inset: 0;
   z-index: 0;
   pointer-events: none;
+
+  /* Full-viewport canvas (so you don’t see “white margins”) */
+  background:
+    radial-gradient(circle at 22% 18%, rgba(0,120,215,0.18), rgba(255,255,255,0) 58%),
+    radial-gradient(circle at 78% 62%, rgba(124,77,255,0.16), rgba(255,255,255,0) 60%),
+    linear-gradient(180deg, rgba(250,252,255,0.92), rgba(246,248,255,0.96));
+}
+
+/* Picker should be a clean deck: no moving background */
+#convoApp[data-mode="picker"] .lux-atmo{
+  display: none !important;
 }
 
 .lux-atmo-layer{
@@ -107,8 +150,9 @@ html.lux-sp-open  .lux-sp-panel { transform: translate3d(0,0,0) !important; }
   border-radius: 999px;
   filter: blur(52px);
   opacity: 1;
-  transform: translate3d(calc(var(--lux-mx) * 18px), calc(var(--lux-my) * 14px), 0);
+  transform: translate3d(calc(var(--lux-mxS) * 18px), calc(var(--lux-myS) * 14px), 0);
   transition: opacity 500ms ease;
+  z-index: 1;
 }
 
 .lux-atmo-layer.a{
@@ -120,19 +164,21 @@ html.lux-sp-open  .lux-sp-panel { transform: translate3d(0,0,0) !important; }
   background: radial-gradient(circle at 70% 60%,
     var(--convo-atmo-b) 0%,
     rgba(255,255,255,0) 66%);
-  transform: translate3d(calc(var(--lux-mx) * -16px), calc(var(--lux-my) * -12px), 0);
+  transform: translate3d(calc(var(--lux-mxS) * -16px), calc(var(--lux-myS) * -12px), 0);
 }
 
 /* Floating “Edge-like” tiles (image-ready + parallax) */
 .lux-scene-cards{
   position: absolute;
   inset: 0;
-  opacity: 0.82;                 /* <- make them actually visible */
+  z-index: 3;
+
+  opacity: 0.98;                 /* intro/picker visibility */
   transition: opacity 400ms ease;
 }
 
 /* keep them subtle during chat */
-#convoApp[data-mode="chat"] .lux-scene-cards{ opacity: 0.18; }
+#convoApp[data-mode="chat"] .lux-scene-cards{ opacity: 0.16; }
 
 .lux-scene-card{
   position: absolute;
@@ -159,8 +205,8 @@ html.lux-sp-open  .lux-sp-panel { transform: translate3d(0,0,0) !important; }
   background-size: cover;
   background-position: center;
 
-  transform: translate3d(calc(var(--lux-mx) * -18px), calc(var(--lux-my) * -14px), 0) scale(1.08);
-  filter: saturate(1.05) contrast(1.02);
+  transform: translate3d(calc(var(--lux-mxI) * -18px), calc(var(--lux-myI) * -14px), 0) scale(1.12);
+  filter: saturate(1.22) contrast(1.15);
 }
 
 /* Positions (peek off-screen like Edge) */
@@ -168,49 +214,49 @@ html.lux-sp-open  .lux-sp-panel { transform: translate3d(0,0,0) !important; }
   width: 360px; height: 230px;
   left: -90px; top: 90px;
   --img: linear-gradient(135deg, rgba(0,120,215,0.30), rgba(255,255,255,0));
-  transform: translate3d(calc(var(--lux-mx) * 24px), calc(var(--lux-my) * 16px), 0) rotate(-10deg);
+  transform: translate3d(calc(var(--lux-mxS) * 24px), calc(var(--lux-myS) * 16px), 0) rotate(-10deg);
 }
 .lux-scene-card.c2{
   width: 380px; height: 240px;
   right: -110px; top: 140px;
   --img: linear-gradient(135deg, rgba(124,77,255,0.26), rgba(255,255,255,0));
-  transform: translate3d(calc(var(--lux-mx) * -26px), calc(var(--lux-my) * 18px), 0) rotate(9deg);
+  transform: translate3d(calc(var(--lux-mxS) * -26px), calc(var(--lux-myS) * 18px), 0) rotate(9deg);
 }
 .lux-scene-card.c3{
   width: 420px; height: 260px;
   left: -120px; bottom: 120px;
   --img: linear-gradient(135deg, rgba(0,200,160,0.18), rgba(0,120,215,0.18));
-  transform: translate3d(calc(var(--lux-mx) * 30px), calc(var(--lux-my) * -22px), 0) rotate(6deg);
+  transform: translate3d(calc(var(--lux-mxS) * 30px), calc(var(--lux-myS) * -22px), 0) rotate(6deg);
 }
 .lux-scene-card.c4{
   width: 360px; height: 230px;
   right: -90px; bottom: 110px;
   --img: linear-gradient(135deg, rgba(255,160,0,0.16), rgba(124,77,255,0.14));
-  transform: translate3d(calc(var(--lux-mx) * -24px), calc(var(--lux-my) * -18px), 0) rotate(-6deg);
+  transform: translate3d(calc(var(--lux-mxS) * -24px), calc(var(--lux-myS) * -18px), 0) rotate(-6deg);
 }
 .lux-scene-card.c5{
   width: 300px; height: 190px;
   left: 8%; top: 56%;
   --img: linear-gradient(135deg, rgba(0,0,0,0.06), rgba(0,120,215,0.16));
-  transform: translate3d(calc(var(--lux-mx) * 16px), calc(var(--lux-my) * -14px), 0) rotate(-4deg);
+  transform: translate3d(calc(var(--lux-mxS) * 16px), calc(var(--lux-myS) * -14px), 0) rotate(-4deg);
 }
 .lux-scene-card.c6{
   width: 320px; height: 200px;
   right: 10%; top: 58%;
   --img: linear-gradient(135deg, rgba(0,0,0,0.06), rgba(124,77,255,0.16));
-  transform: translate3d(calc(var(--lux-mx) * -18px), calc(var(--lux-my) * -14px), 0) rotate(5deg);
+  transform: translate3d(calc(var(--lux-mxS) * -18px), calc(var(--lux-myS) * -14px), 0) rotate(5deg);
 }
 .lux-scene-card.c7{
   width: 260px; height: 170px;
   left: 18%; top: 8%;
   --img: linear-gradient(135deg, rgba(255,255,255,0), rgba(0,120,215,0.18));
-  transform: translate3d(calc(var(--lux-mx) * 14px), calc(var(--lux-my) * 12px), 0) rotate(3deg);
+  transform: translate3d(calc(var(--lux-mxS) * 14px), calc(var(--lux-myS) * 12px), 0) rotate(3deg);
 }
 .lux-scene-card.c8{
   width: 260px; height: 170px;
   right: 18%; bottom: 6%;
   --img: linear-gradient(135deg, rgba(255,255,255,0), rgba(124,77,255,0.18));
-  transform: translate3d(calc(var(--lux-mx) * -14px), calc(var(--lux-my) * -12px), 0) rotate(-3deg);
+  transform: translate3d(calc(var(--lux-mxS) * -14px), calc(var(--lux-myS) * -12px), 0) rotate(-3deg);
 }
 
 /* If user prefers reduced motion */
@@ -225,10 +271,12 @@ html.lux-sp-open  .lux-sp-panel { transform: translate3d(0,0,0) !important; }
 .lux-atmo-fog{
   position: absolute;
   inset: 0;
+  z-index: 2;
+
   background:
     radial-gradient(circle at 50% 0%, rgba(0,120,215,0.10), rgba(255,255,255,0) 55%),
-    linear-gradient(180deg, rgba(255,255,255,0.86), rgba(255,255,255,0.96));
-  opacity: 0.62;
+    linear-gradient(180deg, rgba(255,255,255,0.52), rgba(255,255,255,0.74));
+  opacity: 0.55;
 }
 
 
@@ -310,10 +358,6 @@ html.lux-sp-open  .lux-sp-panel { transform: translate3d(0,0,0) !important; }
   padding: 26px 24px;
   backdrop-filter: blur(10px);
   cursor: pointer;
-
-  transform: translate3d(calc(var(--lux-mx) * -10px), calc(var(--lux-my) * -8px), 0);
-  transition: transform 260ms cubic-bezier(0.18, 0.9, 0.2, 1);
-  will-change: transform;
 }
 
 .lux-heroBrand{
@@ -359,7 +403,6 @@ html.lux-sp-open  .lux-sp-panel { transform: translate3d(0,0,0) !important; }
   width: min(980px, 94vw);
   height: 440px;
 
-  transform: rotateX(calc(var(--lux-my) * -2deg)) rotateY(calc(var(--lux-mx) * 2deg));
   transform-style: preserve-3d;
 }
 
@@ -690,6 +733,19 @@ html.lux-sp-open  .lux-sp-panel { transform: translate3d(0,0,0) !important; }
 #convoApp.knobs-open .lux-scrim{
   opacity: 1;
   pointer-events: auto;
+}
+
+/* Hide drawers + tabs until user reaches chat */
+#convoApp:not([data-mode="chat"]) #tts-controls{
+  display: none !important;
+}
+
+/* SelfPB may not live inside #tts-controls, so hide explicitly too */
+#convoApp:not([data-mode="chat"]) .lux-sp-panel,
+#convoApp:not([data-mode="chat"]) .lux-sp-tab,
+#convoApp:not([data-mode="chat"]) .lux-tts-panel,
+#convoApp:not([data-mode="chat"]) .lux-tts-tab{
+  display: none !important;
 }
 
 /* Knobs form */

@@ -240,8 +240,8 @@ export function bootConvo() {
 
   function parTick() {
     // Ease gives that “float / inertia” feel
-    par.x += (par.tx - par.x) * 0.12;
-    par.y += (par.ty - par.y) * 0.12;
+    par.x += (par.tx - par.x) * 0.18;
+    par.y += (par.ty - par.y) * 0.18;
 
     root.style.setProperty("--lux-mx", par.x.toFixed(4));
     root.style.setProperty("--lux-my", par.y.toFixed(4));
@@ -258,37 +258,62 @@ export function bootConvo() {
   }
 
   function parSetFromEvent(e) {
-    const r = root.getBoundingClientRect();
-    const cx = r.left + r.width / 2;
-    const cy = r.top + r.height / 2;
+    if (state.mode === "picker") return;
 
-    const nx = clamp((e.clientX - cx) / (r.width / 2), -1, 1);
-    const ny = clamp((e.clientY - cy) / (r.height / 2), -1, 1);
+    const cx = window.innerWidth / 2;
+    const cy = window.innerHeight / 2;
 
-    par.tx = nx;
-    par.ty = ny;
+    const nx = (e.clientX - cx) / (window.innerWidth / 2);
+    const ny = (e.clientY - cy) / (window.innerHeight / 2);
+
+    // Boost overall travel (Edge moves more)
+    const BOOST = 1.75;
+
+    par.tx = clamp(nx * BOOST, -1.75, 1.75);
+    par.ty = clamp(ny * BOOST, -1.75, 1.75);
     parKick();
   }
 
-  root.addEventListener("pointermove", parSetFromEvent, { passive: true });
-  root.addEventListener("pointerdown", parSetFromEvent, { passive: true });
-  root.addEventListener(
-    "pointerleave",
-    () => {
+  window.addEventListener("pointermove", parSetFromEvent, { passive: true });
+  window.addEventListener("pointerdown", parSetFromEvent, { passive: true });
+
+  window.addEventListener("blur", () => {
+    par.tx = 0;
+    par.ty = 0;
+    parKick();
+  });
+
+  // When the pointer leaves the browser window, re-center
+  window.addEventListener("mouseout", (e) => {
+    if (!e.relatedTarget && !e.toElement) {
       par.tx = 0;
       par.ty = 0;
       parKick();
-    },
-    { passive: true }
-  );
+    }
+  });
 
   // ensure neutral at boot
   root.style.setProperty("--lux-mx", "0");
   root.style.setProperty("--lux-my", "0");
 
+  function setParallaxEnabled(on) {
+    root.dataset.parallax = on ? "on" : "off";
+
+    if (!on) {
+      par.tx = 0; par.ty = 0;
+      par.x = 0;  par.y = 0;
+      par.raf = 0;
+      root.style.setProperty("--lux-mx", "0");
+      root.style.setProperty("--lux-my", "0");
+    }
+  }
+
   function setMode(mode) {
     state.mode = mode;
     root.dataset.mode = mode;
+
+    // Parallax only in intro + chat (OFF in picker)
+    setParallaxEnabled(mode !== "picker");
   }
 
   function setKnobs(open) {
@@ -502,7 +527,7 @@ export function bootConvo() {
         azureResult,
         sessionId: state.sessionId,
         localTime: new Date().toISOString(),
-      });
+        });
       state.turns.push({ turn: state.turns.length, userText, azureResult, attemptId: saved?.id });
     } catch (e) {
       console.error("[Convo] saveAttempt failed", e);
