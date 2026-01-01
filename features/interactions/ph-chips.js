@@ -42,20 +42,43 @@ export async function initPhonemeChipBehavior(containerSelector = "#prettyResult
     const placement = articulatorPlacement[key];
     const asset = getPhonemeAssetByIPA(key);
 
-    let tipText = "";
+    let tipPlain = "";
+    let tipTech = "";
+    let tipMistake = "";
     let displayIPA = "";
+    let words = [];
 
     if (detail) {
-        tipText = detail.tip;
-        displayIPA = detail.ipa; // e.g. "/t/ (top)"
+      tipPlain = detail.tip || "";
+      tipTech = detail.tech || "";          // (future field)
+      tipMistake = detail.mistake || "";    // already present in many entries
+      displayIPA = detail.ipa || "";
+
+      // (future) examples array support — you can choose "words" or "examples" in details.js
+      const arr = detail.words || detail.examples;
+      if (Array.isArray(arr)) words = arr;
     } else if (placement) {
-        // Fallback to the anatomical description
-        tipText = `${placement.label}. ${placement.tip}`;
-        displayIPA = `/${key}/ (as in '${placement.example}')`;
+      // Fallback: keep today’s behavior, but treat it as “Plain”
+      tipPlain = `${placement.label}. ${placement.tip}`;
+      displayIPA = `/${key}/ (as in '${placement.example}')`;
+
+      // Immediate benefit: at least 1 example shows right now
+      if (placement.example) words = [placement.example];
     }
 
-    // 4. Stamp Attributes (The Hover module reads these)
-    if (tipText) chip.setAttribute("data-tip-text", tipText);
+    // 4) Stamp Attributes (The Hover module reads these)
+    // Legacy field (kept for safety): data-tip-text
+    if (tipPlain) {
+      chip.setAttribute("data-tip-plain", tipPlain);
+      chip.setAttribute("data-tip-text", tipPlain); // backward-compatible
+    }
+    if (tipTech) chip.setAttribute("data-tip-tech", tipTech);
+    if (tipMistake) chip.setAttribute("data-tip-mistake", tipMistake);
+
+    if (words.length) {
+      chip.setAttribute("data-tip-words", JSON.stringify(words.filter(Boolean).slice(0, 3)));
+    }
+
     if (displayIPA) chip.setAttribute("data-display-ipa", displayIPA);
     
     if (asset?.video) {

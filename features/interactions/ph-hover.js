@@ -89,6 +89,87 @@ function injectTooltipCSS() {
     #lux-global-ph-tooltip video::-webkit-media-controls { display:none !important; }
     #lux-global-ph-tooltip video::-webkit-media-controls-enclosure { display:none !important; }
     #lux-global-ph-tooltip video::-webkit-media-controls-panel { display:none !important; }
+
+    /* ---- Text carousel (Plain / Technical / Common mix-ups) ---- */
+    #lux-global-ph-tooltip .lux-ph-text-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      padding:8px 10px;
+      background:#0f172a;
+      border-bottom:1px solid #334155;
+    }
+    #lux-global-ph-tooltip .lux-ph-nav-btn{
+      width:28px;
+      height:28px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      color:#e2e8f0;
+      cursor:pointer;
+      line-height: 1;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      user-select:none;
+    }
+    #lux-global-ph-tooltip .lux-ph-nav-btn:disabled{
+      opacity:0.35;
+      cursor:default;
+    }
+    #lux-global-ph-tooltip .lux-ph-title{
+      flex:1;
+      text-align:center;
+      font-size:12px;
+      letter-spacing:0.02em;
+      color:#cbd5e1;
+      font-weight:800;
+    }
+    #lux-global-ph-tooltip .lux-ph-viewport{ overflow:hidden; }
+    #lux-global-ph-tooltip .lux-ph-track{
+      display:flex;
+      width:300%;
+      transition: transform 220ms ease;
+    }
+    #lux-global-ph-tooltip .lux-ph-panel{
+      flex: 0 0 100%;
+      padding: 10px 12px 12px;
+      color:#e2e8f0;
+    }
+    #lux-global-ph-tooltip .lux-ph-panel.is-empty{
+      color:#94a3b8;
+      font-style:italic;
+    }
+    #lux-global-ph-tooltip .lux-ph-dots{
+      display:flex;
+      justify-content:center;
+      gap:6px;
+      padding: 8px 0 10px;
+      background:#0f172a;
+      border-bottom:1px solid #334155;
+    }
+    #lux-global-ph-tooltip .lux-ph-dot{
+      width:6px;
+      height:6px;
+      border-radius:999px;
+      background: rgba(255,255,255,0.55);
+      opacity:0.55;
+      transform: scale(1);
+      transition: transform 180ms ease, opacity 180ms ease;
+    }
+    #lux-global-ph-tooltip .lux-ph-dot.is-active{
+      opacity:1;
+      transform: scale(1.25);
+      background: rgba(255,255,255,0.9);
+    }
+    #lux-global-ph-tooltip .lux-ph-words{
+      padding: 10px 12px 12px;
+      font-size: 12px;
+      color:#94a3b8;
+      border-bottom:1px solid #334155;
+    }
+    #lux-global-ph-tooltip .lux-ph-words b{ color:#cbd5e1; }
   `;
   document.head.appendChild(style);
 }
@@ -240,26 +321,84 @@ function showTooltip(chip) {
   currentChip = chip;
 
   const ipa = chip.getAttribute("data-ipa") || "?";
-  const tipText = chip.getAttribute("data-tip-text") || "";
+
+  const tipPlain =
+    chip.getAttribute("data-tip-plain") ||
+    chip.getAttribute("data-tip-text") ||
+    "";
+
+  const tipTech = chip.getAttribute("data-tip-tech") || "";
+  const tipMistake = chip.getAttribute("data-tip-mistake") || "";
+
   const vidSrc = chip.getAttribute("data-video-src") || "";
   const poster = chip.getAttribute("data-poster-src") || "";
   const displayLabel = chip.getAttribute("data-display-ipa") || "";
 
+  // Examples (optional)
+  let words = [];
+  const wordsRaw = chip.getAttribute("data-tip-words") || "";
+  if (wordsRaw) {
+    try {
+      const parsed = JSON.parse(wordsRaw);
+      if (Array.isArray(parsed)) words = parsed.filter(Boolean).slice(0, 3);
+    } catch (_) {}
+  }
+
+  const panels = [
+    {
+      title: "Plain",
+      text: tipPlain,
+      empty: `No details available for /${ipa}/ yet.`,
+    },
+    {
+      title: "Technical",
+      text: tipTech,
+      empty: "Technical note coming soon.",
+    },
+    {
+      title: "Common mix-ups",
+      text: tipMistake,
+      empty: "No common mistakes recorded yet.",
+    },
+  ];
+
   let html = `
     <div style="background:#0f172a; padding:10px 12px; border-bottom:1px solid #334155; display:flex; justify-content:space-between; align-items:center;">
       <div>
-        <span style="font-weight:800; font-size:1.2em; color:#fff;">/${ipa}/</span>
-        ${displayLabel ? `<span style="color:#94a3b8; font-size:0.85em; margin-left:8px;">${escapeHTML(displayLabel)}</span>` : ""}
+        <span style="font-weight:800; font-size:1.2em; color:#fff;">/${escapeHTML(ipa)}/</span>
+        ${
+          displayLabel
+            ? `<span style="color:#94a3b8; font-size:0.95em; margin-left:8px;">${escapeHTML(displayLabel)}</span>`
+            : ""
+        }
       </div>
+    </div>
+
+    <div class="lux-ph-text-head">
+      <button id="lux-ph-text-prev" class="lux-ph-nav-btn" type="button" aria-label="Previous panel">‹</button>
+      <div id="lux-ph-text-title" class="lux-ph-title"></div>
+      <button id="lux-ph-text-next" class="lux-ph-nav-btn" type="button" aria-label="Next panel">›</button>
+    </div>
+
+    <div class="lux-ph-viewport">
+      <div id="lux-ph-text-track" class="lux-ph-track">
+        ${panels
+          .map((p) => {
+            const has = (p.text || "").trim().length > 0;
+            const t = has ? p.text : p.empty;
+            return `<div class="lux-ph-panel${has ? "" : " is-empty"}">${escapeHTML(t)}</div>`;
+          })
+          .join("")}
+      </div>
+    </div>
+
+    <div id="lux-ph-text-dots" class="lux-ph-dots">
+      ${panels.map((_, i) => `<span class="lux-ph-dot${i === 0 ? " is-active" : ""}"></span>`).join("")}
     </div>
   `;
 
-  if (tipText) {
-    html += `<div style="padding:12px; color:#e2e8f0; border-bottom:1px solid #334155;">${escapeHTML(
-      tipText
-    )}</div>`;
-  } else if (!vidSrc) {
-    html += `<div style="padding:12px; color:#94a3b8; font-style:italic;">No details available for /${ipa}/</div>`;
+  if (words.length) {
+    html += `<div class="lux-ph-words"><b>Examples:</b> ${words.map(escapeHTML).join(" • ")}</div>`;
   }
 
   if (vidSrc) {
@@ -288,6 +427,9 @@ function showTooltip(chip) {
 
   tooltipContent.innerHTML = html;
 
+  // Wire the carousel now that DOM exists
+  initTooltipTextCarousel(panels);
+
   // Position (zero gap)
   const rect = chip.getBoundingClientRect();
   const tipH = globalTooltip.offsetHeight || 300;
@@ -305,6 +447,52 @@ function showTooltip(chip) {
   globalTooltip.style.left = `${left}px`;
   globalTooltip.style.visibility = "visible";
   globalTooltip.style.opacity = "1";
+}
+
+function initTooltipTextCarousel(panels) {
+  const track = globalTooltip?.querySelector("#lux-ph-text-track");
+  const title = globalTooltip?.querySelector("#lux-ph-text-title");
+  const prev = globalTooltip?.querySelector("#lux-ph-text-prev");
+  const next = globalTooltip?.querySelector("#lux-ph-text-next");
+  const dotsWrap = globalTooltip?.querySelector("#lux-ph-text-dots");
+
+  if (!track || !title || !prev || !next || !dotsWrap) return;
+
+  const dots = [...dotsWrap.querySelectorAll(".lux-ph-dot")];
+  const max = panels.length;
+
+  let idx = 0;
+
+  function render() {
+    track.style.transform = `translateX(-${idx * 100}%)`;
+    title.textContent = panels[idx]?.title || "";
+
+    dots.forEach((d, i) => d.classList.toggle("is-active", i === idx));
+
+    const disabled = max <= 1;
+    prev.disabled = disabled;
+    next.disabled = disabled;
+  }
+
+  function step(delta) {
+    if (max <= 1) return;
+    idx = (idx + delta + max) % max;
+    render();
+  }
+
+  prev.onclick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    step(-1);
+  };
+
+  next.onclick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    step(1);
+  };
+
+  render();
 }
 
 function hideTooltip() {
