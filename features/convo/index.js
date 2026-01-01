@@ -239,7 +239,7 @@ export function bootConvo() {
     { cls: "c5", w: 380, h: 240, rot: -4, parX: 16, parY: -14, depth: 0.64 },
     { cls: "c6", w: 400, h: 250, rot: 5, parX: -18, parY: -14, depth: 0.58 },
     { cls: "c7", w: 360, h: 230, rot: 3, parX: 14, parY: 12, depth: 0.5 },
-      { cls: "c8", w: 440, h: 280, rot: 7, parX: 22, parY: 16, depth: 0.70 },
+    { cls: "c8", w: 440, h: 280, rot: 7, parX: 22, parY: 16, depth: 0.70 },
   ];
 
   const sRand = (a, b) => a + Math.random() * (b - a);
@@ -297,13 +297,15 @@ export function bootConvo() {
 
     // Zones to avoid left/right poles and populate the center band
 const ZONES = sShuffle([
-  { x0: 0.08, x1: 0.34, y0: 0.10, y1: 0.38 }, // left-top
-  { x0: 0.34, x1: 0.66, y0: 0.06, y1: 0.30 }, // center-top
-  { x0: 0.66, x1: 0.92, y0: 0.10, y1: 0.38 }, // right-top
-  { x0: 0.08, x1: 0.36, y0: 0.58, y1: 0.92 }, // left-bottom
-  { x0: 0.32, x1: 0.68, y0: 0.46, y1: 0.90 }, // center-mid/bottom
-  { x0: 0.64, x1: 0.92, y0: 0.58, y1: 0.92 }, // right-bottom
+  { x0: 0.05, x1: 0.33, y0: 0.08, y1: 0.38 },
+  { x0: 0.33, x1: 0.67, y0: 0.02, y1: 0.30 },
+  { x0: 0.67, x1: 0.95, y0: 0.08, y1: 0.38 },
+
+  { x0: 0.05, x1: 0.35, y0: 0.58, y1: 0.96 },
+  { x0: 0.30, x1: 0.70, y0: 0.46, y1: 0.94 },
+  { x0: 0.65, x1: 0.95, y0: 0.58, y1: 0.96 },
 ]);
+
 
 
     // Build placement list (big cards first)
@@ -378,12 +380,14 @@ const ZONES = sShuffle([
 
       const finalR = best ? best.r : mkRect(0, 0, w, h);
       placed.push(finalR);
-      // Pull anchors inward so cards don’t vanish at corner mouse positions
-const EDGE_X = Math.round(Math.max(56, w * 0.10));
-const EDGE_Y = Math.round(Math.max(46, h * 0.10));
 
-finalR.x = sClamp(finalR.x, EDGE_X, W - EDGE_X - w);
-finalR.y = sClamp(finalR.y, EDGE_Y, H - EDGE_Y - h);
+// Allow a little offscreen, but prevent the “only 2 visible” extreme.
+const OFF_X = 44;
+const OFF_Y = 34;
+
+finalR.x = sClamp(finalR.x, -OFF_X, W - w + OFF_X);
+finalR.y = sClamp(finalR.y, -OFF_Y, H - h + OFF_Y);
+
 
 
       // Commit CSS variables
@@ -456,20 +460,21 @@ finalR.y = sClamp(finalR.y, EDGE_Y, H - EDGE_Y - h);
     if (!par.raf) par.raf = requestAnimationFrame(parTick);
   }
 
-  function parSetFromEvent(e) {
-    // Parallax is ONLY for the intro screen.
-    if (state.mode !== "intro" || root.dataset.parallax !== "on") return;
+function parSetFromEvent(e) {
+  if (state.mode !== "intro" || root.dataset.parallax !== "on") return;
 
-const BOOST = 1.15;
+  const BOOST = 1.55;      // more lively than the “restricted” version
+  const MAX   = 1.25;      // still far from the old ±2 insanity
 
-const nx = (e.clientX / window.innerWidth - 0.5) * 2;
-const ny = (e.clientY / window.innerHeight - 0.5) * 2;
+  const nx = (e.clientX / window.innerWidth  - 0.5) * 2;
+  const ny = (e.clientY / window.innerHeight - 0.5) * 2;
 
-// Clamp AFTER boost so max is still [-1, 1]
-par.tx = clamp(nx * BOOST, -1, 1);
-par.ty = clamp(ny * BOOST, -1, 1);
+  par.tx = clamp(nx * BOOST, -MAX, MAX);
+  par.ty = clamp(ny * BOOST, -MAX, MAX);
 
-  }
+  parKick();
+}
+
 
   window.addEventListener("pointermove", parSetFromEvent, { passive: true });
   window.addEventListener("pointerdown", parSetFromEvent, { passive: true });
