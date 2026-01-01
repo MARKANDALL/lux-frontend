@@ -239,6 +239,7 @@ export function bootConvo() {
     { cls: "c5", w: 380, h: 240, rot: -4, parX: 16, parY: -14, depth: 0.64 },
     { cls: "c6", w: 400, h: 250, rot: 5, parX: -18, parY: -14, depth: 0.58 },
     { cls: "c7", w: 360, h: 230, rot: 3, parX: 14, parY: 12, depth: 0.5 },
+      { cls: "c8", w: 440, h: 280, rot: 7, parX: 22, parY: 16, depth: 0.70 },
   ];
 
   const sRand = (a, b) => a + Math.random() * (b - a);
@@ -295,14 +296,15 @@ export function bootConvo() {
       : null;
 
     // Zones to avoid left/right poles and populate the center band
-    const ZONES = sShuffle([
-      { x0: -0.1, x1: 0.28, y0: 0.1, y1: 0.38 }, // left-top
-      { x0: 0.26, x1: 0.74, y0: -0.08, y1: 0.28 }, // center-top (slightly offscreen OK)
-      { x0: 0.72, x1: 1.1, y0: 0.1, y1: 0.4 }, // right-top
-      { x0: -0.1, x1: 0.32, y0: 0.54, y1: 1.1 }, // left-bottom
-      { x0: 0.28, x1: 0.72, y0: 0.44, y1: 1.06 }, // center-mid/bottom
-      { x0: 0.68, x1: 1.1, y0: 0.56, y1: 1.12 }, // right-bottom
-    ]);
+const ZONES = sShuffle([
+  { x0: 0.08, x1: 0.34, y0: 0.10, y1: 0.38 }, // left-top
+  { x0: 0.34, x1: 0.66, y0: 0.06, y1: 0.30 }, // center-top
+  { x0: 0.66, x1: 0.92, y0: 0.10, y1: 0.38 }, // right-top
+  { x0: 0.08, x1: 0.36, y0: 0.58, y1: 0.92 }, // left-bottom
+  { x0: 0.32, x1: 0.68, y0: 0.46, y1: 0.90 }, // center-mid/bottom
+  { x0: 0.64, x1: 0.92, y0: 0.58, y1: 0.92 }, // right-bottom
+]);
+
 
     // Build placement list (big cards first)
     const items = [];
@@ -376,6 +378,13 @@ export function bootConvo() {
 
       const finalR = best ? best.r : mkRect(0, 0, w, h);
       placed.push(finalR);
+      // Pull anchors inward so cards don’t vanish at corner mouse positions
+const EDGE_X = Math.round(Math.max(56, w * 0.10));
+const EDGE_Y = Math.round(Math.max(46, h * 0.10));
+
+finalR.x = sClamp(finalR.x, EDGE_X, W - EDGE_X - w);
+finalR.y = sClamp(finalR.y, EDGE_Y, H - EDGE_Y - h);
+
 
       // Commit CSS variables
       it.node.style.setProperty("--ax", `${finalR.x}px`);
@@ -451,14 +460,15 @@ export function bootConvo() {
     // Parallax is ONLY for the intro screen.
     if (state.mode !== "intro" || root.dataset.parallax !== "on") return;
 
-    const BOOST = 2.0; // slightly calmer / more “Edge-like”
+const BOOST = 1.15;
 
-    const nx = (e.clientX / window.innerWidth - 0.5) * 2;
-    const ny = (e.clientY / window.innerHeight - 0.5) * 2;
+const nx = (e.clientX / window.innerWidth - 0.5) * 2;
+const ny = (e.clientY / window.innerHeight - 0.5) * 2;
 
-    par.tx = clamp(nx, -1, 1) * BOOST;
-    par.ty = clamp(ny, -1, 1) * BOOST;
-    parKick();
+// Clamp AFTER boost so max is still [-1, 1]
+par.tx = clamp(nx * BOOST, -1, 1);
+par.ty = clamp(ny * BOOST, -1, 1);
+
   }
 
   window.addEventListener("pointermove", parSetFromEvent, { passive: true });

@@ -355,6 +355,8 @@ html:not([data-lux-convo-mode="chat"]) .lux-sp-panel{
 .lux-scene-card.c5{ --img: url("/convo-img/airport.webp"); }
 .lux-scene-card.c6{ --img: url("/convo-img/restaurant.webp"); }
 .lux-scene-card.c7{ --img: url("/convo-img/school.webp"); }
+.lux-scene-card.c8{ --img: url("/convo-img/networking.webp"); }
+
 
 /* Reduced motion: freeze tiles completely */
 @media (prefers-reduced-motion: reduce){
