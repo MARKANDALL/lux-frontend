@@ -227,49 +227,66 @@
     <!-- Lux FX: “Corona flare” for the AI Conversations halo (Edge-safe: use url(#filter) ONLY in CSS) -->
     <svg class="lux-fx" width="0" height="0" aria-hidden="true" focusable="false"
          style="position:absolute; width:0; height:0; overflow:hidden">
-      <filter id="luxCoronaFlare" x="-55%" y="-55%" width="210%" height="210%" color-interpolation-filters="sRGB">
-        <!-- two-noise mix: slow drift + faster “flicker” -->
+      <filter id="luxCoronaFlare" x="-70%" y="-70%" width="240%" height="240%" color-interpolation-filters="sRGB">
+        <!-- Base “slow drift” noise -->
         <feTurbulence type="fractalNoise" baseFrequency="0.010" numOctaves="2" seed="9" result="n1">
-          <animate attributeName="baseFrequency" dur="7.2s" values="0.008;0.014;0.010" repeatCount="indefinite" />
+          <animate attributeName="baseFrequency" dur="8.0s" values="0.008;0.014;0.010" repeatCount="indefinite"/>
         </feTurbulence>
 
-        <feTurbulence type="turbulence" baseFrequency="0.030" numOctaves="1" seed="3" result="n2">
-          <animate attributeName="baseFrequency" dur="1.15s" values="0.020;0.040;0.026" repeatCount="indefinite" />
+        <!-- Faster flicker noise (drives flare patches) -->
+        <feTurbulence type="turbulence" baseFrequency="0.040" numOctaves="1" seed="4" result="n2">
+          <animate attributeName="baseFrequency" dur="1.35s" values="0.028;0.055;0.034" repeatCount="indefinite"/>
         </feTurbulence>
 
-        <feComposite in="n1" in2="n2" operator="arithmetic"
-                     k1="0" k2="0.68" k3="0.44" k4="0" result="noise"/>
+        <feComposite in="n1" in2="n2" operator="arithmetic" k1="0" k2="0.78" k3="0.38" k4="0" result="noise"/>
 
-        <!-- thicken the ring a touch so displacement has “material” to throw outward -->
-        <feMorphology in="SourceGraphic" operator="dilate" radius="2.6" result="fat"/>
+        <!-- Thicken the ring a bit -->
+        <feMorphology in="SourceGraphic" operator="dilate" radius="2.8" result="fat"/>
 
-        <!-- the actual “solar edge” wobble -->
-        <feDisplacementMap in="fat" in2="noise" scale="28"
-                           xChannelSelector="R" yChannelSelector="G" result="disp">
-          <animate attributeName="scale" dur="1.55s" values="18;34;20;30;19" repeatCount="indefinite" />
+        <!-- Extract just the outer rim so flares feel like they come from the edge -->
+        <feMorphology in="fat" operator="erode" radius="4.4" result="inner"/>
+        <feComposite in="fat" in2="inner" operator="out" result="rim"/>
+
+        <!-- Turn noise into an alpha “flare mask” with high contrast (patchy, not uniform) -->
+        <feColorMatrix in="noise" type="luminanceToAlpha" result="noiseA"/>
+        <feComponentTransfer in="noiseA" result="flareMask">
+          <!-- table values = threshold-ish; tweak middle to change how “spotty” it is -->
+          <feFuncA type="table" tableValues="0 0 0 0.05 0.18 0.75 1 1"/>
+        </feComponentTransfer>
+
+        <!-- Keep only rim segments selected by the flare mask -->
+        <feComposite in="rim" in2="flareMask" operator="in" result="flareRim"/>
+
+        <!-- Throw those segments outward with stronger displacement -->
+        <feDisplacementMap in="flareRim" in2="noise" scale="62"
+                           xChannelSelector="R" yChannelSelector="G" result="flareDisp">
+          <animate attributeName="scale" dur="1.55s" values="32;72;38;66;34" repeatCount="indefinite"/>
         </feDisplacementMap>
 
-        <!-- bloom: one tighter + one wider glow (merged) -->
-        <feGaussianBlur in="disp" stdDeviation="4.6" result="b1">
-          <animate attributeName="stdDeviation" dur="1.75s" values="3.4;6.8;4.2" repeatCount="indefinite" />
-        </feGaussianBlur>
+        <!-- Base wobble for the whole halo (subtler than the flares) -->
+        <feDisplacementMap in="fat" in2="noise" scale="22"
+                           xChannelSelector="R" yChannelSelector="G" result="baseDisp">
+          <animate attributeName="scale" dur="2.6s" values="14;28;18;24;16" repeatCount="indefinite"/>
+        </feDisplacementMap>
 
-        <feGaussianBlur in="disp" stdDeviation="12.5" result="b2">
-          <animate attributeName="stdDeviation" dur="3.15s" values="10.5;16.5;12.5" repeatCount="indefinite" />
+        <!-- Bloom layers -->
+        <feGaussianBlur in="baseDisp" stdDeviation="10.5" result="baseGlow"/>
+        <feGaussianBlur in="flareDisp" stdDeviation="16.0" result="flareGlow">
+          <animate attributeName="stdDeviation" dur="1.6s" values="12;19;13;18;12" repeatCount="indefinite"/>
         </feGaussianBlur>
 
         <feMerge result="merged">
-          <feMergeNode in="b2"/>
-          <feMergeNode in="b1"/>
+          <feMergeNode in="baseGlow"/>
+          <feMergeNode in="flareGlow"/>
         </feMerge>
 
-        <!-- punch: extra saturation + alpha lift for “plasma” -->
-        <feColorMatrix in="merged" type="saturate" values="1.65" result="sat"/>
+        <!-- Punch: saturation + alpha lift -->
+        <feColorMatrix in="merged" type="saturate" values="1.75" result="sat"/>
         <feColorMatrix in="sat" type="matrix"
           values="1 0 0 0 0
                   0 1 0 0 0
                   0 0 1 0 0
-                  0 0 0 1.65 -0.22" result="out"/>
+                  0 0 0 1.85 -0.24" result="out"/>
 
         <feMerge>
           <feMergeNode in="out"/>
