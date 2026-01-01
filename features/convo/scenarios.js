@@ -49,11 +49,11 @@ export const SCENARIOS = [
     img: "/convo-img/school.webp",
     thumb: "/convo-img/school.webp",
   },
-  {
-    id: "network",
-    title: "Networking Chat",
-    desc: "Introduce yourself, keep it natural, ask good questions.",
-    img: "/convo-img/network.webp",
-    thumb: "/convo-img/network.webp",
-  },
+{
+  id: "network",
+  title: "Networking Chat",
+  desc: "Introduce yourself, keep it natural, ask good questions.",
+  img: "/convo-img/networking.webp",
+  thumb: "/convo-img/networking.webp",
+},
 ];

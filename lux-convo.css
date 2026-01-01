@@ -149,6 +149,27 @@ html:not([data-lux-convo-mode="chat"]) .lux-sp-panel{
   background: var(--convo-card) !important;
 }
 
+/* ============================================================
+   NEW: Intro must be viewport-locked (no scroll / pan)
+   ============================================================ */
+
+/* Lock page scrolling while intro is active (Edge supports :has()) */
+html:has(#convoApp[data-mode="intro"]),
+body:has(#convoApp[data-mode="intro"]){
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+/* Lock the intro stage to the viewport */
+#convoApp[data-mode="intro"]{
+  position: fixed;
+  inset: 0;
+  height: 100vh;
+  overflow: hidden;          /* overrides the earlier overflow:visible */
+  overscroll-behavior: none;
+  touch-action: none;        /* blocks drag-pan */
+}
 
 /* ============================================================
    Atmosphere
@@ -158,6 +179,8 @@ html:not([data-lux-convo-mode="chat"]) .lux-sp-panel{
   inset: 0;
   z-index: 0;
   pointer-events: none;
+  ...
+}
 
   /* Light fallback (used if intro overrides not active) */
   background:
