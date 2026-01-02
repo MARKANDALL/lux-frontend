@@ -417,9 +417,15 @@ body:has(#convoApp[data-mode="intro"]){
   justify-content: center;
 }
 
-#convoApp[data-mode="chat"]   .lux-convo-progress{
-  display: flex;
-  justify-content: center;
+/* Progress widget: ONLY show in chat mode */
+#convoApp[data-mode="chat"] .lux-convo-progress{
+  display:flex;
+  justify-content:center;
+}
+
+/* Safety: never show it outside chat */
+#convoApp:not([data-mode="chat"]) .lux-convo-progress{
+  display:none !important;
 }
 
 
