@@ -1,3 +1,5 @@
 node_modules
 .codesandbox/scripts/
 .codesandbox/
+
+yarn.lock
