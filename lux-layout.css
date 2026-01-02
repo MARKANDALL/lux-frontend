@@ -629,10 +629,46 @@ input[type="radio"]:focus-visible,
   scrollbar-color: #cbd5e1 #f1f5f9;
 }
 
-/* ============================================================
-   OPTIONAL IDEAS (NOT ENABLED — keep for later)
-   ============================================================
-   1) Cursor-reactive “hotspot” in the ring (Apple-ish)
-   2) Press-down micro feedback: ring tightens + glow compresses
-   3) Focus-visible shimmer parity for keyboard navigation
-*/
+/* New banner styles */
+.lux-top-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 999; /* Makes sure it's above other content */
+  background-color: #eff6ff; /* Example color for banner */
+  transition: transform 0.3s ease-out;
+}
+
+.lux-top-banner-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.lux-banner-collapse {
+  border: none;
+  background: transparent;
+  font-size: 20px;
+}
+
+.lux-banner-tab {
+  background: #007aff;
+  border-radius: 20px;
+  color: white;
+  padding: 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* Collapsed state */
+.lux-top-banner.is-collapsed {
+  transform: translateY(-100%);
+}
+
+.lux-top-banner.is-open {
+  transform: translateY(0);
+}

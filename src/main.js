@@ -40,7 +40,7 @@ import { initAuthUI } from '../ui/auth-dom.js';
 // Arrow trail (NEW)
 import { initArrowTrail } from "../ui/ui-arrow-trail.js";
 
-// --- VISUALS: Typewriter Effect ---
+// --- VISUALS: Typewriter Effect --- 
 let typewriterTimeout; 
 
 function startTypewriter() {
@@ -113,7 +113,7 @@ function startTypewriter() {
   type();
 }
 
-// --- MAIN BOOT SEQUENCE ---
+// --- MAIN BOOT SEQUENCE --- 
 async function bootApp() {
   console.log("[Lux] Booting features...");
 
@@ -205,6 +205,34 @@ async function bootApp() {
   
   console.log("[Lux] App fully initialized.");
 }
+
+// Add functionality to toggle the visibility of the banner using the collapse and tab buttons.
+document.addEventListener('DOMContentLoaded', function () {
+    const banner = document.getElementById('lux-top-banner');
+    const collapseButton = document.querySelector('.lux-banner-collapse');
+    const tabButton = document.querySelector('.lux-banner-tab');
+
+    // Check localStorage for banner state
+    if (localStorage.getItem('bannerCollapsed') === 'true') {
+        banner.classList.add('is-collapsed');
+    } else {
+        banner.classList.add('is-open');
+    }
+
+    // Collapse/Expand functionality
+    collapseButton.addEventListener('click', () => {
+        banner.classList.toggle('is-collapsed');
+        banner.classList.toggle('is-open');
+        localStorage.setItem('bannerCollapsed', banner.classList.contains('is-collapsed'));
+    });
+
+    // Tab button functionality
+    tabButton.addEventListener('click', () => {
+        banner.classList.remove('is-collapsed');
+        banner.classList.add('is-open');
+        localStorage.setItem('bannerCollapsed', false);
+    });
+});
 
 // Run Boot
 if (document.readyState === 'loading') {

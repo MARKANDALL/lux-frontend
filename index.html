@@ -23,8 +23,6 @@
 <link rel="stylesheet" href="./ui/ui-arrow-trail.css" />
 <link rel="stylesheet" href="./ui/warp.css" />    
 
-
-
     <style id="lux-tts-guard-style">
       #tts-controls { display: none !important; }
     </style>
@@ -43,21 +41,30 @@
     <script src="lux-popover.js" defer></script>
   </head>
   <body>
+    <!-- New Top Banner with Collapse Feature -->
+    <div id="lux-top-banner" class="lux-top-banner">
+      <div class="lux-top-banner-inner">
+        <div id="userMsg" class="lux-banner-content">
+            <p>We use and measure for standard American accents...</p> <!-- content from original #userMsg -->
+            <button class="lux-banner-collapse">▴</button> <!-- Collapse button -->
+        </div>
+        <button class="lux-banner-tab">Tips ▾</button> <!-- Tab button visible when collapsed -->
+      </div>
+    </div>
+
     <div id="container">
       <h2>Pronunciation Test</h2>
-<div class="lux-toplinks lux-toplinks-cta">
- <a class="lux-toplink lux-toplink-cta" href="./convo.html">
-  AI Conversations
-</a>
-
-</div>
+      <div class="lux-toplinks lux-toplinks-cta">
+        <a class="lux-toplink lux-toplink-cta" href="./convo.html">
+          AI Conversations
+        </a>
+      </div>
 
       <div id="userMsg">
         <ol>
           <li>We use and measure for standard American accents. Hear what it should sound like:
-<span class="lux-arrow-trail" data-arrow-trail="tts" aria-hidden="true"></span>
-
-</li>
+            <span class="lux-arrow-trail" data-arrow-trail="tts" aria-hidden="true"></span>
+          </li>
           <li>The more recordings you make, the better the feedback will be 🤔 💭 💡 😮:
             <span class="lux-cta" tabindex="0" aria-haspopup="dialog" aria-expanded="false">
               database tracking
