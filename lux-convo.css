@@ -179,8 +179,6 @@ body:has(#convoApp[data-mode="intro"]){
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  ...
-}
 
   /* Light fallback (used if intro overrides not active) */
   background:
@@ -188,6 +186,7 @@ body:has(#convoApp[data-mode="intro"]){
     radial-gradient(circle at 78% 62%, rgba(124,77,255,0.16), rgba(255,255,255,0) 60%),
     linear-gradient(180deg, rgba(250,252,255,0.92), rgba(246,248,255,0.96));
 }
+
 
 /* Intro: Edge-like dark stage */
 #convoApp[data-mode="intro"] .lux-atmo{
@@ -405,13 +404,24 @@ body:has(#convoApp[data-mode="intro"]){
 }
 
 /* Mode routing */
-.lux-intro, .lux-picker, .lux-chatwrap{
+.lux-intro, .lux-picker, .lux-chatwrap, .lux-convo-progress{
   width: 100%;
   display: none;
 }
+
 #convoApp[data-mode="intro"]  .lux-intro { display: grid; place-items: center; }
 #convoApp[data-mode="picker"] .lux-picker{ display: flex; flex-direction: column; align-items: center; gap: 14px; }
-#convoApp[data-mode="chat"]   .lux-chatwrap{ display: flex; justify-content: center; }
+
+#convoApp[data-mode="chat"]   .lux-chatwrap{
+  display: flex;
+  justify-content: center;
+}
+
+#convoApp[data-mode="chat"]   .lux-convo-progress{
+  display: flex;
+  justify-content: center;
+}
+
 
 
 /* ============================================================
@@ -817,6 +827,20 @@ body:has(#convoApp[data-mode="intro"]){
    ============================================================ */
 .lux-chatwrap{ width: 100%; }
 
+/* NEW: AI Conversations progress panel (only shown in chat mode via the mode-routing rules above)
+   - aligns to the same width as the chat box
+   - sits directly under the chat panel */
+.lux-convo-progress{
+  width: 100%;
+  margin-top: 14px;
+  padding: 0 16px 18px;
+  display: flex;            /* safe even when hidden; display gets overridden by mode routing */
+  justify-content: center;
+}
+.lux-convo-progress > *{
+  width: min(980px, 94vw);  /* match .lux-chat width */
+}
+
 .lux-chat{
   width: min(980px, 94vw);
   height: min(78vh, 760px);
@@ -824,6 +848,8 @@ body:has(#convoApp[data-mode="intro"]){
   display:flex;
   flex-direction: column;
 }
+
+
 
 .lux-msgs{
   padding: 14px;

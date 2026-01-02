@@ -225,7 +225,12 @@ export function bootConvo() {
 
   const scrim = el("div", "lux-scrim");
 
-  ui.append(intro, picker, chatWrap, drawer, scrim);
+// Progress panel host (ONLY visible in chat mode via CSS)
+const convoProgress = el("div", "lux-convo-progress");
+convoProgress.id = "convoProgress";
+
+// IMPORTANT: append it *after* chatWrap, so it renders UNDER the chat box
+ui.append(intro, picker, chatWrap, convoProgress, drawer, scrim);
   root.append(atmo, ui);
 
   // --- Edge-style scene tiles (scatter + depth + independent drift) ---
