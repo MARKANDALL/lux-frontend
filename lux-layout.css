@@ -666,58 +666,30 @@ input[type="radio"]:focus-visible,
   box-sizing: border-box;
 }
 
-/* Make room for the collapse button inside the blue card */
-.lux-top-banner #userMsg{
-  position: relative;
-  padding-right: 2.4em;
-}
-
-/* Collapse arrow (don’t inherit big global button padding) */
-.lux-banner-collapse{
-  position: absolute;
-  top: 8px;
-  right: 10px;
-  border: 0;
-  background: transparent;
-  padding: 0;
-  font-size: 18px;
-  line-height: 1;
-  cursor: pointer;
-  opacity: 0.75;
-  box-shadow: none;
-}
-.lux-banner-collapse:hover{
-  opacity: 1;
-  transform: none !important;
-  filter: none !important;
-}
-
-/* The tab/handle lives outside the sliding panel */
-.lux-banner-tab{
-  pointer-events: auto;
-  position: absolute;
-  top: 6px;
+/* Always-visible center stub handle (hangs off the panel edge) */
+.lux-banner-handle{
+  position: fixed;
   left: 50%;
-  transform: translateX(-50%) translateY(-6px);
-  border: 0;
+  top: var(--lux-banner-handle-top, 16px);
+  transform: translate(-50%, -50%);
+  z-index: var(--z-modal);
+  pointer-events: auto;
+
+  border: 1px solid rgba(0,0,0,0.10);
   border-radius: 999px;
-  padding: 8px 14px;
+  padding: 7px 14px;
+
+  background: #e8f2ff; /* should match/feel like the blue box */
+  color: #0b2a44;
+
   font-weight: 800;
   font-size: 13px;
-  background: #0078d7;
-  color: #fff;
   cursor: pointer;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.18);
-  opacity: 0;
+
+  box-shadow: 0 10px 20px rgba(0,0,0,0.14);
+  transition: transform 140ms ease, opacity 160ms ease;
 }
 
-/* Only visible when collapsed */
-.lux-top-banner.is-collapsed .lux-banner-tab{
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
-/* When open, tab should not steal clicks */
-.lux-top-banner:not(.is-collapsed) .lux-banner-tab{
-  pointer-events: none;
+.lux-banner-handle:active{
+  transform: translate(-50%, -50%) scale(0.96);
 }

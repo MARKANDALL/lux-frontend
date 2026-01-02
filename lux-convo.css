@@ -746,6 +746,30 @@ body:has(#convoApp[data-mode="intro"]){
   .lux-cardVideo{ display: none !important; }
 }
 
+/* --- Deck card video: force true full-bleed cover --- */
+.lux-deck-card{
+  position: relative;
+  overflow: hidden;          /* critical: clip to rounded corners */
+}
+
+.lux-cardMedia{
+  position: absolute;
+  inset: 0;
+  overflow: hidden;          /* clip video */
+  border-radius: inherit;    /* match card rounding */
+  pointer-events: none;
+}
+
+.lux-cardVideo{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 50%;  /* dead-center framing */
+  transform: none;           /* prevents “drift” if older CSS scaled it */
+}
+
 .lux-deck-card.is-active{
   width: min(660px, 92vw);
   z-index: 3;
@@ -763,10 +787,11 @@ body:has(#convoApp[data-mode="intro"]){
 
 
 /* Overlap + left/right staggering */
-#convoApp[data-side="left"]  .lux-deck-card.is-active { transform: translateX(-50%) translateX(-120px) scale(1.00); }
-#convoApp[data-side="left"]  .lux-deck-card.is-preview{ transform: translateX(-50%) translateX(80px)  scale(0.92); }
-#convoApp[data-side="right"] .lux-deck-card.is-active { transform: translateX(-50%) translateX(120px)  scale(1.00); }
-#convoApp[data-side="right"] .lux-deck-card.is-preview{ transform: translateX(-50%) translateX(-80px) scale(0.92); }
+#convoApp[data-side="left"]  .lux-deck-card.is-active { transform: translateX(-50%) translateX(-80px)  scale(1.00); }
+#convoApp[data-side="left"]  .lux-deck-card.is-preview{ transform: translateX(-50%) translateX(55px)   scale(0.90); }
+
+#convoApp[data-side="right"] .lux-deck-card.is-active { transform: translateX(-50%) translateX(80px)   scale(1.00); }
+#convoApp[data-side="right"] .lux-deck-card.is-preview{ transform: translateX(-50%) translateX(-55px)  scale(0.90); }
 
 .lux-pill{
   display: inline-flex;

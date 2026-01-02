@@ -198,8 +198,8 @@ async function bootApp() {
     if (msg) msg.classList.add("show");
 
     requestAnimationFrame(() => {
-      updateTopBannerOffset();
-      setTimeout(updateTopBannerOffset, 460);
+      updateTopBannerLayout();
+      setTimeout(updateTopBannerLayout, 460);
     });
   }, 2500);
 
@@ -213,68 +213,85 @@ async function bootApp() {
 }
 
 // Add functionality to toggle the visibility of the banner using the collapse and tab buttons.
-function updateTopBannerOffset() {
+function updateTopBannerLayout() {
   const banner = document.getElementById("lux-top-banner");
   if (!banner) return;
 
   const panel = banner.querySelector(".lux-top-banner-panel");
-  const tab = banner.querySelector(".lux-banner-tab");
-  if (!panel || !tab) return;
+  const handle = banner.querySelector(".lux-banner-handle");
+  if (!panel || !handle) return;
 
   const collapsed = banner.classList.contains("is-collapsed");
   const revealed = banner.classList.contains("is-revealed");
 
-  // If not revealed yet and not collapsed, don't push content down.
+  // Show the handle once the banner has revealed OR if user previously collapsed it
+  const showHandle = revealed || collapsed;
+  handle.style.opacity = showHandle ? "1" : "0";
+  handle.style.pointerEvents = showHandle ? "auto" : "none";
+
+  // Position handle: when open, hang off panel bottom; when collapsed, sit near top
+  let handleTop = 16;
+  if (!collapsed && revealed) {
+    const panelRect = panel.getBoundingClientRect();
+    handleTop = Math.max(16, Math.ceil(panelRect.bottom));
+  }
+  document.documentElement.style.setProperty("--lux-banner-handle-top", handleTop + "px");
+
+  // Arrow + a11y
+  handle.textContent = collapsed ? "Tips ▾" : "Tips ▴";
+  handle.setAttribute("aria-label", collapsed ? "Show tips" : "Hide tips");
+  handle.title = collapsed ? "Show tips" : "Hide tips";
+
+  // Content offset: push past whichever is lowest (panel or handle)
   if (!revealed && !collapsed) {
     document.documentElement.style.setProperty("--lux-top-banner-offset", "0px");
     return;
   }
 
-  const target = collapsed ? tab : panel;
-  const rect = target.getBoundingClientRect();
-  const offset = Math.max(0, Math.ceil(rect.bottom));
-  document.documentElement.style.setProperty("--lux-top-banner-offset", offset + "px");
+  const panelRect = panel.getBoundingClientRect();
+  const handleRect = handle.getBoundingClientRect();
+  const bottom = collapsed ? handleRect.bottom : Math.max(panelRect.bottom, handleRect.bottom);
+
+  document.documentElement.style.setProperty("--lux-top-banner-offset", Math.ceil(bottom) + "px");
 }
 
 document.addEventListener("DOMContentLoaded", () => {
   const banner = document.getElementById("lux-top-banner");
   if (!banner) return;
 
-  const collapseButton = banner.querySelector(".lux-banner-collapse");
-  const tabButton = banner.querySelector(".lux-banner-tab");
-  if (!collapseButton || !tabButton) return;
+  const panel = banner.querySelector(".lux-top-banner-panel");
+  const handle = banner.querySelector(".lux-banner-handle");
+  if (!panel || !handle) return;
 
-  // Load state (safe)
+  // Load state
   let collapsed = false;
   try { collapsed = localStorage.getItem("bannerCollapsed") === "true"; } catch {}
   banner.classList.toggle("is-collapsed", collapsed);
+
+  // If user previously collapsed it, we still want the handle visible immediately
+  if (collapsed) banner.classList.add("is-revealed");
 
   const setCollapsed = (next) => {
     banner.classList.toggle("is-collapsed", !!next);
     try { localStorage.setItem("bannerCollapsed", next ? "true" : "false"); } catch {}
 
-    // Update offsets immediately + after transition settles
     requestAnimationFrame(() => {
-      updateTopBannerOffset();
-      setTimeout(updateTopBannerOffset, 460);
+      updateTopBannerLayout();
+      setTimeout(updateTopBannerLayout, 460);
     });
   };
 
-  collapseButton.addEventListener("click", (e) => {
+  // Handle toggles both ways, always
+  handle.addEventListener("click", (e) => {
     e.preventDefault();
-    setCollapsed(true);
+    setCollapsed(!banner.classList.contains("is-collapsed"));
   });
 
-  tabButton.addEventListener("click", (e) => {
-    e.preventDefault();
-    setCollapsed(false);
-  });
+  // Keep layout correct after animation and resizes
+  panel.addEventListener("transitionend", () => updateTopBannerLayout());
+  window.addEventListener("resize", () => updateTopBannerLayout(), { passive: true });
 
-  window.addEventListener("resize", () => {
-    updateTopBannerOffset();
-  }, { passive: true });
-
-  updateTopBannerOffset();
+  updateTopBannerLayout();
 });
 
 // Run Boot
