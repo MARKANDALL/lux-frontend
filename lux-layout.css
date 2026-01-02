@@ -86,7 +86,7 @@ body {
   width: 100%;
   max-width: 1280px;
   margin: 0 auto;
-  padding: 2vw 2vw 3vw;
+  padding: calc(2vw + var(--lux-top-banner-offset, 0px)) 2vw 3vw;
   box-sizing: border-box;
 }
 
@@ -629,46 +629,95 @@ input[type="radio"]:focus-visible,
   scrollbar-color: #cbd5e1 #f1f5f9;
 }
 
-/* New banner styles */
-.lux-top-banner {
+/* ============================================================
+   Top-of-viewport Tips Banner (fixed; tab remains clickable)
+   ============================================================ */
+.lux-top-banner{
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  z-index: 999; /* Makes sure it's above other content */
-  background-color: #eff6ff; /* Example color for banner */
-  transition: transform 0.3s ease-out;
+  z-index: var(--z-modal);     /* below drawers (900), above content */
+  pointer-events: none;        /* wrapper never blocks the viewport */
 }
 
-.lux-top-banner-inner {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px;
-  max-width: 1200px;
-  margin: 0 auto;
+/* The sliding panel */
+.lux-top-banner-panel{
+  pointer-events: auto;
+  transform: translateY(-110%);
+  transition: transform 420ms cubic-bezier(0.22, 1.0, 0.36, 1.0);
 }
 
-.lux-banner-collapse {
-  border: none;
-  background: transparent;
-  font-size: 20px;
-}
-
-.lux-banner-tab {
-  background: #007aff;
-  border-radius: 20px;
-  color: white;
-  padding: 10px;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-/* Collapsed state */
-.lux-top-banner.is-collapsed {
-  transform: translateY(-100%);
-}
-
-.lux-top-banner.is-open {
+/* Reveal after delay */
+.lux-top-banner.is-revealed:not(.is-collapsed) .lux-top-banner-panel{
   transform: translateY(0);
+}
+
+/* Collapsed always hides the panel */
+.lux-top-banner.is-collapsed .lux-top-banner-panel{
+  transform: translateY(-110%);
+}
+
+/* Center align to Lux page width */
+.lux-top-banner-inner{
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 10px 10px 0;
+  box-sizing: border-box;
+}
+
+/* Make room for the collapse button inside the blue card */
+.lux-top-banner #userMsg{
+  position: relative;
+  padding-right: 2.4em;
+}
+
+/* Collapse arrow (don’t inherit big global button padding) */
+.lux-banner-collapse{
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.75;
+  box-shadow: none;
+}
+.lux-banner-collapse:hover{
+  opacity: 1;
+  transform: none !important;
+  filter: none !important;
+}
+
+/* The tab/handle lives outside the sliding panel */
+.lux-banner-tab{
+  pointer-events: auto;
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-6px);
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-weight: 800;
+  font-size: 13px;
+  background: #0078d7;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+  opacity: 0;
+}
+
+/* Only visible when collapsed */
+.lux-top-banner.is-collapsed .lux-banner-tab{
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* When open, tab should not steal clicks */
+.lux-top-banner:not(.is-collapsed) .lux-banner-tab{
+  pointer-events: none;
 }

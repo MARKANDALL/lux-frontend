@@ -191,10 +191,16 @@ async function bootApp() {
   });
 
   setTimeout(() => {
-    const msg = document.getElementById('userMsg');
-    if (msg) {
-      msg.classList.add('show');
-    }
+    const banner = document.getElementById("lux-top-banner");
+    const msg = document.getElementById("userMsg");
+
+    if (banner) banner.classList.add("is-revealed");
+    if (msg) msg.classList.add("show");
+
+    requestAnimationFrame(() => {
+      updateTopBannerOffset();
+      setTimeout(updateTopBannerOffset, 460);
+    });
   }, 2500);
 
   // 7. Boot Dashboard
@@ -207,31 +213,68 @@ async function bootApp() {
 }
 
 // Add functionality to toggle the visibility of the banner using the collapse and tab buttons.
-document.addEventListener('DOMContentLoaded', function () {
-    const banner = document.getElementById('lux-top-banner');
-    const collapseButton = document.querySelector('.lux-banner-collapse');
-    const tabButton = document.querySelector('.lux-banner-tab');
+function updateTopBannerOffset() {
+  const banner = document.getElementById("lux-top-banner");
+  if (!banner) return;
 
-    // Check localStorage for banner state
-    if (localStorage.getItem('bannerCollapsed') === 'true') {
-        banner.classList.add('is-collapsed');
-    } else {
-        banner.classList.add('is-open');
-    }
+  const panel = banner.querySelector(".lux-top-banner-panel");
+  const tab = banner.querySelector(".lux-banner-tab");
+  if (!panel || !tab) return;
 
-    // Collapse/Expand functionality
-    collapseButton.addEventListener('click', () => {
-        banner.classList.toggle('is-collapsed');
-        banner.classList.toggle('is-open');
-        localStorage.setItem('bannerCollapsed', banner.classList.contains('is-collapsed'));
+  const collapsed = banner.classList.contains("is-collapsed");
+  const revealed = banner.classList.contains("is-revealed");
+
+  // If not revealed yet and not collapsed, don't push content down.
+  if (!revealed && !collapsed) {
+    document.documentElement.style.setProperty("--lux-top-banner-offset", "0px");
+    return;
+  }
+
+  const target = collapsed ? tab : panel;
+  const rect = target.getBoundingClientRect();
+  const offset = Math.max(0, Math.ceil(rect.bottom));
+  document.documentElement.style.setProperty("--lux-top-banner-offset", offset + "px");
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const banner = document.getElementById("lux-top-banner");
+  if (!banner) return;
+
+  const collapseButton = banner.querySelector(".lux-banner-collapse");
+  const tabButton = banner.querySelector(".lux-banner-tab");
+  if (!collapseButton || !tabButton) return;
+
+  // Load state (safe)
+  let collapsed = false;
+  try { collapsed = localStorage.getItem("bannerCollapsed") === "true"; } catch {}
+  banner.classList.toggle("is-collapsed", collapsed);
+
+  const setCollapsed = (next) => {
+    banner.classList.toggle("is-collapsed", !!next);
+    try { localStorage.setItem("bannerCollapsed", next ? "true" : "false"); } catch {}
+
+    // Update offsets immediately + after transition settles
+    requestAnimationFrame(() => {
+      updateTopBannerOffset();
+      setTimeout(updateTopBannerOffset, 460);
     });
+  };
 
-    // Tab button functionality
-    tabButton.addEventListener('click', () => {
-        banner.classList.remove('is-collapsed');
-        banner.classList.add('is-open');
-        localStorage.setItem('bannerCollapsed', false);
-    });
+  collapseButton.addEventListener("click", (e) => {
+    e.preventDefault();
+    setCollapsed(true);
+  });
+
+  tabButton.addEventListener("click", (e) => {
+    e.preventDefault();
+    setCollapsed(false);
+  });
+
+  window.addEventListener("resize", () => {
+    updateTopBannerOffset();
+  }, { passive: true });
+
+  updateTopBannerOffset();
 });
 
 // Run Boot

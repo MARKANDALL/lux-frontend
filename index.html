@@ -41,15 +41,49 @@
     <script src="lux-popover.js" defer></script>
   </head>
   <body>
-    <!-- New Top Banner with Collapse Feature -->
-    <div id="lux-top-banner" class="lux-top-banner">
-      <div class="lux-top-banner-inner">
-        <div id="userMsg" class="lux-banner-content">
-            <p>We use and measure for standard American accents...</p> <!-- content from original #userMsg -->
-            <button class="lux-banner-collapse">▴</button> <!-- Collapse button -->
+    <!-- Top-of-viewport Tips Banner (fixed; tab remains clickable when collapsed) -->
+    <div id="lux-top-banner" class="lux-top-banner" aria-label="Tips banner">
+      <!-- This panel slides in/out -->
+      <div class="lux-top-banner-panel">
+        <div class="lux-top-banner-inner">
+          <div id="userMsg" aria-live="polite">
+            <button type="button" class="lux-banner-collapse" aria-label="Hide tips" title="Hide tips">▴</button>
+
+            <ol>
+              <li>We use and measure for standard American accents. Hear what it should sound like:
+                <span class="lux-arrow-trail" data-arrow-trail="tts" aria-hidden="true"></span>
+              </li>
+              <li>The more recordings you make, the better the feedback will be 🤔 💭 💡 😮:
+                <span class="lux-cta" tabindex="0" aria-haspopup="dialog" aria-expanded="false">
+                  database tracking
+                  <span class="lux-pop" role="dialog" aria-label="Database tracking details">
+                    <strong style="display: block; margin-bottom: 6px">How tracking helps</strong>
+                    <p style="margin: 0 0 8px; color: #444; font-size: 13px">
+                      We save summaries of your practice so feedback improves over time.
+                    </p>
+                    <div class="lux-uidrow">
+                      <span>Your UID:</span>
+                      <code id="lux-uid">…</code>
+                      <button id="lux-copy" class="lux-btn" type="button">Copy</button>
+                      <small id="lux-copied" class="lux-copied" aria-live="polite"></small>
+                    </div>
+                    <div class="lux-links">
+                      <a id="lux-link-attempts" target="_blank" rel="noopener">Attempts (admin)</a>
+                      <a id="lux-link-progress" target="_blank" rel="noopener">User Progress (admin)</a>
+                      <a id="lux-link-cohort" target="_blank" rel="noopener">Cohort (admin)</a>
+                    </div>
+                    <small class="lux-note">Admin token required for those pages.</small>
+                  </span>
+                </span>.
+              </li>
+              <li>Remember—mistakes are a necessary part of learning! :)</li>
+            </ol>
+          </div>
         </div>
-        <button class="lux-banner-tab">Tips ▾</button> <!-- Tab button visible when collapsed -->
       </div>
+
+      <!-- This tab stays visible when collapsed -->
+      <button type="button" class="lux-banner-tab" aria-label="Show tips" title="Show tips">Tips ▾</button>
     </div>
 
     <div id="container">
@@ -58,38 +92,6 @@
         <a class="lux-toplink lux-toplink-cta" href="./convo.html">
           AI Conversations
         </a>
-      </div>
-
-      <div id="userMsg">
-        <ol>
-          <li>We use and measure for standard American accents. Hear what it should sound like:
-            <span class="lux-arrow-trail" data-arrow-trail="tts" aria-hidden="true"></span>
-          </li>
-          <li>The more recordings you make, the better the feedback will be 🤔 💭 💡 😮:
-            <span class="lux-cta" tabindex="0" aria-haspopup="dialog" aria-expanded="false">
-              database tracking
-              <span class="lux-pop" role="dialog" aria-label="Database tracking details">
-                <strong style="display: block; margin-bottom: 6px">How tracking helps</strong>
-                <p style="margin: 0 0 8px; color: #444; font-size: 13px">
-                  We save summaries of your practice so feedback improves over time.
-                </p>
-                <div class="lux-uidrow">
-                  <span>Your UID:</span>
-                  <code id="lux-uid">…</code>
-                  <button id="lux-copy" class="lux-btn" type="button">Copy</button>
-                  <small id="lux-copied" class="lux-copied" aria-live="polite"></small>
-                </div>
-                <div class="lux-links">
-                  <a id="lux-link-attempts" target="_blank" rel="noopener">Attempts (admin)</a>
-                  <a id="lux-link-progress" target="_blank" rel="noopener">User Progress (admin)</a>
-                  <a id="lux-link-cohort" target="_blank" rel="noopener">Cohort (admin)</a>
-                </div>
-                <small class="lux-note">Admin token required for those pages.</small>
-              </span>
-            </span>.
-          </li>
-          <li>Remember—mistakes are a necessary part of learning! :)</li>
-        </ol>
       </div>
 
       <label>
