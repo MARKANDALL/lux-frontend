@@ -743,7 +743,7 @@ body:has(#convoApp[data-mode="intro"]){
 }
 
 @media (prefers-reduced-motion: reduce){
-  .lux-cardVideo{ display: none; }
+  .lux-cardVideo{ display: none !important; }
 }
 
 .lux-deck-card.is-active{
@@ -752,6 +752,7 @@ body:has(#convoApp[data-mode="intro"]){
   opacity: 1;
   filter: blur(0px);
 }
+
 .lux-deck-card.is-preview{
   width: min(520px, 86vw);
   z-index: 1;
@@ -759,6 +760,7 @@ body:has(#convoApp[data-mode="intro"]){
   filter: blur(6px);
   cursor: pointer;
 }
+
 
 /* Overlap + left/right staggering */
 #convoApp[data-side="left"]  .lux-deck-card.is-active { transform: translateX(-50%) translateX(-120px) scale(1.00); }

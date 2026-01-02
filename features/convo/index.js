@@ -225,12 +225,12 @@ export function bootConvo() {
 
   const scrim = el("div", "lux-scrim");
 
-// Progress panel host (ONLY visible in chat mode via CSS)
-const convoProgress = el("div", "lux-convo-progress");
-convoProgress.id = "convoProgress";
+  // Progress panel host (ONLY visible in chat mode via CSS)
+  const convoProgress = el("div", "lux-convo-progress");
+  convoProgress.id = "convoProgress";
 
-// IMPORTANT: append it *after* chatWrap, so it renders UNDER the chat box
-ui.append(intro, picker, chatWrap, convoProgress, drawer, scrim);
+  // IMPORTANT: append it *after* chatWrap, so it renders UNDER the chat box
+  ui.append(intro, picker, chatWrap, convoProgress, drawer, scrim);
   root.append(atmo, ui);
 
   // --- Edge-style scene tiles (scatter + depth + independent drift) ---
@@ -301,17 +301,15 @@ ui.append(intro, picker, chatWrap, convoProgress, drawer, scrim);
       : null;
 
     // Zones to avoid left/right poles and populate the center band
-const ZONES = sShuffle([
-  { x0: 0.05, x1: 0.33, y0: 0.08, y1: 0.38 },
-  { x0: 0.33, x1: 0.67, y0: 0.02, y1: 0.30 },
-  { x0: 0.67, x1: 0.95, y0: 0.08, y1: 0.38 },
+    const ZONES = sShuffle([
+      { x0: 0.05, x1: 0.33, y0: 0.08, y1: 0.38 },
+      { x0: 0.33, x1: 0.67, y0: 0.02, y1: 0.30 },
+      { x0: 0.67, x1: 0.95, y0: 0.08, y1: 0.38 },
 
-  { x0: 0.05, x1: 0.35, y0: 0.58, y1: 0.96 },
-  { x0: 0.30, x1: 0.70, y0: 0.46, y1: 0.94 },
-  { x0: 0.65, x1: 0.95, y0: 0.58, y1: 0.96 },
-]);
-
-
+      { x0: 0.05, x1: 0.35, y0: 0.58, y1: 0.96 },
+      { x0: 0.30, x1: 0.70, y0: 0.46, y1: 0.94 },
+      { x0: 0.65, x1: 0.95, y0: 0.58, y1: 0.96 },
+    ]);
 
     // Build placement list (big cards first)
     const items = [];
@@ -386,14 +384,12 @@ const ZONES = sShuffle([
       const finalR = best ? best.r : mkRect(0, 0, w, h);
       placed.push(finalR);
 
-// Allow a little offscreen, but prevent the “only 2 visible” extreme.
-const OFF_X = 44;
-const OFF_Y = 34;
+      // Allow a little offscreen, but prevent the “only 2 visible” extreme.
+      const OFF_X = 44;
+      const OFF_Y = 34;
 
-finalR.x = sClamp(finalR.x, -OFF_X, W - w + OFF_X);
-finalR.y = sClamp(finalR.y, -OFF_Y, H - h + OFF_Y);
-
-
+      finalR.x = sClamp(finalR.x, -OFF_X, W - w + OFF_X);
+      finalR.y = sClamp(finalR.y, -OFF_Y, H - h + OFF_Y);
 
       // Commit CSS variables
       it.node.style.setProperty("--ax", `${finalR.x}px`);
@@ -465,21 +461,20 @@ finalR.y = sClamp(finalR.y, -OFF_Y, H - h + OFF_Y);
     if (!par.raf) par.raf = requestAnimationFrame(parTick);
   }
 
-function parSetFromEvent(e) {
-  if (state.mode !== "intro" || root.dataset.parallax !== "on") return;
+  function parSetFromEvent(e) {
+    if (state.mode !== "intro" || root.dataset.parallax !== "on") return;
 
-  const BOOST = 1.55;      // more lively than the “restricted” version
-  const MAX   = 1.25;      // still far from the old ±2 insanity
+    const BOOST = 1.55; // more lively than the “restricted” version
+    const MAX = 1.25; // still far from the old ±2 insanity
 
-  const nx = (e.clientX / window.innerWidth  - 0.5) * 2;
-  const ny = (e.clientY / window.innerHeight - 0.5) * 2;
+    const nx = (e.clientX / window.innerWidth - 0.5) * 2;
+    const ny = (e.clientY / window.innerHeight - 0.5) * 2;
 
-  par.tx = clamp(nx * BOOST, -MAX, MAX);
-  par.ty = clamp(ny * BOOST, -MAX, MAX);
+    par.tx = clamp(nx * BOOST, -MAX, MAX);
+    par.ty = clamp(ny * BOOST, -MAX, MAX);
 
-  parKick();
-}
-
+    parKick();
+  }
 
   window.addEventListener("pointermove", parSetFromEvent, { passive: true });
   window.addEventListener("pointerdown", parSetFromEvent, { passive: true });
@@ -619,100 +614,128 @@ function parSetFromEvent(e) {
   }
 
   function fillDeckCard(host, scenario, isActive) {
-    host.innerHTML = "";
+    // Hard reset (prevents duplicate media / handlers across re-renders)
+    host.replaceChildren();
+    host.onpointerenter = null;
+    host.onpointerleave = null;
 
-    // image background (your existing behavior)
+    // image background (existing behavior)
     host.classList.toggle("has-img", !!scenario.img);
     if (scenario.img) host.style.setProperty("--lux-card-img", `url("${scenario.img}")`);
     else host.style.removeProperty("--lux-card-img");
 
-    // reset any prior video state
-    host.classList.toggle("has-video", false);
-    host.dataset.vstate = "";
-    host.dataset.vtoken = "";
-    host.onpointerenter = null;
-
-    // --- NEW: media layer (sits behind text) ---
+    // --- media layer (sits behind text) ---
     const media = el("div", "lux-cardMedia");
     host.append(media);
 
-    // --- NEW: active-card video (optional) ---
-    if (isActive && scenario.video) {
-      host.classList.toggle("has-video", true);
+    // --- VIDEO RESOLUTION (zero-touch fallback) ---
+    // If you later add scenario.video explicitly, it will win.
+    const resolveVideoSrc = (s) => {
+      if (s?.video) return s.video;
+      const img = String(s?.img || "");
+      const m = img.match(/\/convo-img\/([^\/?#]+)\.(webp|png|jpe?g)(?:[?#].*)?$/i);
+      if (!m) return "";
+      return `/convo-vid/${m[1].toLowerCase()}.mp4`;
+    };
 
-      const v = document.createElement("video");
-      v.className = "lux-cardVideo";
-      v.muted = true;
-      v.playsInline = true;
-      v.preload = "metadata";
-      v.controls = false;
+    // reset any prior video state
+    host.classList.toggle("has-video", false);
+    delete host.dataset.vstate;
+    delete host.dataset.vtoken;
 
-      // iOS/Safari friendliness
-      v.setAttribute("muted", "");
-      v.setAttribute("playsinline", "");
-      v.setAttribute("webkit-playsinline", "");
+    // --- active-card video (optional) ---
+    // Inactive/preview: NEVER mounts video.
+    if (isActive) {
+      const vsrc = resolveVideoSrc(scenario);
 
-      v.src = scenario.video;
-      media.append(v);
+      if (vsrc) {
+        host.classList.add("has-video");
+        host.dataset.vstate = "idle";
 
-      const prefersReduce =
-        window.matchMedia &&
-        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        const v = document.createElement("video");
+        v.className = "lux-cardVideo";
+        v.src = vsrc;
+        v.preload = "metadata";
 
-      const token = String(Date.now());
-      host.dataset.vtoken = token;
+        // autoplay-friendly + iOS/Safari friendliness
+        v.muted = true;
+        v.setAttribute("muted", "");
+        v.setAttribute("playsinline", "");
+        v.setAttribute("webkit-playsinline", "");
 
-      // Start AFTER the deck transition settles (~520ms in your CSS)
-      if (!prefersReduce) {
-        setTimeout(() => {
-          if (host.dataset.vtoken !== token) return;
-          if (root.dataset.mode !== "picker") return;
+        media.append(v);
 
-          host.dataset.vstate = "playing";
-          try { v.currentTime = 0; } catch (_) {}
+        const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-          const p = v.play();
-          if (p && p.catch) {
-            p.catch(() => {
-              // if autoplay fails, just fall back to the still image
-              host.dataset.vstate = "";
-            });
-          }
-        }, 520);
+        // Token prevents stale timeouts from starting an old card’s video
+        const token = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+        host.dataset.vtoken = token;
+
+        if (!reduced) {
+          // Start AFTER the deck transition settles (tune if needed)
+          const SETTLE_MS = 560;
+
+          setTimeout(() => {
+            if (host.dataset.vtoken !== token) return;
+            if (!document.body.contains(host)) return;
+
+            host.dataset.vstate = "playing";
+            try {
+              v.currentTime = 0;
+            } catch (_) {}
+
+            const p = v.play();
+            if (p && typeof p.catch === "function") {
+              p.catch(() => {
+                // autoplay/codec/path failure => fall back to still image
+                if (host.dataset.vtoken !== token) return;
+                host.dataset.vstate = "error";
+              });
+            }
+          }, SETTLE_MS);
+
+          v.addEventListener("error", () => {
+            if (host.dataset.vtoken !== token) return;
+            host.dataset.vstate = "error";
+          });
+
+          // When finished, fade video away (reveals still background)
+          v.addEventListener("ended", () => {
+            if (host.dataset.vtoken !== token) return;
+            host.dataset.vstate = "ended";
+
+            // Optional replay on hover (only after it ended)
+            host.onpointerenter = () => {
+              if (host.dataset.vtoken !== token) return;
+              host.dataset.vstate = "playing";
+              try {
+                v.currentTime = 0;
+              } catch (_) {}
+              v.play().catch(() => {
+                if (host.dataset.vtoken !== token) return;
+                host.dataset.vstate = "error";
+              });
+            };
+          });
+
+          // If you EVER want looping instead of “play once then still”:
+          // v.loop = true;
+        }
       }
-
-      // When finished, fade video away (reveals your still background)
-      v.addEventListener("ended", () => {
-        if (host.dataset.vtoken !== token) return;
-        host.dataset.vstate = "ended";
-      });
-
-      // Optional: replay on hover (only if it already ended)
-      host.onpointerenter = () => {
-        if (root.dataset.mode !== "picker") return;
-        if (host.dataset.vstate !== "ended") return;
-
-        host.dataset.vstate = "playing";
-        try { v.currentTime = 0; } catch (_) {}
-        v.play().catch(() => {
-          host.dataset.vstate = "ended";
-        });
-      };
-
-      // If you EVER want looping instead of “play once then still”:
-      // v.loop = true;
     }
 
     // --- your existing text content ---
     host.append(
       el("div", "lux-pill", "DIALOGUE"),
       el("div", "lux-deckTitle", scenario.title),
-      el("div", "lux-deckDesc", scenario.desc)
+      el("div", "lux-deckDesc", scenario.desc || "")
     );
 
+    // CTA only on active card (keeps preview calm / non-interactive)
     if (isActive) {
       const cta = el("button", "lux-deckCta", "Practice this dialogue");
       cta.addEventListener("click", async (e) => {
+        e.preventDefault();
         e.stopPropagation();
         await beginScenario();
       });
