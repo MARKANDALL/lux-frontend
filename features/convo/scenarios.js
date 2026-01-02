@@ -6,6 +6,7 @@ export const SCENARIOS = [
     desc: "Quick small talk + ordering under mild time pressure.",
     img: "/convo-img/coffee.webp",
     thumb: "/convo-img/coffee.webp",
+        video: "/convo-vid/coffee.mp4", // ← ADD
   },
   {
     id: "doctor",
@@ -13,6 +14,7 @@ export const SCENARIOS = [
     desc: "Explain symptoms, answer follow-ups, confirm instructions.",
     img: "/convo-img/doctor.webp",
     thumb: "/convo-img/doctor.webp",
+    video: "/convo-vid/doctor.mp4", // ← ADD
   },
   {
     id: "job",
@@ -20,6 +22,7 @@ export const SCENARIOS = [
     desc: "Tell your story, strengths, and handle tricky questions.",
     img: "/convo-img/job.webp",
     thumb: "/convo-img/job.webp",
+    
   },
   {
     id: "landlord",

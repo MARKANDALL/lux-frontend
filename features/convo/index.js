@@ -620,10 +620,90 @@ function parSetFromEvent(e) {
 
   function fillDeckCard(host, scenario, isActive) {
     host.innerHTML = "";
+
+    // image background (your existing behavior)
     host.classList.toggle("has-img", !!scenario.img);
     if (scenario.img) host.style.setProperty("--lux-card-img", `url("${scenario.img}")`);
     else host.style.removeProperty("--lux-card-img");
 
+    // reset any prior video state
+    host.classList.toggle("has-video", false);
+    host.dataset.vstate = "";
+    host.dataset.vtoken = "";
+    host.onpointerenter = null;
+
+    // --- NEW: media layer (sits behind text) ---
+    const media = el("div", "lux-cardMedia");
+    host.append(media);
+
+    // --- NEW: active-card video (optional) ---
+    if (isActive && scenario.video) {
+      host.classList.toggle("has-video", true);
+
+      const v = document.createElement("video");
+      v.className = "lux-cardVideo";
+      v.muted = true;
+      v.playsInline = true;
+      v.preload = "metadata";
+      v.controls = false;
+
+      // iOS/Safari friendliness
+      v.setAttribute("muted", "");
+      v.setAttribute("playsinline", "");
+      v.setAttribute("webkit-playsinline", "");
+
+      v.src = scenario.video;
+      media.append(v);
+
+      const prefersReduce =
+        window.matchMedia &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      const token = String(Date.now());
+      host.dataset.vtoken = token;
+
+      // Start AFTER the deck transition settles (~520ms in your CSS)
+      if (!prefersReduce) {
+        setTimeout(() => {
+          if (host.dataset.vtoken !== token) return;
+          if (root.dataset.mode !== "picker") return;
+
+          host.dataset.vstate = "playing";
+          try { v.currentTime = 0; } catch (_) {}
+
+          const p = v.play();
+          if (p && p.catch) {
+            p.catch(() => {
+              // if autoplay fails, just fall back to the still image
+              host.dataset.vstate = "";
+            });
+          }
+        }, 520);
+      }
+
+      // When finished, fade video away (reveals your still background)
+      v.addEventListener("ended", () => {
+        if (host.dataset.vtoken !== token) return;
+        host.dataset.vstate = "ended";
+      });
+
+      // Optional: replay on hover (only if it already ended)
+      host.onpointerenter = () => {
+        if (root.dataset.mode !== "picker") return;
+        if (host.dataset.vstate !== "ended") return;
+
+        host.dataset.vstate = "playing";
+        try { v.currentTime = 0; } catch (_) {}
+        v.play().catch(() => {
+          host.dataset.vstate = "ended";
+        });
+      };
+
+      // If you EVER want looping instead of “play once then still”:
+      // v.loop = true;
+    }
+
+    // --- your existing text content ---
     host.append(
       el("div", "lux-pill", "DIALOGUE"),
       el("div", "lux-deckTitle", scenario.title),
