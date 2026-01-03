@@ -3,7 +3,7 @@ import { SCENARIOS } from "./scenarios.js";
 import { convoTurn } from "../../api/convo.js";
 import { assessPronunciation } from "../../api/assess.js";
 import { convoReport } from "../../api/convo-report.js";
-import { saveAttempt, ensureUID } from "../../api/index.js";
+import { saveAttempt, ensureUID } from "/src/api/index.js";
 import { warpSwap } from "../../ui/warp-core.js";
 
 // --- Deck card sizing: make the CARD match the media's natural aspect ratio ---

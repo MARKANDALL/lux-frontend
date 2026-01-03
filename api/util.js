@@ -7,7 +7,7 @@ export const API_BASE = (() => {
 })();
 
 export function dbg(...args) {
-  if (globalThis?.__DEBUG_AI ?? true) console.log("[AI]", ...args);
+  if (globalThis?.__DEBUG_AI === true) console.log("[AI]", ...args);
 }
 
 export async function jsonOrThrow(resp) {

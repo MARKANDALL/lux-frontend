@@ -3,7 +3,9 @@ import { passages } from "../src/data/index.js";
 
 // --- global debug hook (browser only)
 if (typeof window !== "undefined") {
-  window.LUX_DEBUG = true;
+  const qs = new URLSearchParams(window.location.search);
+  const flag = qs.has("luxdebug") || window.localStorage.getItem("luxdebug") === "1";
+  window.LUX_DEBUG = !!(import.meta?.env?.DEV && flag);
   window.luxDbg = function (label, extra) {
     if (!window.LUX_DEBUG) return;
     const ts = new Date().toISOString().split("T")[1].slice(0, 8);

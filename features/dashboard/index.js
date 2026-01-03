@@ -4,7 +4,7 @@
 // - On /progress.html: renders the full dashboard immediately.
 
 import * as UI from "./ui.js";
-import { fetchHistory, ensureUID } from "../../api/index.js";
+import { fetchHistory, ensureUID } from "/src/api/index.js";
 import { computeRollups } from "../progress/rollups.js";
 import { renderProgressDashboard } from "../progress/render.js";
 

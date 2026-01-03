@@ -2,7 +2,7 @@
 // Conversation Skills progress panel (same look as Practice Results, but filtered to convo:* attempts).
 // Renders as a collapsed drawer; loads on expand.
 
-import { fetchHistory, ensureUID } from "../../api/index.js";
+import { fetchHistory, ensureUID } from "/src/api/index.js";
 import { computeRollups } from "../progress/rollups.js";
 import { renderProgressDashboard } from "../progress/render.js";
 

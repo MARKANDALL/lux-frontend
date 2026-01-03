@@ -12,7 +12,7 @@ import {
   getCurrentPersona // <--- NEW IMPORT
 } from "./ui-ai-ai-dom.js";
 
-import { fetchAIFeedback, updateAttempt } from "../api/index.js";
+import { fetchAIFeedback, updateAttempt } from "/src/api/index.js";
 
 // State
 let chunkHistory = []; 
