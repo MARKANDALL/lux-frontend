@@ -3,114 +3,16 @@ import { SCENARIOS } from "./scenarios.js";
 import { convoTurn } from "../../api/convo.js";
 import { assessPronunciation } from "../../api/assess.js";
 import { convoReport } from "../../api/convo-report.js";
-import { saveAttempt, ensureUID } from "/src/api/index.js";
+import { saveAttempt } from "/src/api/index.js";
 import { warpSwap } from "../../ui/warp-core.js";
 
-// --- Deck card sizing: make the CARD match the media's natural aspect ratio ---
-const _luxMediaMeta = new Map();
-
-function applyMediaSizingVars(host, imgSrc) {
-  if (!host || !imgSrc) return;
-
-  const cached = _luxMediaMeta.get(imgSrc);
-  if (cached) {
-    host.style.setProperty("--lux-media-ar", cached.ar);
-    host.style.setProperty("--lux-media-h", cached.h);
-    return;
-  }
-
-  const im = new Image();
-  im.onload = () => {
-    const ar = `${im.naturalWidth} / ${im.naturalHeight}`;
-    const h  = `${im.naturalHeight}px`;
-    _luxMediaMeta.set(imgSrc, { ar, h });
-
-    host.style.setProperty("--lux-media-ar", ar);
-    host.style.setProperty("--lux-media-h", h);
-  };
-  im.src = imgSrc;
-}
-
-function uid() {
-  return ensureUID();
-}
-
-function newSessionId() {
-  if (crypto?.randomUUID) return crypto.randomUUID();
-  return `sess_${Math.random().toString(16).slice(2)}_${Date.now()}`;
-}
-
-function el(tag, cls, text) {
-  const n = document.createElement(tag);
-  if (cls) n.className = cls;
-  if (text != null) n.textContent = text;
-  return n;
-}
-
-function escapeHtml(s) {
-  return String(s)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-function showConvoReportOverlay(report) {
-  let host = document.getElementById("luxConvoReportOverlay");
-  const pretty = escapeHtml(JSON.stringify(report, null, 2));
-
-  if (!host) {
-    host = document.createElement("div");
-    host.id = "luxConvoReportOverlay";
-    host.style.cssText = `
-      position: fixed; inset: 0; z-index: 99999;
-      background: rgba(0,0,0,0.45);
-      display:flex; align-items:center; justify-content:center;
-      padding: 18px;
-    `;
-
-    host.innerHTML = `
-      <div style="
-        width: min(980px, 96vw);
-        max-height: min(80vh, 720px);
-        overflow: auto;
-        border-radius: 18px;
-        background: rgba(20,20,30,0.92);
-        border: 1px solid rgba(255,255,255,0.10);
-        padding: 14px;
-        backdrop-filter: blur(12px);
-      ">
-        <div style="display:flex; align-items:center; justify-content:space-between; gap: 12px; margin-bottom: 10px;">
-          <div style="font-weight: 650;">
-            Convo Report (pron: ${escapeHtml(String(report?.scores?.pron ?? "?"))})
-          </div>
-          <button id="luxConvoReportClose" style="
-            background:#111827; color:#e5e7eb; border:1px solid rgba(255,255,255,0.10);
-            border-radius:10px; padding:8px 10px; cursor:pointer;
-          ">Close</button>
-        </div>
-        <pre id="luxConvoReportPre" style="
-          white-space: pre-wrap;
-          margin: 0;
-          font-size: 12px;
-          line-height: 1.35;
-          color: rgba(255,255,255,0.88);
-          background: rgba(0,0,0,0.22);
-          border: 1px solid rgba(255,255,255,0.08);
-          border-radius: 12px;
-          padding: 12px;
-        ">${pretty}</pre>
-      </div>
-    `;
-
-    host.querySelector("#luxConvoReportClose")?.addEventListener("click", () => host.remove());
-  } else {
-    host.querySelector("#luxConvoReportPre").textContent = JSON.stringify(report, null, 2);
-  }
-
-  document.body.appendChild(host);
-}
+import {
+  applyMediaSizingVars,
+  uid,
+  newSessionId,
+  el,
+  showConvoReportOverlay,
+} from "./convo-shared.js";
 
 export function bootConvo() {
   const root = document.getElementById("convoApp");
@@ -638,138 +540,137 @@ export function bootConvo() {
     });
   }
 
-function fillDeckCard(host, scenario, isActive) {
-  // Hard reset (prevents duplicate media / handlers across re-renders)
-  host.replaceChildren();
-  host.onpointerenter = null;
-  host.onpointerleave = null;
+  function fillDeckCard(host, scenario, isActive) {
+    // Hard reset (prevents duplicate media / handlers across re-renders)
+    host.replaceChildren();
+    host.onpointerenter = null;
+    host.onpointerleave = null;
 
-  // image background (existing behavior)
-  host.classList.toggle("has-img", !!scenario.img);
-  if (scenario.img) host.style.setProperty("--lux-card-img", `url("${scenario.img}")`);
-  else host.style.removeProperty("--lux-card-img");
+    // image background (existing behavior)
+    host.classList.toggle("has-img", !!scenario.img);
+    if (scenario.img) host.style.setProperty("--lux-card-img", `url("${scenario.img}")`);
+    else host.style.removeProperty("--lux-card-img");
 
-  applyMediaSizingVars(host, scenario.img);
+    applyMediaSizingVars(host, scenario.img);
 
-  // --- media layer (sits behind text) ---
-  const media = el("div", "lux-cardMedia");
-  host.append(media);
+    // --- media layer (sits behind text) ---
+    const media = el("div", "lux-cardMedia");
+    host.append(media);
 
-  // --- VIDEO RESOLUTION (zero-touch fallback) ---
-  // If you later add scenario.video explicitly, it will win.
-  const resolveVideoSrc = (s) => {
-    if (s?.video) return s.video;
-    const img = String(s?.img || "");
-    const m = img.match(/\/convo-img\/([^\/?#]+)\.(webp|png|jpe?g)(?:[?#].*)?$/i);
-    if (!m) return "";
-    return `/convo-vid/${m[1].toLowerCase()}.mp4`;
-  };
+    // --- VIDEO RESOLUTION (zero-touch fallback) ---
+    // If you later add scenario.video explicitly, it will win.
+    const resolveVideoSrc = (s) => {
+      if (s?.video) return s.video;
+      const img = String(s?.img || "");
+      const m = img.match(/\/convo-img\/([^\/?#]+)\.(webp|png|jpe?g)(?:[?#].*)?$/i);
+      if (!m) return "";
+      return `/convo-vid/${m[1].toLowerCase()}.mp4`;
+    };
 
-  // reset any prior video state
-  host.classList.toggle("has-video", false);
-  delete host.dataset.vstate;
-  delete host.dataset.vtoken;
+    // reset any prior video state
+    host.classList.toggle("has-video", false);
+    delete host.dataset.vstate;
+    delete host.dataset.vtoken;
 
-  // --- active-card video (optional) ---
-  // Inactive/preview: NEVER mounts video.
-  if (isActive) {
-    const vsrc = resolveVideoSrc(scenario);
+    // --- active-card video (optional) ---
+    // Inactive/preview: NEVER mounts video.
+    if (isActive) {
+      const vsrc = resolveVideoSrc(scenario);
 
-    if (vsrc) {
-      host.classList.add("has-video");
-      host.dataset.vstate = "idle";
+      if (vsrc) {
+        host.classList.add("has-video");
+        host.dataset.vstate = "idle";
 
-      const v = document.createElement("video");
-      v.className = "lux-cardVideo";
-      v.src = vsrc;
-      v.preload = "metadata";
+        const v = document.createElement("video");
+        v.className = "lux-cardVideo";
+        v.src = vsrc;
+        v.preload = "metadata";
 
-      // autoplay-friendly + iOS/Safari friendliness
-      v.muted = true;
-      v.setAttribute("muted", "");
-      v.setAttribute("playsinline", "");
-      v.setAttribute("webkit-playsinline", "");
+        // autoplay-friendly + iOS/Safari friendliness
+        v.muted = true;
+        v.setAttribute("muted", "");
+        v.setAttribute("playsinline", "");
+        v.setAttribute("webkit-playsinline", "");
 
-      media.append(v);
+        media.append(v);
 
-      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-      // Token prevents stale timeouts from starting an old card’s video
-      const token = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
-      host.dataset.vtoken = token;
+        // Token prevents stale timeouts from starting an old card’s video
+        const token = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+        host.dataset.vtoken = token;
 
-      if (!reduced) {
-        // Start AFTER the deck transition settles (tune if needed)
-        const SETTLE_MS = 560;
+        if (!reduced) {
+          // Start AFTER the deck transition settles (tune if needed)
+          const SETTLE_MS = 560;
 
-        setTimeout(() => {
-          if (host.dataset.vtoken !== token) return;
-          if (!document.body.contains(host)) return;
-
-          host.dataset.vstate = "playing";
-          try { v.currentTime = 0; } catch (_) {}
-
-          const p = v.play();
-          if (p && typeof p.catch === "function") {
-            p.catch(() => {
-              // autoplay/codec/path failure => fall back to still image
-              if (host.dataset.vtoken !== token) return;
-              host.dataset.vstate = "error";
-            });
-          }
-        }, SETTLE_MS);
-
-        v.addEventListener("error", () => {
-          if (host.dataset.vtoken !== token) return;
-          host.dataset.vstate = "error";
-        });
-
-        // When finished, fade video away (reveals still background)
-        v.addEventListener("ended", () => {
-          if (host.dataset.vtoken !== token) return;
-          host.dataset.vstate = "ended";
-
-          // Optional replay on hover (only after it ended)
-          host.onpointerenter = () => {
+          setTimeout(() => {
             if (host.dataset.vtoken !== token) return;
+            if (!document.body.contains(host)) return;
+
             host.dataset.vstate = "playing";
             try { v.currentTime = 0; } catch (_) {}
-            v.play().catch(() => {
-              if (host.dataset.vtoken !== token) return;
-              host.dataset.vstate = "error";
-            });
-          };
-        });
 
-        // If you EVER want looping instead of “play once then still”:
-        // v.loop = true;
+            const p = v.play();
+            if (p && typeof p.catch === "function") {
+              p.catch(() => {
+                // autoplay/codec/path failure => fall back to still image
+                if (host.dataset.vtoken !== token) return;
+                host.dataset.vstate = "error";
+              });
+            }
+          }, SETTLE_MS);
+
+          v.addEventListener("error", () => {
+            if (host.dataset.vtoken !== token) return;
+            host.dataset.vstate = "error";
+          });
+
+          // When finished, fade video away (reveals still background)
+          v.addEventListener("ended", () => {
+            if (host.dataset.vtoken !== token) return;
+            host.dataset.vstate = "ended";
+
+            // Optional replay on hover (only after it ended)
+            host.onpointerenter = () => {
+              if (host.dataset.vtoken !== token) return;
+              host.dataset.vstate = "playing";
+              try { v.currentTime = 0; } catch (_) {}
+              v.play().catch(() => {
+                if (host.dataset.vtoken !== token) return;
+                host.dataset.vstate = "error";
+              });
+            };
+          });
+
+          // If you EVER want looping instead of “play once then still”:
+          // v.loop = true;
+        }
       }
     }
+
+    // --- your existing text content ---
+    host.append(
+      el("div", "lux-pill", "DIALOGUE"),
+      el("div", "lux-deckTitle", scenario.title),
+      el("div", "lux-deckDesc", scenario.desc || "")
+    );
+
+    // CTA only on active card (keeps preview calm / non-interactive)
+    if (isActive) {
+      const cta = el("button", "lux-deckCta", "Practice this dialogue");
+      cta.addEventListener("click", async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        await beginScenario();
+      });
+      host.append(cta);
+
+      host.onclick = () => beginScenario().catch(console.error);
+    } else {
+      host.onclick = null;
+    }
   }
-
-  // --- your existing text content ---
-  host.append(
-    el("div", "lux-pill", "DIALOGUE"),
-    el("div", "lux-deckTitle", scenario.title),
-    el("div", "lux-deckDesc", scenario.desc || "")
-  );
-
-  // CTA only on active card (keeps preview calm / non-interactive)
-  if (isActive) {
-    const cta = el("button", "lux-deckCta", "Practice this dialogue");
-    cta.addEventListener("click", async (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      await beginScenario();
-    });
-    host.append(cta);
-
-    host.onclick = () => beginScenario().catch(console.error);
-  } else {
-    host.onclick = null;
-  }
-}
-
 
   async function beginScenario() {
     await warpSwap(() => setMode("chat"), { outMs: 200, inMs: 240 });
@@ -919,7 +820,7 @@ function fillDeckCard(host, scenario, isActive) {
         localTime: new Date().toISOString(),
       });
       state.turns.push({ turn: state.turns.length, userText, azureResult, attemptId: saved?.id });
-        } catch (e) {
+    } catch (e) {
       console.error("[Convo] saveAttempt failed", e);
       state.turns.push({ turn: state.turns.length, userText, azureResult, attemptId: null });
     }
@@ -935,7 +836,6 @@ function fillDeckCard(host, scenario, isActive) {
       knobs: state.knobs,
       messages: state.messages.slice(-24),
     });
-
 
     if (rsp?.assistant) state.messages.push({ role: "assistant", content: rsp.assistant });
     renderMessages();
