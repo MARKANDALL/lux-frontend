@@ -4,14 +4,19 @@ import { passages } from "../src/data/index.js";
 // --- global debug hook (browser only)
 if (typeof window !== "undefined") {
   const qs = new URLSearchParams(window.location.search);
-  const flag = qs.has("luxdebug") || window.localStorage.getItem("luxdebug") === "1";
+  const flag =
+    qs.has("luxdebug") || window.localStorage.getItem("luxdebug") === "1";
+
+  // default OFF; only enable in dev *and* when opted-in
   window.LUX_DEBUG = !!(import.meta?.env?.DEV && flag);
+
   window.luxDbg = function (label, extra) {
     if (!window.LUX_DEBUG) return;
     const ts = new Date().toISOString().split("T")[1].slice(0, 8);
     console.log(`[LUX ${ts}] ${label}`, extra ?? "");
   };
 }
+
 
 const dbg = (label, extra) =>
   typeof window !== "undefined" &&

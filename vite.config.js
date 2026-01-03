@@ -1,30 +1,29 @@
-import { defineConfig } from 'vite';
+import { defineConfig } from "vite";
 
 export default defineConfig({
-  // Base path for relative links
-  base: './', 
+  base: "./",
 
   build: {
-    outDir: 'dist',
-    assetsDir: 'assets',
+    outDir: "dist",
+    assetsDir: "assets",
     sourcemap: true,
     emptyOutDir: true,
   },
 
   server: {
-    port: 3000, 
+    port: 3000,
     open: true,
-    
-    // THE FIX:
-    // We use a "Negative Lookahead" Regex.
-    // It says: Match "/api/...", BUT NOT if it ends in ".js"
-    // This lets your code files load locally, while API data calls go to the cloud.
+
+    // Proxy API *data* calls to the cloud,
+    // but do NOT proxy local JS modules like /api/*.js (even with ?t=... cache busters)
     proxy: {
-      '^/api/(?!.*\\.js$)': {
-        target: 'https://luxury-language-api.vercel.app',
+      "^/api/(?!.*\\.js(?:\\?.*)?$)": {
+        target: "https://luxury-language-api.vercel.app",
         changeOrigin: true,
-        secure: false,
-      }
-    }
-  }
+        secure: true,
+        rewrite: (p) => p.replace(/^\/api/, ""),
+      },
+    },
+  },
 });
+ 
