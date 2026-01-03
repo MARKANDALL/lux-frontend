@@ -1,0 +1,302 @@
+<!-- index.html (Pronunciation Test) -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lux Pronunciation Tool</title>
+
+    
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet" />
+
+    
+
+    <style id="lux-tts-guard-style">
+      #tts-controls { display: none !important; }
+    </style>
+    
+<script src="./vendor/wavesurfer-7.8.11.min.js"></script>
+
+
+
+    <script src="lux-popover.js" defer></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "ai.js": "./api/ai.js",
+          "./api.js": "/src/api/index.js"
+        }
+      }
+    </script>
+    <script type="module" crossorigin src="./assets/index-B4IlvQTO.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-yKgDVQGE.css">
+  </head>
+  <body>
+    <!-- Top-of-viewport Tips Banner (fixed; tab remains clickable when collapsed) -->
+    <div id="lux-top-banner" class="lux-top-banner" aria-label="Tips banner">
+      <!-- This panel slides in/out -->
+      <div class="lux-top-banner-panel">
+        <div class="lux-top-banner-inner">
+          <div id="userMsg" aria-live="polite">
+
+            <ol>
+              <li>We use and measure for standard American accents. Hear what it should sound like:
+                <span class="lux-arrow-trail" data-arrow-trail="tts" aria-hidden="true"></span>
+              </li>
+              <li>The more recordings you make, the better the feedback will be 🤔 💭 💡 😮:
+                <span class="lux-cta" tabindex="0" aria-haspopup="dialog" aria-expanded="false">
+                  database tracking
+                  <span class="lux-pop" role="dialog" aria-label="Database tracking details">
+                    <strong style="display: block; margin-bottom: 6px">How tracking helps</strong>
+                    <p style="margin: 0 0 8px; color: #444; font-size: 13px">
+                      We save summaries of your practice so feedback improves over time.
+                    </p>
+                    <div class="lux-uidrow">
+                      <span>Your UID:</span>
+                      <code id="lux-uid">…</code>
+                      <button id="lux-copy" class="lux-btn" type="button">Copy</button>
+                      <small id="lux-copied" class="lux-copied" aria-live="polite"></small>
+                    </div>
+                    <div class="lux-links">
+                      <a id="lux-link-attempts" target="_blank" rel="noopener">Attempts (admin)</a>
+                      <a id="lux-link-progress" target="_blank" rel="noopener">User Progress (admin)</a>
+                      <a id="lux-link-cohort" target="_blank" rel="noopener">Cohort (admin)</a>
+                    </div>
+                    <small class="lux-note">Admin token required for those pages.</small>
+                  </span>
+                </span>.
+              </li>
+              <li>Remember—mistakes are a necessary part of learning! :)</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+
+      <!-- This tab stays visible when collapsed -->
+      <button type="button" class="lux-banner-handle" aria-label="Hide tips" title="Hide tips">Tips ▴</button>
+    </div>
+
+    <div id="container">
+      <h2>Pronunciation Test</h2>
+      <div class="lux-toplinks lux-toplinks-cta">
+        <a class="lux-toplink lux-toplink-cta" href="./convo.html">
+          AI Conversations
+        </a>
+      </div>
+
+      <label>
+        Select Passage:
+        <select id="passageSelect">
+          <option value="" disabled selected>Select Passage...</option>
+          <option value="rainbow">Rainbow Passage</option>
+          <option value="grandfather">Grandfather Passage</option>
+          <option value="minLR">Phoneme Test: L vs R</option>
+          <option value="minEEIH">Phoneme Test: EE vs IH</option>
+          <option value="minAUAH">Phoneme Test: A vs U</option>
+          <option value="wordList">Challenging Word List</option>
+          <option value="sentences">Challenging Sentences</option>
+          <option value="shortStory">Short Story Practice</option>
+          <option disabled>-------------------</option>
+          <option value="write-own">Write Your Own...</option>
+          <option value="clear">Clear Text</option>
+        </select>
+        <span id="partsInfoTip" class="tooltip" style="margin-left: 10px; cursor: pointer; display: inline-block !important;"> 
+            (?) 
+            <span class="tooltiptext">These texts are designed to cover most sounds in English.</span>
+        </span>
+      </label>
+
+      <label style="display: block; margin-top: 14px">
+        First language:
+        <select id="l1Select" name="l1Select">
+          <option value="universal" selected>Universal (English-only)</option>
+          <option value="ar">Arabic – العربية</option>
+          <option value="zh">Chinese – 中文</option>
+          <option value="fr">French – Français</option>
+          <option value="de">German – Deutsch</option>
+          <option value="hi">Hindi – हिन्दी</option>
+          <option value="ja">Japanese – 日本語</option>
+          <option value="ko">Korean – 한국어</option>
+          <option value="mr">Marathi – मराठी</option>
+          <option value="pt">Portuguese – Português</option>
+          <option value="ru">Russian – Русский</option>
+          <option value="es">Spanish – Español</option>
+        </select>
+      </label>
+
+      <span id="suggestedSentence" style="display: none"></span>
+      <label style="margin-top: 20px">
+        <span id="typewriterMsg" style="display: block; margin-bottom: 0.7em"></span>
+        <textarea id="referenceText" placeholder="Paste or type everything you’ll read here." rows="3"></textarea>
+      </label>
+
+      <div id="ghostControls">
+        <button id="nextPartBtn">Next Part</button>
+        <span id="nextPartMsg"></span>
+        <button id="showSummaryBtn">Show Summary</button>
+        <span id="passageLabel"></span>
+        <span id="partProgress"></span>
+      </div>
+
+      <div class="btn-group">
+        <button id="record">Record</button>
+        <button id="stop" disabled>Stop</button>
+      </div>
+
+      <button id="playbackBtn" style="display: none">▶ Play</button>
+      <audio id="playbackAudio" hidden></audio>
+
+      <p id="status">Not recording</p>
+      <div id="prettyResult"></div>
+      
+ <div id="aiFeedbackSection"><div id="aiFeedback"></div></div>
+<button id="showMoreBtn" style="display: none; margin: 1em auto; padding: 0.7em 1.3em; font-size: 1em;">Show More</button>
+
+<!-- My Progress (mount target) -->
+<div id="dashboard-root"></div>
+
+      
+      <div id="ygPreview">
+        <video id="ygDemo" src="https://video.wixstatic.com/video/0d5d6f_5ae77fc4972248b38eb63ea25e5068fb/720p/mp4/file.mp4" style="width: 100%; height: 100%; display: block; object-fit: cover" muted playsinline loop autoplay></video>
+        <div id="unmuteTip" style="display:none;">🔊 Click to unmute</div>
+      </div>
+      
+      <div id="phPreview">
+        <video id="phDemo" src="https://video.wixstatic.com/video/0d5d6f_e100780f16524e51bd9c8e49f1c8c71c/480p/mp4/file.mp4" style="width: 100%; height: 100%; display: block; object-fit: contain; background: #000;" muted playsinline loop preload="metadata"></video>
+        <div id="phUnmuteTip" style="display:none;">🔊 Click to toggle audio</div>
+      </div>
+    </div>
+
+    <!-- Onboarding overlay (required by ui/ui-shell-onboarding.js) -->
+    <div id="onboardingOverlay" class="ob-hidden" aria-hidden="true">
+      <div class="ob-backdrop"></div>
+
+      <div class="ob-card" role="dialog" aria-modal="true" aria-label="Welcome">
+        <button id="obCloseBtn" class="ob-close" type="button" aria-label="Close">×</button>
+
+        <section class="ob-slide">
+          <h2>Welcome</h2>
+          <div class="ob-body">
+            <p class="ob-note">Quick tour to get you started.</p>
+          </div>
+        </section>
+
+        <section class="ob-slide ob-hidden">
+          <h2>Microphone</h2>
+          <div class="ob-body">
+            <button id="obEnableMic" class="ob-cta ob-cta--secondary" type="button">Enable Mic</button>
+            <div id="obMicStatus" class="ob-note" aria-live="polite"></div>
+          </div>
+        </section>
+
+        <section class="ob-slide ob-hidden">
+          <h2>Enter text</h2>
+          <div class="ob-body">
+            <button id="obFocusText" class="ob-cta ob-cta--secondary" type="button">Go to text box</button>
+          </div>
+        </section>
+
+        <section class="ob-slide ob-hidden">
+          <h2>Record</h2>
+          <div class="ob-body">
+            <button id="obStartRecording" class="ob-cta" type="button">Start recording</button>
+          </div>
+        </section>
+
+        <div class="ob-footer">
+          <button id="obPrev" class="ob-nav ob-nav--prev" type="button">Prev</button>
+
+          <div class="ob-dots">
+            <button class="ob-dot" type="button" data-go="1" aria-current="false"></button>
+            <button class="ob-dot" type="button" data-go="2" aria-current="false"></button>
+            <button class="ob-dot" type="button" data-go="3" aria-current="false"></button>
+            <button class="ob-dot" type="button" data-go="4" aria-current="false"></button>
+          </div>
+
+          <button id="obNext" class="ob-nav ob-nav--next" type="button">Next</button>
+          <button id="obDone" class="ob-cta ob-cta--secondary" type="button">Done</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="tts-controls" data-luxHidden="1"></div>
+
+
+
+  
+    <script>window.typeWriter = window.typeWriter || function () {};</script>
+
+    <!-- Lux FX: “Corona flare” for the AI Conversations halo (Edge-safe: use url(#filter) ONLY in CSS) -->
+    <svg class="lux-fx" width="0" height="0" aria-hidden="true" focusable="false"
+         style="position:absolute; width:0; height:0; overflow:hidden">
+      <filter id="luxCoronaFlare" x="-70%" y="-70%" width="240%" height="240%" color-interpolation-filters="sRGB">
+        <!-- Base “slow drift” noise -->
+        <feTurbulence type="fractalNoise" baseFrequency="0.010" numOctaves="2" seed="9" result="n1">
+          <animate attributeName="baseFrequency" dur="8.0s" values="0.008;0.014;0.010" repeatCount="indefinite"/>
+        </feTurbulence>
+
+        <!-- Faster flicker noise (drives flare patches) -->
+        <feTurbulence type="turbulence" baseFrequency="0.040" numOctaves="1" seed="4" result="n2">
+          <animate attributeName="baseFrequency" dur="1.35s" values="0.028;0.055;0.034" repeatCount="indefinite"/>
+        </feTurbulence>
+
+        <feComposite in="n1" in2="n2" operator="arithmetic" k1="0" k2="0.78" k3="0.38" k4="0" result="noise"/>
+
+        <!-- Thicken the ring a bit -->
+        <feMorphology in="SourceGraphic" operator="dilate" radius="2.8" result="fat"/>
+
+        <!-- Extract just the outer rim so flares feel like they come from the edge -->
+        <feMorphology in="fat" operator="erode" radius="4.4" result="inner"/>
+        <feComposite in="fat" in2="inner" operator="out" result="rim"/>
+
+        <!-- Turn noise into an alpha “flare mask” with high contrast (patchy, not uniform) -->
+        <feColorMatrix in="noise" type="luminanceToAlpha" result="noiseA"/>
+        <feComponentTransfer in="noiseA" result="flareMask">
+          <!-- table values = threshold-ish; tweak middle to change how “spotty” it is -->
+          <feFuncA type="table" tableValues="0 0 0 0.05 0.18 0.75 1 1"/>
+        </feComponentTransfer>
+
+        <!-- Keep only rim segments selected by the flare mask -->
+        <feComposite in="rim" in2="flareMask" operator="in" result="flareRim"/>
+
+        <!-- Throw those segments outward with stronger displacement -->
+        <feDisplacementMap in="flareRim" in2="noise" scale="62"
+                           xChannelSelector="R" yChannelSelector="G" result="flareDisp">
+          <animate attributeName="scale" dur="1.55s" values="32;72;38;66;34" repeatCount="indefinite"/>
+        </feDisplacementMap>
+
+        <!-- Base wobble for the whole halo (subtler than the flares) -->
+        <feDisplacementMap in="fat" in2="noise" scale="22"
+                           xChannelSelector="R" yChannelSelector="G" result="baseDisp">
+          <animate attributeName="scale" dur="2.6s" values="14;28;18;24;16" repeatCount="indefinite"/>
+        </feDisplacementMap>
+
+        <!-- Bloom layers -->
+        <feGaussianBlur in="baseDisp" stdDeviation="10.5" result="baseGlow"/>
+        <feGaussianBlur in="flareDisp" stdDeviation="16.0" result="flareGlow">
+          <animate attributeName="stdDeviation" dur="1.6s" values="12;19;13;18;12" repeatCount="indefinite"/>
+        </feGaussianBlur>
+
+        <feMerge result="merged">
+          <feMergeNode in="baseGlow"/>
+          <feMergeNode in="flareGlow"/>
+        </feMerge>
+
+        <!-- Punch: saturation + alpha lift -->
+        <feColorMatrix in="merged" type="saturate" values="1.75" result="sat"/>
+        <feColorMatrix in="sat" type="matrix"
+          values="1 0 0 0 0
+                  0 1 0 0 0
+                  0 0 1 0 0
+                  0 0 0 1.85 -0.24" result="out"/>
+
+        <feMerge>
+          <feMergeNode in="out"/>
+          <feMergeNode in="sat"/>
+        </feMerge>
+      </filter>
+    </svg>
+
+    <!-- Warp nav JS (near end of body) -->
+  </body>
+</html>
