@@ -3,3 +3,7 @@ node_modules
 .codesandbox/
 
 yarn.lock
+
+# local video backups
+public/convo-vid/*_ORIG.mp4
+

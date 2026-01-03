@@ -660,10 +660,15 @@ body:has(#convoApp[data-mode="intro"]){
 /* Picker sizing bump */
 #convoApp[data-mode="picker"] .lux-deck{
   width: min(1120px, 96vw);
-  height: 520px;
+  height: min(780px, 76vh);
 }
+
+/* The card adopts the media's NATURAL ratio.
+   Height is capped to viewport; width is derived automatically. */
 #convoApp[data-mode="picker"] .lux-deck-card{
-  width: min(820px, 94vw);
+  height: min(var(--lux-media-h, 520px), 76vh);
+  aspect-ratio: var(--lux-media-ar, 16 / 9);
+  width: auto;
 }
 #convoApp[data-mode="picker"] .lux-deckTitle{ font-size: 32px; }
 #convoApp[data-mode="picker"] .lux-deckDesc{ font-size: 15px; }
@@ -676,10 +681,10 @@ body:has(#convoApp[data-mode="intro"]){
 
 .lux-deck-card{
   position: absolute;
-  top: 0;
-  bottom: 0;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
+  /* variable-sized cards must be vertically centered */
+  transform: translate(-50%, -50%);
 
   border-radius: 26px;
   overflow: hidden;
@@ -710,7 +715,7 @@ body:has(#convoApp[data-mode="intro"]){
   background-position: center;
   filter: blur(14px) saturate(1.08);
   transform: scale(1.04);
-  opacity: 0.22;
+  opacity: 0.28;
   pointer-events: none;
   z-index: 0;
 }
@@ -720,7 +725,7 @@ body:has(#convoApp[data-mode="intro"]){
   position:absolute;
   inset: 0;
   background-image: var(--lux-card-img);
-  background-size: contain;
+background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   opacity: 0.92;
@@ -744,14 +749,14 @@ body:has(#convoApp[data-mode="intro"]){
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;       /* key: NO cropping */
+object-fit: cover;
   object-position: 50% 50%;
   opacity: 0;
   transition: opacity 420ms ease;
 }
 
 /* PLAYING: show video, hide sharp still */
-.lux-deck-card.has-video[data-vstate="playing"] .lux-cardVideo{ opacity: 1; }
+.lux-deck-card.has-video[data-vstate="playing"] .lux-cardVideo{ opacity: 0.34; }
 .lux-deck-card.has-video[data-vstate="playing"]::after{ opacity: 0; }
 
 /* ENDED/ERROR: hide video, restore sharp still */
@@ -789,11 +794,11 @@ body:has(#convoApp[data-mode="intro"]){
 
 
 /* Overlap + left/right staggering */
-#convoApp[data-side="left"]  .lux-deck-card.is-active { transform: translateX(-50%) translateX(-80px)  scale(1.00); }
-#convoApp[data-side="left"]  .lux-deck-card.is-preview{ transform: translateX(-50%) translateX(55px)   scale(0.90); }
+#convoApp[data-side="left"]  .lux-deck-card.is-active { transform: translate(-50%, -50%) translateX(-80px)  scale(1.00); }
+#convoApp[data-side="left"]  .lux-deck-card.is-preview{ transform: translate(-50%, -50%) translateX(55px)   scale(0.90); }
 
-#convoApp[data-side="right"] .lux-deck-card.is-active { transform: translateX(-50%) translateX(80px)   scale(1.00); }
-#convoApp[data-side="right"] .lux-deck-card.is-preview{ transform: translateX(-50%) translateX(-55px)  scale(0.90); }
+#convoApp[data-side="right"] .lux-deck-card.is-active { transform: translate(-50%, -50%) translateX(80px)   scale(1.00); }
+#convoApp[data-side="right"] .lux-deck-card.is-preview{ transform: translate(-50%, -50%) translateX(-55px)  scale(0.90); }
 
 .lux-pill{
   display: inline-flex;

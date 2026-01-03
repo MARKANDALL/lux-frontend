@@ -6,6 +6,31 @@ import { convoReport } from "../../api/convo-report.js";
 import { saveAttempt, ensureUID } from "../../api/index.js";
 import { warpSwap } from "../../ui/warp-core.js";
 
+// --- Deck card sizing: make the CARD match the media's natural aspect ratio ---
+const _luxMediaMeta = new Map();
+
+function applyMediaSizingVars(host, imgSrc) {
+  if (!host || !imgSrc) return;
+
+  const cached = _luxMediaMeta.get(imgSrc);
+  if (cached) {
+    host.style.setProperty("--lux-media-ar", cached.ar);
+    host.style.setProperty("--lux-media-h", cached.h);
+    return;
+  }
+
+  const im = new Image();
+  im.onload = () => {
+    const ar = `${im.naturalWidth} / ${im.naturalHeight}`;
+    const h  = `${im.naturalHeight}px`;
+    _luxMediaMeta.set(imgSrc, { ar, h });
+
+    host.style.setProperty("--lux-media-ar", ar);
+    host.style.setProperty("--lux-media-h", h);
+  };
+  im.src = imgSrc;
+}
+
 function uid() {
   return ensureUID();
 }
@@ -623,6 +648,8 @@ function fillDeckCard(host, scenario, isActive) {
   host.classList.toggle("has-img", !!scenario.img);
   if (scenario.img) host.style.setProperty("--lux-card-img", `url("${scenario.img}")`);
   else host.style.removeProperty("--lux-card-img");
+
+  applyMediaSizingVars(host, scenario.img);
 
   // --- media layer (sits behind text) ---
   const media = el("div", "lux-cardMedia");
