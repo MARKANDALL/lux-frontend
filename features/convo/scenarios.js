@@ -45,13 +45,15 @@ export const SCENARIOS = [
     img: "/convo-img/restaurant.webp",
     thumb: "/convo-img/restaurant.webp",
   },
-  {
-    id: "school",
-    title: "School Meeting",
-    desc: "Discuss goals and progress with an advisor or teacher.",
-    img: "/convo-img/school.webp",
-    thumb: "/convo-img/school.webp",
-  },
+{
+  id: "school",
+  title: "School Meeting",
+  desc: "Discuss goals and progress with an advisor or teacher.",
+  img: "/convo-img/school.webp",
+  thumb: "/convo-img/school.webp",
+  video: "/convo-vid/parents.mp4", // explicit override
+},
+
 {
   id: "network",
   title: "Networking Chat",
