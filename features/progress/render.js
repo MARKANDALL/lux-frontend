@@ -95,27 +95,75 @@ function attemptsToCSV(attempts = []) {
   return [header.join(","), ...rows].join("\n");
 }
 
-export function renderProgressDashboard(host, attempts, model) {
+export function renderProgressDashboard(host, attempts, model, opts = {}) {
   const totals = model?.totals || {};
   const trouble = model?.trouble || {};
   const trend = model?.trend || [];
   const sessions = model?.sessions || [];
 
+  const title = opts.title || "My Progress";
+  const subtitle = opts.subtitle || "All practice (Pronunciation + AI Conversations)";
+  const showActions = opts.showActions !== false; // default true
+
   const topPh = (trouble.phonemesAll || []).slice(0, 12);
   const topWd = (trouble.wordsAll || []).slice(0, 12);
+
+  function esc(s) {
+    return String(s ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function pickAzure(a) {
+    return a?.azureResult || a?.azure_result || a?.azure || a?.result || null;
+  }
+
+  function pickSummary(a) {
+    return a?.summary || a?.summary_json || a?.sum || null;
+  }
+
+  function pickSessionId(a) {
+    return a?.session_id || a?.sessionId || "";
+  }
+
+  function pickTS(a) {
+    return (
+      a?.ts ||
+      a?.created_at ||
+      a?.createdAt ||
+      a?.time ||
+      a?.localTime ||
+      null
+    );
+  }
+
+  // Pre-group attempts by session for the History drill-in.
+  const bySession = new Map();
+  for (const a of attempts || []) {
+    const sid = pickSessionId(a);
+    if (!sid) continue;
+    const arr = bySession.get(sid) || [];
+    arr.push(a);
+    bySession.set(sid, arr);
+  }
 
   host.innerHTML = `
     <a id="lux-my-progress"></a>
     <section class="lux-progress-shell">
       <div class="lux-progress-head">
         <div>
-          <h2 class="lux-progress-title">My Progress</h2>
-          <div class="lux-progress-sub">All practice (Pronunciation + AI Conversations)</div>
+          <h2 class="lux-progress-title">${esc(title)}</h2>
+          <div class="lux-progress-sub">${esc(subtitle)}</div>
         </div>
-        <div class="lux-progress-actions">
-          <button class="lux-pbtn" id="luxDownloadReport">Download report</button>
-          <button class="lux-pbtn lux-pbtn--ghost" id="luxDownloadTrouble">Download troubleshooting report</button>
-        </div>
+        ${showActions ? `
+          <div class="lux-progress-actions">
+            <button class="lux-pbtn" id="luxDownloadReport">Download report</button>
+            <button class="lux-pbtn lux-pbtn--ghost" id="luxDownloadTrouble">Download troubleshooting report</button>
+          </div>
+        ` : ``}
       </div>
 
       <div class="lux-progress-cards">
@@ -139,20 +187,32 @@ export function renderProgressDashboard(host, attempts, model) {
       </div>
 
       <details class="lux-progress-sec" open>
-        <summary>🎧 Trouble Sounds <span style="color:#94a3b8; font-weight:800">${(trouble.phonemesAll||[]).length}</span></summary>
+        <summary>🎯 Snapshot</summary>
+        <div class="lux-sec-body">
+          <div class="lux-grid2">
+            <div class="lux-kv">
+              <div class="lux-k">Best day</div>
+              <div class="lux-v">${fmtDate(totals.bestDayTS)} · ${fmtScore(totals.bestDayScore ?? 0)}</div>
+            </div>
+            <div class="lux-kv">
+              <div class="lux-k">Most practiced</div>
+              <div class="lux-v">${esc(totals.topPassage || "—")}</div>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <details class="lux-progress-sec">
+        <summary>⚠️ Trouble Sounds <span style="color:#94a3b8; font-weight:800">${(trouble.phonemesAll||[]).length}</span></summary>
         <div class="lux-sec-body">
           <div class="lux-chiprow">
             ${topPh.length ? topPh.map((p) => `
               <span class="lux-chip">
-                <span>/${p.ipa}/</span>
+                <span>${esc(p.ipa)}</span>
                 <span class="lux-pill ${scoreClass(p.avg)}">${fmtScore(p.avg)}</span>
               </span>
             `).join("") : `<span style="color:#64748b">Not enough data yet — keep practicing.</span>`}
           </div>
-          ${topPh.length ? `
-            <div style="margin-top:10px; color:#64748b; font-size:0.92rem;">
-              Tip: sounds only appear after repeated occurrences (so results are stable).
-            </div>` : ``}
         </div>
       </details>
 
@@ -162,7 +222,7 @@ export function renderProgressDashboard(host, attempts, model) {
           <div class="lux-chiprow">
             ${topWd.length ? topWd.map((w) => `
               <span class="lux-chip">
-                <span>${w.word}</span>
+                <span>${esc(w.word)}</span>
                 <span class="lux-pill ${scoreClass(w.avg)}">${fmtScore(w.avg)}</span>
               </span>
             `).join("") : `<span style="color:#64748b">Not enough data yet — keep practicing.</span>`}
@@ -175,34 +235,157 @@ export function renderProgressDashboard(host, attempts, model) {
         <div class="lux-sec-body">
           <div class="lux-history">
             ${sessions.slice(0, 12).map((s) => `
-              <div class="lux-hrow">
-                <div class="lux-hleft">
-                  <div class="lux-htitle">${titleFromPassageKey(s.passageKey)}</div>
-                  <div class="lux-hmeta">${fmtDate(s.tsMax)} · ${s.count} attempt${s.count===1?"":"s"}${s.hasAI ? " · 🤖 AI coaching" : ""}</div>
+              <div class="lux-hblock">
+                <div class="lux-hrow" data-sid="${esc(s.sessionId)}">
+                  <div class="lux-hleft">
+                    <div class="lux-htitle">${esc(titleFromPassageKey(s.passageKey))}</div>
+                    <div class="lux-hmeta">${fmtDate(s.tsMax)} · ${s.count} attempt${s.count===1?"":"s"}${s.hasAI ? " · 🤖 AI coaching" : ""}</div>
+                  </div>
+                  <div class="lux-hright">
+                    <button class="lux-hbtn" type="button" data-sid="${esc(s.sessionId)}" aria-label="Show details">👉</button>
+                    <div class="lux-pill ${scoreClass(s.avgScore)}">${fmtScore(s.avgScore)}</div>
+                  </div>
                 </div>
-                <div class="lux-pill ${scoreClass(s.avgScore)}">${fmtScore(s.avgScore)}</div>
+                <div class="lux-hdetail" data-sid="${esc(s.sessionId)}" hidden></div>
               </div>
             `).join("")}
+          </div>
+
+          <div style="margin-top:10px; color:#64748b; font-size:0.9rem;">
+            Showing your most recent sessions. Tip: click 👉 to open a saved-detail card (including any saved AI feedback).
           </div>
         </div>
       </details>
     </section>
   `;
 
-  // Downloads (label doesn’t say CSV)
-  const btn1 = host.querySelector("#luxDownloadReport");
-  const btn2 = host.querySelector("#luxDownloadTrouble");
+  // --- History drill-in (👉) ---
 
-  if (btn1) {
-    btn1.addEventListener("click", () => {
-      const csv = attemptsToCSV(attempts);
-      const name = `lux-report-${new Date().toISOString().slice(0,10)}.csv`;
-      downloadBlob(name, csv, "text/csv;charset=utf-8");
-    });
+  // Fast lookup (avoid CSS.escape dependency)
+  const detailBySid = new Map();
+  host.querySelectorAll(".lux-hdetail").forEach((el) => {
+    if (el?.dataset?.sid) detailBySid.set(el.dataset.sid, el);
+  });
+
+  function renderAiFeedback(sum) {
+    const secs = sum?.ai_feedback?.sections || sum?.ai_feedback?.Sections || sum?.aiFeedback?.sections || sum?.sections || [];
+    if (!Array.isArray(secs) || !secs.length) return "";
+    return `
+      <details class="lux-hdetail-ai">
+        <summary>🤖 Saved AI feedback (${secs.length})</summary>
+        <div class="lux-hdetail-ai-body">
+          ${secs.map((sec) => {
+            const title = sec?.title || sec?.heading || "";
+            const bullets = sec?.bullets || sec?.items || sec?.points || [];
+            return `
+              <div class="lux-ai-sec">
+                ${title ? `<div class="lux-ai-sec-title">${esc(title)}</div>` : ``}
+                ${Array.isArray(bullets) && bullets.length ? `
+                  <ul class="lux-ai-bullets">
+                    ${bullets.map((b) => `<li>${esc(b)}</li>`).join("")}
+                  </ul>
+                ` : ``}
+              </div>
+            `;
+          }).join("")}
+        </div>
+      </details>
+    `;
   }
 
-  if (btn2) {
-    btn2.addEventListener("click", () => {
+  function attemptPills(a) {
+    const az = pickAzure(a);
+    const nb = az?.NBest?.[0] || az?.nBest?.[0] || null;
+    const pa = nb?.PronunciationAssessment || nb?.pronunciationAssessment || az?.PronunciationAssessment || null;
+
+    const pills = [];
+    const pron = nb?.PronScore ?? pa?.PronScore;
+    const acc = pa?.AccuracyScore;
+    const flu = pa?.FluencyScore;
+    const pro = pa?.ProsodyScore;
+
+    if (pron != null) pills.push(`Pron ${Math.round(Number(pron))}`);
+    if (acc != null) pills.push(`Acc ${Math.round(Number(acc))}`);
+    if (flu != null) pills.push(`Flu ${Math.round(Number(flu))}`);
+    if (pro != null) pills.push(`Pro ${Math.round(Number(pro))}`);
+
+    return pills.map((t) => `<span class="lux-mini-pill">${esc(t)}</span>`).join("");
+  }
+
+  function toggleSession(sid) {
+    const detail = detailBySid.get(sid);
+    if (!detail) return;
+
+    const isHidden = detail.hasAttribute("hidden");
+    if (!isHidden) {
+      detail.setAttribute("hidden", "");
+      detail.innerHTML = "";
+      return;
+    }
+
+    const list = (bySession.get(sid) || []).slice().sort((a, b) => {
+      const ta = new Date(pickTS(a) || 0).getTime();
+      const tb = new Date(pickTS(b) || 0).getTime();
+      return tb - ta;
+    });
+
+    detail.innerHTML = list.map((a) => {
+      const ts = pickTS(a);
+      const pk = a?.passage_key || a?.passageKey || a?.passage || "";
+      const isConvo = String(pk).startsWith("convo:");
+      const sum = pickSummary(a);
+      const ref = a?.text || "";
+
+      const label = isConvo ? "Conversation sample" : "Practice attempt";
+
+      return `
+        <div class="lux-hdetail-card">
+          <div class="lux-hdetail-head">
+            <div>
+              <div class="lux-hdetail-title">${esc(label)} · ${fmtDate(ts)}</div>
+              <div class="lux-hdetail-sub" style="color:#64748b; font-weight:800; font-size:0.9rem;">
+                ${esc(titleFromPassageKey(pk))}
+              </div>
+            </div>
+            <div class="lux-hdetail-pills">
+              ${attemptPills(a)}
+            </div>
+          </div>
+
+          ${ref ? `
+            <details class="lux-hdetail-textwrap">
+              <summary style="cursor:pointer; font-weight:900; color:#334155;">📝 Text</summary>
+              <div class="lux-hdetail-text">${esc(ref)}</div>
+            </details>
+          ` : ``}
+
+          ${renderAiFeedback(sum)}
+        </div>
+      `;
+    }).join("");
+
+    detail.removeAttribute("hidden");
+  }
+
+  host.querySelectorAll(".lux-hbtn").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const sid = btn.getAttribute("data-sid") || "";
+      if (sid) toggleSession(sid);
+    });
+  });
+
+  // Downloads (optional)
+  if (showActions) {
+    const dl = document.getElementById("luxDownloadReport");
+    if (dl) dl.addEventListener("click", () => {
+      const name = `lux-progress-${new Date().toISOString().slice(0,10)}.json`;
+      downloadBlob(name, JSON.stringify({ model }, null, 2), "application/json");
+    });
+
+    const dlT = document.getElementById("luxDownloadTrouble");
+    if (dlT) dlT.addEventListener("click", () => {
       const name = `lux-troubleshooting-${new Date().toISOString().slice(0,10)}.json`;
       downloadBlob(name, JSON.stringify({ attempts }, null, 2), "application/json");
     });

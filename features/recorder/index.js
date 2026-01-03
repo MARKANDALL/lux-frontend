@@ -17,7 +17,6 @@ import { assessPronunciation, saveAttempt, getUID, fetchHistory } from "../../ap
 import { showPrettyResults } from "../results/index.js"; 
 import { markPartCompleted } from "../passages/index.js"; 
 import { bringInputToTop } from "../../helpers/index.js"; 
-import { renderHistoryRows } from "../dashboard/ui.js";
 import { promptUserForAI } from "../../ui/ui-ai-ai-logic.js"; 
 
 let isInitialized = false;
@@ -165,9 +164,11 @@ async function saveToDatabase(result, text, lang) {
         window.lastAttemptId = saved.id;
         console.log("[Lux] Saved Attempt ID:", window.lastAttemptId);
 
-        // REFRESH DASHBOARD
-        const freshHistory = await fetchHistory(uid);
-        renderHistoryRows(freshHistory);
+     // REFRESH DASHBOARD (keeps the drawer intact)
+if (window.refreshDashboard) {
+  try { await window.refreshDashboard(); } catch (_) {}
+}
+
       }
     }
   } catch (e) {

@@ -919,9 +919,14 @@ function fillDeckCard(host, scenario, isActive) {
         localTime: new Date().toISOString(),
       });
       state.turns.push({ turn: state.turns.length, userText, azureResult, attemptId: saved?.id });
-    } catch (e) {
+        } catch (e) {
       console.error("[Convo] saveAttempt failed", e);
       state.turns.push({ turn: state.turns.length, userText, azureResult, attemptId: null });
+    }
+
+    // refresh Conversation Skills progress (if present)
+    if (window.refreshConvoProgress) {
+      try { await window.refreshConvoProgress(); } catch (_) {}
     }
 
     // next AI response + suggestions
@@ -930,6 +935,7 @@ function fillDeckCard(host, scenario, isActive) {
       knobs: state.knobs,
       messages: state.messages.slice(-24),
     });
+
 
     if (rsp?.assistant) state.messages.push({ role: "assistant", content: rsp.assistant });
     renderMessages();
