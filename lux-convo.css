@@ -93,6 +93,12 @@ html:not([data-lux-convo-mode="chat"]) .lux-sp-panel{
   display: none !important;
 }
 
+/* Canonical gating: Save Progress/Login button ONLY in chat mode */
+html:not([data-lux-convo-mode="chat"]) #lux-auth-btn{
+  display: none !important;
+}
+
+
 
 /* ============================================================
    Stage wrapper
