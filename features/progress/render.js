@@ -3,6 +3,7 @@
 
 import { passages } from "../../src/data/passages.js";
 import { SCENARIOS } from "../convo/scenarios.js";
+import { openDetailsModal } from "./attempt-detail-modal.js";
 
 function scoreClass(score) {
   if (score >= 80) return "lux-pill--blue";
@@ -141,9 +142,27 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
   }
 
   // Pre-group attempts by session for the History drill-in.
+  function localDayKey(ts) {
+    const d = new Date(ts);
+    try { return d.toLocaleDateString("en-CA"); } catch (_) {}
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const da = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${da}`;
+  }
+
+  function sessionKeyForAttempt(a) {
+    const sid = pickSessionId(a);
+    if (sid) return sid;
+
+    const ts = pickTS(a);
+    if (!ts) return "";
+    return `nosess:${localDayKey(ts)}`;
+  }
+
   const bySession = new Map();
   for (const a of attempts || []) {
-    const sid = pickSessionId(a);
+    const sid = sessionKeyForAttempt(a);
     if (!sid) continue;
     const arr = bySession.get(sid) || [];
     arr.push(a);
@@ -236,7 +255,7 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
           <div class="lux-history">
             ${sessions.slice(0, 12).map((s) => `
               <div class="lux-hblock">
-                <div class="lux-hrow" data-sid="${esc(s.sessionId)}">
+                <div class="lux-hrow" data-sid="${esc(s.sessionId)}" role="button" tabindex="0">
                   <div class="lux-hleft">
                     <div class="lux-htitle">${esc(titleFromPassageKey(s.passageKey))}</div>
                     <div class="lux-hmeta">${fmtDate(s.tsMax)} · ${s.count} attempt${s.count===1?"":"s"}${s.hasAI ? " · 🤖 AI coaching" : ""}</div>
@@ -246,7 +265,6 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
                     <div class="lux-pill ${scoreClass(s.avgScore)}">${fmtScore(s.avgScore)}</div>
                   </div>
                 </div>
-                <div class="lux-hdetail" data-sid="${esc(s.sessionId)}" hidden></div>
               </div>
             `).join("")}
           </div>
@@ -367,12 +385,42 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
     detail.removeAttribute("hidden");
   }
 
+  function attemptOverallScore(a) {
+    const sum = pickSummary(a) || {};
+    if (sum.pron != null) return Number(sum.pron) || 0;
+
+    const az = pickAzure(a);
+    const v = az?.NBest?.[0]?.PronScore;
+    return Number(v) || 0;
+  }
+
+  function attemptDateStr(a) {
+    const ts = pickTS(a);
+    const d = new Date(ts || Date.now());
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  }
+
   host.querySelectorAll(".lux-hbtn").forEach((btn) => {
     btn.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
+
       const sid = btn.getAttribute("data-sid") || "";
-      if (sid) toggleSession(sid);
+      if (!sid) return;
+
+      const list = (bySession.get(sid) || []).slice().sort((a, b) => {
+        const ta = new Date(pickTS(a) || 0).getTime();
+        const tb = new Date(pickTS(b) || 0).getTime();
+        return tb - ta;
+      });
+
+      const a = list[0];
+      if (!a) {
+        console.warn("[progress] No attempts found for sid:", sid);
+        return;
+      }
+
+      openDetailsModal(a, attemptOverallScore(a), attemptDateStr(a));
     });
   });
 
@@ -406,4 +454,3 @@ export function renderMiniProgress(host, model, opts = {}) {
     </section>
   `;
 }
-
