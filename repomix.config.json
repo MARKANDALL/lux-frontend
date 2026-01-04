@@ -1,0 +1,30 @@
+{
+  "$schema": "https://repomix.com/schemas/latest/schema.json",
+  "output": {
+    "filePath": "repomix-output.xml",
+    "style": "xml",
+    "fileSummary": true,
+    "directoryStructure": true
+  },
+  "include": [
+    "**/*.{js,css,html}",
+    "*.json",
+    "**/*.json",
+    "*.md",
+    "**/*.md",
+    "package.json",
+    "vite.config.*",
+    ".eslintrc.*",
+    ".gitignore",
+    ".repomixignore",
+    "repomix.config.json"
+  ],
+  "ignore": {
+    "useGitignore": true,
+    "useDotIgnore": true,
+    "useDefaultPatterns": true
+  },
+  "security": {
+    "enableSecurityCheck": true
+  }
+}

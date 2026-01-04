@@ -1,0 +1,13 @@
+# Always exclude archives / trash
+_ARCHIVE/**
+
+# Vendor/minified noise (keep integration code, drop the blob)
+public/vendor/**
+**/*.min.js
+**/*.min.css
+**/*.map
+
+# Optional: common output folders (just in case)
+dist/**
+build/**
+coverage/**
