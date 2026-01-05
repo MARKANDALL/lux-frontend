@@ -111,42 +111,94 @@ export function computeRollups(attempts = [], opts = {}) {
     sAgg.hasAI = sAgg.hasAI || hasAI;
     sessions.set(sid, sAgg);
 
-    // Word + phoneme details (from Azure result)
+    // Word + phoneme details
+    // Prefer Azure word/phoneme arrays if present; otherwise use compact backend summary (summary.words / summary.lows).
     const az = pickAzure(a);
     const nb = az?.NBest?.[0];
     const W = Array.isArray(nb?.Words) ? nb.Words : [];
 
-    for (const w of W) {
-      const word = String(w?.Word || "").trim();
-      if (!word) continue;
+    if (W.length) {
+      // --- Original path: full Azure detail available ---
+      for (const w of W) {
+        const word = String(w?.Word || "").trim();
+        if (!word) continue;
 
-      const wScore = num(w?.AccuracyScore);
-      if (wScore != null) {
+        const wScore = num(w?.AccuracyScore);
+        if (wScore != null) {
+          const wAgg = words.get(word) || { word, count: 0, sum: 0 };
+          wAgg.count += 1;
+          wAgg.sum += wScore;
+          words.set(word, wAgg);
+        }
+
+        const P = Array.isArray(w?.Phonemes) ? w.Phonemes : [];
+        for (const p of P) {
+          const raw = String(p?.Phoneme || p?.phoneme || "").trim();
+          if (!raw) continue;
+
+          const ipa = norm(raw);
+          if (!ipa) continue;
+
+          const pScore = num(p?.AccuracyScore);
+          if (pScore == null) continue;
+
+          const pAgg = phon.get(ipa) || { ipa, count: 0, sum: 0, examples: new Set() };
+          pAgg.count += 1;
+          pAgg.sum += pScore;
+
+          // keep a few example words
+          if (word && pAgg.examples.size < 4) pAgg.examples.add(word);
+
+          phon.set(ipa, pAgg);
+        }
+      }
+    } else {
+      // --- Fallback path: compact summary-only attempts (normal for /api/user-recent) ---
+      // Words: summary.words is [[word, avgScore, count], ...]
+      const sumWords = Array.isArray(sum?.words) ? sum.words : [];
+      for (const t of sumWords) {
+        if (!Array.isArray(t)) continue;
+        const word = String(t[0] || "").trim();
+        const avg = num(t[1]);
+        const cntRaw = Number(t[2]);
+        const cnt = Number.isFinite(cntRaw) && cntRaw > 0 ? cntRaw : 1;
+        if (!word || avg == null) continue;
+
         const wAgg = words.get(word) || { word, count: 0, sum: 0 };
-        wAgg.count += 1;
-        wAgg.sum += wScore;
+        wAgg.count += cnt;
+        wAgg.sum += avg * cnt;
         words.set(word, wAgg);
       }
 
-      const P = Array.isArray(w?.Phonemes) ? w.Phonemes : [];
-      for (const p of P) {
-        const raw = String(p?.Phoneme || p?.phoneme || "").trim();
-        if (!raw) continue;
+      // Phonemes: prefer summary.stats.phonemes if it ever exists; otherwise use summary.lows [[phoneme, score], ...]
+      const phStats = sum?.stats?.phonemes;
+      if (phStats && typeof phStats === "object") {
+        for (const [rawIpa, v] of Object.entries(phStats)) {
+          const ipa = norm(String(rawIpa || "").trim()) || String(rawIpa || "").trim();
+          const occ = Number(v?.occ);
+          const avg = num(v?.avg);
+          if (!ipa || !Number.isFinite(occ) || occ <= 0 || avg == null) continue;
 
-        const ipa = norm(raw);
-        if (!ipa) continue;
+          const pAgg = phon.get(ipa) || { ipa, count: 0, sum: 0, examples: new Set() };
+          pAgg.count += occ;
+          pAgg.sum += avg * occ;
+          phon.set(ipa, pAgg);
+        }
+      } else {
+        const lows = Array.isArray(sum?.lows) ? sum.lows : [];
+        for (const p of lows) {
+          if (!Array.isArray(p)) continue;
+          const raw = String(p[0] || "").trim();
+          const pScore = num(p[1]);
+          if (!raw || pScore == null) continue;
 
-        const pScore = num(p?.AccuracyScore);
-        if (pScore == null) continue;
+          const ipa = norm(raw) || raw;
 
-        const pAgg = phon.get(ipa) || { ipa, count: 0, sum: 0, examples: new Set() };
-        pAgg.count += 1;
-        pAgg.sum += pScore;
-
-        // keep a few example words
-        if (word && pAgg.examples.size < 4) pAgg.examples.add(word);
-
-        phon.set(ipa, pAgg);
+          const pAgg = phon.get(ipa) || { ipa, count: 0, sum: 0, examples: new Set() };
+          pAgg.count += 1;
+          pAgg.sum += pScore;
+          phon.set(ipa, pAgg);
+        }
       }
     }
   }
@@ -206,4 +258,3 @@ export function computeRollups(attempts = [], opts = {}) {
     sessions: sessionArr,
   };
 }
-
