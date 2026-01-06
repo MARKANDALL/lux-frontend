@@ -4,51 +4,8 @@
 import { passages } from "../../src/data/passages.js";
 import { SCENARIOS } from "../convo/scenarios.js";
 import { computeRollups } from "./rollups.js";
-
-function esc(s) {
-  return String(s ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-function getColorConfig(s) {
-  const n = Number(s) || 0;
-  if (n >= 80) return { color: "#2563eb", bg: "#dbeafe" }; // Blue
-  if (n >= 60) return { color: "#d97706", bg: "#fef3c7" }; // Yellow
-  return { color: "#dc2626", bg: "#fee2e2" }; // Red
-}
-
-function mdToHtml(md = "") {
-  if (!md) return "";
-  return String(md)
-    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\*(.+?)\*/g, "<em>$1</em>")
-    .split("\n")
-    .join("<br>");
-}
-
-function pickTS(a) {
-  return a?.ts || a?.created_at || a?.createdAt || a?.time || a?.localTime || null;
-}
-
-function pickPassageKey(a) {
-  return a?.passage_key || a?.passageKey || a?.passage || "";
-}
-
-function pickSessionId(a) {
-  return a?.session_id || a?.sessionId || "";
-}
-
-function pickSummary(a) {
-  return a?.summary || a?.summary_json || a?.sum || null;
-}
-
-function pickAzure(a) {
-  return a?.azureResult || a?.azure_result || a?.azure || a?.result || null;
-}
+import { esc, getColorConfig, mdToHtml, mean } from "./progress-utils.js";
+import { pickTS, pickPassageKey, pickSessionId, pickSummary, pickAzure } from "./attempt-pickers.js";
 
 function fmtDateTime(ts) {
   if (!ts) return "—";
@@ -71,12 +28,6 @@ function titleFromPassageKey(pk = "") {
   }
   const hit = passages?.[s];
   return hit?.name || s || "Practice";
-}
-
-function mean(nums) {
-  const v = (nums || []).filter((x) => Number.isFinite(x));
-  if (!v.length) return null;
-  return v.reduce((a, b) => a + b, 0) / v.length;
 }
 
 function attemptMetric(a, kind) {
