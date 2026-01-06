@@ -217,7 +217,11 @@ export function openDetailsModal(attempt, overallScore, dateStr, ctx = {}) {
     Math.min(...list.map((a) => +new Date(pickTS(a) || 0)));
 
   // Session rollups (consistent trouble logic + summary-only support)
-  const sessionModel = computeRollups(list, { windowDays: 30 });
+const sessionModel = computeRollups(list, {
+  windowDays: 30,
+  minWordCount: 1,
+  minPhonCount: 1,
+});
   const trouble = sessionModel?.trouble || {};
   const totals = sessionModel?.totals || {};
 

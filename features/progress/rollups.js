@@ -84,6 +84,13 @@ export function getAttemptScore(attempt) {
 export function computeRollups(attempts = [], opts = {}) {
   const windowDays = Number(opts.windowDays || 30);
 
+  // Optional thresholds (dashboard defaults stay strict; modal can loosen)
+  const minWordCountRaw = Number(opts.minWordCount);
+  const minPhonCountRaw = Number(opts.minPhonCount);
+
+  const minWordCount = Number.isFinite(minWordCountRaw) ? Math.max(1, Math.floor(minWordCountRaw)) : 2;
+  const minPhonCount = Number.isFinite(minPhonCountRaw) ? Math.max(1, Math.floor(minPhonCountRaw)) : 3;
+
   const phon = new Map(); // ipa -> {ipa,count,sum,examples:Set,days:Set,lastTS,lowCount}
   const words = new Map(); // word -> {word,count,sum,days:Set,lastTS}
   const byDay = new Map(); // day -> {count,sum}
@@ -327,7 +334,7 @@ export function computeRollups(attempts = [], opts = {}) {
         examples: Array.from(x.examples || []).slice(0, 3),
       };
     })
-    .filter((x) => x.count >= 3)
+    .filter((x) => x.count >= minPhonCount)
     .sort((a, b) =>
       (b.priority - a.priority) ||
       (a.avg - b.avg) ||
@@ -346,7 +353,7 @@ export function computeRollups(attempts = [], opts = {}) {
         priority: priorityFromFull({ avg, count: x.count, daysSeen: days, lastTS: x.lastTS }),
       };
     })
-    .filter((x) => x.count >= 2)
+    .filter((x) => x.count >= minWordCount)
     .sort((a, b) =>
       (b.priority - a.priority) ||
       (a.avg - b.avg) ||
