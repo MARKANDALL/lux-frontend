@@ -128,12 +128,19 @@ function chipRowWords(items = []) {
       ${items
         .slice(0, 12)
         .map(
-          (w) => `
-        <span class="lux-chip" title="${esc(
-          `Seen ${w.count}× · ${w.days || 1} day(s) · priority ${
-            Number.isFinite(w.priority) ? w.priority.toFixed(2) : "—"
-          }`
-        )}">
+          (w, i) => `
+        <span
+          class="lux-chip"
+          data-kind="word"
+          data-idx="${i}"
+          role="button"
+          tabindex="0"
+          title="${esc(
+            `Seen ${w.count}× · ${w.days || 1} day(s) · priority ${
+              Number.isFinite(w.priority) ? w.priority.toFixed(2) : "—"
+            }`
+          )}"
+        >
           <span>${esc(w.word)}</span>
           <span class="lux-pill ${
             w.avg >= 80 ? "lux-pill--blue" : w.avg >= 60 ? "lux-pill--yellow" : "lux-pill--red"
@@ -154,7 +161,7 @@ function chipRowPhonemes(items = []) {
     <div class="lux-chiprow">
       ${items
         .slice(0, 12)
-        .map((p) => {
+        .map((p, i) => {
           const ex =
             Array.isArray(p.examples) && p.examples.length
               ? `<div style="margin-top:4px; color:#94a3b8; font-size:0.82rem; font-weight:800;">e.g., ${esc(
@@ -164,11 +171,18 @@ function chipRowPhonemes(items = []) {
 
           return `
           <div style="display:inline-block;">
-            <span class="lux-chip" title="${esc(
-              `Seen ${p.count}× · ${p.days || 1} day(s) · priority ${
-                Number.isFinite(p.priority) ? p.priority.toFixed(2) : "—"
-              }`
-            )}">
+            <span
+              class="lux-chip"
+              data-kind="phoneme"
+              data-idx="${i}"
+              role="button"
+              tabindex="0"
+              title="${esc(
+                `Seen ${p.count}× · ${p.days || 1} day(s) · priority ${
+                  Number.isFinite(p.priority) ? p.priority.toFixed(2) : "—"
+                }`
+              )}"
+            >
               <span>${esc(p.ipa)}</span>
               <span class="lux-pill ${
                 p.avg >= 80 ? "lux-pill--blue" : p.avg >= 60 ? "lux-pill--yellow" : "lux-pill--red"
@@ -224,6 +238,10 @@ export function openDetailsModal(attempt, overallScore, dateStr, ctx = {}) {
   });
   const trouble = sessionModel?.trouble || {};
   const totals = sessionModel?.totals || {};
+
+  // Keep the exact arrays used to render chips (so data-idx lines up)
+  const phItems = (trouble.phonemesAll || []).slice(0, 12);
+  const wdItems = (trouble.wordsAll || []).slice(0, 12);
 
   // Scores (session average)
   const pronAvg =
@@ -414,7 +432,8 @@ export function openDetailsModal(attempt, overallScore, dateStr, ctx = {}) {
   sounds.style.cssText = "border-top: 1px solid #e2e8f0; padding-top: 12px; margin-top: 12px;";
   sounds.innerHTML = `
     <h4 style="margin:0 0 10px 0; font-size:0.95rem; color:#334155;">⚠️ Trouble Sounds</h4>
-    ${chipRowPhonemes(trouble.phonemesAll || [])}
+    ${chipRowPhonemes(phItems)}
+    <div id="luxExplainSounds" style="margin-top:10px;" hidden></div>
   `;
   card.appendChild(sounds);
 
@@ -423,9 +442,10 @@ export function openDetailsModal(attempt, overallScore, dateStr, ctx = {}) {
   words.style.cssText = "border-top: 1px solid #e2e8f0; padding-top: 12px; margin-top: 12px;";
   words.innerHTML = `
     <h4 style="margin:0 0 10px 0; font-size:0.95rem; color:#334155;">⚠️ Trouble Words</h4>
-    ${chipRowWords(trouble.wordsAll || [])}
+    ${chipRowWords(wdItems)}
+    <div id="luxExplainWords" style="margin-top:10px;" hidden></div>
     ${
-      (trouble.wordsAll || []).length
+      (wdItems || []).length
         ? ""
         : `<details style="margin-top:10px;">
             <summary style="cursor:pointer; font-weight:900; color:#334155;">(Fallback) Focus words from latest attempt</summary>
@@ -569,6 +589,94 @@ export function openDetailsModal(attempt, overallScore, dateStr, ctx = {}) {
 
   modal.appendChild(card);
   document.body.appendChild(modal);
+
+  // --- Inline micro-explainer wiring (click chip => explain below section) ---
+  const explainSounds = card.querySelector("#luxExplainSounds");
+  const explainWords = card.querySelector("#luxExplainWords");
+
+  let lastPick = ""; // `${kind}:${idx}`
+
+  function showExplain(kind, idx) {
+    const key = `${kind}:${idx}`;
+    const same = key === lastPick;
+    lastPick = same ? "" : key;
+
+    const panel = kind === "phoneme" ? explainSounds : explainWords;
+    const items = kind === "phoneme" ? phItems : wdItems;
+
+    if (!panel) return;
+
+    if (same) {
+      panel.innerHTML = "";
+      panel.setAttribute("hidden", "");
+      return;
+    }
+
+    const item = items[idx];
+    if (!item) return;
+
+    const avg = Math.round(Number(item.avg) || 0);
+    const count = Number(item.count) || 0;
+    const days = Number(item.days) || 1;
+    const pr = Number.isFinite(item.priority) ? item.priority.toFixed(2) : "—";
+
+    const label =
+      kind === "phoneme"
+        ? `Sound ${esc(item.ipa)}`
+        : `Word ${esc(item.word)}`;
+
+    const examples =
+      kind === "phoneme" && Array.isArray(item.examples) && item.examples.length
+        ? `<div style="margin-top:8px; color:#475569;"><span style="font-weight:900;">Examples:</span> ${esc(
+            item.examples.join(", ")
+          )}</div>`
+        : "";
+
+    panel.innerHTML = `
+      <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px;">
+        <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px;">
+          <div>
+            <div style="font-weight:900; color:#334155;">${label}</div>
+            <div style="margin-top:4px; color:#64748b; font-weight:800; font-size:0.92rem;">
+              Seen ${count}× · ${days} day(s) · Priority ${esc(pr)}
+            </div>
+          </div>
+          <div style="font-weight:900; color:#334155; border:1px solid #e2e8f0; background:#fff; border-radius:999px; padding:6px 10px;">
+            Avg ${avg}%
+          </div>
+        </div>
+        ${examples}
+        <div style="margin-top:10px; color:#64748b; font-size:0.92rem;">
+          <span style="font-weight:900;">Why it’s here:</span> low accuracy + repeated exposure (count/days) increases priority.
+        </div>
+      </div>
+    `;
+
+    panel.removeAttribute("hidden");
+    // keep it visible even if the user clicked near the bottom
+    try { panel.scrollIntoView({ block: "nearest" }); } catch (_) {}
+  }
+
+  function bindChip(chip) {
+    const kind = chip.getAttribute("data-kind");
+    const idx = Number(chip.getAttribute("data-idx"));
+    if (!kind || !Number.isFinite(idx)) return;
+
+    chip.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      showExplain(kind, idx);
+    });
+
+    chip.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        showExplain(kind, idx);
+      }
+    });
+  }
+
+  card.querySelectorAll(".lux-chip[data-kind][data-idx]").forEach(bindChip);
 
   try {
     document.body.style.overflow = "hidden";
