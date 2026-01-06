@@ -217,11 +217,11 @@ export function openDetailsModal(attempt, overallScore, dateStr, ctx = {}) {
     Math.min(...list.map((a) => +new Date(pickTS(a) || 0)));
 
   // Session rollups (consistent trouble logic + summary-only support)
-const sessionModel = computeRollups(list, {
-  windowDays: 30,
-  minWordCount: 1,
-  minPhonCount: 1,
-});
+  const sessionModel = computeRollups(list, {
+    windowDays: 30,
+    minWordCount: 1,
+    minPhonCount: 1,
+  });
   const trouble = sessionModel?.trouble || {};
   const totals = sessionModel?.totals || {};
 
@@ -240,6 +240,32 @@ const sessionModel = computeRollups(list, {
   const title = titleFromPassageKey(pk);
   const mode = String(pk).startsWith("convo:") ? "AI Conversations" : "Pronunciation Practice";
   const attemptsCount = list.length;
+
+  // Confidence badge (tiny clarity layer)
+  const uniqueDays = new Set(
+    list
+      .map((a) => {
+        const ts = +new Date(pickTS(a) || 0);
+        if (!ts) return "";
+        const d = new Date(ts);
+        try { return d.toLocaleDateString("en-CA"); } catch (_) {}
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const da = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${da}`;
+      })
+      .filter(Boolean)
+  ).size;
+
+  let confidenceLabel = "Early signal";
+  let confidenceHint = "Based on a small sample — keep practicing for stronger patterns.";
+  if (attemptsCount >= 3 || uniqueDays >= 2) {
+    confidenceLabel = "High confidence";
+    confidenceHint = "Patterns are consistent across attempts/days.";
+  } else if (attemptsCount === 2) {
+    confidenceLabel = "Medium confidence";
+    confidenceHint = "Good start — one more attempt will sharpen priorities.";
+  }
 
   const bigScoreColor = getColorConfig(pronAvg).color;
 
@@ -341,6 +367,12 @@ const sessionModel = computeRollups(list, {
       <p style="margin:6px 0 0; color:#64748b; font-size:0.9rem;">
         ${esc(fmtDateTime(tsMin))} → ${esc(fmtDateTime(tsMax))}
       </p>
+
+      <p style="margin:6px 0 0; color:#64748b; font-size:0.9rem; font-weight:900;">
+        Confidence: ${esc(confidenceLabel)}
+        <span style="color:#94a3b8; font-weight:800;">· ${esc(confidenceHint)}</span>
+      </p>
+
       <p style="margin:6px 0 0; color:#94a3b8; font-size:0.85rem; font-weight:800;">
         ${
           sid
