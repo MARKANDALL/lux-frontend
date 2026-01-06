@@ -211,11 +211,15 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
           <div class="lux-grid2">
             <div class="lux-kv">
               <div class="lux-k">Best day</div>
-              <div class="lux-v">${fmtDate(totals.bestDayTS)} · ${fmtScore(totals.bestDayScore ?? 0)}</div>
+              <div class="lux-v">${fmtDate(totals.bestDayTS)} · ${totals.bestDayScore == null ? "—" : fmtScore(totals.bestDayScore)}</div>
             </div>
             <div class="lux-kv">
               <div class="lux-k">Most practiced</div>
-              <div class="lux-v">${esc(totals.topPassage || "—")}</div>
+              <div class="lux-v">${
+                totals.topPassageKey
+                  ? `${esc(titleFromPassageKey(totals.topPassageKey))}${totals.topPassageCount ? ` · ${totals.topPassageCount} attempt${totals.topPassageCount === 1 ? "" : "s"}` : ""}`
+                  : "—"
+              }</div>
             </div>
           </div>
         </div>

@@ -68,6 +68,7 @@ export function computeRollups(attempts = [], opts = {}) {
   const words = new Map(); // word -> {count,sum}
   const byDay = new Map(); // day -> {count,sum}
   const sessions = new Map(); // sessionId -> {count,sumScore,tsMin,tsMax,passageKey,hasAI}
+  const byPassage = new Map(); // passageKey -> {count,sumScore,lastTS}
 
   let lastTS = 0;
   let scoreSum = 0;
@@ -93,6 +94,13 @@ export function computeRollups(attempts = [], opts = {}) {
     const pk = pickPassageKey(a);
     const sum = pickSummary(a);
     const hasAI = !!(sum && sum.ai_feedback && sum.ai_feedback.sections && sum.ai_feedback.sections.length);
+
+    // Snapshot: most-practiced passage across these attempts
+    const pAgg = byPassage.get(pk) || { passageKey: pk, count: 0, sumScore: 0, lastTS: 0 };
+    pAgg.count += 1;
+    pAgg.sumScore += score;
+    pAgg.lastTS = Math.max(pAgg.lastTS, +new Date(ts));
+    byPassage.set(pk, pAgg);
 
     const sAgg = sessions.get(sid) || {
       sessionId: sid,
@@ -203,6 +211,35 @@ export function computeRollups(attempts = [], opts = {}) {
     }
   }
 
+  // Snapshot: best day (highest avg) + most-practiced passage
+  let bestDayKey = null;
+  let bestDayScore = null;
+
+  for (const [day, agg] of byDay.entries()) {
+    if (!agg || !agg.count) continue;
+    const avg = agg.sum / agg.count;
+    if (bestDayScore == null || avg > bestDayScore) {
+      bestDayScore = avg;
+      bestDayKey = day;
+    }
+  }
+
+  let bestDayTS = null;
+  if (bestDayKey) {
+    const [yy, mm, dd] = String(bestDayKey).split("-").map((x) => Number(x));
+    if (yy && mm && dd) bestDayTS = +new Date(yy, mm - 1, dd);
+  }
+
+  let topPassageKey = null;
+  let topPassageCount = 0;
+
+  for (const v of byPassage.values()) {
+    if ((v.count || 0) > topPassageCount) {
+      topPassageCount = v.count || 0;
+      topPassageKey = v.passageKey || null;
+    }
+  }
+
   // Build trouble lists (worst avg first), with basic “seen enough” guard.
   const troublePhonemesAll = Array.from(phon.values())
     .map((x) => ({
@@ -249,6 +286,12 @@ export function computeRollups(attempts = [], opts = {}) {
       sessions: sessions.size,
       lastTS: lastTS || null,
       avgScore: scoreCount ? scoreSum / scoreCount : 0,
+
+      // Snapshot
+      bestDayTS,
+      bestDayScore,
+      topPassageKey,
+      topPassageCount,
     },
     trouble: {
       phonemesAll: troublePhonemesAll,
