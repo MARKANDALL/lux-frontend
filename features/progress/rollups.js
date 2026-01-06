@@ -57,7 +57,7 @@ function daysAgoFrom(tsNum) {
 }
 
 // Constitutional priority: error_rate × exposure × persistence × recency
-function priorityFrom({ avg, count, daysSeen, lastTS }) {
+function priorityFromFull({ avg, count, daysSeen, lastTS }) {
   const a = Number.isFinite(avg) ? avg : 0;
   const c = Number.isFinite(count) ? count : 0;
   const ds = Number.isFinite(daysSeen) ? daysSeen : 0;
@@ -89,6 +89,9 @@ export function computeRollups(attempts = [], opts = {}) {
   const byDay = new Map(); // day -> {count,sum}
   const sessions = new Map(); // sessionId -> {count,sumScore,tsMin,tsMax,passageKey,hasAI}
   const byPassage = new Map(); // passageKey -> {count,sumScore,lastTS}
+
+  const phonDays = new Map(); // ipa -> Set(dayKey)
+  const wordDays = new Map(); // word -> Set(dayKey)
 
   let lastTS = 0;
   let scoreSum = 0;
@@ -160,6 +163,10 @@ export function computeRollups(attempts = [], opts = {}) {
           wAgg.days.add(day);
           wAgg.lastTS = Math.max(wAgg.lastTS, tsNum);
           words.set(word, wAgg);
+
+          const wd = wordDays.get(word) || new Set();
+          wd.add(day);
+          wordDays.set(word, wd);
         }
 
         const P = Array.isArray(w?.Phonemes) ? w.Phonemes : [];
@@ -188,6 +195,10 @@ export function computeRollups(attempts = [], opts = {}) {
           if (word && pAgg.examples.size < 4) pAgg.examples.add(word);
 
           phon.set(ipa, pAgg);
+
+          const pd = phonDays.get(ipa) || new Set();
+          pd.add(day);
+          phonDays.set(ipa, pd);
         }
       }
     } else {
@@ -196,7 +207,7 @@ export function computeRollups(attempts = [], opts = {}) {
       const sumWords = Array.isArray(sum?.words) ? sum.words : [];
       for (const t of sumWords) {
         if (!Array.isArray(t)) continue;
-        const word = String(t[0] || "").trim();
+        const word = String(t[0] || "").trim().toLowerCase();
         const avg = num(t[1]);
         const cntRaw = Number(t[2]);
         const cnt = Number.isFinite(cntRaw) && cntRaw > 0 ? cntRaw : 1;
@@ -208,6 +219,10 @@ export function computeRollups(attempts = [], opts = {}) {
         wAgg.days.add(day);
         wAgg.lastTS = Math.max(wAgg.lastTS, tsNum);
         words.set(word, wAgg);
+
+        const wd = wordDays.get(word) || new Set();
+        wd.add(day);
+        wordDays.set(word, wd);
       }
 
       // Phonemes: prefer summary.stats.phonemes if it ever exists; otherwise use summary.lows [[phoneme, score], ...]
@@ -233,6 +248,10 @@ export function computeRollups(attempts = [], opts = {}) {
           pAgg.lastTS = Math.max(pAgg.lastTS, tsNum);
 
           phon.set(ipa, pAgg);
+
+          const pd = phonDays.get(ipa) || new Set();
+          pd.add(day);
+          phonDays.set(ipa, pd);
         }
       } else {
         const lows = Array.isArray(sum?.lows) ? sum.lows : [];
@@ -256,6 +275,10 @@ export function computeRollups(attempts = [], opts = {}) {
           pAgg.lastTS = Math.max(pAgg.lastTS, tsNum);
 
           phon.set(ipa, pAgg);
+
+          const pd = phonDays.get(ipa) || new Set();
+          pd.add(day);
+          phonDays.set(ipa, pd);
         }
       }
     }
@@ -294,39 +317,41 @@ export function computeRollups(attempts = [], opts = {}) {
   const troublePhonemesAll = Array.from(phon.values())
     .map((x) => {
       const avg = x.count ? x.sum / x.count : 0;
-      const daysSeen = x.days ? x.days.size : 0;
-      const priority = priorityFrom({ avg, count: x.count, daysSeen, lastTS: x.lastTS });
-
+      const days = phonDays.get(x.ipa)?.size || 1;
       return {
         ipa: x.ipa,
         count: x.count,
         avg,
-        daysSeen,
-        lastTS: x.lastTS || null,
-        priority,
+        days,
+        priority: priorityFromFull({ avg, count: x.count, daysSeen: days, lastTS: x.lastTS }),
         examples: Array.from(x.examples || []).slice(0, 3),
       };
     })
-    .filter((x) => x.count >= 3 && x.daysSeen >= 2) // persistence guard
-    .sort((a, b) => (b.priority - a.priority) || (a.avg - b.avg));
+    .filter((x) => x.count >= 3)
+    .sort((a, b) =>
+      (b.priority - a.priority) ||
+      (a.avg - b.avg) ||
+      (b.count - a.count)
+    );
 
   const troubleWordsAll = Array.from(words.values())
     .map((x) => {
       const avg = x.count ? x.sum / x.count : 0;
-      const daysSeen = x.days ? x.days.size : 0;
-      const priority = priorityFrom({ avg, count: x.count, daysSeen, lastTS: x.lastTS });
-
+      const days = wordDays.get(x.word)?.size || 1;
       return {
         word: x.word,
         count: x.count,
         avg,
-        daysSeen,
-        lastTS: x.lastTS || null,
-        priority,
+        days,
+        priority: priorityFromFull({ avg, count: x.count, daysSeen: days, lastTS: x.lastTS }),
       };
     })
-    .filter((x) => x.count >= 2 && x.daysSeen >= 2)
-    .sort((a, b) => (b.priority - a.priority) || (a.avg - b.avg));
+    .filter((x) => x.count >= 2)
+    .sort((a, b) =>
+      (b.priority - a.priority) ||
+      (a.avg - b.avg) ||
+      (b.count - a.count)
+    );
 
   // Trend points (last windowDays)
   const now = new Date();
