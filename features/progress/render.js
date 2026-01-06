@@ -513,7 +513,13 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
         return;
       }
 
-      openDetailsModal(a, attemptOverallScore(a), attemptDateStr(a));
+const sess = (sessions || []).find((x) => String(x.sessionId) === String(sid)) || null;
+
+openDetailsModal(a, attemptOverallScore(a), attemptDateStr(a), {
+  sid,
+  list,
+  session: sess,
+});
     });
   });
 

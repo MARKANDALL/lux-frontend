@@ -1,5 +1,18 @@
 // features/progress/attempt-detail-modal.js
-// Restored "Attempt Details" modal (from old dashboard), used by new progress History.
+// Session "Attempt Details" modal (micro-report) used by Progress History drill-in.
+
+import { passages } from "../../src/data/passages.js";
+import { SCENARIOS } from "../convo/scenarios.js";
+import { computeRollups } from "./rollups.js";
+
+function esc(s) {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 function getColorConfig(s) {
   const n = Number(s) || 0;
@@ -17,26 +30,258 @@ function mdToHtml(md = "") {
     .join("<br>");
 }
 
-export function openDetailsModal(attempt, overallScore, dateStr) {
+function pickTS(a) {
+  return a?.ts || a?.created_at || a?.createdAt || a?.time || a?.localTime || null;
+}
+
+function pickPassageKey(a) {
+  return a?.passage_key || a?.passageKey || a?.passage || "";
+}
+
+function pickSessionId(a) {
+  return a?.session_id || a?.sessionId || "";
+}
+
+function pickSummary(a) {
+  return a?.summary || a?.summary_json || a?.sum || null;
+}
+
+function pickAzure(a) {
+  return a?.azureResult || a?.azure_result || a?.azure || a?.result || null;
+}
+
+function fmtDateTime(ts) {
+  if (!ts) return "—";
+  const d = new Date(ts);
+  return d.toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function titleFromPassageKey(pk = "") {
+  const s = String(pk);
+  if (s.startsWith("convo:")) {
+    const id = s.slice("convo:".length);
+    const hit = SCENARIOS.find((x) => x.id === id);
+    return hit ? `AI Conversation · ${hit.title}` : `AI Conversation · ${id}`;
+  }
+  const hit = passages?.[s];
+  return hit?.name || s || "Practice";
+}
+
+function mean(nums) {
+  const v = (nums || []).filter((x) => Number.isFinite(x));
+  if (!v.length) return null;
+  return v.reduce((a, b) => a + b, 0) / v.length;
+}
+
+function attemptMetric(a, kind) {
+  const sum = pickSummary(a) || {};
+  const az = pickAzure(a);
+  const nb = az?.NBest?.[0] || az?.nBest?.[0] || null;
+  const pa =
+    nb?.PronunciationAssessment ||
+    nb?.pronunciationAssessment ||
+    az?.PronunciationAssessment ||
+    null;
+
+  const map = {
+    pron: () => (sum.pron != null ? Number(sum.pron) : Number(nb?.PronScore ?? pa?.PronScore)),
+    acc: () => (sum.acc != null ? Number(sum.acc) : Number(pa?.AccuracyScore)),
+    flu: () => (sum.flu != null ? Number(sum.flu) : Number(pa?.FluencyScore)),
+    comp: () => (sum.comp != null ? Number(sum.comp) : Number(pa?.CompletenessScore)),
+    pros: () =>
+      sum.pros != null
+        ? Number(sum.pros)
+        : sum.pro != null
+        ? Number(sum.pro)
+        : Number(pa?.ProsodyScore),
+  };
+
+  const fn = map[kind];
+  if (!fn) return null;
+  const n = fn();
+  return Number.isFinite(n) ? n : null;
+}
+
+function pillKV(label, val) {
+  return `
+    <div style="background:#f8fafc; padding:8px; border-radius:8px; text-align:center;">
+      <div style="font-size:0.75rem; color:#64748b; text-transform:uppercase; font-weight:700;">${esc(
+        label
+      )}</div>
+      <div style="font-weight:800; color:#334155;">${val}</div>
+    </div>
+  `;
+}
+
+function chipRowWords(items = []) {
+  if (!items.length) {
+    return `<p style="color:#94a3b8; font-style:italic;">Not enough word data in this session yet.</p>`;
+  }
+  return `
+    <div class="lux-chiprow">
+      ${items
+        .slice(0, 12)
+        .map(
+          (w) => `
+        <span class="lux-chip" title="${esc(
+          `Seen ${w.count}× · ${w.days || 1} day(s) · priority ${
+            Number.isFinite(w.priority) ? w.priority.toFixed(2) : "—"
+          }`
+        )}">
+          <span>${esc(w.word)}</span>
+          <span class="lux-pill ${
+            w.avg >= 80 ? "lux-pill--blue" : w.avg >= 60 ? "lux-pill--yellow" : "lux-pill--red"
+          }">${Math.round(Number(w.avg) || 0)}%</span>
+        </span>
+      `
+        )
+        .join("")}
+    </div>
+  `;
+}
+
+function chipRowPhonemes(items = []) {
+  if (!items.length) {
+    return `<p style="color:#94a3b8; font-style:italic;">Not enough sound data in this session yet.</p>`;
+  }
+  return `
+    <div class="lux-chiprow">
+      ${items
+        .slice(0, 12)
+        .map((p) => {
+          const ex =
+            Array.isArray(p.examples) && p.examples.length
+              ? `<div style="margin-top:4px; color:#94a3b8; font-size:0.82rem; font-weight:800;">e.g., ${esc(
+                  p.examples.join(", ")
+                )}</div>`
+              : ``;
+
+          return `
+          <div style="display:inline-block;">
+            <span class="lux-chip" title="${esc(
+              `Seen ${p.count}× · ${p.days || 1} day(s) · priority ${
+                Number.isFinite(p.priority) ? p.priority.toFixed(2) : "—"
+              }`
+            )}">
+              <span>${esc(p.ipa)}</span>
+              <span class="lux-pill ${
+                p.avg >= 80 ? "lux-pill--blue" : p.avg >= 60 ? "lux-pill--yellow" : "lux-pill--red"
+              }">${Math.round(Number(p.avg) || 0)}%</span>
+            </span>
+            ${ex}
+          </div>
+        `;
+        })
+        .join("")}
+    </div>
+  `;
+}
+
+/**
+ * openDetailsModal(attempt, overallScore, dateStr, ctx?)
+ * ctx can include:
+ *   { sid, list: Attempt[], session: {sessionId, passageKey, count, tsMin, tsMax, avgScore, hasAI} }
+ */
+export function openDetailsModal(attempt, overallScore, dateStr, ctx = {}) {
   const existing = document.getElementById("lux-detail-modal");
   if (existing) existing.remove();
 
-  const sum = attempt?.summary || {};
-  const acc = sum.acc ?? "?";
-  const flu = sum.flu ?? "?";
-  const comp = sum.comp ?? "?";
-  const pron = sum.pron ?? Math.round(Number(overallScore) || 0);
+  const list = Array.isArray(ctx?.list) && ctx.list.length ? ctx.list.slice() : [attempt].filter(Boolean);
 
-  // Focus Words
-  let troubleWordsHtml = `<p style="color:#94a3b8; font-style:italic;">No word details available.</p>`;
-  if (Array.isArray(sum.words) && sum.words.length > 0) {
-    const items = sum.words.slice(0, 5).map((w) => {
-      const text = Array.isArray(w) ? w[0] : w?.w;
-      const s = Array.isArray(w) ? w[1] : w?.s;
-      const wordColor = getColorConfig(s).color;
-      return `<li style="margin-bottom:4px;"><strong style="color:${wordColor};">${text}</strong> (${Math.round(Number(s)||0)}%)</li>`;
-    }).join("");
-    troubleWordsHtml = `<ul style="padding-left:20px; color:#475569;">${items}</ul>`;
+  // Sort desc by time (latest first)
+  list.sort((a, b) => +new Date(pickTS(b) || 0) - +new Date(pickTS(a) || 0));
+
+  const sid =
+    ctx?.sid ||
+    ctx?.session?.sessionId ||
+    pickSessionId(list[0]) ||
+    "";
+
+  const pk =
+    ctx?.session?.passageKey ||
+    pickPassageKey(list[0]) ||
+    "";
+
+  const tsMax =
+    ctx?.session?.tsMax ??
+    Math.max(...list.map((a) => +new Date(pickTS(a) || 0)));
+
+  const tsMin =
+    ctx?.session?.tsMin ??
+    Math.min(...list.map((a) => +new Date(pickTS(a) || 0)));
+
+  // Session rollups (consistent trouble logic + summary-only support)
+  const sessionModel = computeRollups(list, { windowDays: 30 });
+  const trouble = sessionModel?.trouble || {};
+  const totals = sessionModel?.totals || {};
+
+  // Scores (session average)
+  const pronAvg =
+    Number.isFinite(totals.avgScore) ? totals.avgScore : Number(overallScore) || 0;
+
+  const accAvg = mean(list.map((a) => attemptMetric(a, "acc")));
+  const fluAvg = mean(list.map((a) => attemptMetric(a, "flu")));
+  const compAvg = mean(list.map((a) => attemptMetric(a, "comp")));
+  const prosAvg = mean(list.map((a) => attemptMetric(a, "pros")));
+
+  const isNoSess = String(sid).startsWith("nosess:");
+  const dayGroup = isNoSess ? String(sid).slice("nosess:".length) : "";
+
+  const title = titleFromPassageKey(pk);
+  const mode = String(pk).startsWith("convo:") ? "AI Conversations" : "Pronunciation Practice";
+  const attemptsCount = list.length;
+
+  const bigScoreColor = getColorConfig(pronAvg).color;
+
+  // Derive next-action bullets from top priorities
+  const topPh = (trouble.phonemesAll || [])[0] || null;
+  const topWd = (trouble.wordsAll || [])[0] || null;
+
+  const nextActions = [];
+  if (topPh) {
+    const ex = Array.isArray(topPh.examples) && topPh.examples.length ? ` (e.g., ${topPh.examples.join(", ")})` : "";
+    nextActions.push(
+      `Top priority sound: <strong>${esc(topPh.ipa)}</strong> — seen ${topPh.count}× across ${
+        topPh.days || 1
+      } day(s).${ex}`
+    );
+  }
+  if (topWd) {
+    nextActions.push(
+      `Top priority word: <strong>${esc(topWd.word)}</strong> — avg ${Math.round(topWd.avg)}% over ${topWd.count}×.`
+    );
+  }
+  if (nextActions.length) {
+    nextActions.push(`Repeat <strong>${esc(title)}</strong> once more focusing on the top items above.`);
+  } else {
+    nextActions.push(`Keep practicing — priorities become more reliable after a few repeats.`);
+  }
+
+  // Latest attempt quick fallback (for small sessions with no trouble lists yet)
+  const latest = list[0];
+  const latestSum = pickSummary(latest) || {};
+
+  // Fallback focus words list (latest attempt summary.words)
+  let focusWordsFallbackHtml = `<p style="color:#94a3b8; font-style:italic;">No word details available.</p>`;
+  if (Array.isArray(latestSum.words) && latestSum.words.length > 0) {
+    const items = latestSum.words
+      .slice(0, 6)
+      .map((w) => {
+        const text = Array.isArray(w) ? w[0] : w?.w;
+        const s = Array.isArray(w) ? w[1] : w?.s;
+        const wordColor = getColorConfig(s).color;
+        return `<li style="margin-bottom:4px;"><strong style="color:${wordColor};">${esc(
+          text
+        )}</strong> (${Math.round(Number(s) || 0)}%)</li>`;
+      })
+      .join("");
+    focusWordsFallbackHtml = `<ul style="padding-left:20px; color:#475569;">${items}</ul>`;
   }
 
   // Modal shell
@@ -51,8 +296,8 @@ export function openDetailsModal(attempt, overallScore, dateStr) {
 
   const card = document.createElement("div");
   card.style.cssText = `
-    background: white; width: 92%; max-width: 520px;
-    border-radius: 16px; padding: 24px;
+    background: white; width: 94%; max-width: 640px;
+    border-radius: 16px; padding: 22px;
     box-shadow: 0 20px 25px -5px rgba(0,0,0,0.18);
     position: relative; max-height: 90vh; overflow-y: auto;
   `;
@@ -60,104 +305,227 @@ export function openDetailsModal(attempt, overallScore, dateStr) {
   const closeBtn = document.createElement("button");
   closeBtn.innerHTML = "&times;";
   closeBtn.style.cssText = `
-    position: absolute; top: 16px; right: 16px;
+    position: absolute; top: 14px; right: 14px;
     background: none; border: none; font-size: 1.6rem;
     cursor: pointer; color: #94a3b8;
   `;
-  closeBtn.onclick = () => modal.remove();
+
+  function close() {
+    modal.remove();
+    document.removeEventListener("keydown", onKey);
+    try {
+      document.body.style.overflow = "";
+    } catch (_) {}
+  }
+
+  function onKey(e) {
+    if (e.key === "Escape") close();
+  }
+
+  closeBtn.onclick = close;
   card.appendChild(closeBtn);
 
-  const bigScoreColor = getColorConfig(pron).color;
-
+  // Header block
   const header = document.createElement("div");
   header.innerHTML = `
-    <div style="text-align:center; margin-bottom: 18px;">
-      <h3 style="margin:0; color:#1e293b; font-size:1.25rem;">Attempt Details</h3>
-      <p style="margin:4px 0 0; color:#64748b; font-size:0.9rem;">${dateStr || ""}</p>
+    <div style="text-align:center; margin-bottom: 14px;">
+      <h3 style="margin:0; color:#1e293b; font-size:1.25rem;">Session Report</h3>
+      <div style="margin-top:6px; font-weight:900; color:#334155;">${esc(title)}</div>
+      <p style="margin:6px 0 0; color:#64748b; font-size:0.92rem;">
+        ${esc(mode)} · ${attemptsCount} attempt${attemptsCount === 1 ? "" : "s"}
+      </p>
+      <p style="margin:6px 0 0; color:#64748b; font-size:0.9rem;">
+        ${esc(fmtDateTime(tsMin))} → ${esc(fmtDateTime(tsMax))}
+      </p>
+      <p style="margin:6px 0 0; color:#94a3b8; font-size:0.85rem; font-weight:800;">
+        ${
+          sid
+            ? isNoSess
+              ? `Grouped by day (no session id): ${esc(dayGroup)}`
+              : `Session: ${esc(sid)}`
+            : ""
+        }
+      </p>
     </div>
 
-    <div style="display:flex; justify-content:center; margin-bottom: 18px;">
+    <div style="display:flex; justify-content:center; margin-bottom: 14px;">
       <div style="
         width: 80px; height: 80px; border-radius: 50%;
         border: 4px solid ${bigScoreColor};
         display:flex; align-items:center; justify-content:center;
-        font-size: 1.5rem; font-weight: 800; color:#334155;
-      ">${Math.round(Number(pron)||0)}%</div>
+        font-size: 1.5rem; font-weight: 900; color:#334155;
+      ">${Math.round(Number(pronAvg) || 0)}%</div>
     </div>
 
-    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 18px; text-align:center;">
-      <div style="background:#f8fafc; padding:8px; border-radius:8px;">
-        <div style="font-size:0.75rem; color:#64748b; text-transform:uppercase; font-weight:700;">Acc</div>
-        <div style="font-weight:700; color:#334155;">${acc}%</div>
-      </div>
-      <div style="background:#f8fafc; padding:8px; border-radius:8px;">
-        <div style="font-size:0.75rem; color:#64748b; text-transform:uppercase; font-weight:700;">Flu</div>
-        <div style="font-weight:700; color:#334155;">${flu}%</div>
-      </div>
-      <div style="background:#f8fafc; padding:8px; border-radius:8px;">
-        <div style="font-size:0.75rem; color:#64748b; text-transform:uppercase; font-weight:700;">Comp</div>
-        <div style="font-weight:700; color:#334155;">${comp}%</div>
-      </div>
+    <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px;">
+      ${pillKV("Acc", accAvg == null ? "—" : `${Math.round(accAvg)}%`)}
+      ${pillKV("Flu", fluAvg == null ? "—" : `${Math.round(fluAvg)}%`)}
+      ${pillKV("Comp", compAvg == null ? "—" : `${Math.round(compAvg)}%`)}
+      ${pillKV("Pro", prosAvg == null ? "—" : `${Math.round(prosAvg)}%`)}
     </div>
 
-    <div style="border-top:1px solid #e2e8f0; padding-top: 14px;">
-      <h4 style="margin:0 0 10px 0; font-size:0.95rem; color:#334155;">Focus Words</h4>
-      ${troubleWordsHtml}
+    <div style="border-top:1px solid #e2e8f0; padding-top: 12px;">
+      <h4 style="margin:0 0 10px 0; font-size:0.95rem; color:#334155;">✅ What to do next</h4>
+      <ul style="margin:0; padding-left:18px; color:#475569; line-height:1.55;">
+        ${nextActions.map((x) => `<li style="margin-bottom:6px;">${x}</li>`).join("")}
+      </ul>
     </div>
   `;
   card.appendChild(header);
 
-  // AI Coach Memory (saved)
-  const sections = sum?.ai_feedback?.sections;
-  if (Array.isArray(sections) && sections.length) {
+  // Trouble Sounds
+  const sounds = document.createElement("div");
+  sounds.style.cssText = "border-top: 1px solid #e2e8f0; padding-top: 12px; margin-top: 12px;";
+  sounds.innerHTML = `
+    <h4 style="margin:0 0 10px 0; font-size:0.95rem; color:#334155;">⚠️ Trouble Sounds</h4>
+    ${chipRowPhonemes(trouble.phonemesAll || [])}
+  `;
+  card.appendChild(sounds);
+
+  // Trouble Words
+  const words = document.createElement("div");
+  words.style.cssText = "border-top: 1px solid #e2e8f0; padding-top: 12px; margin-top: 12px;";
+  words.innerHTML = `
+    <h4 style="margin:0 0 10px 0; font-size:0.95rem; color:#334155;">⚠️ Trouble Words</h4>
+    ${chipRowWords(trouble.wordsAll || [])}
+    ${
+      (trouble.wordsAll || []).length
+        ? ""
+        : `<details style="margin-top:10px;">
+            <summary style="cursor:pointer; font-weight:900; color:#334155;">(Fallback) Focus words from latest attempt</summary>
+            <div style="margin-top:10px;">${focusWordsFallbackHtml}</div>
+          </details>`
+    }
+  `;
+  card.appendChild(words);
+
+  // Attempts list (collapsed)
+  const attemptsWrap = document.createElement("div");
+  attemptsWrap.style.cssText = "border-top: 1px solid #e2e8f0; padding-top: 12px; margin-top: 12px;";
+  attemptsWrap.innerHTML = `
+    <details>
+      <summary style="cursor:pointer; font-weight:900; color:#334155;">🕘 Attempts in this session (${attemptsCount})</summary>
+      <div style="margin-top:10px;"></div>
+    </details>
+  `;
+  const attemptsBody = attemptsWrap.querySelector("details > div");
+  list.slice(0, 20).forEach((a) => {
+    const ts = pickTS(a);
+    const sum = pickSummary(a) || {};
+    const pron = attemptMetric(a, "pron");
+    const acc = attemptMetric(a, "acc");
+    const flu = attemptMetric(a, "flu");
+    const pros = attemptMetric(a, "pros");
+    const text = String(a?.text || "").trim();
+
+    const pills = [];
+    if (pron != null) pills.push(`Pron ${Math.round(pron)}`);
+    if (acc != null) pills.push(`Acc ${Math.round(acc)}`);
+    if (flu != null) pills.push(`Flu ${Math.round(flu)}`);
+    if (pros != null) pills.push(`Pro ${Math.round(pros)}`);
+
+    const item = document.createElement("div");
+    item.style.cssText = "background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:10px; margin-bottom:10px;";
+    item.innerHTML = `
+      <div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start;">
+        <div style="font-weight:900; color:#334155;">${esc(fmtDateTime(ts))}</div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          ${pills
+            .map(
+              (t) =>
+                `<span style="background:#fff; border:1px solid #e2e8f0; border-radius:999px; padding:3px 8px; font-weight:900; color:#475569; font-size:0.82rem;">${esc(
+                  t
+                )}</span>`
+            )
+            .join("")}
+        </div>
+      </div>
+      ${
+        text
+          ? `<details style="margin-top:8px;">
+              <summary style="cursor:pointer; font-weight:900; color:#334155;">📝 Text</summary>
+              <div style="margin-top:8px; color:#475569; line-height:1.45;">${esc(text)}</div>
+            </details>`
+          : ""
+      }
+    `;
+    attemptsBody.appendChild(item);
+  });
+  card.appendChild(attemptsWrap);
+
+  // AI Coach Memory (across session)
+  const aiAttemptGroups = list
+    .map((a) => {
+      const sum = pickSummary(a) || {};
+      const secs = sum?.ai_feedback?.sections;
+      if (!Array.isArray(secs) || !secs.length) return null;
+      return { ts: pickTS(a), sections: secs };
+    })
+    .filter(Boolean);
+
+  if (aiAttemptGroups.length) {
+    const totalSecs = aiAttemptGroups.reduce((n, g) => n + (g.sections?.length || 0), 0);
+
     const aiContainer = document.createElement("div");
-    aiContainer.style.cssText = "border-top: 1px solid #e2e8f0; padding-top: 14px; margin-top: 14px;";
+    aiContainer.style.cssText = "border-top: 1px solid #e2e8f0; padding-top: 12px; margin-top: 12px;";
 
     aiContainer.innerHTML = `
-      <h4 style="margin:0 0 10px 0; font-size:0.95rem; color:#334155;">🧠 AI Coach Memory</h4>
-      <div style="max-height: 260px; overflow-y:auto;"></div>
+      <details>
+        <summary style="cursor:pointer; font-weight:900; color:#334155;">🧠 AI Coach Memory (${totalSecs})</summary>
+        <div style="margin-top:10px; max-height: 320px; overflow-y:auto;"></div>
+      </details>
     `;
 
-    const listDiv = aiContainer.querySelector("div");
-    sections.forEach((sec) => {
-      const item = document.createElement("div");
-      item.style.cssText = "background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; padding:12px; margin-bottom:10px;";
+    const listDiv = aiContainer.querySelector("details > div");
 
-      const titleEn = sec?.title || "Coach Tip";
-      const contentL1 = sec?.l1;
-      const contentEn = sec?.en || sec?.content || "";
-      const hasL1 = !!contentL1;
-      let isShowingL1 = hasL1;
+    aiAttemptGroups.forEach((g) => {
+      const groupHead = document.createElement("div");
+      groupHead.style.cssText = "margin:12px 0 8px; font-weight:900; color:#64748b;";
+      groupHead.textContent = fmtDateTime(g.ts);
+      listDiv.appendChild(groupHead);
 
-      const header = document.createElement("div");
-      header.style.cssText = "font-weight:800; color:#0369a1; font-size:0.9em; margin-bottom:6px;";
-      header.textContent = `${sec?.emoji || "🤖"} ${titleEn}`;
-      item.appendChild(header);
+      g.sections.forEach((sec) => {
+        const item = document.createElement("div");
+        item.style.cssText =
+          "background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; padding:12px; margin-bottom:10px;";
 
-      const contentDiv = document.createElement("div");
-      contentDiv.style.cssText = "color:#334155; font-size:0.9em; line-height:1.5;";
-      contentDiv.innerHTML = mdToHtml(hasL1 ? contentL1 : contentEn);
-      item.appendChild(contentDiv);
+        const titleEn = sec?.title || "Coach Tip";
+        const contentL1 = sec?.l1;
+        const contentEn = sec?.en || sec?.content || "";
+        const hasL1 = !!contentL1;
+        let isShowingL1 = hasL1;
 
-      if (hasL1) {
-        const btn = document.createElement("button");
-        btn.textContent = "Show English 🇺🇸";
-        btn.style.cssText = "margin-top:8px; font-size:0.8em; padding:4px 8px; cursor:pointer; background:#fff; border:1px solid #bae6fd; border-radius:6px; color:#0284c7; font-weight:800;";
-        btn.onclick = () => {
-          if (isShowingL1) {
-            contentDiv.innerHTML = mdToHtml(contentEn);
-            btn.textContent = "Show Original ↩️";
-            isShowingL1 = false;
-          } else {
-            contentDiv.innerHTML = mdToHtml(contentL1);
-            btn.textContent = "Show English 🇺🇸";
-            isShowingL1 = true;
-          }
-        };
-        item.appendChild(btn);
-      }
+        const h = document.createElement("div");
+        h.style.cssText = "font-weight:900; color:#0369a1; font-size:0.9em; margin-bottom:6px;";
+        h.textContent = `${sec?.emoji || "🤖"} ${titleEn}`;
+        item.appendChild(h);
 
-      listDiv.appendChild(item);
+        const contentDiv = document.createElement("div");
+        contentDiv.style.cssText = "color:#334155; font-size:0.9em; line-height:1.5;";
+        contentDiv.innerHTML = mdToHtml(hasL1 ? contentL1 : contentEn);
+        item.appendChild(contentDiv);
+
+        if (hasL1) {
+          const btn = document.createElement("button");
+          btn.textContent = "Show English 🇺🇸";
+          btn.style.cssText =
+            "margin-top:8px; font-size:0.8em; padding:4px 8px; cursor:pointer; background:#fff; border:1px solid #bae6fd; border-radius:6px; color:#0284c7; font-weight:900;";
+          btn.onclick = () => {
+            if (isShowingL1) {
+              contentDiv.innerHTML = mdToHtml(contentEn);
+              btn.textContent = "Show Original ↩️";
+              isShowingL1 = false;
+            } else {
+              contentDiv.innerHTML = mdToHtml(contentL1);
+              btn.textContent = "Show English 🇺🇸";
+              isShowingL1 = true;
+            }
+          };
+          item.appendChild(btn);
+        }
+
+        listDiv.appendChild(item);
+      });
     });
 
     card.appendChild(aiContainer);
@@ -166,7 +534,13 @@ export function openDetailsModal(attempt, overallScore, dateStr) {
   modal.appendChild(card);
   document.body.appendChild(modal);
 
+  try {
+    document.body.style.overflow = "hidden";
+  } catch (_) {}
+
+  document.addEventListener("keydown", onKey);
+
   modal.onclick = (e) => {
-    if (e.target === modal) modal.remove();
+    if (e.target === modal) close();
   };
 }
