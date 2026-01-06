@@ -208,6 +208,11 @@ export function openDetailsModal(attempt, overallScore, dateStr, ctx = {}) {
 
   const title = titleFromPassageKey(pk);
   const mode = String(pk).startsWith("convo:") ? "AI Conversations" : "Pronunciation Practice";
+
+  const isConvo = String(pk).startsWith("convo:");
+  const practiceHref = isConvo ? "./convo.html#chat" : "./index.html";
+  const chooseHref = isConvo ? "./convo.html#picker" : "./index.html";
+
   const attemptsCount = list.length;
 
   // Confidence badge (tiny clarity layer)
@@ -333,6 +338,22 @@ export function openDetailsModal(attempt, overallScore, dateStr, ctx = {}) {
       <p style="margin:6px 0 0; color:#64748b; font-size:0.92rem;">
         ${esc(mode)} · ${attemptsCount} attempt${attemptsCount === 1 ? "" : "s"}
       </p>
+
+      <div style="margin-top:10px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+        <button id="luxPracticeAgainBtn"
+          style="border:1px solid #cbd5e1; background:#fff; padding:8px 12px; border-radius:10px; font-weight:900; cursor:pointer; color:#0f172a;">
+          🔁 Practice again
+        </button>
+        ${
+          isConvo
+            ? `<button id="luxChooseScenarioBtn"
+                style="border:1px solid #e2e8f0; background:#f8fafc; padding:8px 12px; border-radius:10px; font-weight:900; cursor:pointer; color:#334155;">
+                🗂️ Choose scenario
+              </button>`
+            : ``
+        }
+      </div>
+
       <p style="margin:6px 0 0; color:#64748b; font-size:0.9rem;">
         ${esc(fmtDateTime(tsMin))} → ${esc(fmtDateTime(tsMax))}
       </p>
@@ -540,6 +561,24 @@ export function openDetailsModal(attempt, overallScore, dateStr, ctx = {}) {
 
   modal.appendChild(card);
   document.body.appendChild(modal);
+
+  const againBtn = document.getElementById("luxPracticeAgainBtn");
+  if (againBtn) {
+    againBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      close();
+      window.location.assign(practiceHref);
+    });
+  }
+
+  const chooseBtn = document.getElementById("luxChooseScenarioBtn");
+  if (chooseBtn) {
+    chooseBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      close();
+      window.location.assign(chooseHref);
+    });
+  }
 
   // --- Inline micro-explainer wiring (click chip => explain below section) ---
   const explainSounds = card.querySelector("#luxExplainSounds");
