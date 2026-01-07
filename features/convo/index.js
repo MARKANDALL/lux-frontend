@@ -218,7 +218,7 @@ export function bootConvo() {
     // Browser back/forward steps: intro -> picker -> chat
     if (opts.replace) {
       syncHistory(mode, false);
-    } else if (opts.push !== false && changed) {
+    } else if (opts.opts !== false && changed) {
       syncHistory(mode, true);
     }
 
@@ -273,6 +273,34 @@ export function bootConvo() {
     return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 
+  function makeFocusTester(ipa) {
+    const k = String(ipa || "").trim();
+
+    // Return a function(word)->boolean, or null if we don't have safe spelling cues
+    // (When null, we trust model marks only; no validation/auto-mark)
+    if (!k) return null;
+
+    // Common consonant cues (safe-ish). Expand later as needed.
+    const map = {
+      f: /(?:f|ph|gh)/i, // far, flight, phone, laugh
+      v: /v/i,
+      θ: /th/i, // think
+      ð: /th/i, // this
+      ʃ: /sh/i, // she
+      "tʃ": /(?:ch|tch)/i, // chair, match
+      "dʒ": /(?:j|dge|dg)/i, // job, bridge
+      ŋ: /ng/i, // sing
+      ɹ: /(?:r|wr)/i,
+      r: /(?:r|wr)/i,
+      l: /l/i,
+    };
+
+    const re = map[k];
+    if (!re) return null;
+
+    return (word) => re.test(String(word || ""));
+  }
+
   function stripMarks(s) {
     return String(s || "")
       .replace(/\{~([^}]+)~\}/g, "$1")
@@ -288,23 +316,84 @@ export function bootConvo() {
   }
 
   function highlightHtml(text) {
-    const raw = String(text || "");
-    // 1) highlight explicit model marks:
-    //    {~word~} => word-bank (yellow)
-    //    {^word^} => phoneme-focus (blue)
-    let html = escHtml(raw)
-      .replace(/\{~([^}]+)~\}/g, (_m, w) => `<span class="lux-hl">${escHtml(w)}</span>`)
-      .replace(/\{\^([^}]+)\^\}/g, (_m, w) => `<span class="lux-hl2">${escHtml(w)}</span>`);
+    const focus = state.nextActivity?.targets?.phoneme?.ipa || "";
+    const focusTest = makeFocusTester(focus);
 
-    // 2) highlight known target words (whole-word, case-insensitive)
-    const tw = targetWords()
-      .slice()
-      .sort((a, b) => b.length - a.length);
+    const tw = targetWords().slice().sort((a, b) => b.length - a.length);
+    const twSet = new Set(tw.map((w) => String(w).toLowerCase()));
 
-    for (const w of tw) {
-      const re = new RegExp(`\\b(${escapeRegExp(w)})\\b`, "gi");
-      html = html.replace(re, `<span class="lux-hl">$1</span>`);
+    let marked = String(text || "");
+
+    // B) Auto-wrap obvious focus words in {^ ^} (only when we have a tester)
+    if (focusTest) {
+      const markTokenRe = /(\{~[^}]+~\}|\{\^[^}]+\^\})/g;
+      marked = marked
+        .split(markTokenRe)
+        .map((part) => {
+          if (!part) return "";
+          if (part.startsWith("{~") || part.startsWith("{^")) return part;
+
+          // Wrap words that match the focus spelling cue
+          return part.replace(/\b([A-Za-z][A-Za-z']*)\b/g, (m, w) => {
+            return focusTest(w) ? `{^${w}^}` : m;
+          });
+        })
+        .join("");
     }
+
+    // Auto-mark word-bank words ONLY in unmarked regions.
+    // This avoids wrapping inside spans / nested markup later.
+    if (tw.length) {
+      const anyTargetRe = new RegExp(`\\b(${tw.map(escapeRegExp).join("|")})\\b`, "gi");
+      const markTokenRe = /(\{~[^}]+~\}|\{\^[^}]+\^\})/g;
+      marked = marked
+        .split(markTokenRe)
+        .map((part) => {
+          if (!part) return "";
+          if (part.startsWith("{~") || part.startsWith("{^")) return part; // already marked
+          return part.replace(anyTargetRe, "{~$1~}");
+        })
+        .join("");
+    }
+
+    // Convert marks to HTML safely.
+    const tokenRe = /(\{~[^}]+~\}|\{\^[^}]+\^\})/g;
+
+    const html = marked
+      .split(tokenRe)
+      .map((part) => {
+        if (!part) return "";
+
+        // {~word~}
+        if (part.startsWith("{~")) {
+          const w = part.slice(2, -2); // inside {~ ~}
+          const cls = focusTest && focusTest(w) ? "lux-hl3" : "lux-hl";
+          return `<span class="${cls}">${escHtml(w)}</span>`;
+        }
+
+        // {^word^}
+        if (part.startsWith("{^")) {
+          const w = part.slice(2, -2); // inside {^ ^}
+          const word = String(w).trim();
+          const key = word.toLowerCase();
+
+          // If we have a safe tester, reject invalid {^ ^}
+          if (focusTest && !focusTest(word)) {
+            // If it's a bank word, keep yellow; else plain
+            return twSet.has(key)
+              ? `<span class="lux-hl">${escHtml(word)}</span>`
+              : escHtml(word);
+          }
+
+          // Valid phoneme-focus: if also bank word -> overlap class
+          const cls = twSet.has(key) ? "lux-hl3" : "lux-hl2";
+          return `<span class="${cls}">${escHtml(word)}</span>`;
+        }
+
+        // plain text
+        return escHtml(part);
+      })
+      .join("");
 
     return html;
   }

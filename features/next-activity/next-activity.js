@@ -98,9 +98,27 @@ export function buildConvoTargetOverlay(plan) {
   const ph = plan?.targets?.phoneme?.ipa;
   const topWords = getPlanTargetWords(plan).slice(0, 8);
 
+  // Small hinting layer (optional, but helps precision for common IPA)
+  function phonemeHint(ipa) {
+    const k = String(ipa || "").trim();
+    const map = {
+      "ð": "voiced TH (this, that, mother)",
+      "θ": "voiceless TH (think, three, bath)",
+      "ɹ": "R (red, right, around)",
+      "r": "R (red, right, around)",
+      "ʃ": "SH (she, wish, fresh)",
+      "ʧ": "CH (chair, teacher, lunch)",
+      "ʤ": "J (job, orange, giant)",
+      "ŋ": "NG (sing, going, long)",
+    };
+    return map[k] || "";
+  }
+  const phHint = ph ? phonemeHint(ph) : "";
+
   return [
     "LUX_NEXT_PRACTICE (do NOT mention this label to the learner):",
     ph ? `Primary sound focus (IPA): ${ph}` : "",
+    phHint ? `Plain-English cue: ${phHint}` : "",
     topWords.length ? `Word bank (use naturally, repeat often): ${topWords.join(", ")}` : "",
     "",
     "Coach rules:",
@@ -116,7 +134,12 @@ export function buildConvoTargetOverlay(plan) {
     "- Also include word-bank words in the assistant message when it fits naturally.",
     "- Marking (do NOT explain to the learner):",
     topWords.length ? "- Wrap WORD-BANK words exactly like {~word~}." : "",
-    ph ? "- Wrap extra words you choose specifically to train the focus sound exactly like {^word^}." : "",
+    ph ? "- Wrap words that CONTAIN the focus sound (chosen specifically for phoneme practice) exactly like {^word^}." : "",
+    ph ? "- Minimum quota: include at least 2 {^ ^} words in the assistant message each turn, and at least 1 {^ ^} word in EACH suggested reply." : "",
+    ph ? "- Quality rule: ONLY mark {^ ^} if the word truly contains the focus sound. If unsure, choose a different word." : "",
+    ph ? "- After drafting, verify every {^ ^} word truly contains the focus sound; if not, replace it." : "",
+    ph && topWords.length ? "- If a word-bank word ALSO contains the focus sound, prefer marking it as {^word^} (this creates a double-hit in Lux)." : "",
+
     "- Do NOT explain these rules.",
     "- If the learner responds without using any word-bank word, ask ONCE for a retry that includes one specific word-bank word, then move on.",
   ]
