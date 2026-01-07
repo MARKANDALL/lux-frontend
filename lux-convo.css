@@ -1011,24 +1011,32 @@ object-fit: cover;
 }
 
 /* =========================
-   Next Practice coach tips
+   Target highlighting + coach tips
    ========================= */
+.lux-hl{
+  background: rgba(250, 204, 21, 0.35);
+  border-radius: 6px;
+  padding: 0 2px;
+  font-weight: 900;
+}
+
 .lux-coachbar{
   padding: 10px 14px 0;
 }
 .lux-coachcard{
-  border: 1px solid rgba(0,0,0,0.10);
-  background: rgba(255,255,255,0.85);
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(15, 23, 42, 0.55);
   border-radius: 14px;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.20);
   padding: 10px 12px;
   display:flex;
   gap: 10px;
   align-items:flex-start;
   justify-content: space-between;
+  margin-bottom: 10px;
 }
 .lux-coachcard .lux-coachtext{
-  color:#0f172a;
+  color:#e5e7eb;
   font-size: 13px;
   line-height: 1.25rem;
 }
@@ -1038,16 +1046,17 @@ object-fit: cover;
   margin-bottom: 2px;
 }
 .lux-coachcard .lux-coachmeta{
-  color:#475569;
+  color: rgba(229,231,235,0.72);
   font-size: 12px;
   margin-top: 6px;
 }
 .lux-coachcard .lux-coachbtn{
   white-space: nowrap;
 }
+
 .lux-sugsNote{
   padding: 6px 14px 0;
-  color:#475569;
+  color: rgba(226,232,240,0.82);
   font-size: 12px;
 }
 

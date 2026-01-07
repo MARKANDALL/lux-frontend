@@ -91,6 +91,7 @@ export function wireConvoFlow({
   // --- Turn send (assess -> attempt -> convoTurn) ---
   async function sendTurn({ audioBlob }) {
     const s = SCENARIOS[state.scenarioIdx];
+    const scenario = scenarioForTurn();
     const userText = (input.value || "").trim();
     if (!userText) return;
 
@@ -139,7 +140,6 @@ export function wireConvoFlow({
     }
 
     // next AI response + suggestions
-    const scenario = scenarioForTurn();
     const rsp = await convoTurn({
       scenario,
       knobs: state.knobs,
@@ -202,7 +202,13 @@ export function wireConvoFlow({
       });
 
       console.log("[Convo] convo-report result", report);
-      showConvoReportOverlay(report);
+      showConvoReportOverlay(report, {
+        nextActivity: state.nextActivity || null,
+        turns: Array.isArray(state.turns) ? state.turns : [],
+        sessionId: state.sessionId,
+        passageKey: `convo:${s.id}`,
+        scenario: { id: s.id, title: s.title },
+      });
 
       // Keep the old debug dump too (harmless + useful)
       let pre = document.getElementById("luxConvoReportDump");

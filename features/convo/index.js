@@ -47,7 +47,7 @@ export function bootConvo() {
 
     // Next practice (optional)
     nextActivity: null,
-    coach: { startTipShown: false, replyTipShown: false },
+    coach: { startTipShown: false, replyTipShown: false, typeTipShown: false },
   };
 
   const next = consumeNextActivityPlan();
@@ -260,12 +260,57 @@ export function bootConvo() {
   stressSel.sel.addEventListener("change", () => (state.knobs.stress = stressSel.sel.value));
   paceSel.sel.addEventListener("change", () => (state.knobs.pace = paceSel.sel.value));
 
+  function escHtml(s) {
+    return String(s)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function escapeRegExp(s) {
+    return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  function stripMarks(s) {
+    return String(s || "").replace(/\{~([^}]+)~\}/g, "$1");
+  }
+
+  function targetWords() {
+    return (state.nextActivity?.targets?.words || [])
+      .map((x) => x?.word || x)
+      .filter(Boolean)
+      .map((x) => String(x).trim())
+      .filter(Boolean);
+  }
+
+  function highlightHtml(text) {
+    const raw = String(text || "");
+    // 1) highlight explicit model marks {~word~}
+    let html = escHtml(raw).replace(/\{~([^}]+)~\}/g, (_m, w) => {
+      return `<span class="lux-hl">${escHtml(w)}</span>`;
+    });
+
+    // 2) highlight known target words (whole-word, case-insensitive)
+    const tw = targetWords()
+      .slice()
+      .sort((a, b) => b.length - a.length);
+
+    for (const w of tw) {
+      const re = new RegExp(`\\b(${escapeRegExp(w)})\\b`, "gi");
+      html = html.replace(re, `<span class="lux-hl">$1</span>`);
+    }
+
+    return html;
+  }
+
   // --- Chat rendering ---
   function renderMessages() {
     msgs.innerHTML = "";
     for (const m of state.messages) {
       const bubble = el("div", "msg " + (m.role === "user" ? "user" : "assistant"));
-      bubble.textContent = m.content;
+      bubble.innerHTML = highlightHtml(m.content);
       msgs.append(bubble);
     }
     msgs.scrollTop = msgs.scrollHeight;
@@ -280,14 +325,13 @@ export function bootConvo() {
   }
 
   function showCoachCard({ title, body, meta, onDismiss }) {
-    coachBar.innerHTML = "";
     const card = el("div", "lux-coachcard");
     const left = el("div", "lux-coachtext");
     left.append(el("strong", "", title), el("div", "", body));
     if (meta) left.append(el("div", "lux-coachmeta", meta));
     const btn = el("button", "btn ghost lux-coachbtn", "Got it");
     btn.addEventListener("click", () => {
-      coachBar.innerHTML = "";
+      card.remove();
       if (onDismiss) onDismiss();
     });
     card.append(left, btn);
@@ -310,9 +354,12 @@ export function bootConvo() {
   function renderSuggestions(list) {
     sugs.innerHTML = "";
     (list || []).forEach((t) => {
-      const b = el("button", "sug", t);
+      const raw = stripMarks(t);
+      const b = el("button", "sug");
+      b.dataset.raw = raw;
+      b.innerHTML = highlightHtml(t);
       b.addEventListener("click", () => {
-        input.value = t;
+        input.value = raw;
         input.focus();
       });
       sugs.append(b);
@@ -340,6 +387,17 @@ export function bootConvo() {
       });
     }
   }
+
+  input.addEventListener("focus", () => {
+    if (!state.nextActivity) return;
+    if (state.coach.typeTipShown) return;
+    state.coach.typeTipShown = true;
+    showCoachCard({
+      title: "Quick note before typing",
+      body:
+        "The suggested replies are packed with the exact sounds/words Lux thinks you need most right now. You can still type your own, but you might accidentally skip the targeted practice if you do.",
+    });
+  });
 
   // --- Convo flow (extracted) ---
   const { startScenario } = wireConvoFlow({

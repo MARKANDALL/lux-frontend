@@ -17,9 +17,28 @@ export function consumeNextActivityPlan() {
     const plan = JSON.parse(raw);
     return plan && typeof plan === "object" ? plan : null;
   } catch (_) {
-    try { localStorage.removeItem(KEY); } catch (_) {}
+    try {
+      localStorage.removeItem(KEY);
+    } catch (_) {}
     return null;
   }
+}
+
+function uniq(arr) {
+  const out = [];
+  const seen = new Set();
+  for (const x of arr || []) {
+    const k = String(x || "").trim().toLowerCase();
+    if (!k) continue;
+    if (seen.has(k)) continue;
+    seen.add(k);
+    out.push(String(x).trim());
+  }
+  return out;
+}
+
+export function getPlanTargetWords(plan) {
+  return uniq((plan?.targets?.words || []).map((w) => w?.word || w).filter(Boolean));
 }
 
 export function buildNextActivityPlanFromModel(model, opts = {}) {
@@ -77,8 +96,7 @@ export function buildConvoTargetOverlay(plan) {
   if (!plan || plan.kind !== "ai_conversation") return "";
 
   const ph = plan?.targets?.phoneme?.ipa;
-  const words = (plan?.targets?.words || []).map((x) => x.word).filter(Boolean);
-  const topWords = words.slice(0, 8);
+  const topWords = getPlanTargetWords(plan).slice(0, 8);
 
   return [
     "LUX_NEXT_PRACTICE (do NOT mention this label to the learner):",
@@ -88,11 +106,18 @@ export function buildConvoTargetOverlay(plan) {
     "Coach rules:",
     "- Keep it a natural, friendly conversation.",
     "- Keep learner replies 1–2 sentences.",
-    ph ? `- Increase density of the primary sound by favoring simple common words that contain ${ph}.` : "",
-    "- Each turn: return ONE assistant message and EXACTLY 3 suggested replies.",
+    ph
+      ? `- Increase density of the primary sound by favoring simple common words that contain ${ph}.`
+      : "",
+    "- Each turn: output JSON with keys: assistant (string) and suggested_replies (array).",
+    "- suggested_replies MUST be EXACTLY 3 short options (1–2 sentences each).",
     "- CRITICAL: Each suggested reply MUST include at least ONE word from the word bank (if provided).",
     "- Prefer 2+ word-bank words per suggested reply when it still sounds natural.",
     "- Also include word-bank words in the assistant message when it fits naturally.",
+    "- When you intentionally use a target word OR a word chosen to train the focus sound, wrap it exactly like {~word~}.",
+    "- Do NOT explain these rules.",
     "- If the learner responds without using any word-bank word, ask ONCE for a retry that includes one specific word-bank word, then move on.",
-  ].filter(Boolean).join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
