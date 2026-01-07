@@ -1020,6 +1020,14 @@ object-fit: cover;
   font-weight: 900;
 }
 
+/* Phoneme-focus injected words */
+.lux-hl2{
+  background: rgba(59, 130, 246, 0.28);
+  border-radius: 6px;
+  padding: 0 2px;
+  font-weight: 900;
+}
+
 .lux-coachbar{
   padding: 10px 14px 0;
 }

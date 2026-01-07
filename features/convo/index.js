@@ -274,7 +274,9 @@ export function bootConvo() {
   }
 
   function stripMarks(s) {
-    return String(s || "").replace(/\{~([^}]+)~\}/g, "$1");
+    return String(s || "")
+      .replace(/\{~([^}]+)~\}/g, "$1")
+      .replace(/\{\^([^}]+)\^\}/g, "$1");
   }
 
   function targetWords() {
@@ -287,10 +289,12 @@ export function bootConvo() {
 
   function highlightHtml(text) {
     const raw = String(text || "");
-    // 1) highlight explicit model marks {~word~}
-    let html = escHtml(raw).replace(/\{~([^}]+)~\}/g, (_m, w) => {
-      return `<span class="lux-hl">${escHtml(w)}</span>`;
-    });
+    // 1) highlight explicit model marks:
+    //    {~word~} => word-bank (yellow)
+    //    {^word^} => phoneme-focus (blue)
+    let html = escHtml(raw)
+      .replace(/\{~([^}]+)~\}/g, (_m, w) => `<span class="lux-hl">${escHtml(w)}</span>`)
+      .replace(/\{\^([^}]+)\^\}/g, (_m, w) => `<span class="lux-hl2">${escHtml(w)}</span>`);
 
     // 2) highlight known target words (whole-word, case-insensitive)
     const tw = targetWords()

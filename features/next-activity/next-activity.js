@@ -114,7 +114,9 @@ export function buildConvoTargetOverlay(plan) {
     "- CRITICAL: Each suggested reply MUST include at least ONE word from the word bank (if provided).",
     "- Prefer 2+ word-bank words per suggested reply when it still sounds natural.",
     "- Also include word-bank words in the assistant message when it fits naturally.",
-    "- When you intentionally use a target word OR a word chosen to train the focus sound, wrap it exactly like {~word~}.",
+    "- Marking (do NOT explain to the learner):",
+    topWords.length ? "- Wrap WORD-BANK words exactly like {~word~}." : "",
+    ph ? "- Wrap extra words you choose specifically to train the focus sound exactly like {^word^}." : "",
     "- Do NOT explain these rules.",
     "- If the learner responds without using any word-bank word, ask ONCE for a retry that includes one specific word-bank word, then move on.",
   ]
