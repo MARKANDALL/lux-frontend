@@ -1010,6 +1010,47 @@ object-fit: cover;
   font-weight: 800;
 }
 
+/* =========================
+   Next Practice coach tips
+   ========================= */
+.lux-coachbar{
+  padding: 10px 14px 0;
+}
+.lux-coachcard{
+  border: 1px solid rgba(0,0,0,0.10);
+  background: rgba(255,255,255,0.85);
+  border-radius: 14px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+  padding: 10px 12px;
+  display:flex;
+  gap: 10px;
+  align-items:flex-start;
+  justify-content: space-between;
+}
+.lux-coachcard .lux-coachtext{
+  color:#0f172a;
+  font-size: 13px;
+  line-height: 1.25rem;
+}
+.lux-coachcard .lux-coachtext strong{
+  display:block;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+.lux-coachcard .lux-coachmeta{
+  color:#475569;
+  font-size: 12px;
+  margin-top: 6px;
+}
+.lux-coachcard .lux-coachbtn{
+  white-space: nowrap;
+}
+.lux-sugsNote{
+  padding: 6px 14px 0;
+  color:#475569;
+  font-size: 12px;
+}
+
 /* Buttons */
 .btn{
   border: none;

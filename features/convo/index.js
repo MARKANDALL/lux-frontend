@@ -45,7 +45,9 @@ export function bootConvo() {
 
     busy: false,
 
+    // Next practice (optional)
     nextActivity: null,
+    coach: { startTipShown: false, replyTipShown: false },
   };
 
   const next = consumeNextActivityPlan();
@@ -132,6 +134,8 @@ export function bootConvo() {
 
   const msgs = el("div", "lux-msgs");
   const sugs = el("div", "lux-sugs");
+  const sugsNote = el("div", "lux-sugsNote");
+  const coachBar = el("div", "lux-coachbar");
 
   const compose = el("div", "lux-compose");
   const input = document.createElement("textarea");
@@ -141,7 +145,7 @@ export function bootConvo() {
   const talkBtn = el("button", "btn primary", "🎙 Record");
   compose.append(input, talkBtn);
 
-  mid.append(midHd, msgs, sugs, compose);
+  mid.append(midHd, coachBar, msgs, sugsNote, sugs, compose);
   chatWrap.append(mid);
 
   // Knobs drawer
@@ -267,6 +271,42 @@ export function bootConvo() {
     msgs.scrollTop = msgs.scrollHeight;
   }
 
+  function targetsInline(plan) {
+    const ph = plan?.targets?.phoneme?.ipa ? `/${plan.targets.phoneme.ipa}/` : "";
+    const words = (plan?.targets?.words || []).map((x) => x.word).filter(Boolean).slice(0, 6);
+    const w = words.length ? words.join(", ") : "";
+    if (ph && w) return `${ph} · ${w}`;
+    return ph || w || "";
+  }
+
+  function showCoachCard({ title, body, meta, onDismiss }) {
+    coachBar.innerHTML = "";
+    const card = el("div", "lux-coachcard");
+    const left = el("div", "lux-coachtext");
+    left.append(el("strong", "", title), el("div", "", body));
+    if (meta) left.append(el("div", "lux-coachmeta", meta));
+    const btn = el("button", "btn ghost lux-coachbtn", "Got it");
+    btn.addEventListener("click", () => {
+      coachBar.innerHTML = "";
+      if (onDismiss) onDismiss();
+    });
+    card.append(left, btn);
+    coachBar.append(card);
+  }
+
+  function maybeShowStartTip() {
+    if (!state.nextActivity) return;
+    if (state.coach.startTipShown) return;
+    state.coach.startTipShown = true;
+    const t = targetsInline(state.nextActivity);
+    showCoachCard({
+      title: "Targeted practice loaded",
+      body:
+        "Tip: read BOTH parts out loud. The assistant lines are packed with your focus sound/words. Then click a suggested reply and record it.",
+      meta: t ? `Focus: ${t}` : "",
+    });
+  }
+
   function renderSuggestions(list) {
     sugs.innerHTML = "";
     (list || []).forEach((t) => {
@@ -277,6 +317,28 @@ export function bootConvo() {
       });
       sugs.append(b);
     });
+
+    // Tiny, always-light label (not overwhelming)
+    if (state.nextActivity && (list || []).length) {
+      const t = targetsInline(state.nextActivity);
+      sugsNote.textContent = t
+        ? `Suggested replies are tuned to: ${t}`
+        : "Suggested replies are tuned to your targets.";
+    } else {
+      sugsNote.textContent = "";
+    }
+
+    // First-turn coaching tip (shown once, only when suggestions first appear)
+    if (state.nextActivity && (list || []).length && !state.coach.replyTipShown) {
+      state.coach.replyTipShown = true;
+      const t = targetsInline(state.nextActivity);
+      showCoachCard({
+        title: "Recommended for best results",
+        body:
+          "This time, please use the suggested replies (at least for a few turns). They’re designed to include the sounds/words you need most.",
+        meta: t ? `Targets inside the suggestions: ${t}` : "",
+      });
+    }
   }
 
   // --- Convo flow (extracted) ---
@@ -342,11 +404,23 @@ export function bootConvo() {
   applySceneVisuals();
   renderDeck();
 
+  // If a Next Practice plan was stored, consume it once and keep in memory for this session.
+  try {
+    const plan = consumeNextActivityPlan();
+    if (plan) state.nextActivity = plan;
+  } catch (_) {}
+
   // Initial mode: hash (if present) wins, otherwise intro.
   const initialMode =
     normalizeMode(history.state?.luxConvo ? history.state.mode : location.hash) || "intro";
 
   setMode(initialMode, { replace: true, push: false });
+
+  // If we landed directly in chat (e.g., from "Generate my next practice"),
+  // show the start tip immediately.
+  if (state.mode === "chat" && state.nextActivity) {
+    maybeShowStartTip();
+  }
 
   window.addEventListener("popstate", (e) => {
     const m = normalizeMode(e.state?.luxConvo ? e.state.mode : location.hash);

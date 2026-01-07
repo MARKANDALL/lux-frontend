@@ -89,7 +89,10 @@ export function buildConvoTargetOverlay(plan) {
     "- Keep it a natural, friendly conversation.",
     "- Keep learner replies 1–2 sentences.",
     ph ? `- Increase density of the primary sound by favoring simple common words that contain ${ph}.` : "",
-    "- Each turn: return ONE assistant message and 3 suggested replies.",
-    "- If the learner avoids a word-bank word, ask once for a repeat using that word, then move on.",
+    "- Each turn: return ONE assistant message and EXACTLY 3 suggested replies.",
+    "- CRITICAL: Each suggested reply MUST include at least ONE word from the word bank (if provided).",
+    "- Prefer 2+ word-bank words per suggested reply when it still sounds natural.",
+    "- Also include word-bank words in the assistant message when it fits naturally.",
+    "- If the learner responds without using any word-bank word, ask ONCE for a retry that includes one specific word-bank word, then move on.",
   ].filter(Boolean).join("\n");
 }
