@@ -5,6 +5,11 @@ import { passages } from "../../src/data/passages.js";
 import { SCENARIOS } from "../convo/scenarios.js";
 import { openDetailsModal } from "./attempt-detail-modal.js";
 
+import {
+  buildNextActivityPlanFromModel,
+  saveNextActivityPlan,
+} from "../next-activity/next-activity.js";
+
 function scoreClass(score) {
   if (score >= 80) return "lux-pill--blue";
   if (score >= 60) return "lux-pill--yellow";
@@ -188,6 +193,7 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
           showActions
             ? `
           <div class="lux-progress-actions">
+            <button class="lux-pbtn" id="luxGenerateNextPractice">✨ Generate my next practice</button>
             <button class="lux-pbtn" id="luxDownloadReport">Download report</button>
             <button class="lux-pbtn lux-pbtn--ghost" id="luxDownloadTrouble">Download troubleshooting report</button>
           </div>
@@ -525,6 +531,16 @@ openDetailsModal(a, attemptOverallScore(a), attemptDateStr(a), {
 
   // Downloads (optional)
   if (showActions) {
+    const gen = document.getElementById("luxGenerateNextPractice");
+    if (gen) {
+      gen.addEventListener("click", () => {
+        const plan = buildNextActivityPlanFromModel(model, { source: "global" });
+        if (!plan) return;
+        saveNextActivityPlan(plan);
+        window.location.assign("./convo.html#chat");
+      });
+    }
+
     const dl = document.getElementById("luxDownloadReport");
     if (dl)
       dl.addEventListener("click", () => {

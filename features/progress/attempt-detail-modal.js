@@ -7,6 +7,11 @@ import { computeRollups } from "./rollups.js";
 import { esc, getColorConfig, mdToHtml, mean } from "./progress-utils.js";
 import { pickTS, pickPassageKey, pickSessionId, pickSummary, pickAzure } from "./attempt-pickers.js";
 
+import {
+  buildNextActivityPlanFromModel,
+  saveNextActivityPlan,
+} from "../next-activity/next-activity.js";
+
 function fmtDateTime(ts) {
   if (!ts) return "—";
   const d = new Date(ts);
@@ -342,7 +347,7 @@ export function openDetailsModal(attempt, overallScore, dateStr, ctx = {}) {
       <div style="margin-top:10px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
         <button id="luxPracticeAgainBtn"
           style="border:1px solid #cbd5e1; background:#fff; padding:8px 12px; border-radius:10px; font-weight:900; cursor:pointer; color:#0f172a;">
-          🔁 Practice again
+          ✨ Generate my next practice
         </button>
         ${
           isConvo
@@ -566,6 +571,20 @@ export function openDetailsModal(attempt, overallScore, dateStr, ctx = {}) {
   if (againBtn) {
     againBtn.addEventListener("click", (e) => {
       e.preventDefault();
+
+      const plan = buildNextActivityPlanFromModel(sessionModel, {
+        source: "session",
+        confidence: { level: confidenceLabel, hint: confidenceHint },
+      });
+
+      if (plan) {
+        saveNextActivityPlan(plan);
+        close();
+        window.location.assign("./convo.html#chat");
+        return;
+      }
+
+      // Fallback: old behavior if we don't have enough data
       close();
       window.location.assign(practiceHref);
     });

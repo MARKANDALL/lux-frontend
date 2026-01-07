@@ -6,6 +6,8 @@ import { convoReport } from "../../api/convo-report.js";
 import { saveAttempt } from "/src/api/index.js";
 import { warpSwap } from "../../ui/warp-core.js";
 
+import { consumeNextActivityPlan } from "../next-activity/next-activity.js";
+
 import { initSceneAtmo } from "./scene-atmo.js";
 import { wirePickerDeck } from "./picker-deck.js";
 import { wireConvoFlow } from "./convo-flow.js";
@@ -42,7 +44,17 @@ export function bootConvo() {
     chunks: [],
 
     busy: false,
+
+    nextActivity: null,
   };
+
+  const next = consumeNextActivityPlan();
+  if (next && next.kind === "ai_conversation") {
+    state.nextActivity = next;
+
+    // Choose a base scenario for variety (keeps passageKey pretty: convo:doctor, etc.)
+    state.scenarioIdx = Math.floor(Math.random() * SCENARIOS.length);
+  }
 
   // --- Layout (single stage) ---
   root.innerHTML = "";
@@ -284,6 +296,13 @@ export function bootConvo() {
     convoReport,
     showConvoReportOverlay,
   });
+
+  if (state.nextActivity) {
+    // Ensure we’re in chat mode and start immediately
+    warpSwap(() => setMode("chat", { replace: true, push: false }), { outMs: 120, inMs: 160 })
+      .then(() => startScenario())
+      .catch((e) => console.error("[NextPractice] auto-start failed", e));
+  }
 
   async function beginScenario() {
     await warpSwap(() => setMode("chat"), { outMs: 200, inMs: 240 });

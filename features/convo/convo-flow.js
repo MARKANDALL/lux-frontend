@@ -1,4 +1,6 @@
 // features/convo/convo-flow.js
+import { buildConvoTargetOverlay } from "../next-activity/next-activity.js";
+
 export function wireConvoFlow({
   SCENARIOS,
   state,
@@ -21,6 +23,16 @@ export function wireConvoFlow({
   convoReport,
   showConvoReportOverlay,
 }) {
+  function scenarioForTurn() {
+    const s = SCENARIOS[state.scenarioIdx];
+    const overlay = buildConvoTargetOverlay(state.nextActivity);
+    return {
+      id: s.id,
+      title: s.title,
+      desc: overlay ? `${s.desc}\n\n${overlay}` : s.desc,
+    };
+  }
+
   async function startScenario() {
     // reset convo
     state.messages = [];
@@ -28,11 +40,11 @@ export function wireConvoFlow({
     renderMessages();
     renderSuggestions([]);
 
-    const s = SCENARIOS[state.scenarioIdx];
+    const scenario = scenarioForTurn();
 
     // ask backend for opening line + suggestions
     const rsp = await convoTurn({
-      scenario: { id: s.id, title: s.title, desc: s.desc },
+      scenario,
       knobs: state.knobs,
       messages: [],
     });
@@ -127,8 +139,9 @@ export function wireConvoFlow({
     }
 
     // next AI response + suggestions
+    const scenario = scenarioForTurn();
     const rsp = await convoTurn({
-      scenario: { id: s.id, title: s.title, desc: s.desc },
+      scenario,
       knobs: state.knobs,
       messages: state.messages.slice(-24),
     });
