@@ -33,6 +33,25 @@ export function wireConvoFlow({
     };
   }
 
+  function showNetErrorBubble(err) {
+    const msg = err && err.message ? err.message : "Unknown error";
+
+    // Visible bubble, but keep it OUT of model history by using role:"system"
+    state.messages.push({
+      role: "system",
+      content: `⚠️ AI turn failed: ${msg}. Try again.`,
+    });
+    renderMessages();
+    renderSuggestions([]);
+  }
+
+  function modelMessagesSlice() {
+    // Never send "system" bubbles back to the model
+    return state.messages
+      .filter((m) => m.role === "assistant" || m.role === "user")
+      .slice(-24);
+  }
+
   async function startScenario() {
     // reset convo
     state.messages = [];
@@ -43,29 +62,15 @@ export function wireConvoFlow({
     const scenario = scenarioForTurn();
 
     // ask backend for opening line + suggestions
-    let rsp;
     try {
-      rsp = await convoTurn({ scenario, knobs: state.knobs, messages: [] });
+      const rsp = await convoTurn({ scenario, knobs: state.knobs, messages: [] });
+      state.messages.push({ role: "assistant", content: rsp.assistant });
+      renderMessages();
+      renderSuggestions(rsp.suggested_replies);
     } catch (err) {
       console.warn("[convo] startScenario failed", err);
-      state.messages.push({
-        role: "assistant",
-        content:
-          "⚠️ I couldn’t reach the AI service for the opening line. Please try again (refresh, or click Scenarios → Begin).",
-      });
-      state.suggestions = [
-        "Hi — can we try again?",
-        "Sorry, please repeat that.",
-        "Let’s restart the conversation.",
-      ];
-      renderMessages();
-      renderSuggestions();
-      return;
+      showNetErrorBubble(err);
     }
-
-    if (rsp?.assistant) state.messages.push({ role: "assistant", content: rsp.assistant });
-    renderMessages();
-    renderSuggestions(rsp?.suggested_replies || []);
   }
 
   // --- Recording helpers ---
@@ -156,27 +161,20 @@ export function wireConvoFlow({
     // next AI response + suggestions
     let rsp;
     try {
-      rsp = await convoTurn({ scenario, knobs: state.knobs, messages: state.messages });
+      rsp = await convoTurn({
+        scenario,
+        knobs: state.knobs,
+        messages: modelMessagesSlice(),
+      });
     } catch (err) {
       console.warn("[convo] convo-turn failed", err);
-      state.messages.push({
-        role: "assistant",
-        content:
-          "⚠️ I didn’t get a reply from the AI service. Please try that turn again (click a suggestion or press Record).",
-      });
-      state.suggestions = [
-        "Can we try that again?",
-        "Let’s repeat my last reply.",
-        "Restart this turn, please.",
-      ];
-      renderMessages();
-      renderSuggestions();
+      showNetErrorBubble(err);
       return;
     }
 
-    if (rsp?.assistant) state.messages.push({ role: "assistant", content: rsp.assistant });
+    state.messages.push({ role: "assistant", content: rsp.assistant });
     renderMessages();
-    renderSuggestions(rsp?.suggested_replies || []);
+    renderSuggestions(rsp.suggested_replies);
   }
 
   // --- Buttons ---

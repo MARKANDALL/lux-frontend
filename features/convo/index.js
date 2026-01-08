@@ -21,6 +21,7 @@ import {
 } from "./convo-shared.js";
 
 import { promptUserForAI } from "../../ui/ui-ai-ai-logic.js";
+import { norm } from "../../src/data/phonemes/core.js";
 
 export function bootConvo() {
   const root = document.getElementById("convoApp");
@@ -301,31 +302,55 @@ export function bootConvo() {
     return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 
+  // Normalize a token for comparisons (word-bank matching, focus testing).
+  function normToken(tok) {
+    let s = String(tok || "").trim().toLowerCase();
+    if (!s) return "";
+    s = s.replace(/^[^a-z0-9]+|[^a-z0-9]+$/g, ""); // trim edge punctuation
+    s = s.replace(/’/g, "'"); // curly apostrophe
+    s = s.replace(/'s$/g, ""); // possessive
+    return s;
+  }
+
   function makeFocusTester(ipa) {
-    const k = String(ipa || "").trim();
+    const k = norm(String(ipa || "").trim());
 
     // Return a function(word)->boolean, or null if we don't have safe spelling cues
-    // (When null, we trust model marks only; no validation/auto-mark)
+    // (When null, we do NOT attempt auto-marking; we may still accept model marks depending on renderer policy.)
     if (!k) return null;
 
+    // Common consonant cues (safe-ish). Expand later via your 47-phoneme map.
+    // NOTE: Some IPA symbols have multiple common representations (e.g., CH = ʧ or tʃ).
     const map = {
-      "f": (w) => /(?:f|ph|gh)/i.test(w), // far, flight, phone, laugh
-      "v": (w) => /v/i.test(w),
-      "θ": (w) => /th/i.test(w), // think
-      "ð": (w) => /th/i.test(w), // this
-      "ʃ": (w) => /sh/i.test(w), // she
-      "tʃ": (w) => /(?:ch|tch)/i.test(w), // chair, match
-      "dʒ": (w) => /(?:j|dge|dg)/i.test(w), // job, bridge
-      "ŋ": (w) => /ng/i.test(w), // sing
-      "ɹ": (w) => /(?:r|wr)/i.test(w),
-      "r": (w) => /(?:r|wr)/i.test(w),
-      "l": (w) => /l/i.test(w),
-
-      // /t/ is tricky, but “contains letter t and not -tion/-tial” is a decent guardrail
-      "t": (w) => /t/i.test(w) && !/(tion|tions|tial|tially|tious|tian)/i.test(w),
+      f: /(?:f|ph|gh)/i, // far, flight, phone, laugh
+      v: /v/i,
+      θ: /th/i, // think
+      ð: /th/i, // this
+      ʃ: /sh/i, // she
+      "tʃ": /(?:ch|tch)/i, // chair, match
+      "dʒ": /(?:j|dge|dg)/i, // job, bridge
+      ŋ: /ng/i, // sing
+      ɹ: /(?:r|wr)/i,
+      r: /(?:r|wr)/i,
+      l: /l/i,
+      // /t/ is tricky, but we need a practical rule so blue can exist.
+      // Accept most “t” spellings; avoid very common t→sh/ch patterns + a tiny silent-t denylist.
+      t: (word) => {
+        const s = normToken(word);
+        if (!s) return false;
+        if (!s.includes("t")) return false;
+        if (/(tion|tial|tious|ture)/i.test(s)) return false; // nation, special, future (often not /t/)
+        if (/stle$/i.test(s)) return false; // castle, whistle (t often silent)
+        if (/(listen|often)/i.test(s)) return false; // common silent-t words
+        return true;
+      },
     };
 
-    return map[k] || null;
+    const rule = map[k];
+    if (!rule) return null;
+    if (rule instanceof RegExp) return (word) => rule.test(String(word || ""));
+    if (typeof rule === "function") return rule;
+    return null;
   }
 
   function stripMarks(s) {
@@ -344,13 +369,18 @@ export function bootConvo() {
 
   function highlightHtml(text, opts = {}) {
     const raw = String(text || "");
-    const focusIpa = String(opts.focusIpa || "").trim();
+    const autoBlue = opts.autoBlue !== false;
+    const wb = targetWords().map((w) => String(w || "").trim()).filter(Boolean);
+    const wbSet = new Set(wb.map(normToken).filter(Boolean));
 
-    const wb = (opts.targetWords || targetWords())
-      .map((w) => String(w || "").trim())
-      .filter(Boolean);
+    const focusIpa = norm(state.nextActivity?.targets?.phoneme?.ipa || "");
+    const focusTester = focusIpa ? makeFocusTester(focusIpa) : null;
 
-    const wordSet = new Set(wb.map((w) => w.toLowerCase()));
+    const dbgOn = localStorage.getItem("lux.debugMarks") === "1";
+    const dbg =
+      dbgOn && autoBlue
+        ? { focusIpa, wbCount: wbSet.size, gotBlue: 0, okBlue: 0, badBlue: 0 }
+        : null;
 
     // Protect explicit marks so fallback word-bank highlighting can’t wrap inside them.
     const stash = [];
@@ -378,28 +408,101 @@ export function bootConvo() {
       .replace(/\u0001(\d+)\u0002/g, (_m, i) => `{~${stash[Number(i)]?.w ?? ""}~}`)
       .replace(/\u0003(\d+)\u0004/g, (_m, i) => `{^${stash[Number(i)]?.w ?? ""}^}`);
 
+    // AUTO-BLUE FALLBACK:
+    // If the model provided zero {^ ^}, inject up to 2 safe focus words.
+    // We only do this when we have a conservative focusTester (trust boundary).
+    if (autoBlue && focusTester && !/\{\^/.test(marked)) {
+      const STOP = new Set([
+        "the",
+        "a",
+        "an",
+        "and",
+        "or",
+        "but",
+        "to",
+        "of",
+        "in",
+        "on",
+        "for",
+        "at",
+        "by",
+        "with",
+        "as",
+        "is",
+        "are",
+        "was",
+        "were",
+        "be",
+        "been",
+        "being",
+        "i",
+        "you",
+        "he",
+        "she",
+        "we",
+        "they",
+        "it",
+        "this",
+        "that",
+        "these",
+        "those",
+        "my",
+        "your",
+        "his",
+        "her",
+        "our",
+        "their",
+      ]);
+
+      // Protect existing {~ ~} blocks so we don’t nest marks inside them.
+      const prot = [];
+      let scan = marked.replace(/\{~([^}]+)~\}/g, (m) => {
+        const i = prot.length;
+        prot.push(m);
+        return `\u0005${i}\u0006`;
+      });
+
+      let added = 0;
+      scan = scan.replace(/\b[A-Za-z][A-Za-z']*\b/g, (tok) => {
+        if (added >= 2) return tok;
+        const key = normToken(tok);
+        if (!key) return tok;
+        if (STOP.has(key)) return tok;
+        if (wbSet.has(key)) return tok; // word-bank handled separately (can become double-hit)
+        if (!focusTester(key)) return tok;
+        added++;
+        return `{^${tok}^}`;
+      });
+
+      marked = scan.replace(/\u0005(\d+)\u0006/g, (_m, i) => prot[Number(i)] || "");
+    }
+
     // Escape once, then convert marks to spans (no double-escaping).
     let html = escHtml(marked);
 
-    const tester = makeFocusTester(focusIpa);
-
-    // Yellow {~ ~}: only honor if it’s truly in the current word bank (strip invented marks).
+    // Only honor {~ ~} if it’s truly in the current word bank (prevents {~salad~}/{~fries~} nonsense).
     html = html.replace(/\{~([^}]+)~\}/g, (_m, w) => {
-      const clean = String(w).trim();
-      const norm = clean.toLowerCase();
-      if (wordSet.size && !wordSet.has(norm)) return clean; // strip invented yellow
-      return `<span class="lux-hl">${clean}</span>`;
+      const key = normToken(w);
+      if (!wbSet.has(key)) return w;
+      // Double-hit without requiring the model to mark {^ ^}:
+      if (focusTester && focusTester(key)) return `<span class="lux-hl lux-hl2">${w}</span>`;
+      return `<span class="lux-hl">${w}</span>`;
     });
 
-    // Blue {^ ^}: only honor if it matches the focus sound’s safe spelling cue (strip bogus blue).
-    // Also: if it’s ALSO a word-bank word, give it both classes (clean “double-hit”, no nesting).
+    // Blue: validate against focusTester when available. If invalid, strip highlight.
     html = html.replace(/\{\^([^}]+)\^\}/g, (_m, w) => {
-      const clean = String(w).trim();
-      if (tester && !tester(clean)) return clean;
-      const norm = clean.toLowerCase();
-      const cls = wordSet.has(norm) ? "lux-hl lux-hl2" : "lux-hl2";
-      return `<span class="${cls}">${clean}</span>`;
+      if (dbg) dbg.gotBlue++;
+      const key = normToken(w);
+      if (focusTester && !focusTester(key)) {
+        if (dbg) dbg.badBlue++;
+        return w;
+      }
+      if (dbg) dbg.okBlue++;
+      const cls = wbSet.has(key) ? "lux-hl lux-hl2" : "lux-hl2";
+      return `<span class="${cls}">${w}</span>`;
     });
+
+    if (dbg) console.debug("[Lux blue marks]", dbg);
 
     return html;
   }
@@ -412,7 +515,7 @@ export function bootConvo() {
 
     for (const m of state.messages) {
       const bubble = el("div", "msg " + (m.role === "user" ? "user" : "assistant"));
-      bubble.innerHTML = highlightHtml(m.content, { targetWords: wb, focusIpa });
+      bubble.innerHTML = highlightHtml(m.content, { autoBlue: m.role !== "user" });
       msgs.append(bubble);
     }
     msgs.scrollTop = msgs.scrollHeight;
@@ -462,7 +565,7 @@ export function bootConvo() {
       const raw = stripMarks(t);
       const b = el("button", "sug");
       b.dataset.raw = raw;
-      b.innerHTML = highlightHtml(t, { targetWords: wb, focusIpa });
+      b.innerHTML = highlightHtml(t, { autoBlue: true });
       b.addEventListener("click", () => {
         input.value = raw;
         input.focus();

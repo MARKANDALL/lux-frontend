@@ -1,6 +1,8 @@
 // features/next-activity/next-activity.js
 // Tiny glue: pick targets from rollups + store/consume a Next Activity plan.
 
+import { norm } from "../../src/data/phonemes/core.js";
+
 const KEY = "lux.nextActivity.v1";
 
 export function saveNextActivityPlan(plan) {
@@ -65,7 +67,9 @@ export function buildNextActivityPlanFromModel(model, opts = {}) {
 
 function pickPh(p) {
   return {
-    ipa: String(p.ipa || p.phoneme || p.id || ""),
+    // IMPORTANT: rollups may provide Azure codes (th/dh/ch/jh/iy/ax/etc).
+    // Normalize to canonical IPA so overlays + testers stay consistent.
+    ipa: norm(String(p.ipa || p.phoneme || p.id || "")),
     avg: num(p.avg),
     count: num(p.count),
     days: num(p.days),
@@ -95,7 +99,7 @@ function num(x) {
 export function buildConvoTargetOverlay(plan) {
   if (!plan || plan.kind !== "ai_conversation") return "";
 
-  const ph = plan?.targets?.phoneme?.ipa;
+  const ph = plan?.targets?.phoneme?.ipa ? norm(plan.targets.phoneme.ipa) : "";
   const topWords = getPlanTargetWords(plan).slice(0, 8);
 
   // Small hinting layer (optional, but helps precision for common IPA)
@@ -107,8 +111,13 @@ export function buildConvoTargetOverlay(plan) {
       "ɹ": "R (red, right, around)",
       "r": "R (red, right, around)",
       "ʃ": "SH (she, wish, fresh)",
+
+      // Affricates: handle both glyph styles
+      "tʃ": "CH (chair, teacher, lunch)",
       "ʧ": "CH (chair, teacher, lunch)",
+      "dʒ": "J (job, orange, giant)",
       "ʤ": "J (job, orange, giant)",
+
       "ŋ": "NG (sing, going, long)",
     };
     return map[k] || "";
@@ -151,7 +160,7 @@ export function buildConvoTargetOverlay(plan) {
       ? "- If a word-bank word ALSO contains the focus sound, prefer marking it as {^word^} (this creates a double-hit in Lux)."
       : "",
     "- Do NOT explain these rules.",
-    "- If the learner responds without using any word-bank word, ask ONCE for a retry that includes one specific word-bank word, then move on.",
+    "- If the learner responds without using any word-bank words, gently retry with a suggested reply that includes one specific word-bank word, then move on.",
   ];
 
   // Extra help for /t/ — keep targets unambiguous and easy to mark correctly
@@ -161,8 +170,8 @@ export function buildConvoTargetOverlay(plan) {
       "",
       "Extra rules for /t/:",
       "- Prefer CLEAR /t/ words where the /t/ is easy to hear (especially word-initial /t/).",
-      "- Safe /t/ words to use + mark often: {^time^}, {^take^}, {^talk^}, {^today^}, {^try^}, {^tell^}, {^ten^}, {^two^}, {^teacher^}, {^student^}, {^test^}, {^topic^}, {^tired^}, {^ticket^}.",
-      "- If you are unsure a word contains a true /t/ sound, choose a different word from the safe list."
+      "- Safe /t/ words to use + mark often: {^time^}, {^take^}, {^today^}, {^talk^}, {^team^}, {^teacher^}, {^student^}, {^test^}, {^topic^}, {^tired^}, {^ticket^}.",
+      "- If you are unsure a word really has a clear /t/, choose a different word."
     );
   }
 
