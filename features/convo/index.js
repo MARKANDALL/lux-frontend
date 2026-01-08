@@ -6,6 +6,7 @@ import { saveAttempt } from "/src/api/index.js";
 import { warpSwap } from "../../ui/warp-core.js";
 
 import { convoTurnWithUi } from "./convo-api.js";
+import { createConvoModeController } from "./convo-modes.js";
 
 import { consumeNextActivityPlan } from "../next-activity/next-activity.js";
 
@@ -192,53 +193,24 @@ export function bootConvo() {
 
   const { applySceneVisuals, setParallaxEnabled } = initSceneAtmo({ root, atmo, state });
 
-  const VALID_MODES = new Set(["intro", "picker", "chat"]);
-
-  function normalizeMode(m) {
-    const s = (m ?? "").toString().replace(/^#/, "");
-    return VALID_MODES.has(s) ? s : null;
-  }
-
-  function syncHistory(mode, push) {
-    try {
-      const url = `${location.pathname}${location.search}#${mode}`;
-      const st = { luxConvo: 1, mode };
-      if (push) history.pushState(st, "", url);
-      else history.replaceState(st, "", url);
-    } catch (_) {}
-  }
-
   function render() {}
-
-  function setMode(mode, opts = {}) {
-    const changed = state.mode !== mode;
-
-    state.mode = mode;
-    root.dataset.mode = mode;
-
-    // Used by lux-convo.css to gate drawers (TTS + SelfPB) until chat mode.
-    document.documentElement.dataset.luxConvoMode = mode;
-
-    // Parallax ONLY on intro screen.
-    setParallaxEnabled(mode === "intro");
-
-    // Keep knobs overlay from bleeding into intro/picker.
-    if (mode !== "chat") setKnobs(false);
-
-    // Browser back/forward steps: intro -> picker -> chat
-    if (opts.replace) {
-      syncHistory(mode, false);
-    } else if (opts.opts !== false && changed) {
-      syncHistory(mode, true);
-    }
-
-    render();
-  }
 
   function setKnobs(open) {
     state.knobsOpen = !!open;
     root.classList.toggle("knobs-open", state.knobsOpen);
   }
+
+  // Mode controller (extracted)
+  const modeCtl = createConvoModeController({
+    root,
+    state,
+    setParallaxEnabled,
+    setKnobs,
+    render,
+  });
+
+  const { normalizeMode, setMode } = modeCtl;
+  modeCtl.wirePopstate({ warpSwap });
 
   function warpToPicker() {
     // intro -> picker gets the warp treatment
@@ -436,10 +408,4 @@ export function bootConvo() {
   if (state.mode === "chat" && state.nextActivity) {
     coach.maybeShowStartTip();
   }
-
-  window.addEventListener("popstate", (e) => {
-    const m = normalizeMode(e.state?.luxConvo ? e.state.mode : location.hash);
-    if (!m) return;
-    warpSwap(() => setMode(m, { push: false }), { outMs: 140, inMs: 200 });
-  });
 }
