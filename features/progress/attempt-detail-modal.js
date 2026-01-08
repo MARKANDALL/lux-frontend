@@ -1,9 +1,8 @@
 // features/progress/attempt-detail-modal.js
 // Session "Attempt Details" modal (micro-report) used by Progress History drill-in.
 
-import { passages } from "../../src/data/passages.js";
-import { SCENARIOS } from "../convo/scenarios.js";
 import { computeRollups } from "./rollups.js";
+import { fmtDateTime, titleFromPassageKey } from "./attempt-detail/format.js";
 import { esc, getColorConfig, mdToHtml, mean } from "./progress-utils.js";
 import { pickTS, pickPassageKey, pickSessionId, pickSummary, pickAzure } from "./attempt-pickers.js";
 
@@ -11,29 +10,6 @@ import {
   buildNextActivityPlanFromModel,
   saveNextActivityPlan,
 } from "../next-activity/next-activity.js";
-
-function fmtDateTime(ts) {
-  if (!ts) return "—";
-  const d = new Date(ts);
-  return d.toLocaleString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-function titleFromPassageKey(pk = "") {
-  const s = String(pk);
-  if (s.startsWith("convo:")) {
-    const id = s.slice("convo:".length);
-    const hit = SCENARIOS.find((x) => x.id === id);
-    return hit ? `AI Conversation · ${hit.title}` : `AI Conversation · ${id}`;
-  }
-  const hit = passages?.[s];
-  return hit?.name || s || "Practice";
-}
 
 function attemptMetric(a, kind) {
   const sum = pickSummary(a) || {};
