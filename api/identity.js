@@ -6,6 +6,13 @@ const KEY = "LUX_USER_ID";
 // Legacy key that older code wrote to. We'll migrate + keep in sync for now.
 const LEGACY_KEY = "lux_user_id";
 
+function isUUID(u) {
+  const s = String(u || "").trim();
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    s
+  );
+}
+
 function makeUUID() {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
     return crypto.randomUUID();
@@ -21,7 +28,7 @@ function makeUUID() {
 }
 
 function looksValid(u) {
-  return typeof u === "string" && (/^[0-9a-f-]{18,}$/i.test(u) || u.length >= 6);
+  return isUUID(u);
 }
 
 /**

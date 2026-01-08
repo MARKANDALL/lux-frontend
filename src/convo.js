@@ -1,9 +1,14 @@
 // src/convo.js
+import { ensureUID } from "../api/identity.js";
+
 import { bootConvo } from "../features/convo/index.js";
 import { initAudioSink } from "../app-core/audio-sink.js";
 import { bootTTS } from "../features/features/tts/boot-tts.js";
 import { initConvoProgress } from "../features/convo/progress.js";
 import { initAuthUI } from "../ui/auth-dom.js";
+
+// 0. Initialize UID (single source of truth)
+ensureUID();
 
 // 1. Initialize the global audio handler
 initAudioSink();

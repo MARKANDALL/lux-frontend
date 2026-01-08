@@ -1,6 +1,8 @@
 // src/main.js
 // The Main Entry Point: Boots the app, handles the Typewriter, and wires the Dropdown.
 
+import { ensureUID } from "../api/identity.js";
+
 import { 
   wirePassageSelect, 
   wireNextBtn
@@ -39,6 +41,7 @@ import { initAuthUI } from '../ui/auth-dom.js';
 
 // Arrow trail (NEW)
 import { initArrowTrail } from "../ui/ui-arrow-trail.js";
+
 
 // --- VISUALS: Typewriter Effect --- 
 let typewriterTimeout; 
@@ -116,6 +119,9 @@ function startTypewriter() {
 // --- MAIN BOOT SEQUENCE --- 
 async function bootApp() {
   console.log("[Lux] Booting features...");
+
+  // 0. Initialize UID (single source of truth)
+  ensureUID();
 
   // 1. Initialize Audio Infrastructure
   initAudioSink();
