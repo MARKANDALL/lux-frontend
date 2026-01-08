@@ -1,34 +1,9 @@
 // helpers/core.js
-const LUX_KEY = "lux_user_id";
+import { getUID } from "../api/identity.js";
 
-function genUuidV4() {
-  if (typeof crypto !== "undefined" && crypto.getRandomValues) {
-    const b = crypto.getRandomValues(new Uint8Array(16));
-    b[6] = (b[6] & 0x0f) | 0x40;
-    b[8] = (b[8] & 0x3f) | 0x80;
-    const hex = Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
-    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(
-      12,
-      16
-    )}-${hex.slice(16, 20)}-${hex.slice(20)}`;
-  }
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0,
-      v = c === "x" ? r : (r & 3) | 8;
-    return v.toString(16);
-  });
-}
-
-let _luxId = null;
-try {
-  _luxId = localStorage.getItem(LUX_KEY) || genUuidV4();
-  localStorage.setItem(LUX_KEY, _luxId);
-} catch {
-  _luxId = genUuidV4();
-}
-
-export const LUX_USER_ID = _luxId;
-if (typeof window !== "undefined") window.LUX_USER_ID = _luxId;
+// Single source of truth for UID:
+// - api/identity.js owns generation + persistence + migration
+export const LUX_USER_ID = typeof window !== "undefined" ? getUID() : null;
 
 export function scoreClass(score) {
   if (score == null || Number.isNaN(+score)) return "";

@@ -3,6 +3,8 @@
 // Handles generation, persistence (localStorage), and global exposure.
 
 const KEY = "LUX_USER_ID";
+// Legacy key that older code wrote to. We'll migrate + keep in sync for now.
+const LEGACY_KEY = "lux_user_id";
 
 function makeUUID() {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
@@ -35,20 +37,39 @@ export function ensureUID() {
 
   const qs = new URLSearchParams(location.search);
   const fromQuery = (qs.get("uid") || "").trim();
-  const existing = window.LUX_USER_ID || localStorage.getItem(KEY) || "";
+
+  let fromKey = "";
+  let fromLegacy = "";
+  try {
+    fromKey = localStorage.getItem(KEY) || "";
+    fromLegacy = localStorage.getItem(LEGACY_KEY) || "";
+  } catch (_) {}
+
+  // Precedence (strongest → weakest):
+  // 1) ?uid= (explicit override)
+  // 2) localStorage KEY (canonical persisted)
+  // 3) window.LUX_USER_ID (runtime)
+  // 4) legacy localStorage key (migration)
+  const existingWin = (window.LUX_USER_ID || "").trim();
 
   const finalUID = looksValid(fromQuery)
     ? fromQuery
-    : looksValid(existing)
-    ? existing
+    : looksValid(fromKey)
+    ? fromKey
+    : looksValid(existingWin)
+    ? existingWin
+    : looksValid(fromLegacy)
+    ? fromLegacy
     : makeUUID();
 
   // Persist
   window.LUX_USER_ID = finalUID;
   try {
     localStorage.setItem(KEY, finalUID);
+    // Keep legacy in sync temporarily (so any straggler code still sees the same UID).
+    localStorage.setItem(LEGACY_KEY, finalUID);
   } catch (_) {}
-  
+
   // Set attribute for CSS/DOM queries
   document.documentElement.setAttribute("data-uid", finalUID);
 
