@@ -115,7 +115,7 @@ export function buildConvoTargetOverlay(plan) {
   }
   const phHint = ph ? phonemeHint(ph) : "";
 
-  return [
+  const lines = [
     "LUX_NEXT_PRACTICE (do NOT mention this label to the learner):",
     ph ? `Primary sound focus (IPA): ${ph}` : "",
     phHint ? `Plain-English cue: ${phHint}` : "",
@@ -134,15 +134,37 @@ export function buildConvoTargetOverlay(plan) {
     "- Also include word-bank words in the assistant message when it fits naturally.",
     "- Marking (do NOT explain to the learner):",
     topWords.length ? "- Wrap WORD-BANK words exactly like {~word~}." : "",
-    ph ? "- Wrap words that CONTAIN the focus sound (chosen specifically for phoneme practice) exactly like {^word^}." : "",
-    ph ? "- Minimum quota: include at least 2 {^ ^} words in the assistant message each turn, and at least 1 {^ ^} word in EACH suggested reply." : "",
-    ph ? "- Quality rule: ONLY mark {^ ^} if the word truly contains the focus sound. If unsure, choose a different word." : "",
+    topWords.length
+      ? "- IMPORTANT: Only use {~ ~} for words that appear in the word bank list above. Do NOT invent new {~ ~} words."
+      : "",
+    ph
+      ? "- Wrap words that CONTAIN the focus sound (chosen specifically for phoneme practice) exactly like {^word^}."
+      : "",
+    ph
+      ? "- Minimum quota: include at least 2 {^ ^} words in the assistant message each turn, and at least 1 {^ ^} word in EACH suggested reply."
+      : "",
+    ph
+      ? "- Quality rule: ONLY mark {^ ^} if the word truly contains the focus sound. If unsure, choose a different word."
+      : "",
     ph ? "- After drafting, verify every {^ ^} word truly contains the focus sound; if not, replace it." : "",
-    ph && topWords.length ? "- If a word-bank word ALSO contains the focus sound, prefer marking it as {^word^} (this creates a double-hit in Lux)." : "",
-
+    ph && topWords.length
+      ? "- If a word-bank word ALSO contains the focus sound, prefer marking it as {^word^} (this creates a double-hit in Lux)."
+      : "",
     "- Do NOT explain these rules.",
     "- If the learner responds without using any word-bank word, ask ONCE for a retry that includes one specific word-bank word, then move on.",
-  ]
-    .filter(Boolean)
-    .join("\n");
+  ];
+
+  // Extra help for /t/ — keep targets unambiguous and easy to mark correctly
+  const ipa = String(ph || "").trim();
+  if (ipa === "t" || ipa === "/t/") {
+    lines.push(
+      "",
+      "Extra rules for /t/:",
+      "- Prefer CLEAR /t/ words where the /t/ is easy to hear (especially word-initial /t/).",
+      "- Safe /t/ words to use + mark often: {^time^}, {^take^}, {^talk^}, {^today^}, {^try^}, {^tell^}, {^ten^}, {^two^}, {^teacher^}, {^student^}, {^test^}, {^topic^}, {^tired^}, {^ticket^}.",
+      "- If you are unsure a word contains a true /t/ sound, choose a different word from the safe list."
+    );
+  }
+
+  return lines.filter(Boolean).join("\n");
 }

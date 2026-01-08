@@ -1,6 +1,7 @@
 // features/convo/convo-shared.js
 import { ensureUID } from "../../api/index.js";
 import { computeRollups } from "../progress/rollups.js";
+import { promptUserForAI } from "../../ui/ui-ai-ai-logic.js";
 
 // --- Deck card sizing: make the CARD match the media's natural aspect ratio ---
 const _luxMediaMeta = new Map();
@@ -88,17 +89,72 @@ function chipRow(items) {
   `;
 }
 
-export function showConvoReportOverlay(report, ctx = {}) {
+function wireCoachTurnList(host, turns) {
+  const list = host?.querySelector("#luxConvoCoachTurnList");
+  if (!list) return;
+
+  const all = Array.isArray(turns) ? turns : [];
+  const shown = all.slice(-10); // keep it compact
+
+  if (!shown.length) {
+    list.innerHTML = `<div style="font-size:12px; opacity:0.85;">No turns saved for this session yet.</div>`;
+    return;
+  }
+
+  list.innerHTML = shown
+    .map((t, idx) => {
+      const has = !!t?.azureResult?.NBest?.[0];
+      const text = String(t?.userText || "").trim();
+      const label = text ? (text.length > 90 ? text.slice(0, 90) + "…" : text) : "(no text)";
+      const turnNum = Number.isFinite(t?.turn) ? (t.turn + 1) : (all.length - shown.length + idx + 1);
+
+      return `
+        <button data-i="${idx}" ${has ? "" : "disabled"} style="
+          text-align:left;
+          width: 100%;
+          appearance:none;
+          border: 1px solid rgba(255,255,255,0.10);
+          background: ${has ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.03)"};
+          color: ${has ? "#e5e7eb" : "rgba(229,231,235,0.55)"};
+          border-radius: 10px;
+          padding: 10px 12px;
+          cursor: ${has ? "pointer" : "not-allowed"};
+        ">
+          <div style="font-weight:800; margin-bottom:4px;">Coach Turn ${turnNum}</div>
+          <div style="font-size:12px; opacity:0.9;">${escapeHtml(label)}</div>
+        </button>
+      `;
+    })
+    .join("");
+
+  list.querySelectorAll("button[data-i]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const idx = Number(btn.getAttribute("data-i") || -1);
+      const t = shown[idx];
+      if (!t?.azureResult?.NBest?.[0]) return;
+
+      // Close overlay first so coach panel is visible
+      host.remove();
+
+      window.lastAttemptId = t.attemptId || null;
+      promptUserForAI(t.azureResult, t.userText || "", "universal");
+
+      document.getElementById("aiFeedbackSection")?.scrollIntoView?.({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  });
+}
+
+export function showConvoReportOverlay(report, turns = []) {
   let host = document.getElementById("luxConvoReportOverlay");
   const pretty = escapeHtml(JSON.stringify(report, null, 2));
 
-  const plan = ctx?.nextActivity || null;
-  const targetPh = plan?.targets?.phoneme?.ipa ? String(plan.targets.phoneme.ipa) : "";
-  const targetWords = uniqLower(
-    (plan?.targets?.words || []).map((w) => (w?.word ? w.word : w)).filter(Boolean)
-  );
+  const plan = null;
+  const targetPh = "";
+  const targetWords = [];
 
-  const turns = Array.isArray(ctx?.turns) ? ctx.turns : [];
   const said = new Set();
   for (const t of turns) {
     const ws = wordSetFromText(t?.userText || "");
@@ -110,8 +166,8 @@ export function showConvoReportOverlay(report, ctx = {}) {
   const baseTS = Date.now();
   const attempts = turns.map((t, i) => ({
     ts: baseTS - (turns.length - i) * 1000,
-    passage_key: ctx?.passageKey || "",
-    session_id: ctx?.sessionId || "",
+    passage_key: "",
+    session_id: "",
     text: t?.userText || "",
     azureResult: t?.azureResult || null,
   }));
@@ -170,9 +226,7 @@ export function showConvoReportOverlay(report, ctx = {}) {
     }
   }
 
-  const headerSub =
-    (ctx?.scenario?.title ? `Scenario: ${ctx.scenario.title}` : "") ||
-    (ctx?.passageKey ? `Session: ${ctx.passageKey}` : "");
+  const headerSub = "";
 
   if (!host) {
     host = document.createElement("div");
@@ -232,17 +286,34 @@ export function showConvoReportOverlay(report, ctx = {}) {
 
             <details style="border:1px solid rgba(255,255,255,0.10); background: rgba(255,255,255,0.03); border-radius: 14px; padding: 10px 12px;">
               <summary style="cursor:pointer; font-weight: 800;">Debug JSON</summary>
-              <pre id="luxConvoReportPre" style="
-                white-space: pre-wrap;
-                word-break: break-word;
-                font-size: 12px;
-                line-height: 1.35;
-                margin: 10px 0 0;
-                background: rgba(255,255,255,0.06);
-                border: 1px solid rgba(255,255,255,0.10);
-                padding: 12px;
-                border-radius: 12px;
-              ">${pretty}</pre>
+              <div style="padding: 12px 14px;">
+
+                <div style="
+                  margin: 0 0 12px 0;
+                  padding: 12px;
+                  border: 1px solid rgba(255,255,255,0.08);
+                  border-radius: 12px;
+                  background: rgba(255,255,255,0.04);
+                ">
+                  <div style="font-weight:800; margin-bottom:8px;">AI Coach</div>
+                  <div id="luxConvoCoachTurnList" style="display:flex; flex-direction:column; gap:8px;"></div>
+                  <div style="font-size:12px; opacity:0.85; margin-top:8px;">
+                    Choose a turn to coach (turns without analysis are disabled).
+                  </div>
+                </div>
+
+                <pre id="luxConvoReportPre" style="
+                  white-space: pre-wrap;
+                  word-break: break-word;
+                  font-size: 12px;
+                  line-height: 1.35;
+                  margin: 10px 0 0;
+                  background: rgba(255,255,255,0.06);
+                  border: 1px solid rgba(255,255,255,0.10);
+                  padding: 12px;
+                  border-radius: 12px;
+                ">${pretty}</pre>
+              </div>
             </details>
 
           </div>
@@ -253,10 +324,14 @@ export function showConvoReportOverlay(report, ctx = {}) {
     host.querySelector("#luxConvoReportClose")?.addEventListener("click", () =>
       host.remove()
     );
+
+    wireCoachTurnList(host, turns);
   } else {
     // If reusing existing overlay, just update Debug JSON block
     const pre = host.querySelector("#luxConvoReportPre");
     if (pre) pre.textContent = JSON.stringify(report, null, 2);
+
+    wireCoachTurnList(host, turns);
   }
 
   document.body.appendChild(host);

@@ -20,6 +20,8 @@ import {
   showConvoReportOverlay,
 } from "./convo-shared.js";
 
+import { promptUserForAI } from "../../ui/ui-ai-ai-logic.js";
+
 export function bootConvo() {
   const root = document.getElementById("convoApp");
   if (!root) return;
@@ -127,8 +129,9 @@ export function bootConvo() {
   const actions = el("div", "lux-actions");
   const scenBtn = el("button", "btn ghost", "Scenarios");
   const knobsBtn = el("button", "btn ghost", "Knobs");
+  const coachBtn = el("button", "btn ghost", "AI Coach");
   const endBtn = el("button", "btn danger", "End Session");
-  actions.append(scenBtn, knobsBtn, endBtn);
+  actions.append(scenBtn, knobsBtn, coachBtn, endBtn);
 
   midHd.append(titleWrap, actions);
 
@@ -248,6 +251,31 @@ export function bootConvo() {
     warpSwap(() => setMode("picker"), { outMs: 170, inMs: 220 })
   );
   knobsBtn.addEventListener("click", () => setKnobs(true));
+  coachBtn.addEventListener("click", () => {
+    const section = document.getElementById("aiFeedbackSection");
+    if (!section) {
+      alert("AI Coach mount not found (aiFeedbackSection).");
+      return;
+    }
+
+    // Find most recent analyzed turn
+    const t = [...(state.turns || [])]
+      .reverse()
+      .find((x) => x?.azureResult?.NBest?.[0]);
+
+    if (!t) {
+      alert("No analyzed turns yet. Record a reply first.");
+      return;
+    }
+
+    // Persist coaching onto THIS attempt (same mechanism as Practice Skills)
+    window.lastAttemptId = t.attemptId || null;
+
+    // For convo, referenceText == what the learner intended to say
+    promptUserForAI(t.azureResult, t.userText || "", "universal");
+
+    section.scrollIntoView?.({ behavior: "smooth", block: "start" });
+  });
   closeDrawer.addEventListener("click", () => setKnobs(false));
   scrim.addEventListener("click", () => setKnobs(false));
 
@@ -280,25 +308,24 @@ export function bootConvo() {
     // (When null, we trust model marks only; no validation/auto-mark)
     if (!k) return null;
 
-    // Common consonant cues (safe-ish). Expand later as needed.
     const map = {
-      f: /(?:f|ph|gh)/i, // far, flight, phone, laugh
-      v: /v/i,
-      θ: /th/i, // think
-      ð: /th/i, // this
-      ʃ: /sh/i, // she
-      "tʃ": /(?:ch|tch)/i, // chair, match
-      "dʒ": /(?:j|dge|dg)/i, // job, bridge
-      ŋ: /ng/i, // sing
-      ɹ: /(?:r|wr)/i,
-      r: /(?:r|wr)/i,
-      l: /l/i,
+      "f": (w) => /(?:f|ph|gh)/i.test(w), // far, flight, phone, laugh
+      "v": (w) => /v/i.test(w),
+      "θ": (w) => /th/i.test(w), // think
+      "ð": (w) => /th/i.test(w), // this
+      "ʃ": (w) => /sh/i.test(w), // she
+      "tʃ": (w) => /(?:ch|tch)/i.test(w), // chair, match
+      "dʒ": (w) => /(?:j|dge|dg)/i.test(w), // job, bridge
+      "ŋ": (w) => /ng/i.test(w), // sing
+      "ɹ": (w) => /(?:r|wr)/i.test(w),
+      "r": (w) => /(?:r|wr)/i.test(w),
+      "l": (w) => /l/i.test(w),
+
+      // /t/ is tricky, but “contains letter t and not -tion/-tial” is a decent guardrail
+      "t": (w) => /t/i.test(w) && !/(tion|tions|tial|tially|tious|tian)/i.test(w),
     };
 
-    const re = map[k];
-    if (!re) return null;
-
-    return (word) => re.test(String(word || ""));
+    return map[k] || null;
   }
 
   function stripMarks(s) {
@@ -315,85 +342,64 @@ export function bootConvo() {
       .filter(Boolean);
   }
 
-  function highlightHtml(text) {
-    const focus = state.nextActivity?.targets?.phoneme?.ipa || "";
-    const focusTest = makeFocusTester(focus);
+  function highlightHtml(text, opts = {}) {
+    const raw = String(text || "");
+    const focusIpa = String(opts.focusIpa || "").trim();
 
-    const tw = targetWords().slice().sort((a, b) => b.length - a.length);
-    const twSet = new Set(tw.map((w) => String(w).toLowerCase()));
+    const wb = (opts.targetWords || targetWords())
+      .map((w) => String(w || "").trim())
+      .filter(Boolean);
 
-    let marked = String(text || "");
+    const wordSet = new Set(wb.map((w) => w.toLowerCase()));
 
-    // B) Auto-wrap obvious focus words in {^ ^} (only when we have a tester)
-    if (focusTest) {
-      const markTokenRe = /(\{~[^}]+~\}|\{\^[^}]+\^\})/g;
-      marked = marked
-        .split(markTokenRe)
-        .map((part) => {
-          if (!part) return "";
-          if (part.startsWith("{~") || part.startsWith("{^")) return part;
-
-          // Wrap words that match the focus spelling cue
-          return part.replace(/\b([A-Za-z][A-Za-z']*)\b/g, (m, w) => {
-            return focusTest(w) ? `{^${w}^}` : m;
-          });
-        })
-        .join("");
-    }
-
-    // Auto-mark word-bank words ONLY in unmarked regions.
-    // This avoids wrapping inside spans / nested markup later.
-    if (tw.length) {
-      const anyTargetRe = new RegExp(`\\b(${tw.map(escapeRegExp).join("|")})\\b`, "gi");
-      const markTokenRe = /(\{~[^}]+~\}|\{\^[^}]+\^\})/g;
-      marked = marked
-        .split(markTokenRe)
-        .map((part) => {
-          if (!part) return "";
-          if (part.startsWith("{~") || part.startsWith("{^")) return part; // already marked
-          return part.replace(anyTargetRe, "{~$1~}");
-        })
-        .join("");
-    }
-
-    // Convert marks to HTML safely.
-    const tokenRe = /(\{~[^}]+~\}|\{\^[^}]+\^\})/g;
-
-    const html = marked
-      .split(tokenRe)
-      .map((part) => {
-        if (!part) return "";
-
-        // {~word~}
-        if (part.startsWith("{~")) {
-          const w = part.slice(2, -2); // inside {~ ~}
-          const cls = focusTest && focusTest(w) ? "lux-hl3" : "lux-hl";
-          return `<span class="${cls}">${escHtml(w)}</span>`;
-        }
-
-        // {^word^}
-        if (part.startsWith("{^")) {
-          const w = part.slice(2, -2); // inside {^ ^}
-          const word = String(w).trim();
-          const key = word.toLowerCase();
-
-          // If we have a safe tester, reject invalid {^ ^}
-          if (focusTest && !focusTest(word)) {
-            // If it's a bank word, keep yellow; else plain
-            return twSet.has(key)
-              ? `<span class="lux-hl">${escHtml(word)}</span>`
-              : escHtml(word);
-          }
-
-          // Valid phoneme-focus: if also bank word -> overlap class
-          const cls = twSet.has(key) ? "lux-hl3" : "lux-hl2";
-          return `<span class="${cls}">${escHtml(word)}</span>`;
-        }
-
-        // plain text
-        return escHtml(part);
+    // Protect explicit marks so fallback word-bank highlighting can’t wrap inside them.
+    const stash = [];
+    let marked = raw
+      .replace(/\{~([^}]+)~\}/g, (_m, w) => {
+        const i = stash.length;
+        stash.push({ t: "wb", w: String(w) });
+        return `\u0001${i}\u0002`;
       })
-      .join("");
+      .replace(/\{\^([^}]+)\^\}/g, (_m, w) => {
+        const i = stash.length;
+        stash.push({ t: "ph", w: String(w) });
+        return `\u0003${i}\u0004`;
+      });
+
+    // Fallback: wrap unmarked word-bank words with {~ ~} (so yellow still appears if the model forgets).
+    const tw = [...wb].sort((a, b) => b.length - a.length);
+    for (const w of tw) {
+      const re = new RegExp(`\\b(${escapeRegExp(w)})\\b`, "gi");
+      marked = marked.replace(re, "{~$1~}");
+    }
+
+    // Restore protected explicit marks
+    marked = marked
+      .replace(/\u0001(\d+)\u0002/g, (_m, i) => `{~${stash[Number(i)]?.w ?? ""}~}`)
+      .replace(/\u0003(\d+)\u0004/g, (_m, i) => `{^${stash[Number(i)]?.w ?? ""}^}`);
+
+    // Escape once, then convert marks to spans (no double-escaping).
+    let html = escHtml(marked);
+
+    const tester = makeFocusTester(focusIpa);
+
+    // Yellow {~ ~}: only honor if it’s truly in the current word bank (strip invented marks).
+    html = html.replace(/\{~([^}]+)~\}/g, (_m, w) => {
+      const clean = String(w).trim();
+      const norm = clean.toLowerCase();
+      if (wordSet.size && !wordSet.has(norm)) return clean; // strip invented yellow
+      return `<span class="lux-hl">${clean}</span>`;
+    });
+
+    // Blue {^ ^}: only honor if it matches the focus sound’s safe spelling cue (strip bogus blue).
+    // Also: if it’s ALSO a word-bank word, give it both classes (clean “double-hit”, no nesting).
+    html = html.replace(/\{\^([^}]+)\^\}/g, (_m, w) => {
+      const clean = String(w).trim();
+      if (tester && !tester(clean)) return clean;
+      const norm = clean.toLowerCase();
+      const cls = wordSet.has(norm) ? "lux-hl lux-hl2" : "lux-hl2";
+      return `<span class="${cls}">${clean}</span>`;
+    });
 
     return html;
   }
@@ -401,9 +407,12 @@ export function bootConvo() {
   // --- Chat rendering ---
   function renderMessages() {
     msgs.innerHTML = "";
+    const focusIpa = state.nextActivity?.targets?.phoneme?.ipa || "";
+    const wb = targetWords();
+
     for (const m of state.messages) {
       const bubble = el("div", "msg " + (m.role === "user" ? "user" : "assistant"));
-      bubble.innerHTML = highlightHtml(m.content);
+      bubble.innerHTML = highlightHtml(m.content, { targetWords: wb, focusIpa });
       msgs.append(bubble);
     }
     msgs.scrollTop = msgs.scrollHeight;
@@ -446,11 +455,14 @@ export function bootConvo() {
 
   function renderSuggestions(list) {
     sugs.innerHTML = "";
+    const focusIpa = state.nextActivity?.targets?.phoneme?.ipa || "";
+    const wb = targetWords();
+
     (list || []).forEach((t) => {
       const raw = stripMarks(t);
       const b = el("button", "sug");
       b.dataset.raw = raw;
-      b.innerHTML = highlightHtml(t);
+      b.innerHTML = highlightHtml(t, { targetWords: wb, focusIpa });
       b.addEventListener("click", () => {
         input.value = raw;
         input.focus();
@@ -492,6 +504,21 @@ export function bootConvo() {
     });
   });
 
+  // Patch 2: Visible error bubble instead of silent failure
+  async function convoTurnWithUi(payload) {
+    try {
+      return await convoTurn(payload, { timeoutMs: 25000, attempts: 2 });
+    } catch (err) {
+      return {
+        assistant:
+          "⚠️ I couldn’t get the next AI turn. " +
+          (err?.message ? `(${err.message}) ` : "") +
+          "Press Record again to retry.",
+        suggested_replies: ["Press Record again", "Try again", "Back to scenarios"],
+      };
+    }
+  }
+
   // --- Convo flow (extracted) ---
   const { startScenario } = wireConvoFlow({
     SCENARIOS,
@@ -502,7 +529,7 @@ export function bootConvo() {
     endBtn,
     renderMessages,
     renderSuggestions,
-    convoTurn,
+    convoTurn: convoTurnWithUi,
     assessPronunciation,
     saveAttempt,
     uid,

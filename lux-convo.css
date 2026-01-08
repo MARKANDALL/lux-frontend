@@ -1028,6 +1028,12 @@ body:has(#convoApp[data-mode="intro"]){
   font-weight: 900;
 }
 
+/* Double-hit (word-bank + phoneme-focus): blue base + yellow underline */
+.lux-hl.lux-hl2{
+  background: rgba(59, 130, 246, 0.28);
+  box-shadow: inset 0 -2px 0 rgba(250, 204, 21, 0.85);
+}
+
 /* Double-hit: word-bank + focus-sound at the same time
    Keep it "never overwhelming": reuse yellow, add a subtle blue inset outline. */
 .lux-hl3{

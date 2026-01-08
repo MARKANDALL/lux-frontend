@@ -9,6 +9,7 @@
 <script src="./vendor/wavesurfer-7.8.11.min.js"></script>
 
     <link rel="stylesheet" href="lux-layout.css" />
+    <link rel="stylesheet" href="lux-results.css" />
     <link rel="stylesheet" href="lux-convo.css" />
     <link rel="stylesheet" href="lux-progress.css" />
 
@@ -44,6 +45,11 @@
       </div>
 
       <div id="convoApp"></div>
+
+      <!-- AI Coach (reused from Practice Skills) -->
+      <div id="aiFeedbackSection" style="display:none; margin-top:16px;">
+        <div id="aiFeedback"></div>
+      </div>
     </div>
 
     <script type="module" src="./src/convo.js"></script>

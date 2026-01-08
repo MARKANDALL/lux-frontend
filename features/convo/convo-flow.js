@@ -43,11 +43,25 @@ export function wireConvoFlow({
     const scenario = scenarioForTurn();
 
     // ask backend for opening line + suggestions
-    const rsp = await convoTurn({
-      scenario,
-      knobs: state.knobs,
-      messages: [],
-    });
+    let rsp;
+    try {
+      rsp = await convoTurn({ scenario, knobs: state.knobs, messages: [] });
+    } catch (err) {
+      console.warn("[convo] startScenario failed", err);
+      state.messages.push({
+        role: "assistant",
+        content:
+          "⚠️ I couldn’t reach the AI service for the opening line. Please try again (refresh, or click Scenarios → Begin).",
+      });
+      state.suggestions = [
+        "Hi — can we try again?",
+        "Sorry, please repeat that.",
+        "Let’s restart the conversation.",
+      ];
+      renderMessages();
+      renderSuggestions();
+      return;
+    }
 
     if (rsp?.assistant) state.messages.push({ role: "assistant", content: rsp.assistant });
     renderMessages();
@@ -140,11 +154,25 @@ export function wireConvoFlow({
     }
 
     // next AI response + suggestions
-    const rsp = await convoTurn({
-      scenario,
-      knobs: state.knobs,
-      messages: state.messages.slice(-24),
-    });
+    let rsp;
+    try {
+      rsp = await convoTurn({ scenario, knobs: state.knobs, messages: state.messages });
+    } catch (err) {
+      console.warn("[convo] convo-turn failed", err);
+      state.messages.push({
+        role: "assistant",
+        content:
+          "⚠️ I didn’t get a reply from the AI service. Please try that turn again (click a suggestion or press Record).",
+      });
+      state.suggestions = [
+        "Can we try that again?",
+        "Let’s repeat my last reply.",
+        "Restart this turn, please.",
+      ];
+      renderMessages();
+      renderSuggestions();
+      return;
+    }
 
     if (rsp?.assistant) state.messages.push({ role: "assistant", content: rsp.assistant });
     renderMessages();
@@ -202,7 +230,7 @@ export function wireConvoFlow({
       });
 
       console.log("[Convo] convo-report result", report);
-      showConvoReportOverlay(report, {
+      showConvoReportOverlay(report, state.turns, {
         nextActivity: state.nextActivity || null,
         turns: Array.isArray(state.turns) ? state.turns : [],
         sessionId: state.sessionId,
