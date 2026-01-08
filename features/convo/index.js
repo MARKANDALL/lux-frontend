@@ -1,10 +1,11 @@
 // features/convo/index.js
 import { SCENARIOS } from "./scenarios.js";
-import { convoTurn } from "../../api/convo.js";
 import { assessPronunciation } from "../../api/assess.js";
 import { convoReport } from "../../api/convo-report.js";
 import { saveAttempt } from "/src/api/index.js";
 import { warpSwap } from "../../ui/warp-core.js";
+
+import { convoTurnWithUi } from "./convo-api.js";
 
 import { consumeNextActivityPlan } from "../next-activity/next-activity.js";
 
@@ -353,21 +354,6 @@ export function bootConvo() {
     }
 
     coach.noteSuggestionsRendered(list);
-  }
-
-  // Patch 2: Visible error bubble instead of silent failure
-  async function convoTurnWithUi(payload) {
-    try {
-      return await convoTurn(payload, { timeoutMs: 25000, attempts: 2 });
-    } catch (err) {
-      return {
-        assistant:
-          "⚠️ I couldn’t get the next AI turn. " +
-          (err?.message ? `(${err.message}) ` : "") +
-          "Press Record again to retry.",
-        suggested_replies: ["Press Record again", "Try again", "Back to scenarios"],
-      };
-    }
   }
 
   // --- Convo flow (extracted) ---
