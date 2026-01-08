@@ -22,6 +22,7 @@ import {
 
 import { promptUserForAI } from "../../ui/ui-ai-ai-logic.js";
 import { highlightHtml, stripMarks } from "./convo-highlight.js";
+import { createConvoCoach } from "./convo-coach.js";
 
 export function bootConvo() {
   const root = document.getElementById("convoApp");
@@ -145,6 +146,10 @@ export function bootConvo() {
   const input = document.createElement("textarea");
   input.className = "lux-in";
   input.placeholder = "Type or click a suggestion, then record your reply…";
+
+  // Coach controller (after coachBar + input exist)
+  const coach = createConvoCoach({ state, coachBar, input, el });
+  coach.wireTypeTip();
 
   const talkBtn = el("button", "btn primary", "🎙 Record");
   compose.append(input, talkBtn);
@@ -289,41 +294,6 @@ export function bootConvo() {
   stressSel.sel.addEventListener("change", () => (state.knobs.stress = stressSel.sel.value));
   paceSel.sel.addEventListener("change", () => (state.knobs.pace = paceSel.sel.value));
 
-  function targetsInline(plan) {
-    const ph = plan?.targets?.phoneme?.ipa ? `/${plan.targets.phoneme.ipa}/` : "";
-    const words = (plan?.targets?.words || []).map((x) => x.word).filter(Boolean).slice(0, 6);
-    const w = words.length ? words.join(", ") : "";
-    if (ph && w) return `${ph} · ${w}`;
-    return ph || w || "";
-  }
-
-  function showCoachCard({ title, body, meta, onDismiss }) {
-    const card = el("div", "lux-coachcard");
-    const left = el("div", "lux-coachtext");
-    left.append(el("strong", "", title), el("div", "", body));
-    if (meta) left.append(el("div", "lux-coachmeta", meta));
-    const btn = el("button", "btn ghost lux-coachbtn", "Got it");
-    btn.addEventListener("click", () => {
-      card.remove();
-      if (onDismiss) onDismiss();
-    });
-    card.append(left, btn);
-    coachBar.append(card);
-  }
-
-  function maybeShowStartTip() {
-    if (!state.nextActivity) return;
-    if (state.coach.startTipShown) return;
-    state.coach.startTipShown = true;
-    const t = targetsInline(state.nextActivity);
-    showCoachCard({
-      title: "Targeted practice loaded",
-      body:
-        "Tip: read BOTH parts out loud. The assistant lines are packed with your focus sound/words. Then click a suggested reply and record it.",
-      meta: t ? `Focus: ${t}` : "",
-    });
-  }
-
   // Helpers (for rendering / highlight inputs)
   function getWordBank() {
     return (state.nextActivity?.targets?.words || [])
@@ -374,7 +344,7 @@ export function bootConvo() {
 
     // Tiny, always-light label (not overwhelming)
     if (state.nextActivity && (list || []).length) {
-      const t = targetsInline(state.nextActivity);
+      const t = coach.targetsInline(state.nextActivity);
       sugsNote.textContent = t
         ? `Suggested replies are tuned to: ${t}`
         : "Suggested replies are tuned to your targets.";
@@ -382,29 +352,8 @@ export function bootConvo() {
       sugsNote.textContent = "";
     }
 
-    // First-turn coaching tip (shown once, only when suggestions first appear)
-    if (state.nextActivity && (list || []).length && !state.coach.replyTipShown) {
-      state.coach.replyTipShown = true;
-      const t = targetsInline(state.nextActivity);
-      showCoachCard({
-        title: "Recommended for best results",
-        body:
-          "This time, please use the suggested replies (at least for a few turns). They’re designed to include the sounds/words you need most.",
-        meta: t ? `Targets inside the suggestions: ${t}` : "",
-      });
-    }
+    coach.noteSuggestionsRendered(list);
   }
-
-  input.addEventListener("focus", () => {
-    if (!state.nextActivity) return;
-    if (state.coach.typeTipShown) return;
-    state.coach.typeTipShown = true;
-    showCoachCard({
-      title: "Quick note before typing",
-      body:
-        "The suggested replies are packed with the exact sounds/words Lux thinks you need most right now. You can still type your own, but you might accidentally skip the targeted practice if you do.",
-    });
-  });
 
   // Patch 2: Visible error bubble instead of silent failure
   async function convoTurnWithUi(payload) {
@@ -499,7 +448,7 @@ export function bootConvo() {
   // If we landed directly in chat (e.g., from "Generate my next practice"),
   // show the start tip immediately.
   if (state.mode === "chat" && state.nextActivity) {
-    maybeShowStartTip();
+    coach.maybeShowStartTip();
   }
 
   window.addEventListener("popstate", (e) => {
