@@ -1,4 +1,5 @@
 // features/progress/attempt-detail-modal.js
+// Orchestrator: builds session model + composes modal sections.
 // Session "Attempt Details" modal (micro-report) used by Progress History drill-in.
 
 import { computeRollups } from "./rollups.js";
@@ -11,6 +12,7 @@ import { buildAiCoachMemorySection } from "./attempt-detail/ai-coach-section.js"
 import { createAttemptDetailModalShell } from "./attempt-detail/modal-shell.js";
 import { wireAttemptDetailChipExplainers } from "./attempt-detail/chip-explainers.js";
 import { buildAttemptDetailHeader } from "./attempt-detail/header.js";
+import { buildTroubleSoundsSection, buildTroubleWordsSection } from "./attempt-detail/trouble-sections.js";
 import { esc, getColorConfig, mdToHtml, mean } from "./progress-utils.js";
 import { pickTS, pickPassageKey, pickSessionId, pickSummary } from "./attempt-pickers.js";
 
@@ -126,32 +128,10 @@ export function openDetailsModal(attempt, overallScore, dateStr, ctx = {}) {
   card.appendChild(header);
 
   // Trouble Sounds
-  const sounds = document.createElement("div");
-  sounds.style.cssText = "border-top: 1px solid #e2e8f0; padding-top: 12px; margin-top: 12px;";
-  sounds.innerHTML = `
-    <h4 style="margin:0 0 10px 0; font-size:0.95rem; color:#334155;">⚠️ Trouble Sounds</h4>
-    ${chipRowPhonemes(phItems)}
-    <div id="luxExplainSounds" style="margin-top:10px;" hidden></div>
-  `;
-  card.appendChild(sounds);
+  card.appendChild(buildTroubleSoundsSection(phItems));
 
   // Trouble Words
-  const words = document.createElement("div");
-  words.style.cssText = "border-top: 1px solid #e2e8f0; padding-top: 12px; margin-top: 12px;";
-  words.innerHTML = `
-    <h4 style="margin:0 0 10px 0; font-size:0.95rem; color:#334155;">⚠️ Trouble Words</h4>
-    ${chipRowWords(wdItems)}
-    <div id="luxExplainWords" style="margin-top:10px;" hidden></div>
-    ${
-      (wdItems || []).length
-        ? ""
-        : `<details style="margin-top:10px;">
-            <summary style="cursor:pointer; font-weight:900; color:#334155;">(Fallback) Focus words from latest attempt</summary>
-            <div style="margin-top:10px;">${focusWordsFallbackHtml}</div>
-          </details>`
-    }
-  `;
-  card.appendChild(words);
+  card.appendChild(buildTroubleWordsSection(wdItems, focusWordsFallbackHtml));
 
   // Attempts list (collapsed)
   card.appendChild(buildAttemptsListSection(list));
