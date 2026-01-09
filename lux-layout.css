@@ -245,6 +245,78 @@ select {
   text-decoration: none;
 }
 
+/* Base: same pill size/shape everywhere */
+.lux-navpill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: min(420px, 92vw);   /* SAME SIZE everywhere */
+  padding: 16px 30px;
+  font-size: 18px;
+  font-weight: 900;
+  text-decoration: none;
+  border-radius: 999px;
+  position: relative;
+  isolation: isolate;
+
+  color: #1f2a37;
+  background: rgba(255,255,255,0.98);
+  border: 1px solid rgba(0,0,0,0.10);
+  box-shadow: 0 12px 26px rgba(0,0,0,0.10);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.lux-navpill:hover { transform: translateY(-2px); }
+.lux-navpill:active { transform: translateY(0); }
+.lux-navpill:focus-visible { outline: 3px solid rgba(0,120,215,0.35); outline-offset: 3px; }
+
+/* Destination animation: “to AI Conversations” = rainbow ring */
+.lux-navpill--to-convo {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.lux-navpill--to-convo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: conic-gradient(
+    from 0deg,
+    #3b82f6, #a855f7, #ec4899, #f97316, #f59e0b, #22c55e, #3b82f6
+  );
+  animation: luxNavRingSpin var(--luxRingDur, 4.2s) linear infinite;
+  z-index: -2;
+}
+
+.lux-navpill--to-convo::after {
+  content: "";
+  position: absolute;
+  inset: 3px;               /* ring thickness */
+  border-radius: 999px;
+  background: rgba(255,255,255,0.98);
+  border: 1px solid rgba(0,0,0,0.10);
+  box-shadow: 0 12px 26px rgba(0,0,0,0.10);
+  z-index: -1;
+}
+
+@keyframes luxNavRingSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* Use on any CTA you want to match the AI Conversations pill size */
+.lux-cta-same {
+  width: min(420px, 92vw);   /* consistent “big button” width, responsive */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
 /* Ripple-ready: keeps filter effects from looking janky */
 [data-lux-ripple]{
   display: inline-block;
@@ -253,7 +325,8 @@ select {
 }
 
 /* Base button */
-a.lux-toplink-cta{
+a.lux-toplink-cta,
+button.lux-toplink-cta{
   padding: 16px 30px;
   font-size: 18px;
   font-weight: 900;
@@ -271,10 +344,16 @@ a.lux-toplink-cta{
 
   box-shadow: 0 12px 26px rgba(0,0,0,0.10);
   transition: transform 160ms ease, box-shadow 160ms ease;
+
+  /* important for button parity */
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
 }
 
 /* One-time “sun flash” glass sheen (interior only) */
-a.lux-toplink-cta::before{
+a.lux-toplink-cta::before,
+button.lux-toplink-cta::before{
   content: "";
   position: absolute;
   inset: 0;
@@ -300,7 +379,8 @@ a.lux-toplink-cta::before{
 }
 
 /* Outer glow halo (ring-only cutout) */
-a.lux-toplink-cta::after{
+a.lux-toplink-cta::after,
+button.lux-toplink-cta::after{
   content: "";
   position: absolute;
   inset: -22px;
@@ -336,7 +416,9 @@ a.lux-toplink-cta::after{
 
 /* Hover: crisp rotating ring + moving thickness hotspot + one-time sheen */
 a.lux-toplink-cta:hover,
-a.lux-toplink-cta:focus-visible{
+a.lux-toplink-cta:focus-visible,
+button.lux-toplink-cta:hover,
+button.lux-toplink-cta:focus-visible{
   transform: translateY(-1px) !important; /* override global a:hover */
   box-shadow: 0 16px 36px rgba(0,0,0,0.14) !important;
 
@@ -378,7 +460,9 @@ a.lux-toplink-cta:focus-visible{
 
 /* Start the halo + breathe it a bit */
 a.lux-toplink-cta:hover::after,
-a.lux-toplink-cta:focus-visible::after{
+a.lux-toplink-cta:focus-visible::after,
+button.lux-toplink-cta:hover::after,
+button.lux-toplink-cta:focus-visible::after{
   opacity: 0.80;
   filter: url(#luxCoronaFlare);
   animation:
@@ -387,7 +471,9 @@ a.lux-toplink-cta:focus-visible::after{
 
 /* Sheen runs ONCE per hover entry */
 a.lux-toplink-cta:hover::before,
-a.lux-toplink-cta:focus-visible::before{
+a.lux-toplink-cta:focus-visible::before,
+button.lux-toplink-cta:hover::before,
+button.lux-toplink-cta:focus-visible::before{
   opacity: 0.95;
   animation: luxGlassSweep 980ms ease-out 1;
 }
@@ -409,11 +495,17 @@ a.lux-toplink-cta:focus-visible::before{
 
 @media (prefers-reduced-motion: reduce){
   a.lux-toplink-cta:hover,
-  a.lux-toplink-cta:focus-visible{ animation: none; }
+  a.lux-toplink-cta:focus-visible,
+  button.lux-toplink-cta:hover,
+  button.lux-toplink-cta:focus-visible{ animation: none; }
   a.lux-toplink-cta:hover::before,
   a.lux-toplink-cta:focus-visible::before,
   a.lux-toplink-cta:hover::after,
-  a.lux-toplink-cta:focus-visible::after{ animation: none; }
+  a.lux-toplink-cta:focus-visible::after,
+  button.lux-toplink-cta:hover::before,
+  button.lux-toplink-cta:focus-visible::before,
+  button.lux-toplink-cta:hover::after,
+  button.lux-toplink-cta:focus-visible::after{ animation: none; }
 }
 
 #userMsg {
