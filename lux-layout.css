@@ -245,6 +245,13 @@ select {
   text-decoration: none;
 }
 
+/* Ripple-ready: keeps filter effects from looking janky */
+[data-lux-ripple]{
+  display: inline-block;
+  transform: translateZ(0); /* encourage GPU compositing */
+  will-change: filter;
+}
+
 /* Base button */
 a.lux-toplink-cta{
   padding: 16px 30px;

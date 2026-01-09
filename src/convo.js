@@ -6,6 +6,7 @@ import { initAudioSink } from "../app-core/audio-sink.js";
 import { bootTTS } from "../features/features/tts/boot-tts.js";
 import { initConvoProgress } from "../features/convo/progress.js";
 import { initAuthUI } from "../ui/auth-dom.js";
+import { bootRippleButtons } from "../ui/ui-ripple-filter.js";
 
 // 0. Initialize UID (single source of truth)
 ensureUID();
@@ -27,3 +28,6 @@ initAuthUI();
 // 5. Start the AI Conversation app
 bootConvo();
 initConvoProgress();
+
+// 6. Boot ripple buttons (safe here: script loads at end of body)
+bootRippleButtons();

@@ -138,6 +138,8 @@ html:not([data-lux-convo-mode="chat"]) #lux-auth-btn{
   max-width: none;
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
+}
+
 
   border-radius: 0;
   box-shadow: none;
@@ -146,7 +148,7 @@ html:not([data-lux-convo-mode="chat"]) #lux-auth-btn{
 
   --lux-par-bg: 7.5;
   --lux-par-img: 9.0;
-}
+
 
 /* Keep chat calmer */
 #convoApp[data-mode="chat"]{
@@ -159,7 +161,39 @@ html:not([data-lux-convo-mode="chat"]) #lux-auth-btn{
    NEW: Intro must be viewport-locked (no scroll / pan)
    ============================================================ */
 
-/* Lock page scrolling while intro is active (Edge supports :has()) */
+/* Lock page scrolling while intro is active (Edge supports :has()) */<svg>
+  <defs>       
+    <filter id="ripple-filter">                  
+      <feImage x="250" y="250" width="0%" height="0%" result="rippleImage" /> 
+      
+      <feDisplacementMap id="displacement-map"
+                         xChannelSelector="R" 
+                         yChannelSelector="G" 
+                         in="SourceGraphic" 
+                         in2="rippleImage"
+                         result="displacementMap"
+                         color-interpolation-filters="sRGB"
+                         scale="0" />
+
+      <feComposite operator="in" in2="rippleImage"></feComposite>
+    </filter>    
+  </defs>
+
+  <g id="logo">
+    <image id="logo-image" 
+           width="500" 
+           height="500" 
+           xlink:href="https://s3-us-west-2.amazonaws.com/s.cdpn.io/106114/greensock-logo.png" />
+
+    <image id="logo-overlay" 
+           width="500" 
+           height="500" 
+           xlink:href="https://s3-us-west-2.amazonaws.com/s.cdpn.io/106114/greensock-logo.png" 
+           filter="url(#ripple-filter)" />
+  </g> 
+</svg>
+
+
 html:has(#convoApp[data-mode="intro"]),
 body:has(#convoApp[data-mode="intro"]){
   height: 100%;
