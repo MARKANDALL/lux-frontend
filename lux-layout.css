@@ -794,7 +794,38 @@ input[type="radio"]:focus-visible,
   cursor: pointer;
 
   box-shadow: 0 10px 20px rgba(0,0,0,0.14);
-  transition: transform 140ms ease, opacity 160ms ease;
+  transition: box-shadow 160ms ease, background 160ms ease, transform 140ms ease, opacity 160ms ease;
+}
+
+/* Tips handle: NO movement on hover (halo + tint + shadow only) */
+button.lux-banner-handle:hover:not(:disabled):not(.lux-col-toggle),
+button.lux-banner-handle:focus-visible:not(:disabled):not(.lux-col-toggle) {
+  /* Override global hover translate/scale */
+  transform: translate(-50%, -50%) !important;
+  filter: none !important;
+
+  /* Halo + depth */
+  box-shadow:
+    0 10px 20px rgba(0,0,0,0.16),
+    0 0 0 3px rgba(0,120,215,0.22);
+
+  /* Tiny tint */
+  background: #eef6ff;
+}
+
+button.lux-banner-handle:active:not(:disabled):not(.lux-col-toggle) {
+  transform: translate(-50%, -50%) scale(0.96) !important;
+}
+
+button.lux-banner-handle .lux-banner-caret {
+  display: inline-block;
+  margin-left: 6px;
+  transition: transform 160ms ease;
+}
+
+button.lux-banner-handle:hover .lux-banner-caret,
+button.lux-banner-handle:focus-visible .lux-banner-caret {
+  transform: rotate(12deg);
 }
 
 .lux-banner-handle:active{
