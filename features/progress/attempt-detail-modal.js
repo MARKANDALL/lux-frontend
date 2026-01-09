@@ -9,6 +9,8 @@ import { computeConfidence, buildNextActions, buildFocusWordsFallbackHtml } from
 import { buildAttemptsListSection } from "./attempt-detail/attempts-section.js";
 import { buildAiCoachMemorySection } from "./attempt-detail/ai-coach-section.js";
 import { createAttemptDetailModalShell } from "./attempt-detail/modal-shell.js";
+import { wireAttemptDetailChipExplainers } from "./attempt-detail/chip-explainers.js";
+import { buildAttemptDetailHeader } from "./attempt-detail/header.js";
 import { esc, getColorConfig, mdToHtml, mean } from "./progress-utils.js";
 import { pickTS, pickPassageKey, pickSessionId, pickSummary } from "./attempt-pickers.js";
 
@@ -89,8 +91,6 @@ export function openDetailsModal(attempt, overallScore, dateStr, ctx = {}) {
   const confidenceLabel = confidence.label;
   const confidenceHint = confidence.hint;
 
-  const bigScoreColor = getColorConfig(pronAvg).color;
-
   // Derive next-action bullets from top priorities
   const nextActions = buildNextActions(trouble, title);
 
@@ -104,74 +104,25 @@ export function openDetailsModal(attempt, overallScore, dateStr, ctx = {}) {
   // Modal shell
   const { modal, card, close, mount } = createAttemptDetailModalShell();
 
-  // Header block
-  const header = document.createElement("div");
-  header.innerHTML = `
-    <div style="text-align:center; margin-bottom: 14px;">
-      <h3 style="margin:0; color:#1e293b; font-size:1.25rem;">Session Report</h3>
-      <div style="margin-top:6px; font-weight:900; color:#334155;">${esc(title)}</div>
-      <p style="margin:6px 0 0; color:#64748b; font-size:0.92rem;">
-        ${esc(mode)} · ${attemptsCount} attempt${attemptsCount === 1 ? "" : "s"}
-      </p>
+  const { header, againBtn, chooseBtn } = buildAttemptDetailHeader({
+    title,
+    mode,
+    attemptsCount,
+    tsMin,
+    tsMax,
+    fmtDateTime,
+    sid,
+    isNoSess,
+    dayGroup,
+    pronAvg,
+    list,
+    attemptMetric,
+    confidenceLabel,
+    confidenceHint,
+    nextActions,
+    isConvo,
+  });
 
-      <div style="margin-top:10px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
-        <button id="luxPracticeAgainBtn"
-          style="border:1px solid #cbd5e1; background:#fff; padding:8px 12px; border-radius:10px; font-weight:900; cursor:pointer; color:#0f172a;">
-          ✨ Generate my next practice
-        </button>
-        ${
-          isConvo
-            ? `<button id="luxChooseScenarioBtn"
-                style="border:1px solid #e2e8f0; background:#f8fafc; padding:8px 12px; border-radius:10px; font-weight:900; cursor:pointer; color:#334155;">
-                🗂️ Choose scenario
-              </button>`
-            : ``
-        }
-      </div>
-
-      <p style="margin:6px 0 0; color:#64748b; font-size:0.9rem;">
-        ${esc(fmtDateTime(tsMin))} → ${esc(fmtDateTime(tsMax))}
-      </p>
-
-      <p style="margin:6px 0 0; color:#64748b; font-size:0.9rem; font-weight:900;">
-        Confidence: ${esc(confidenceLabel)}
-        <span style="color:#94a3b8; font-weight:800;">· ${esc(confidenceHint)}</span>
-      </p>
-
-      <p style="margin:6px 0 0; color:#94a3b8; font-size:0.85rem; font-weight:800;">
-        ${
-          sid
-            ? isNoSess
-              ? `Grouped by day (no session id): ${esc(dayGroup)}`
-              : `Session: ${esc(sid)}`
-            : ""
-        }
-      </p>
-    </div>
-
-    <div style="display:flex; justify-content:center; margin-bottom: 14px;">
-      <div style="
-        width: 80px; height: 80px; border-radius: 50%;
-        border: 4px solid ${bigScoreColor};
-        display:flex; align-items:center; justify-content:center;
-        font-size: 1.5rem; font-weight: 900; color:#334155;
-      ">${Math.round(Number(pronAvg) || 0)}%</div>
-    </div>
-
-    <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px;">
-      ${pillKV("Acc", accAvg == null ? "—" : `${Math.round(accAvg)}%`)}
-      ${pillKV("Flu", fluAvg == null ? "—" : `${Math.round(fluAvg)}%`)}
-      ${pillKV("Comp", compAvg == null ? "—" : `${Math.round(compAvg)}%`)}
-      ${pillKV("Pro", prosAvg == null ? "—" : `${Math.round(prosAvg)}%`)}
-    </div>
-
-    <div style="border-top:1px solid #e2e8f0; padding-top: 12px;">
-      <h4 style="margin:0 0 10px 0; font-size:0.95rem; color:#334155;">✅ What to do next</h4>
-      <ul style="margin:0; padding-left:18px; color:#475569; line-height:1.55;">
-        ${nextActions.map((x) => `<li style="margin-bottom:6px;">${x}</li>`).join("")}
-      </ul>
-    </div>
-  `;
   card.appendChild(header);
 
   // Trouble Sounds
@@ -211,7 +162,6 @@ export function openDetailsModal(attempt, overallScore, dateStr, ctx = {}) {
 
   mount();
 
-  const againBtn = document.getElementById("luxPracticeAgainBtn");
   if (againBtn) {
     againBtn.addEventListener("click", (e) => {
       e.preventDefault();
@@ -228,13 +178,11 @@ export function openDetailsModal(attempt, overallScore, dateStr, ctx = {}) {
         return;
       }
 
-      // Fallback: old behavior if we don't have enough data
       close();
       window.location.assign(practiceHref);
     });
   }
 
-  const chooseBtn = document.getElementById("luxChooseScenarioBtn");
   if (chooseBtn) {
     chooseBtn.addEventListener("click", (e) => {
       e.preventDefault();
@@ -244,90 +192,5 @@ export function openDetailsModal(attempt, overallScore, dateStr, ctx = {}) {
   }
 
   // --- Inline micro-explainer wiring (click chip => explain below section) ---
-  const explainSounds = card.querySelector("#luxExplainSounds");
-  const explainWords = card.querySelector("#luxExplainWords");
-
-  let lastPick = ""; // `${kind}:${idx}`
-
-  function showExplain(kind, idx) {
-    const key = `${kind}:${idx}`;
-    const same = key === lastPick;
-    lastPick = same ? "" : key;
-
-    const panel = kind === "phoneme" ? explainSounds : explainWords;
-    const items = kind === "phoneme" ? phItems : wdItems;
-
-    if (!panel) return;
-
-    if (same) {
-      panel.innerHTML = "";
-      panel.setAttribute("hidden", "");
-      return;
-    }
-
-    const item = items[idx];
-    if (!item) return;
-
-    const avg = Math.round(Number(item.avg) || 0);
-    const count = Number(item.count) || 0;
-    const days = Number(item.days) || 1;
-    const pr = Number.isFinite(item.priority) ? item.priority.toFixed(2) : "—";
-
-    const label =
-      kind === "phoneme"
-        ? `Sound ${esc(item.ipa)}`
-        : `Word ${esc(item.word)}`;
-
-    const examples =
-      kind === "phoneme" && Array.isArray(item.examples) && item.examples.length
-        ? `<div style="margin-top:8px; color:#475569;"><span style="font-weight:900;">Examples:</span> ${esc(
-            item.examples.join(", ")
-          )}</div>`
-        : "";
-
-    panel.innerHTML = `
-      <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px;">
-        <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px;">
-          <div>
-            <div style="font-weight:900; color:#334155;">${label}</div>
-            <div style="margin-top:4px; color:#64748b; font-weight:800; font-size:0.92rem;">
-              Seen ${count}× · ${days} day(s) · Priority ${esc(pr)}
-            </div>
-          </div>
-          <div style="font-weight:900; color:#334155; border:1px solid #e2e8f0; background:#fff; border-radius:999px; padding:6px 10px;">
-            Avg ${avg}%
-          </div>
-        </div>
-        ${examples}
-        <div style="margin-top:10px; color:#64748b; font-size:0.92rem;">
-          <span style="font-weight:900;">Why it’s here:</span> low accuracy + repeated exposure (count/days) increases priority.
-        </div>
-      </div>
-    `;
-
-    panel.removeAttribute("hidden");
-    // keep it visible even if the user clicked near the bottom
-    try { panel.scrollIntoView({ block: "nearest" }); } catch (_) {}
-  }
-
-  function bindChip(chip) {
-    const kind = chip.getAttribute("data-kind");
-    const idx = Number(chip.getAttribute("data-idx"));
-    if (!kind || !Number.isFinite(idx)) return;
-
-    chip.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      showExplain(kind, idx);
-    });
-
-    chip.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        showExplain(kind, idx);
-      }
-    });
-  }
-
-  card.querySelectorAll(".lux-chip[data-kind][data-idx]").forEach(bindChip);
+  wireAttemptDetailChipExplainers(card, { phItems, wdItems });
 }
