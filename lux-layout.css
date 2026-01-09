@@ -273,7 +273,12 @@ select {
 .lux-navpill:active { transform: translateY(0); }
 .lux-navpill:focus-visible { outline: 3px solid rgba(0,120,215,0.35); outline-offset: 3px; }
 
-/* Destination animation: “to AI Conversations” = rainbow ring */
+/* ========================================================================
+   DISABLED: Destination animation “to AI Conversations” = rainbow ring
+   (The “windmill” system)
+   ======================================================================== */
+
+/*
 .lux-navpill--to-convo {
   background: transparent;
   border: none;
@@ -296,7 +301,7 @@ select {
 .lux-navpill--to-convo::after {
   content: "";
   position: absolute;
-  inset: 3px;               /* ring thickness */
+  inset: 3px;               ring thickness
   border-radius: 999px;
   background: rgba(255,255,255,0.98);
   border: 1px solid rgba(0,0,0,0.10);
@@ -307,6 +312,9 @@ select {
 @keyframes luxNavRingSpin {
   to { transform: rotate(360deg); }
 }
+*/
+
+
 
 /* Use on any CTA you want to match the AI Conversations pill size */
 .lux-cta-same {
