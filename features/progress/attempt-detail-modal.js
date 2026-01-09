@@ -8,6 +8,7 @@ import { pillKV, chipRowWords, chipRowPhonemes } from "./attempt-detail/chips.js
 import { computeConfidence, buildNextActions, buildFocusWordsFallbackHtml } from "./attempt-detail/derive.js";
 import { buildAttemptsListSection } from "./attempt-detail/attempts-section.js";
 import { buildAiCoachMemorySection } from "./attempt-detail/ai-coach-section.js";
+import { createAttemptDetailModalShell } from "./attempt-detail/modal-shell.js";
 import { esc, getColorConfig, mdToHtml, mean } from "./progress-utils.js";
 import { pickTS, pickPassageKey, pickSessionId, pickSummary } from "./attempt-pickers.js";
 
@@ -101,45 +102,7 @@ export function openDetailsModal(attempt, overallScore, dateStr, ctx = {}) {
   const focusWordsFallbackHtml = buildFocusWordsFallbackHtml(latestSum);
 
   // Modal shell
-  const modal = document.createElement("div");
-  modal.id = "lux-detail-modal";
-  modal.style.cssText = `
-    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-    background: rgba(0,0,0,0.5); z-index: 9999;
-    display: flex; align-items: center; justify-content: center;
-    backdrop-filter: blur(2px);
-  `;
-
-  const card = document.createElement("div");
-  card.style.cssText = `
-    background: white; width: 94%; max-width: 640px;
-    border-radius: 16px; padding: 22px;
-    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.18);
-    position: relative; max-height: 90vh; overflow-y: auto;
-  `;
-
-  const closeBtn = document.createElement("button");
-  closeBtn.innerHTML = "&times;";
-  closeBtn.style.cssText = `
-    position: absolute; top: 14px; right: 14px;
-    background: none; border: none; font-size: 1.6rem;
-    cursor: pointer; color: #94a3b8;
-  `;
-
-  function close() {
-    modal.remove();
-    document.removeEventListener("keydown", onKey);
-    try {
-      document.body.style.overflow = "";
-    } catch (_) {}
-  }
-
-  function onKey(e) {
-    if (e.key === "Escape") close();
-  }
-
-  closeBtn.onclick = close;
-  card.appendChild(closeBtn);
+  const { modal, card, close, mount } = createAttemptDetailModalShell();
 
   // Header block
   const header = document.createElement("div");
@@ -246,8 +209,7 @@ export function openDetailsModal(attempt, overallScore, dateStr, ctx = {}) {
   const aiCoachEl = buildAiCoachMemorySection(list);
   if (aiCoachEl) card.appendChild(aiCoachEl);
 
-  modal.appendChild(card);
-  document.body.appendChild(modal);
+  mount();
 
   const againBtn = document.getElementById("luxPracticeAgainBtn");
   if (againBtn) {
@@ -368,14 +330,4 @@ export function openDetailsModal(attempt, overallScore, dateStr, ctx = {}) {
   }
 
   card.querySelectorAll(".lux-chip[data-kind][data-idx]").forEach(bindChip);
-
-  try {
-    document.body.style.overflow = "hidden";
-  } catch (_) {}
-
-  document.addEventListener("keydown", onKey);
-
-  modal.onclick = (e) => {
-    if (e.target === modal) close();
-  };
 }
