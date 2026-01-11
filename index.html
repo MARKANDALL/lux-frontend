@@ -9,26 +9,26 @@
     <link rel="stylesheet" href="lux-layout.css" />
     <link rel="stylesheet" href="lux-onboarding.css" />
     <link rel="stylesheet" href="lux-popover.css" />
-    
-<link rel="stylesheet" href="lux-widgets.css" />
-<link rel="stylesheet" href="lux-results.css" />
-<link rel="stylesheet" href="lux-progress.css" />
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet" />
 
-<link rel="stylesheet" href="./features/features/tts-peekaboo.css" />
-<link rel="stylesheet" href="./features/features/tts/tts-overlay.css" />
-<link rel="stylesheet" href="./features/features/tts.css" />
+    <link rel="stylesheet" href="lux-widgets.css" />
+    <link rel="stylesheet" href="lux-results.css" />
+    <link rel="stylesheet" href="lux-progress.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet" />
 
-<link rel="stylesheet" href="./features/features/selfpb-peekaboo.css" />
-<link rel="stylesheet" href="./features/features/self-playback.css" />
-<link rel="stylesheet" href="./ui/ui-arrow-trail.css" />
-<link rel="stylesheet" href="./ui/warp.css" />    
+    <link rel="stylesheet" href="./features/features/tts-peekaboo.css" />
+    <link rel="stylesheet" href="./features/features/tts/tts-overlay.css" />
+    <link rel="stylesheet" href="./features/features/tts.css" />
+
+    <link rel="stylesheet" href="./features/features/selfpb-peekaboo.css" />
+    <link rel="stylesheet" href="./features/features/self-playback.css" />
+    <link rel="stylesheet" href="./ui/ui-arrow-trail.css" />
+    <link rel="stylesheet" href="./ui/warp.css" />
 
     <style id="lux-tts-guard-style">
       #tts-controls { display: none !important; }
     </style>
-    
-<script src="./vendor/wavesurfer-7.8.11.min.js"></script>
+
+    <script src="./vendor/wavesurfer-7.8.11.min.js"></script>
 
     <script type="importmap">
       {
@@ -48,12 +48,13 @@
       <div class="lux-top-banner-panel">
         <div class="lux-top-banner-inner">
           <div id="userMsg" aria-live="polite">
-
             <ol>
-              <li>We use and measure for standard American accents. Hear what it should sound like:
+              <li>
+                We use and measure for standard American accents. Hear what it should sound like:
                 <span class="lux-arrow-trail" data-arrow-trail="tts" aria-hidden="true"></span>
               </li>
-              <li>The more recordings you make, the better the feedback will be 🤔 💭 💡 😮:
+              <li>
+                The more recordings you make, the better the feedback will be 🤔 💭 💡 😮:
                 <span class="lux-cta" tabindex="0" aria-haspopup="dialog" aria-expanded="false">
                   database tracking
                   <span class="lux-pop" role="dialog" aria-label="Database tracking details">
@@ -83,42 +84,77 @@
       </div>
 
       <!-- This tab stays visible when collapsed -->
-<button type="button" class="lux-banner-handle" aria-label="Hide tips" title="Hide tips">
-  <span class="lux-banner-label">Tips</span>
-  <svg class="lux-banner-caret" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
-    <path d="M6 12l4-4 4 4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-  </svg>
-</button>
+      <button type="button" class="lux-banner-handle" aria-label="Hide tips" title="Hide tips">
+        <span class="lux-banner-label">Tips</span>
+        <svg class="lux-banner-caret" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+          <path
+            d="M6 12l4-4 4 4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </button>
     </div>
 
     <div id="container">
       <h2>Pronunciation Test</h2>
-      <div class="lux-toplinks lux-toplinks-cta">
-<a class="lux-toplink lux-toplink-cta lux-cta-same" href="./convo.html">AI Conversations</a>
-  AI Conversations
-</a>
 
+      <div class="lux-toplinks lux-toplinks-cta">
+        <a class="lux-toplink lux-toplink-cta lux-cta-same" href="./convo.html">AI Conversations</a>
       </div>
 
       <label>
         Select Passage:
         <select id="passageSelect" data-lux-browse-lessons>
           <option value="" disabled selected>Select Passage...</option>
+
+          <!-- Standard Passages -->
           <option value="rainbow">Rainbow Passage</option>
           <option value="grandfather">Grandfather Passage</option>
+          <option value="caterpillar">The Caterpillar</option>
+          <option value="hunterScript">The Hunter Script</option>
+          <option value="huntersStory">The Hunter’s Story</option>
+
+          <option value="arthurTheRat_p1">Arthur the Rat (Part 1)</option>
+          <option value="arthurTheRat_p2">Arthur the Rat (Part 2)</option>
+          <option value="arthurTheRat_p3">Arthur the Rat (Part 3)</option>
+
+          <option value="johnPassage">The John Passage</option>
+
+          <option value="commaGetsACure_p1">Comma Gets a Cure (Part 1)</option>
+          <option value="commaGetsACure_p2">Comma Gets a Cure (Part 2)</option>
+          <option value="commaGetsACure_p3">Comma Gets a Cure (Part 3)</option>
+          <option value="commaGetsACure_p4">Comma Gets a Cure (Part 4)</option>
+
+          <option value="northWindAndSun">The North Wind and the Sun</option>
+          <option value="bamboo">The Bamboo Passage</option>
+
+          <option disabled>-------------------</option>
+
+          <!-- Tests / Drills -->
           <option value="minLR">Phoneme Test: L vs R</option>
           <option value="minEEIH">Phoneme Test: EE vs IH</option>
           <option value="minAUAH">Phoneme Test: A vs U</option>
           <option value="wordList">Challenging Word List</option>
           <option value="sentences">Challenging Sentences</option>
           <option value="shortStory">Short Story Practice</option>
+
           <option disabled>-------------------</option>
+
           <option value="write-own">Write Your Own...</option>
           <option value="clear">Clear Text</option>
         </select>
-        <span id="partsInfoTip" class="tooltip" style="margin-left: 10px; cursor: pointer; display: inline-block !important;"> 
-            (?) 
-            <span class="tooltiptext">These texts are designed to cover most sounds in English.</span>
+
+        <span
+          id="partsInfoTip"
+          class="tooltip"
+          style="margin-left: 10px; cursor: pointer; display: inline-block !important;"
+        >
+          (?)
+          <span class="tooltiptext">These texts are designed to cover most sounds in English.</span>
         </span>
       </label>
 
@@ -141,6 +177,7 @@
       </label>
 
       <span id="suggestedSentence" style="display: none"></span>
+
       <label style="margin-top: 20px">
         <span id="typewriterMsg" style="display: block; margin-bottom: 0.7em"></span>
         <textarea id="referenceText" placeholder="Paste or type everything you’ll read here." rows="3"></textarea>
@@ -164,21 +201,38 @@
 
       <p id="status">Not recording</p>
       <div id="prettyResult"></div>
-      
- <div id="aiFeedbackSection"><div id="aiFeedback"></div></div>
-<button id="showMoreBtn" style="display: none; margin: 1em auto; padding: 0.7em 1.3em; font-size: 1em;">Show More</button>
 
-<!-- My Progress (mount target) -->
-<div id="dashboard-root"></div>
+      <div id="aiFeedbackSection"><div id="aiFeedback"></div></div>
+      <button id="showMoreBtn" style="display: none; margin: 1em auto; padding: 0.7em 1.3em; font-size: 1em;">
+        Show More
+      </button>
 
-      
+      <!-- My Progress (mount target) -->
+      <div id="dashboard-root"></div>
+
       <div id="ygPreview">
-        <video id="ygDemo" src="https://video.wixstatic.com/video/0d5d6f_5ae77fc4972248b38eb63ea25e5068fb/720p/mp4/file.mp4" style="width: 100%; height: 100%; display: block; object-fit: cover" muted playsinline loop autoplay></video>
+        <video
+          id="ygDemo"
+          src="https://video.wixstatic.com/video/0d5d6f_5ae77fc4972248b38eb63ea25e5068fb/720p/mp4/file.mp4"
+          style="width: 100%; height: 100%; display: block; object-fit: cover"
+          muted
+          playsinline
+          loop
+          autoplay
+        ></video>
         <div id="unmuteTip" style="display:none;">🔊 Click to unmute</div>
       </div>
-      
+
       <div id="phPreview">
-        <video id="phDemo" src="https://video.wixstatic.com/video/0d5d6f_e100780f16524e51bd9c8e49f1c8c71c/480p/mp4/file.mp4" style="width: 100%; height: 100%; display: block; object-fit: contain; background: #000;" muted playsinline loop preload="metadata"></video>
+        <video
+          id="phDemo"
+          src="https://video.wixstatic.com/video/0d5d6f_e100780f16524e51bd9c8e49f1c8c71c/480p/mp4/file.mp4"
+          style="width: 100%; height: 100%; display: block; object-fit: contain; background: #000;"
+          muted
+          playsinline
+          loop
+          preload="metadata"
+        ></video>
         <div id="phUnmuteTip" style="display:none;">🔊 Click to toggle audio</div>
       </div>
     </div>
@@ -193,12 +247,17 @@
       else bootTTS();
     </script>
 
-  
     <script>window.typeWriter = window.typeWriter || function () {};</script>
 
     <!-- Lux FX: “Corona flare” for the AI Conversations halo (Edge-safe: use url(#filter) ONLY in CSS) -->
-    <svg class="lux-fx" width="0" height="0" aria-hidden="true" focusable="false"
-         style="position:absolute; width:0; height:0; overflow:hidden">
+    <svg
+      class="lux-fx"
+      width="0"
+      height="0"
+      aria-hidden="true"
+      focusable="false"
+      style="position:absolute; width:0; height:0; overflow:hidden"
+    >
       <filter id="luxCoronaFlare" x="-70%" y="-70%" width="240%" height="240%" color-interpolation-filters="sRGB">
         <!-- Base “slow drift” noise -->
         <feTurbulence type="fractalNoise" baseFrequency="0.010" numOctaves="2" seed="9" result="n1">
