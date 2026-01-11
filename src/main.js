@@ -8,6 +8,8 @@ import {
   wireNextBtn
 } from '../features/passages/index.js';
 
+import { wireHarvardPicker } from "../features/harvard/index.js";
+
 import { 
   initLuxRecorder, 
   wireRecordingButtons 
@@ -129,6 +131,8 @@ async function bootApp() {
   // 2. Setup Passages
   wirePassageSelect();     
   wireNextBtn();           
+
+  wireHarvardPicker(); // ✅ new
 
   // 3. Setup Dropdown Logic
   const passageSelect = document.getElementById('passageSelect');

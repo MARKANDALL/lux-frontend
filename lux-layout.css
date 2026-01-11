@@ -28,6 +28,12 @@
   --rec-glow-strong: rgba(234, 179, 8, 0.92);
   --stripe-green-1: #34d399;
   --stripe-green-2: #059669;
+
+  /* --- 4. NAV PILL WATER HOVER (CTA polish) --- */
+  --lux-water-hover: #e9f6ff;        /* light water blue */
+  --lux-water-hover-2: #dff1ff;      /* slightly deeper for active */
+  --lux-water-border: rgba(0,120,215,0.28);
+  --lux-water-halo: rgba(0,120,215,0.16);
 }
 
 /* Core application styles */
@@ -263,14 +269,38 @@ select {
   background: rgba(255,255,255,0.98);
   border: 1px solid rgba(0,0,0,0.10);
   box-shadow: 0 12px 26px rgba(0,0,0,0.10);
-  transition: transform 160ms ease, box-shadow 160ms ease;
+  transition:
+    transform 160ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 200ms ease,
+    color 180ms ease,
+    filter 180ms ease;
   cursor: pointer;
   -webkit-appearance: none;
   appearance: none;
 }
 
-.lux-navpill:hover { transform: translateY(-2px); }
-.lux-navpill:active { transform: translateY(0); }
+/* Hover: water-blue wash */
+.lux-navpill:hover:not(:disabled){
+  transform: translateY(-2px);
+  background-color: var(--lux-water-hover);
+  border-color: var(--lux-water-border);
+  box-shadow:
+    0 14px 28px rgba(0,0,0,0.10),
+    0 0 0 3px var(--lux-water-halo);
+}
+
+/* Press: slightly deeper “dip” */
+.lux-navpill:active:not(:disabled){
+  transform: translateY(0);
+  background-color: var(--lux-water-hover-2);
+  border-color: rgba(0,120,215,0.34);
+  box-shadow:
+    0 10px 18px rgba(0,0,0,0.12),
+    0 0 0 3px rgba(0,120,215,0.12);
+}
+
 .lux-navpill:focus-visible { outline: 3px solid rgba(0,120,215,0.35); outline-offset: 3px; }
 
 /* ========================================================================
@@ -331,6 +361,11 @@ select {
   transform: translateZ(0); /* encourage GPU compositing */
   will-change: filter;
 }
+/* Don't let the ripple helper clobber navpill centering */
+.lux-navpill[data-lux-ripple]{
+  display: inline-flex;
+}
+
 
 /* Base button */
 a.lux-toplink-cta,
@@ -840,4 +875,3 @@ button.lux-banner-handle:active:not(:disabled){
 .lux-banner-handle:active{
   transform: translate(-50%, -50%) scale(0.96);
 }
-

@@ -13,7 +13,10 @@
     <link rel="stylesheet" href="lux-widgets.css" />
     <link rel="stylesheet" href="lux-results.css" />
     <link rel="stylesheet" href="lux-progress.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap"
+      rel="stylesheet"
+    />
 
     <link rel="stylesheet" href="./features/features/tts-peekaboo.css" />
     <link rel="stylesheet" href="./features/features/tts/tts-overlay.css" />
@@ -25,7 +28,9 @@
     <link rel="stylesheet" href="./ui/warp.css" />
 
     <style id="lux-tts-guard-style">
-      #tts-controls { display: none !important; }
+      #tts-controls {
+        display: none !important;
+      }
     </style>
 
     <script src="./vendor/wavesurfer-7.8.11.min.js"></script>
@@ -158,6 +163,22 @@
         </span>
       </label>
 
+      <!-- Harvard list picker (next to / below the main passage select) -->
+      <div class="lux-harvard-picker" aria-label="Harvard sentence list picker">
+        <span class="lux-harvard-label">Harvard</span>
+
+        <button id="harvardPrev" type="button">◀</button>
+
+        <label class="sr-only" for="harvardNum">Harvard list number</label>
+        <input id="harvardNum" type="number" min="1" max="72" step="1" value="1" />
+
+        <button id="harvardNext" type="button">▶</button>
+        <button id="harvardLoad" type="button">Load</button>
+        <button id="harvardRandom" type="button">🎲</button>
+
+        <span id="harvardLoaded" style="margin-left:10px; font-size: 13px; opacity: 0.75;"></span>
+      </div>
+
       <label style="display: block; margin-top: 14px">
         First language:
         <select id="l1Select" name="l1Select">
@@ -247,7 +268,9 @@
       else bootTTS();
     </script>
 
-    <script>window.typeWriter = window.typeWriter || function () {};</script>
+    <script>
+      window.typeWriter = window.typeWriter || function () {};
+    </script>
 
     <!-- Lux FX: “Corona flare” for the AI Conversations halo (Edge-safe: use url(#filter) ONLY in CSS) -->
     <svg
@@ -261,67 +284,76 @@
       <filter id="luxCoronaFlare" x="-70%" y="-70%" width="240%" height="240%" color-interpolation-filters="sRGB">
         <!-- Base “slow drift” noise -->
         <feTurbulence type="fractalNoise" baseFrequency="0.010" numOctaves="2" seed="9" result="n1">
-          <animate attributeName="baseFrequency" dur="8.0s" values="0.008;0.014;0.010" repeatCount="indefinite"/>
+          <animate attributeName="baseFrequency" dur="8.0s" values="0.008;0.014;0.010" repeatCount="indefinite" />
         </feTurbulence>
 
         <!-- Faster flicker noise (drives flare patches) -->
         <feTurbulence type="turbulence" baseFrequency="0.040" numOctaves="1" seed="4" result="n2">
-          <animate attributeName="baseFrequency" dur="1.35s" values="0.028;0.055;0.034" repeatCount="indefinite"/>
+          <animate attributeName="baseFrequency" dur="1.35s" values="0.028;0.055;0.034" repeatCount="indefinite" />
         </feTurbulence>
 
-        <feComposite in="n1" in2="n2" operator="arithmetic" k1="0" k2="0.78" k3="0.38" k4="0" result="noise"/>
+        <feComposite in="n1" in2="n2" operator="arithmetic" k1="0" k2="0.78" k3="0.38" k4="0" result="noise" />
 
         <!-- Thicken the ring a bit -->
-        <feMorphology in="SourceGraphic" operator="dilate" radius="2.8" result="fat"/>
+        <feMorphology in="SourceGraphic" operator="dilate" radius="2.8" result="fat" />
 
         <!-- Extract just the outer rim so flares feel like they come from the edge -->
-        <feMorphology in="fat" operator="erode" radius="4.4" result="inner"/>
-        <feComposite in="fat" in2="inner" operator="out" result="rim"/>
+        <feMorphology in="fat" operator="erode" radius="4.4" result="inner" />
+        <feComposite in="fat" in2="inner" operator="out" result="rim" />
 
         <!-- Turn noise into an alpha “flare mask” with high contrast (patchy, not uniform) -->
-        <feColorMatrix in="noise" type="luminanceToAlpha" result="noiseA"/>
+        <feColorMatrix in="noise" type="luminanceToAlpha" result="noiseA" />
         <feComponentTransfer in="noiseA" result="flareMask">
           <!-- table values = threshold-ish; tweak middle to change how “spotty” it is -->
-          <feFuncA type="table" tableValues="0 0 0 0.05 0.18 0.75 1 1"/>
+          <feFuncA type="table" tableValues="0 0 0 0.05 0.18 0.75 1 1" />
         </feComponentTransfer>
 
         <!-- Keep only rim segments selected by the flare mask -->
-        <feComposite in="rim" in2="flareMask" operator="in" result="flareRim"/>
+        <feComposite in="rim" in2="flareMask" operator="in" result="flareRim" />
 
         <!-- Throw those segments outward with stronger displacement -->
-        <feDisplacementMap in="flareRim" in2="noise" scale="62"
-                           xChannelSelector="R" yChannelSelector="G" result="flareDisp">
-          <animate attributeName="scale" dur="1.55s" values="32;72;38;66;34" repeatCount="indefinite"/>
+        <feDisplacementMap
+          in="flareRim"
+          in2="noise"
+          scale="62"
+          xChannelSelector="R"
+          yChannelSelector="G"
+          result="flareDisp"
+        >
+          <animate attributeName="scale" dur="1.55s" values="32;72;38;66;34" repeatCount="indefinite" />
         </feDisplacementMap>
 
         <!-- Base wobble for the whole halo (subtler than the flares) -->
-        <feDisplacementMap in="fat" in2="noise" scale="22"
-                           xChannelSelector="R" yChannelSelector="G" result="baseDisp">
-          <animate attributeName="scale" dur="2.6s" values="14;28;18;24;16" repeatCount="indefinite"/>
+        <feDisplacementMap in="fat" in2="noise" scale="22" xChannelSelector="R" yChannelSelector="G" result="baseDisp">
+          <animate attributeName="scale" dur="2.6s" values="14;28;18;24;16" repeatCount="indefinite" />
         </feDisplacementMap>
 
         <!-- Bloom layers -->
-        <feGaussianBlur in="baseDisp" stdDeviation="10.5" result="baseGlow"/>
+        <feGaussianBlur in="baseDisp" stdDeviation="10.5" result="baseGlow" />
         <feGaussianBlur in="flareDisp" stdDeviation="16.0" result="flareGlow">
-          <animate attributeName="stdDeviation" dur="1.6s" values="12;19;13;18;12" repeatCount="indefinite"/>
+          <animate attributeName="stdDeviation" dur="1.6s" values="12;19;13;18;12" repeatCount="indefinite" />
         </feGaussianBlur>
 
         <feMerge result="merged">
-          <feMergeNode in="baseGlow"/>
-          <feMergeNode in="flareGlow"/>
+          <feMergeNode in="baseGlow" />
+          <feMergeNode in="flareGlow" />
         </feMerge>
 
         <!-- Punch: saturation + alpha lift -->
-        <feColorMatrix in="merged" type="saturate" values="1.75" result="sat"/>
-        <feColorMatrix in="sat" type="matrix"
+        <feColorMatrix in="merged" type="saturate" values="1.75" result="sat" />
+        <feColorMatrix
+          in="sat"
+          type="matrix"
           values="1 0 0 0 0
                   0 1 0 0 0
                   0 0 1 0 0
-                  0 0 0 1.85 -0.24" result="out"/>
+                  0 0 0 1.85 -0.24"
+          result="out"
+        />
 
         <feMerge>
-          <feMergeNode in="out"/>
-          <feMergeNode in="sat"/>
+          <feMergeNode in="out" />
+          <feMergeNode in="sat" />
         </feMerge>
       </filter>
     </svg>
