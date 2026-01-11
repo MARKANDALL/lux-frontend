@@ -50,10 +50,11 @@ export function buildAttemptDetailHeader({
       </p>
 
       <div style="margin-top:10px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
-        <button id="luxPracticeAgainBtn"
-          style="border:1px solid #cbd5e1; background:#fff; padding:8px 12px; border-radius:10px; font-weight:900; cursor:pointer; color:#0f172a;">
-          ✨ Generate my next practice
-        </button>
+<button id="luxPracticeAgainBtn" data-lux-generate-next
+  style="border:1px solid #cbd5e1; background:#fff; padding:8px 12px; border-radius:10px; font-weight:900; cursor:pointer; color:#0f172a;">
+  ✨ Generate my next practice
+</button>
+
         ${
           isConvo
             ? `<button id="luxChooseScenarioBtn"

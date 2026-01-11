@@ -193,7 +193,9 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
           showActions
             ? `
           <div class="lux-progress-actions">
-            <button class="lux-pbtn" id="luxGenerateNextPractice">✨ Generate my next practice</button>
+<button class="lux-pbtn" id="luxGenerateNextPractice" data-lux-generate-next>
+  ✨ Generate my next practice
+</button>
             <button class="lux-pbtn" id="luxDownloadReport">Download report</button>
             <button class="lux-pbtn lux-pbtn--ghost" id="luxDownloadTrouble">Download troubleshooting report</button>
           </div>

@@ -30,8 +30,11 @@ import { onLanguageChanged } from '../ui/ui-ai-ai-logic.js';
 // Lazy-load controller for the Self-Playback drawer
 import "../features/features/08-selfpb-peekaboo.js";
 
-// Onboarding
-import '/ui/ui-shell-onboarding.js';
+// Onboarding (TEMPORARILY OFF: old tour disabled while we build new onboarding)
+// import '/ui/ui-shell-onboarding.js';
+
+// NEW: New onboarding deck boot
+import { maybeShowOnboarding } from "../features/onboarding/lux-onboarding.js";
 
 // Dashboard
 import { initDashboard } from '../features/dashboard/index.js'; 
@@ -214,6 +217,9 @@ async function bootApp() {
   
   // 8. Boot Authentication
   initAuthUI();
+
+  // 9. Boot New Onboarding Deck (CSS is loaded via index.html <link>)
+  maybeShowOnboarding();
   
   console.log("[Lux] App fully initialized.");
 }
