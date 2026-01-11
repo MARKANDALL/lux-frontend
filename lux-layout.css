@@ -840,5 +840,4 @@ button.lux-banner-handle:active:not(:disabled){
 .lux-banner-handle:active{
   transform: translate(-50%, -50%) scale(0.96);
 }
-/* TEMP: kill old onboarding overlay so it can't affect layout */
-#onboardingOverlay { display: none !important; }
+
