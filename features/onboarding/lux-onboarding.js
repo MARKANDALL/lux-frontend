@@ -153,6 +153,19 @@ function showOnboarding() {
 
   btnPrimary.addEventListener("click", async () => {
     const step = STEPS[state.i];
+
+    // SPECIAL CASE:
+    // Mic step primary is "requestMic" initially, but once ready it should act like Next.
+    if (step.key === "mic" && state.mic.ready) {
+      if (state.i < STEPS.length - 1) {
+        state.i++;
+        render();
+      } else {
+        close(true);
+      }
+      return;
+    }
+
     if (step.primary?.action) {
       await runAction(step.primary.action);
       return;
@@ -171,7 +184,8 @@ function showOnboarding() {
     switch (action) {
       case "requestMic":
         await requestMic(state, card);
-        // After requesting mic, we do NOT auto-advance; user sees success state.
+        // Re-render so the primary button becomes "Next" when mic is ready
+        render();
         break;
 
       case "samplePhrase":
@@ -240,13 +254,13 @@ function showOnboarding() {
     btnPrimary.classList.toggle("is-success", false);
     btnPrimary.disabled = false;
 
-    // If mic already ready and we are on mic step, show success style
+    // If mic is ready on mic step, allow Next
     if (step.key === "mic" && state.mic.ready) {
-      btnPrimary.textContent = "Mic ready ✓";
-      btnPrimary.classList.add("is-success");
-      btnPrimary.disabled = true;
+      btnPrimary.textContent = "Next";
+      btnPrimary.disabled = false;
+      btnPrimary.classList.remove("is-success");
       const msg = card.querySelector("#luxOnbMicMsg");
-      if (msg) msg.textContent = "Great — try speaking and watch the meter jump.";
+      if (msg) msg.textContent = "Mic ready ✓ Try speaking — you should see the meter move.";
     }
 
     // Always keep skip in top-right
@@ -294,10 +308,9 @@ async function requestMic(state, card) {
     setupAnalyser(state);
     resumeMeterIfPossible(state, card);
 
-    // Turn button green + lock
-    stepPrimary.textContent = "Mic ready ✓";
+    // Keep it clickable (render() will convert to "Next" on success)
     stepPrimary.classList.add("is-success");
-    stepPrimary.disabled = true;
+    stepPrimary.disabled = false;
   } catch (err) {
     state.mic.ready = false;
 
