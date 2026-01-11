@@ -797,37 +797,48 @@ input[type="radio"]:focus-visible,
   transition: box-shadow 160ms ease, background 160ms ease, transform 140ms ease, opacity 160ms ease;
 }
 
-/* Tips handle: NO movement on hover (halo + tint + shadow only) */
-button.lux-banner-handle:hover:not(:disabled):not(.lux-col-toggle),
-button.lux-banner-handle:focus-visible:not(:disabled):not(.lux-col-toggle) {
-  /* Override global hover translate/scale */
-  transform: translate(-50%, -50%) !important;
-  filter: none !important;
-
-  /* Halo + depth */
-  box-shadow:
-    0 10px 20px rgba(0,0,0,0.16),
-    0 0 0 3px rgba(0,120,215,0.22);
-
-  /* Tiny tint */
-  background: #eef6ff;
+/* Make layout stable + allow icon sizing */
+.lux-banner-handle{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  line-height: 1; /* helps icon alignment */
 }
 
-button.lux-banner-handle:active:not(:disabled):not(.lux-col-toggle) {
-  transform: translate(-50%, -50%) scale(0.96) !important;
-}
-
-button.lux-banner-handle .lux-banner-caret {
+/* Bigger, crisp caret that inherits text color (stays dark) */
+.lux-banner-caret{
+  width: 16px;
+  height: 16px;
   display: inline-block;
-  margin-left: 6px;
+  transform-origin: 50% 50%;
   transition: transform 160ms ease;
 }
 
+/* Tips handle: lock hitbox (no hover motion), halo + tint */
+button.lux-banner-handle:hover:not(:disabled),
+button.lux-banner-handle:focus-visible:not(:disabled){
+  transform: translate(-50%, -50%) !important; /* cancels global hover translate/scale */
+  filter: none !important;
+
+  background: #eef6ff;
+  box-shadow:
+    0 10px 20px rgba(0,0,0,0.16),
+    0 0 0 3px rgba(0,120,215,0.22);
+}
+
+/* Caret cue only (subtle) */
 button.lux-banner-handle:hover .lux-banner-caret,
-button.lux-banner-handle:focus-visible .lux-banner-caret {
+button.lux-banner-handle:focus-visible .lux-banner-caret{
   transform: rotate(12deg);
+}
+
+button.lux-banner-handle:active:not(:disabled){
+  transform: translate(-50%, -50%) scale(0.96) !important;
 }
 
 .lux-banner-handle:active{
   transform: translate(-50%, -50%) scale(0.96);
 }
+/* TEMP: kill old onboarding overlay so it can't affect layout */
+#onboardingOverlay { display: none !important; }

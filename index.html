@@ -8,6 +8,7 @@
 
     <link rel="stylesheet" href="lux-layout.css" />
     <link rel="stylesheet" href="lux-onboarding.css" />
+    <link rel="stylesheet" href="lux-onboarding-v2.css">
     <link rel="stylesheet" href="lux-popover.css" />
     
 <link rel="stylesheet" href="lux-widgets.css" />
@@ -102,7 +103,7 @@
 
       <label>
         Select Passage:
-        <select id="passageSelect">
+        <select id="passageSelect" data-lux-browse-lessons>
           <option value="" disabled selected>Select Passage...</option>
           <option value="rainbow">Rainbow Passage</option>
           <option value="grandfather">Grandfather Passage</option>
@@ -155,7 +156,7 @@
       </div>
 
       <div class="btn-group">
-        <button id="record">Record</button>
+        <button id="record" data-lux-record>Record</button>
         <button id="stop" disabled>Stop</button>
       </div>
 
