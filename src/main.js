@@ -30,10 +30,7 @@ import { onLanguageChanged } from '../ui/ui-ai-ai-logic.js';
 // Lazy-load controller for the Self-Playback drawer
 import "../features/features/08-selfpb-peekaboo.js";
 
-// Onboarding (TEMPORARILY OFF: old tour disabled while we build new onboarding)
-// import '/ui/ui-shell-onboarding.js';
-
-// NEW: New onboarding deck boot
+// Onboarding
 import { maybeShowOnboarding } from "../features/onboarding/lux-onboarding.js";
 
 // Dashboard
