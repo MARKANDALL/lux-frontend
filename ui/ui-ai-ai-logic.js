@@ -15,8 +15,8 @@ import {
 import { fetchAIFeedback, updateAttempt } from "/src/api/index.js";
 
 // State
-let chunkHistory = []; 
-let currentArgs = null; 
+let chunkHistory = [];
+let currentArgs = null;
 let isFetching = false;
 
 let lastContext = {
@@ -25,13 +25,16 @@ let lastContext = {
   firstLang: "universal"
 };
 
+// NEW: QuickTip paging state
+let quickTipState = { index: 0, count: 3, cache: [] };
+
 /**
  * Entry Point
  */
 export function promptUserForAI(azureResult, referenceText, firstLang) {
   const nb = azureResult?.NBest?.[0];
   const saidText = (azureResult?.DisplayText || nb?.Display || "").trim();
-  
+
   if (!nb || !saidText) {
     hideAI();
     return;
@@ -40,7 +43,7 @@ export function promptUserForAI(azureResult, referenceText, firstLang) {
   // Save context
   lastContext = { azureResult, referenceText, firstLang };
   resetState();
-  
+
   // Render Entry with Sidebar Callback
   renderEntryButtons({
     onQuick: (persona) => startQuickMode(azureResult, referenceText, firstLang, persona),
@@ -59,7 +62,7 @@ function onPersonaChanged(newPersona) {
   if (currentArgs) {
     // If we are already viewing results, refresh immediately
     const { referenceText, firstLang, mode } = currentArgs;
-    
+
     chunkHistory = [];
     clearAIFeedback(); // Clears content area, keeps sidebar
 
@@ -80,11 +83,11 @@ function onPersonaChanged(newPersona) {
 export function onLanguageChanged(newLang) {
   if (!lastContext.azureResult) return;
   console.log(`[AI Logic] Language changed to ${newLang}. Refreshing...`);
-  
+
   lastContext.firstLang = newLang;
-  
+
   // Get currently selected sidebar persona to maintain consistency
-  const currentPersona = getCurrentPersona(); 
+  const currentPersona = getCurrentPersona();
 
   if (currentArgs) {
     const { mode } = currentArgs;
@@ -113,6 +116,7 @@ function resetState() {
   chunkHistory = [];
   isFetching = false;
   currentArgs = null;
+  quickTipState = { index: 0, count: 3, cache: [] };
 }
 
 function persistFeedbackToDB(sections) {
@@ -122,57 +126,101 @@ function persistFeedbackToDB(sections) {
 }
 
 async function startQuickMode(azureResult, referenceText, firstLang, persona) {
-  showLoading();
   const lang = normalizeLang(firstLang);
   currentArgs = { azureResult, referenceText, firstLang: lang, persona, mode: "simple" };
 
+  quickTipState = { index: 0, count: 3, cache: [] };
+  await showQuickTipAt(0);
+}
+
+async function showQuickTipAt(i) {
+  if (isFetching) return;
+  isFetching = true;
+  showLoading();
+
   try {
-    const res = await fetchAIFeedback({ 
-        azureResult, 
-        referenceText, 
-        firstLang: lang, 
-        mode: "simple", 
-        persona 
-    });
-    const sections = res.sections || res.fallbackSections || [];
-    
-    chunkHistory.push(sections);
-    renderSections(sections, sections.length);
-    
-    updateFooterButtons({ 
-      canShowMore: false, 
-      canShowLess: true, 
-      onShowLess: handleShowLess,
-      lessLabel: "Back to Options ⬅"
+    // cached?
+    if (quickTipState.cache[i]) {
+      hideLoadingAndRenderQuick(i);
+      return;
+    }
+
+    const res = await fetchAIFeedback({
+      ...currentArgs,
+      mode: "simple",
+      tipIndex: i,
+      tipCount: quickTipState.count
     });
 
-    persistFeedbackToDB(sections);
+    const sections = res.sections || res.fallbackSections || [];
+    const meta = res.meta || {};
+
+    if (Number.isFinite(meta.tipCount)) quickTipState.count = meta.tipCount;
+
+    quickTipState.cache[i] = sections;
+    hideLoadingAndRenderQuick(i);
+
+    // OPTIONAL: prefetch next tip to make Next feel instant
+    const next = i + 1;
+    if (next < quickTipState.count && !quickTipState.cache[next]) {
+      fetchAIFeedback({ ...currentArgs, mode: "simple", tipIndex: next, tipCount: quickTipState.count })
+        .then((r) => { quickTipState.cache[next] = r.sections || r.fallbackSections || []; })
+        .catch(() => {});
+    }
+
+    // Persist only the first viewed tip (keeps DB clean + fast)
+    if (i === 0) persistFeedbackToDB(sections);
+
   } catch (err) {
     console.error(err);
-    showAIFeedbackError("Could not load Quick Tips.");
+    showAIFeedbackError("Could not load Quick Tip.");
+  } finally {
+    isFetching = false;
   }
+}
+
+function hideLoadingAndRenderQuick(i) {
+  const sections = quickTipState.cache[i] || [];
+  quickTipState.index = i;
+
+  renderSections(sections, sections.length);
+
+  updateFooterButtons({
+    canShowMore: i < quickTipState.count - 1,
+    canShowLess: true,
+    moreLabel: "Next Tip ➡",
+    lessLabel: i === 0 ? "Back to Options ⬅" : "Previous Tip ⬅",
+    onShowMore: () => showQuickTipAt(i + 1),
+    onShowLess: () => (i === 0 ? handleShowLess() : showQuickTipAt(i - 1))
+  });
 }
 
 async function startDeepMode(azureResult, referenceText, firstLang, persona) {
   const lang = normalizeLang(firstLang);
   currentArgs = { azureResult, referenceText, firstLang: lang, persona, mode: "detailed" };
-  chunkHistory = []; 
+  chunkHistory = [];
   await fetchNextChunk();
 }
 
 async function fetchNextChunk() {
   if (isFetching) return;
   const nextChunkId = chunkHistory.length + 1;
-  if (nextChunkId > 3) return; 
+  if (nextChunkId > 3) return;
 
   isFetching = true;
   if (nextChunkId === 1) showLoading();
-  else refreshFooter(); 
+  else refreshFooter();
 
   try {
+    // DeepDive: includeHistory ~1/3 of the time deterministically on chunk 1
+    const attemptIdNum = Number(window.lastAttemptId);
+    const includeHistory =
+      nextChunkId === 1 && Number.isFinite(attemptIdNum) ? (attemptIdNum % 3 === 0) : undefined;
+
     const res = await fetchAIFeedback({
-        ...currentArgs, 
-        chunk: nextChunkId
+      ...currentArgs,
+      chunk: nextChunkId,
+      includeHistory
     });
 
     const newSections = res.sections || res.fallbackSections || [];
@@ -195,9 +243,9 @@ function handleShowLess() {
   if (chunkHistory.length > 0) chunkHistory.pop();
 
   if (chunkHistory.length === 0) {
-    clearAIFeedback(); 
-    currentArgs = null; 
-    
+    clearAIFeedback();
+    currentArgs = null;
+
     // Go back to entry buttons
     renderEntryButtons({
       onQuick: (p) => startQuickMode(lastContext.azureResult, lastContext.referenceText, lastContext.firstLang, p),
@@ -217,7 +265,7 @@ function refreshFooter() {
     onShowMore: () => fetchNextChunk(),
     onShowLess: () => handleShowLess(),
     canShowMore: currentCount < 3,
-    canShowLess: true, 
+    canShowLess: true,
     isLoading: isFetching
   });
 }

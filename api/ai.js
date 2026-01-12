@@ -8,13 +8,19 @@ const FEEDBACK_URL = `${API_BASE}/api/pronunciation-gpt`;
 /**
  * Get GPT-powered coaching sections.
  * Now supports 'chunk' to fetch partial reports and 'persona' for tone.
+ * Also supports QuickTips paging + optional history injection.
  * @param {{
- * referenceText: string, 
- * azureResult: any, 
- * firstLang?: string, 
+ * referenceText: string,
+ * azureResult: any,
+ * firstLang?: string,
  * mode?: "simple"|"detailed",
  * chunk?: number,
- * persona?: "tutor"|"drill"|"linguist"
+ * persona?: "tutor"|"drill"|"linguist",
+ * uid?: string,
+ * attemptId?: number|null,
+ * tipIndex?: number,
+ * tipCount?: number,
+ * includeHistory?: boolean|undefined
  * }} params
  */
 export async function fetchAIFeedback({
@@ -23,17 +29,37 @@ export async function fetchAIFeedback({
   firstLang = "universal",
   mode = "detailed",
   chunk = 1,
-  persona = "tutor" // <--- NEW: Default to Tutor
+  persona = "tutor", // <--- Default to Tutor
+
+  // NEW
+  uid = window.LUX_USER_ID || "",
+  attemptId = window.lastAttemptId || null,
+  tipIndex = 0,
+  tipCount = 3,
+  includeHistory = undefined
 }) {
-  // Add persona to payload so the backend knows which style to use
-  const payload = { referenceText, azureResult, firstLang, mode, chunk, persona };
-  
-  dbg("POST", FEEDBACK_URL, { firstLang, mode, chunk, persona });
-  
+  // Add new fields to payload so backend can do model selection + tip paging + optional history
+  const payload = {
+    referenceText,
+    azureResult,
+    firstLang,
+    mode,
+    chunk,
+    persona,
+    uid,
+    attemptId,
+    tipIndex,
+    tipCount,
+    includeHistory
+  };
+
+  dbg("POST", FEEDBACK_URL, { firstLang, mode, chunk, persona, uid, attemptId, tipIndex, tipCount, includeHistory });
+
   const resp = await fetch(FEEDBACK_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
+
   return jsonOrThrow(resp);
 }
