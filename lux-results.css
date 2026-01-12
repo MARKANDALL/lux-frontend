@@ -371,7 +371,20 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
 .pr-seg:hover { transform: scaleY(1.35); filter: brightness(0.9); }
 
 #prettyResult .results-flex { display: flex; align-items: flex-start; gap: 16px; width: 100%; }
-#prettyResult .results-flex > table.score-table { flex: 1 1 auto; min-width: 420px; }
+
+/* table is wrapped now, so flex the wrapper */
+#prettyResult .results-flex > .table-scroll-container { flex: 1 1 auto; min-width: 420px; }
+#prettyResult .results-flex > .table-scroll-container > table.score-table { width: 100%; }
+
+/* ============================================================
+   Word/Phoneme table: contained scroll (like AI feedback)
+   ============================================================ */
+#prettyResult .table-scroll-container{
+  max-height: min(520px, 55vh);   /* adjust if you want taller/shorter */
+  overflow-y: auto;
+  overflow-x: auto;
+  scrollbar-gutter: stable;
+}
 
 .prosody-legend {
   margin: 8px auto 12px; max-width: 950px; padding: 8px 10px; border-radius: 10px;
@@ -393,7 +406,7 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
 @media (max-width: 900px) {
   #prettyResult .results-flex { flex-direction: column; }
   #prettyResult .prosody-legend--side { position: static; width: 100%; max-width: 100%; margin: 8px 0 12px; }
-  #prettyResult .results-flex > table.score-table { min-width: 0; }
+  #prettyResult .results-flex > .table-scroll-container { min-width: 0; }
 }
 
 /* ============================================================
