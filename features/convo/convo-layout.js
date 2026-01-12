@@ -52,15 +52,20 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
   deck.append(deckActive, deckPreview);
 
   const thumbs = el("div", "lux-thumbs");
+
+  /* NEW: picker knobs row */
+  const pickerKnobsRow = el("div", "lux-pickerKnobsRow");
+  const pickerKnobsBtn = el("button", "btn ghost", "Knobs");
+  const pickerKnobsSummary = el("div", "lux-pickerKnobsSummary", "");
+  pickerKnobsRow.append(pickerKnobsBtn, pickerKnobsSummary);
+
   const nav = el("div", "lux-deckNav");
   const backBtn = el("button", "lux-navArrow", "← Back");
-
-  // NEW: knobs button on picker (index.js will wire it to setKnobs(true))
-  const pickerKnobsBtn = el("button", "lux-navKnobs", "Knobs");
-
   const nextBtn = el("button", "lux-navNext", "Next →");
-  nav.append(backBtn, pickerKnobsBtn, nextBtn);
-  picker.append(deck, thumbs, nav);
+  nav.append(backBtn, nextBtn);
+
+  /* IMPORTANT: insert knobs row between thumbs and nav */
+  picker.append(deck, thumbs, pickerKnobsRow, nav);
 
   // Chat panel (single centered)
   const chatWrap = el("div", "lux-chatwrap");
@@ -138,8 +143,9 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
     deckActive,
     deckPreview,
     thumbs,
-    backBtn,
     pickerKnobsBtn,
+    pickerKnobsSummary,
+    backBtn,
     nextBtn,
     chatWrap,
     mid,

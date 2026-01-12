@@ -35,12 +35,37 @@ export function bootConvo() {
   if (root.dataset.luxBooted === "1") return;
   root.dataset.luxBooted = "1";
 
+  const KNOBS_KEY = "lux_knobs_v1";
+  const KNOBS_DEFAULTS = { tone: "friendly", stress: "low", pace: "normal" };
+
+  function loadKnobs() {
+    try {
+      const raw = localStorage.getItem(KNOBS_KEY);
+      if (!raw) return { ...KNOBS_DEFAULTS };
+      const parsed = JSON.parse(raw);
+      return { ...KNOBS_DEFAULTS, ...(parsed || {}) };
+    } catch {
+      return { ...KNOBS_DEFAULTS };
+    }
+  }
+
+  function saveKnobs(knobs) {
+    try {
+      localStorage.setItem(KNOBS_KEY, JSON.stringify(knobs));
+    } catch {}
+  }
+
+  function knobsSummaryText(knobs) {
+    const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : "");
+    return `Tone: ${cap(knobs.tone)} • Stress: ${cap(knobs.stress)} • Pace: ${cap(knobs.pace)}`;
+  }
+
   const state = {
     sessionId: newSessionId(),
     scenarioIdx: 0,
     mode: "intro", // intro | picker | chat
     knobsOpen: false,
-    knobs: { tone: "friendly", stress: "low", pace: "normal" },
+    knobs: loadKnobs(),
 
     messages: [], // {role:"user"|"assistant", content:string}
     turns: [], // {turn, userText, azureResult, attemptId?}
@@ -79,6 +104,8 @@ export function bootConvo() {
     deckActive,
     deckPreview,
     thumbs,
+    pickerKnobsBtn,
+    pickerKnobsSummary,
     backBtn,
     nextBtn,
     scenBtn,
@@ -109,6 +136,13 @@ export function bootConvo() {
   function setKnobs(open) {
     state.knobsOpen = !!open;
     root.classList.toggle("knobs-open", state.knobsOpen);
+
+    // If opening, ensure drawer UI reflects current state
+    if (state.knobsOpen) {
+      toneSel.sel.value = state.knobs.tone;
+      stressSel.sel.value = state.knobs.stress;
+      paceSel.sel.value = state.knobs.pace;
+    }
   }
 
   // Mode controller (extracted)
@@ -141,6 +175,15 @@ export function bootConvo() {
     warpSwap(() => setMode("picker"), { outMs: 170, inMs: 220 })
   );
   knobsBtn.addEventListener("click", () => setKnobs(true));
+
+  if (pickerKnobsBtn) {
+    pickerKnobsBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation(); // IMPORTANT: don't advance deck / trigger other clicks
+      setKnobs(true);
+    });
+  }
+
   coachBtn.addEventListener("click", () => {
     const section = document.getElementById("aiFeedbackSection");
     if (!section) {
@@ -169,14 +212,35 @@ export function bootConvo() {
   closeDrawer.addEventListener("click", () => setKnobs(false));
   scrim.addEventListener("click", () => setKnobs(false));
 
-  // Knob wiring
+  // Initialize drawer selects from stored knobs
   toneSel.sel.value = state.knobs.tone;
   stressSel.sel.value = state.knobs.stress;
   paceSel.sel.value = state.knobs.pace;
 
-  toneSel.sel.addEventListener("change", () => (state.knobs.tone = toneSel.sel.value));
-  stressSel.sel.addEventListener("change", () => (state.knobs.stress = stressSel.sel.value));
-  paceSel.sel.addEventListener("change", () => (state.knobs.pace = paceSel.sel.value));
+  // Picker summary (if present)
+  function renderPickerKnobsSummary() {
+    if (!pickerKnobsSummary) return;
+    pickerKnobsSummary.textContent = knobsSummaryText(state.knobs);
+  }
+  renderPickerKnobsSummary();
+
+  toneSel.sel.addEventListener("change", () => {
+    state.knobs.tone = toneSel.sel.value;
+    saveKnobs(state.knobs);
+    renderPickerKnobsSummary();
+  });
+
+  stressSel.sel.addEventListener("change", () => {
+    state.knobs.stress = stressSel.sel.value;
+    saveKnobs(state.knobs);
+    renderPickerKnobsSummary();
+  });
+
+  paceSel.sel.addEventListener("change", () => {
+    state.knobs.pace = paceSel.sel.value;
+    saveKnobs(state.knobs);
+    renderPickerKnobsSummary();
+  });
 
   // Helpers (for rendering / highlight inputs)
   function getWordBank() {
