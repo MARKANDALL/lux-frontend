@@ -108,29 +108,38 @@ export function renderResultsHeaderModern(data) {
       </div>
     </div>
 
-    <div class="results-flex">
-      ${legendHtml}
+    <details class="lux-results-accordion" id="luxWpAccordion" open>
+      <summary class="lux-results-accordion-handle" title="Show/hide Word & Phoneme chart">
+        <span class="lux-acc-label lux-acc-label-open">Hide Word &amp; Phoneme chart</span>
+        <span class="lux-acc-label lux-acc-label-closed">Show Word &amp; Phoneme chart</span>
+        <span class="lux-acc-chev">▾</span>
+      </summary>
 
-      <div class="table-scroll-container custom-scrollbar">
-        <table class="score-table collapsed-score collapsed-error">
-          <thead style="position: sticky; top: 0; z-index: 20; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
-            <tr>
-              <th id="wordHeader">
-                <button class="lux-col-toggle" type="button" data-col="word" aria-label="Collapse/expand Word column" title="Collapse/expand Word column">▸</button>
-                <span class="word-chip clickable">Word</span>
-              </th>
-              <th ${scoreHeaderAttrs}>Score ▸</th>
-              <th id="errorHeader" class="toggle-col">Error ▸</th>
-              <th id="phonemeHeader">
-                <button class="lux-col-toggle" type="button" data-col="phoneme" aria-label="Collapse/expand Phoneme column" title="Collapse/expand Phoneme column">▸</button>
-                <span class="word-chip phoneme-chip clickable" id="phonemeTitle">Phoneme</span>
-                <span class="tooltip result-tip tip-Phoneme" style="margin-left: 8px;">(?)<span class="tooltiptext">${TOOLTIPS.Phoneme}</span></span>
-              </th>
-            </tr>
-          </thead>
-          <tbody id="resultBody"></tbody>
-        </table>
+      <div class="results-flex">
+        ${legendHtml}
+
+        <div class="table-scroll-container custom-scrollbar">
+          <table class="score-table collapsed-score collapsed-error">
+            <thead style="position: sticky; top: 0; z-index: 20; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+              <tr>
+                <th id="wordHeader">
+                  <button class="lux-col-toggle" type="button" data-col="word" aria-label="Collapse/expand Word column" title="Collapse/expand Word column">▸</button>
+                  <span class="word-chip clickable">Word</span>
+                </th>
+                <th ${scoreHeaderAttrs}>Score ▸</th>
+                <th id="errorHeader" class="toggle-col">Error ▸</th>
+                <th id="phonemeHeader">
+                  <button class="lux-col-toggle" type="button" data-col="phoneme" aria-label="Collapse/expand Phoneme column" title="Collapse/expand Phoneme column">▸</button>
+                  <span class="word-chip phoneme-chip clickable" id="phonemeTitle">Phoneme</span>
+                  <span class="tooltip result-tip tip-Phoneme" style="margin-left:6px;">(?)<span class="tooltiptext">${TOOLTIPS.Phoneme}</span></span>
+                </th>
+              </tr>
+            </thead>
+            <tbody id="resultBody"></tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </details>
   `;
 }
+ 
