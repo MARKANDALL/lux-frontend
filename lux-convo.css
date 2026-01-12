@@ -867,6 +867,29 @@ body:has(#convoApp[data-mode="intro"]){
   text-shadow: 0 2px 10px rgba(0,0,0,0.28);
 }
 
+/* Expand/collapse (taller “fog box” reveal) */
+.lux-deckMore{
+  margin-top: 10px;
+  color: rgba(255,255,255,0.84);
+  text-shadow: 0 2px 10px rgba(0,0,0,0.28);
+
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-4px);
+
+  transition:
+    max-height 240ms ease,
+    opacity 180ms ease,
+    transform 240ms ease;
+}
+
+.lux-deck-card.isExpanded .lux-deckMore{
+  max-height: 240px;
+  opacity: 1;
+  transform: translateY(0);
+}
+
 /* CTA stands out (and is the only "enter" affordance) */
 .lux-deckText .lux-deckCta{
   background: rgba(255,255,255,0.92);
@@ -902,18 +925,17 @@ body:has(#convoApp[data-mode="intro"]){
 .lux-deck-card.is-preview{
   width: min(520px, 86vw);
   z-index: 1;
-  opacity: 0.55;
-  filter: blur(6px);
+  opacity: 0.62;       /* was 0.55 */
+  filter: blur(4.5px); /* was 6px */
   cursor: pointer;
 }
 
+/* Overlap + left/right staggering (MORE separation) */
+#convoApp[data-side="left"]  .lux-deck-card.is-active { transform: translate(-50%, -50%) translateX(-110px) scale(1.00); }
+#convoApp[data-side="left"]  .lux-deck-card.is-preview{ transform: translate(-50%, -50%) translateX(190px)  scale(0.90); }
 
-/* Overlap + left/right staggering */
-#convoApp[data-side="left"]  .lux-deck-card.is-active { transform: translate(-50%, -50%) translateX(-80px)  scale(1.00); }
-#convoApp[data-side="left"]  .lux-deck-card.is-preview{ transform: translate(-50%, -50%) translateX(55px)   scale(0.90); }
-
-#convoApp[data-side="right"] .lux-deck-card.is-active { transform: translate(-50%, -50%) translateX(80px)   scale(1.00); }
-#convoApp[data-side="right"] .lux-deck-card.is-preview{ transform: translate(-50%, -50%) translateX(-55px)  scale(0.90); }
+#convoApp[data-side="right"] .lux-deck-card.is-active { transform: translate(-50%, -50%) translateX(110px)  scale(1.00); }
+#convoApp[data-side="right"] .lux-deck-card.is-preview{ transform: translate(-50%, -50%) translateX(-190px) scale(0.90); }
 
 .lux-pill{
   display: inline-flex;
@@ -957,6 +979,178 @@ body:has(#convoApp[data-mode="intro"]){
   font-weight: 850;
 }
 .lux-deckCta:hover{ background: rgba(0,120,215,0.14); }
+
+/* =========================================================
+   Picker: thumbnail dots (bigger + actual image preview)
+   NOTE: Your DOM uses .lux-thumbs + .lux-thumb already.
+   This block upgrades them in picker mode (size + cover/center).
+========================================================= */
+
+#convoApp[data-mode="picker"] .lux-thumbs{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* base “dot” becomes a tiny thumbnail */
+#convoApp[data-mode="picker"] .lux-thumb{
+  width: 28px;              /* bigger than circles, still small */
+  height: 18px;
+  border-radius: 6px;
+
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  border: 1px solid rgba(0,0,0,0.10);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.10);
+
+  opacity: 0.70;
+  transform: translateY(0);
+  transition: transform 160ms ease, opacity 160ms ease, box-shadow 160ms ease;
+  cursor: pointer;
+}
+
+/* keep non-image fallback readable (single letter) */
+#convoApp[data-mode="picker"] .lux-thumb:not(.has-img){
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  line-height: 1;
+}
+
+#convoApp[data-mode="picker"] .lux-thumb:hover{
+  opacity: 0.95;
+  transform: translateY(-1px) scale(1.04);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.12);
+}
+
+#convoApp[data-mode="picker"] .lux-thumb.is-active{
+  opacity: 1;
+  border-color: rgba(0,120,215,0.45);
+  box-shadow:
+    0 12px 26px rgba(0,0,0,0.14),
+    0 0 0 3px rgba(0,120,215,0.18);
+}
+
+/* =========================================================
+   Knobs drawer (shared: picker + convo)
+========================================================= */
+
+.lux-knobsOverlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.28);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+  z-index: 998;
+}
+.lux-knobsOverlay[data-open="1"]{
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.lux-knobsDrawer{
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 340px;
+  max-width: 92vw;
+
+  background: rgba(255,255,255,0.86);
+  backdrop-filter: blur(16px);
+  border-left: 1px solid rgba(0,0,0,0.10);
+
+  transform: translateX(110%);
+  transition: transform 220ms ease;
+  z-index: 999;
+
+  display: flex;
+  flex-direction: column;
+}
+.lux-knobsDrawer[data-open="1"]{
+  transform: translateX(0);
+}
+
+.lux-knobsHeader{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 14px 10px;
+}
+.lux-knobsTitle{
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+.lux-knobsClose{
+  border: 0;
+  background: transparent;
+  font-size: 1.1rem;
+  cursor: pointer;
+  opacity: 0.75;
+}
+.lux-knobsClose:hover{ opacity: 1; }
+
+.lux-knobsBody{
+  padding: 8px 14px 14px;
+  overflow: auto;
+}
+
+.lux-knobsGroup{
+  padding: 10px 0 12px;
+  border-top: 1px solid rgba(0,0,0,0.06);
+}
+.lux-knobsGroup:first-child{ border-top: 0; }
+
+.lux-knobsLabel{
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.lux-knobsChips{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.lux-knobsChips button{
+  border-radius: 999px;
+  padding: 7px 10px;
+  border: 1px solid rgba(0,0,0,0.14);
+  background: rgba(255,255,255,0.78);
+  cursor: pointer;
+}
+
+.lux-knobsChips button.is-on{
+  border-color: rgba(0,120,215,0.42);
+  box-shadow: 0 0 0 3px rgba(0,120,215,0.16);
+}
+
+/* Picker: inline knobs row under CTA */
+#convoApp[data-mode="picker"] .lux-deckKnobsRow{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+#convoApp[data-mode="picker"] .lux-deckKnobsBtn{
+  border-radius: 999px;
+  padding: 7px 10px;
+  border: 1px solid rgba(0,0,0,0.14);
+  background: rgba(255,255,255,0.82);
+  cursor: pointer;
+}
+
+#convoApp[data-mode="picker"] .lux-deckKnobsSummary{
+  font-size: 0.95rem;
+  opacity: 0.90;
+}
 
 /* Thumbnails */
 .lux-thumbs{

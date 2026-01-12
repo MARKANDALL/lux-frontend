@@ -1,4 +1,8 @@
 // features/convo/picker-deck.js
+import { mountKnobsDrawer, getKnobs, onKnobsChange, formatKnobsSummary } from "./knobs-drawer.js";
+
+const knobsDrawer = mountKnobsDrawer();
+
 export function wirePickerDeck({
   scenarios,
   state,
@@ -27,23 +31,53 @@ export function wirePickerDeck({
     }
   }
 
+  function scenarioThumbUrl(s){
+    // pick the “best available” image-like field without breaking older scenarios
+    return (
+      s.thumb ||
+      s.thumbnail ||
+      s.image ||
+      s.imageUrl ||
+      s.bg ||
+      s.background ||
+      (s.media && (s.media.poster || s.media.thumb)) ||
+      ""
+    );
+  }
+
   function renderThumbs() {
     if (!thumbs) return;
     thumbs.innerHTML = "";
     list.forEach((s, i) => {
       const b = el("button", "lux-thumb" + (i === state.scenarioIdx ? " is-active" : ""));
-      b.title = s.title;
-      if (s.thumb) {
+      b.type = "button";
+
+      // keep your existing tooltip behavior
+      b.title = s.title || `Scenario ${i + 1}`;
+
+      // accessibility + "active" marker
+      b.setAttribute("aria-label", b.title);
+      b.setAttribute("aria-current", i === state.scenarioIdx ? "true" : "false");
+
+      const thumb = scenarioThumbUrl(s);
+      if (thumb) {
         b.classList.add("has-img");
-        b.style.backgroundImage = `url("${s.thumb}")`;
+        b.style.backgroundImage = `url("${thumb}")`;
         b.textContent = "";
       } else {
+        // fallback (keeps your “color dots” behavior if a scenario has no image)
+        const hue = (i * 37) % 360;
+        b.style.backgroundImage = `linear-gradient(135deg, hsl(${hue} 55% 70%), hsl(${(hue+18)%360} 55% 62%))`;
         b.textContent = (s.title || "?").trim().slice(0, 1).toUpperCase();
       }
-      b.addEventListener("click", () => {
+
+      b.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         state.scenarioIdx = i;
         renderDeck();
       });
+
       thumbs.append(b);
     });
   }
@@ -55,6 +89,9 @@ export function wirePickerDeck({
     host.replaceChildren();
     host.onpointerenter = null;
     host.onpointerleave = null;
+
+    // Always collapse when re-rendering a card
+    host.classList.remove("isExpanded");
 
     // image background (existing behavior)
     host.classList.toggle("has-img", !!scenario.img);
@@ -172,6 +209,13 @@ export function wirePickerDeck({
       el("div", "lux-deckDesc", scenario.desc || "")
     );
 
+    // “more” content node (shown when expanded via CSS)
+    const moreText =
+      scenario.more ||
+      "More details coming next: goals, moves, and what to listen for.";
+
+    textWrap.append(el("div", "lux-deckMore", moreText));
+
     // CTA only on active card (keeps preview calm / non-interactive)
     if (isActive) {
       const cta = el("button", "lux-deckCta", "Practice this dialogue");
@@ -182,13 +226,30 @@ export function wirePickerDeck({
       });
       textWrap.append(cta);
 
-      // ✅ Clicking anywhere on the active card advances to the next card
+      // NEW: Knobs row in picker card (active card only)
+      const knobsRow = el("div", "lux-deckKnobsRow");
+
+      const knobsBtn = el("button", "lux-deckKnobsBtn", "Knobs");
+      knobsBtn.type = "button";
+      knobsBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();       // IMPORTANT: don't advance deck
+        knobsDrawer.open();
+      });
+
+      const summary = el("div", "lux-deckKnobsSummary", formatKnobsSummary(getKnobs()));
+      const unsub = onKnobsChange((k) => { summary.textContent = formatKnobsSummary(k); });
+
+      // If you ever destroy/rebuild cards aggressively, you can call unsub() then.
+      knobsRow.append(knobsBtn, summary);
+      host.append(knobsRow);
+
+      // Active card: click toggles expanded description (never advances, never begins)
       host.onclick = () => {
-        if (!list.length) return;
-        state.scenarioIdx = (state.scenarioIdx + 1) % list.length;
-        renderDeck();
+        host.classList.toggle("isExpanded");
       };
     } else {
+      // Preview card: don't set onclick here (wirePickerDeck already has a click listener on deckPreview)
       host.onclick = null;
     }
 

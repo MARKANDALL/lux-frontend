@@ -33,7 +33,6 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
   const intro = el("div", "lux-intro");
   const hero = el("div", "lux-heroCard");
   hero.append(
-  
     el("div", "lux-heroTitle", "AI Conversations"),
     el(
       "div",
@@ -55,8 +54,12 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
   const thumbs = el("div", "lux-thumbs");
   const nav = el("div", "lux-deckNav");
   const backBtn = el("button", "lux-navArrow", "← Back");
+
+  // NEW: knobs button on picker (index.js will wire it to setKnobs(true))
+  const pickerKnobsBtn = el("button", "lux-navKnobs", "Knobs");
+
   const nextBtn = el("button", "lux-navNext", "Next →");
-  nav.append(backBtn, nextBtn);
+  nav.append(backBtn, pickerKnobsBtn, nextBtn);
   picker.append(deck, thumbs, nav);
 
   // Chat panel (single centered)
@@ -136,6 +139,7 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
     deckPreview,
     thumbs,
     backBtn,
+    pickerKnobsBtn,
     nextBtn,
     chatWrap,
     mid,
