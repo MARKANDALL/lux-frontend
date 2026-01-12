@@ -163,8 +163,10 @@ export function wirePickerDeck({
       }
     }
 
-    // --- your existing text content ---
-    host.append(
+    // --- your existing text content (now wrapped so we can style readability) ---
+    const textWrap = el("div", "lux-deckText");
+
+    textWrap.append(
       el("div", "lux-pill", "DIALOGUE"),
       el("div", "lux-deckTitle", scenario.title),
       el("div", "lux-deckDesc", scenario.desc || "")
@@ -178,12 +180,19 @@ export function wirePickerDeck({
         e.stopPropagation();
         safeBeginScenario();
       });
-      host.append(cta);
+      textWrap.append(cta);
 
-      host.onclick = () => safeBeginScenario();
+      // ✅ Clicking anywhere on the active card advances to the next card
+      host.onclick = () => {
+        if (!list.length) return;
+        state.scenarioIdx = (state.scenarioIdx + 1) % list.length;
+        renderDeck();
+      };
     } else {
       host.onclick = null;
     }
+
+    host.append(textWrap);
   }
 
   function renderDeck() {
