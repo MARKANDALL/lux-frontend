@@ -33,12 +33,12 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
   const intro = el("div", "lux-intro");
   const hero = el("div", "lux-heroCard");
   hero.append(
-    el("div", "lux-heroBrand", "Lux"),
+  
     el("div", "lux-heroTitle", "AI Conversations"),
     el(
       "div",
       "lux-heroSub",
-      "Pick a dialogue. Record your reply. We assess each turn silently and give you a session report at the end."
+      "Pick a dialogue. Record your reply. We assess each turn silently and give you a session report at the end. Then take your results to the Practice Skills page to review them in detail."
     )
   );
   const heroNext = el("button", "lux-heroNext", "Next");

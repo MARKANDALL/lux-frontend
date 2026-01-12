@@ -22,11 +22,9 @@ table:not(.collapsed-error) #errorHeader::after { transform: rotate(90deg); }
 table:not(.collapsed-score) th#scoreHeader::after,
 table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
 
-/* Collapsed States */
+/* Collapsed States: keep ONLY the headers as the skinny clickable handles */
 #prettyResult table.collapsed-score th#scoreHeader,
-#prettyResult table.collapsed-score td:nth-child(2),
-#prettyResult table.collapsed-error th#errorHeader,
-#prettyResult table.collapsed-error td:nth-child(3) {
+#prettyResult table.collapsed-error th#errorHeader {
   width: 26px !important;
   min-width: 26px !important;
   max-width: 26px !important;
@@ -35,16 +33,29 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   opacity: 0.2;
   pointer-events: auto !important;
   cursor: pointer;
+
+  /* critical: stop the “S C O R E” vertical stacking */
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: clip !important;
 }
 
+/* Collapsed States: fully hide Score/Error BODY cells so they can't stack text */
 #prettyResult table.collapsed-score td:nth-child(2),
 #prettyResult table.collapsed-error td:nth-child(3) {
-  width: 0;
-  min-width: 0;
-  max-width: 0;
-  overflow: hidden;
-  opacity: 0.15;
-  pointer-events: none;
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+
+  /* critical: remove text height so rows stop ballooning */
+  font-size: 0 !important;
+  line-height: 0 !important;
+  opacity: 0 !important;
+
+  pointer-events: none !important;
+  white-space: nowrap !important;
 }
 
 /* Open States */

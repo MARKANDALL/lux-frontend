@@ -228,13 +228,11 @@ body:has(#convoApp[data-mode="intro"]){
 }
 
 
-/* Intro: Edge-like dark stage */
+/* Intro: white stage (landing page background) */
 #convoApp[data-mode="intro"] .lux-atmo{
-  background:
-    radial-gradient(circle at 22% 18%, rgba(65, 190, 160, 0.22), rgba(0,0,0,0) 58%),
-    radial-gradient(circle at 78% 62%, rgba(30, 130, 200, 0.18), rgba(0,0,0,0) 60%),
-    linear-gradient(120deg, var(--edge-bg-c), var(--edge-bg-a) 45%, var(--edge-bg-b));
+  background: #fff;
 }
+
 
 /* Picker/Chat: no atmo (keeps deck + chat crisp + fast) */
 #convoApp[data-mode="picker"] .lux-atmo,
