@@ -637,3 +637,62 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   border-color: #94a3b8;
   background: #f8fafc;
 }
+/* =========================================================
+   Word/Phoneme Accordion (pill handle)
+   Put this at the VERY END of lux-results.css
+========================================================= */
+
+#prettyResult details.lux-results-accordion{
+  margin-top: 10px;
+}
+
+/* kill native marker */
+#prettyResult details.lux-results-accordion > summary::-webkit-details-marker{ display:none; }
+#prettyResult details.lux-results-accordion > summary::marker{ content:""; }
+
+/* the pill */
+#prettyResult details.lux-results-accordion > summary.lux-results-accordion-handle{
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+
+  height: 34px !important;
+  width: min(980px, 100%) !important;
+  margin: 6px auto 0 !important;
+
+  padding: 0 14px !important;
+  border-radius: 999px !important;
+
+  background: #e7f2fb !important;
+  border: 1px solid rgba(0,120,215,0.28) !important;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06) !important;
+
+  cursor: pointer !important;
+  user-select: none !important;
+  list-style: none !important;
+}
+
+/* label styles */
+#prettyResult .lux-acc-label{
+  font-weight: 800 !important;
+  color: #1e293b !important;
+  font-size: 0.95rem !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+
+/* label swap: only one shows */
+#prettyResult .lux-acc-label-open{ display:none !important; }
+#prettyResult details.lux-results-accordion:not([open]) .lux-acc-label-closed{ display:inline !important; }
+#prettyResult details.lux-results-accordion[open] .lux-acc-label-open{ display:inline !important; }
+#prettyResult details.lux-results-accordion[open] .lux-acc-label-closed{ display:none !important; }
+
+/* chevron */
+#prettyResult .lux-acc-chev{
+  opacity: 0.65 !important;
+  transition: transform 160ms ease !important;
+}
+#prettyResult details.lux-results-accordion[open] .lux-acc-chev{
+  transform: rotate(180deg) !important;
+}
