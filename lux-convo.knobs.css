@@ -197,3 +197,60 @@
   color: var(--convo-muted);
   line-height: 1.35;
 }
+
+/* ============================================================
+   Docked knobs (anchored to the convo box, not the viewport)
+   Earthquake-safe: scoped overrides only
+   ============================================================ */
+
+.lux-convoStage{
+  position: relative; /* anchors dock + local scrim */
+}
+
+/* Local scrim that dims only the convo box area */
+.lux-knobsScrim{
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: rgba(0,0,0,0.12);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+  border-radius: 18px; /* match the chat card rounding */
+}
+.lux-convoStage.knobs-open .lux-knobsScrim{
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Dock host sits to the RIGHT of the convo box */
+.lux-knobsDock{
+  position: absolute;
+  top: 0;
+  left: 100%;
+  margin-left: 14px;
+  width: min(360px, 92vw);
+  height: 100%;
+  overflow: hidden;     /* enables “slide from behind” */
+  pointer-events: none; /* only enabled when open */
+}
+.lux-convoStage.knobs-open .lux-knobsDock{
+  pointer-events: auto;
+}
+
+/* Override legacy viewport drawer ONLY when inside the dock */
+#convoKnobsDock .lux-drawer{
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  transform: translateX(-100%);
+  opacity: 0;
+  transition: transform 280ms ease, opacity 220ms ease;
+}
+.lux-convoStage.knobs-open #convoKnobsDock .lux-drawer{
+  transform: translateX(0);
+  opacity: 1;
+}

@@ -85,6 +85,9 @@ export async function initPhonemeChipBehavior(containerSelector = "#prettyResult
         chip.setAttribute("data-video-src", asset.video);
         if (asset.poster) chip.setAttribute("data-poster-src", asset.poster);
     }
+    if (asset?.videoFront) {
+      chip.setAttribute("data-video-front-src", asset.videoFront);
+    }
   }
   
   // Console log to confirm we cleaned up the "Old" ones

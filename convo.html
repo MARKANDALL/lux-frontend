@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Lux — AI Conversations</title>
 
-<script src="./vendor/wavesurfer-7.8.11.min.js"></script>
+    <script src="./vendor/wavesurfer-7.8.11.min.js"></script>
 
     <link rel="stylesheet" href="lux-layout.css" />
     <link rel="stylesheet" href="lux-results.css" />
@@ -17,7 +17,10 @@
     <link rel="stylesheet" href="./ui/warp.css" />
 
     <!-- Match main page typography -->
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap"
+      rel="stylesheet"
+    />
 
     <link rel="stylesheet" href="./features/features/tts-peekaboo.css" />
     <link rel="stylesheet" href="./features/features/tts/tts-overlay.css" />
@@ -26,9 +29,10 @@
     <link rel="stylesheet" href="./features/features/selfpb-peekaboo.css" />
     <link rel="stylesheet" href="./features/features/self-playback.css" />
 
-
     <style id="lux-tts-guard-style">
-      #tts-controls { display: none !important; }
+      #tts-controls {
+        display: none !important;
+      }
     </style>
   </head>
 
@@ -41,15 +45,15 @@
     <div id="container">
       <h2>AI Conversations</h2>
       <div class="lux-toplinks">
-<a class="lux-toplink lux-navpill" href="./index.html" data-lux-ripple>
-  Pronunciation Test
-</a>
+        <a class="lux-toplink lux-navpill" href="./index.html" data-lux-ripple>
+          Pronunciation Test
+        </a>
       </div>
 
       <div id="convoApp"></div>
 
       <!-- AI Coach (reused from Practice Skills) -->
-      <div id="aiFeedbackSection" style="display:none; margin-top:16px;">
+      <div id="aiFeedbackSection">
         <div id="aiFeedback"></div>
       </div>
     </div>

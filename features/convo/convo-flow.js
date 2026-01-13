@@ -145,6 +145,10 @@ export function wireConvoFlow({
         sessionId: state.sessionId,
         localTime: new Date().toISOString(),
       });
+
+      // Keep AI Coach wired to the latest convo attempt (Practice Skills parity)
+      window.lastAttemptId = saved?.id || null;
+
       state.turns.push({ turn: state.turns.length, userText, azureResult, attemptId: saved?.id });
     } catch (e) {
       console.error("[Convo] saveAttempt failed", e);

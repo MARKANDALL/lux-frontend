@@ -80,9 +80,8 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
   const actions = el("div", "lux-actions");
   const scenBtn = el("button", "btn ghost", "Scenarios");
   const knobsBtn = el("button", "btn ghost", "Knobs");
-  const coachBtn = el("button", "btn ghost", "AI Coach");
   const endBtn = el("button", "btn danger", "End Session");
-  actions.append(scenBtn, knobsBtn, coachBtn, endBtn);
+  actions.append(scenBtn, knobsBtn, endBtn);
 
   midHd.append(titleWrap, actions);
 
@@ -100,7 +99,26 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
   compose.append(input, talkBtn);
 
   mid.append(midHd, coachBar, msgs, sugsNote, sugs, compose);
-  chatWrap.append(mid);
+
+  // =========================================================
+  // Stage wrapper (anchors docked knobs + local scrim to the chat box)
+  // =========================================================
+  const stage = el("div", "lux-convoStage");
+  stage.id = "convoStage";
+  stage.append(mid);
+
+  // Local scrim (dims ONLY the convo box area)
+  const scrim = el("button", "lux-knobsScrim");
+  scrim.type = "button";
+  scrim.setAttribute("aria-label", "Close scene knobs");
+  stage.append(scrim);
+
+  // Dock host (lives to the RIGHT of the convo box)
+  const knobsDock = el("div", "lux-knobsDock");
+  knobsDock.id = "convoKnobsDock";
+  stage.append(knobsDock);
+
+  chatWrap.append(stage);
 
   // Knobs drawer
   const drawer = el("div", "lux-drawer");
@@ -124,14 +142,27 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
 
   drawer.append(drawerHd, drawerBody);
 
-  const scrim = el("div", "lux-scrim");
+  // Dock the drawer to the convo box (not viewport)
+  knobsDock.append(drawer);
 
   // Progress panel host (ONLY visible in chat mode via CSS)
   const convoProgress = el("div", "lux-convo-progress");
   convoProgress.id = "convoProgress";
 
-  // IMPORTANT: append it *after* chatWrap, so it renders UNDER the chat box
-  ui.append(intro, picker, chatWrap, convoProgress, drawer, scrim);
+  // =========================================================
+  // AI Coach: always visible (no button), placed between chat + progress
+  // Move existing #aiFeedbackSection (from convo.html) into this stack.
+  // =========================================================
+  const aiCoachSection = document.getElementById("aiFeedbackSection");
+  if (aiCoachSection) {
+    aiCoachSection.style.display = ""; // remove inline display:none if present
+    aiCoachSection.style.marginTop = ""; // let CSS handle spacing
+  }
+
+  // IMPORTANT: append progress AFTER chatWrap so it sits under the chat panel
+  if (aiCoachSection) ui.append(intro, picker, chatWrap, aiCoachSection, convoProgress);
+  else ui.append(intro, picker, chatWrap, convoProgress);
+
   root.append(atmo, ui);
 
   return {
@@ -149,9 +180,10 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
     nextBtn,
     chatWrap,
     mid,
+    stage,
+    knobsDock,
     scenBtn,
     knobsBtn,
-    coachBtn,
     endBtn,
     msgs,
     sugs,

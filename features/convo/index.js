@@ -110,7 +110,6 @@ export function bootConvo() {
     nextBtn,
     scenBtn,
     knobsBtn,
-    coachBtn,
     endBtn,
     msgs,
     sugs,
@@ -120,6 +119,7 @@ export function bootConvo() {
     talkBtn,
     closeDrawer,
     scrim,
+    stage,
     toneSel,
     stressSel,
     paceSel,
@@ -135,7 +135,7 @@ export function bootConvo() {
 
   function setKnobs(open) {
     state.knobsOpen = !!open;
-    root.classList.toggle("knobs-open", state.knobsOpen);
+    stage.classList.toggle("knobs-open", state.knobsOpen);
 
     // If opening, ensure drawer UI reflects current state
     if (state.knobsOpen) {
@@ -174,7 +174,7 @@ export function bootConvo() {
   scenBtn.addEventListener("click", () =>
     warpSwap(() => setMode("picker"), { outMs: 170, inMs: 220 })
   );
-  knobsBtn.addEventListener("click", () => setKnobs(true));
+  knobsBtn.addEventListener("click", () => setKnobs(!state.knobsOpen));
 
   if (pickerKnobsBtn) {
     pickerKnobsBtn.addEventListener("click", (e) => {
@@ -184,33 +184,11 @@ export function bootConvo() {
     });
   }
 
-  coachBtn.addEventListener("click", () => {
-    const section = document.getElementById("aiFeedbackSection");
-    if (!section) {
-      alert("AI Coach mount not found (aiFeedbackSection).");
-      return;
-    }
-
-    // Find most recent analyzed turn
-    const t = [...(state.turns || [])]
-      .reverse()
-      .find((x) => x?.azureResult?.NBest?.[0]);
-
-    if (!t) {
-      alert("No analyzed turns yet. Record a reply first.");
-      return;
-    }
-
-    // Persist coaching onto THIS attempt (same mechanism as Practice Skills)
-    window.lastAttemptId = t.attemptId || null;
-
-    // For convo, referenceText == what the learner intended to say
-    promptUserForAI(t.azureResult, t.userText || "", "universal");
-
-    section.scrollIntoView?.({ behavior: "smooth", block: "start" });
-  });
   closeDrawer.addEventListener("click", () => setKnobs(false));
   scrim.addEventListener("click", () => setKnobs(false));
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") setKnobs(false);
+  });
 
   // Initialize drawer selects from stored knobs
   toneSel.sel.value = state.knobs.tone;

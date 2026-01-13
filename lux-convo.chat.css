@@ -25,6 +25,20 @@
   flex-direction: column;
 }
 
+/* AI Coach panel (Practice Skills parity): sits under chat and matches chat width */
+#aiFeedbackSection{
+  width: min(980px, 94vw);
+  margin: 14px auto 0;
+}
+
+/* Only show coach in chat mode (prevents it appearing on intro/picker screens) */
+#convoApp:not([data-mode="chat"]) #aiFeedbackSection{
+  display: none;
+}
+#convoApp[data-mode="chat"] #aiFeedbackSection{
+  display: block;
+}
+
 
 
 .lux-msgs{

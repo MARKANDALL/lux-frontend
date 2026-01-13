@@ -330,7 +330,9 @@ function showTooltip(chip) {
   const tipTech = chip.getAttribute("data-tip-tech") || "";
   const tipMistake = chip.getAttribute("data-tip-mistake") || "";
 
-  const vidSrc = chip.getAttribute("data-video-src") || "";
+  const vidSrc = chip.getAttribute("data-video-src") || chip.dataset.videoSrc;
+  const vidFrontSrc = chip.getAttribute("data-video-front-src") || chip.dataset.videoFrontSrc;
+
   const poster = chip.getAttribute("data-poster-src") || "";
   const displayLabel = chip.getAttribute("data-display-ipa") || "";
 
@@ -402,16 +404,39 @@ function showTooltip(chip) {
   }
 
   if (vidSrc) {
+    const hasFront = !!vidFrontSrc;
     html += `
-      <div style="background:#000; width:100%; aspect-ratio:16/9; position:relative;">
-        <video id="lux-global-video"
-          src="${vidSrc}"
-          poster="${poster}"
-          playsinline
-          muted
-          disablePictureInPicture
-          style="width:100%; height:100%; object-fit:contain; display:block;"
-          preload="metadata"></video>
+      <div style="background:#000; width:100%; position:relative; padding:10px;">
+        <div style="display:grid; grid-template-columns:${hasFront ? "1fr 1fr" : "1fr"}; gap:10px;">
+          <div style="background:#000; width:100%; aspect-ratio:16/9; position:relative;">
+            <video id="lux-global-video-side"
+              src="${vidSrc}"
+              muted
+              loop
+              autoplay
+              playsinline
+              preload="metadata"
+              style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;">
+            </video>
+          </div>
+
+          ${
+            hasFront
+              ? `
+          <div style="background:#000; width:100%; aspect-ratio:16/9; position:relative;">
+            <video id="lux-global-video-front"
+              src="${vidFrontSrc}"
+              muted
+              loop
+              autoplay
+              playsinline
+              preload="metadata"
+              style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;">
+            </video>
+          </div>`
+              : ``
+          }
+        </div>
 
         <div id="lux-vid-overlay"
           style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.2); pointer-events:none;">
@@ -500,11 +525,10 @@ function hideTooltip() {
     globalTooltip.style.opacity = "0";
     globalTooltip.style.visibility = "hidden";
 
-    const vid = globalTooltip.querySelector("video");
-    if (vid) {
-      vid.pause();
-      vid.currentTime = 0;
-      // leave muted as-is; it will be re-created on next showTooltip anyway
+    const vids = [...globalTooltip.querySelectorAll("video")];
+    for (const v of vids) {
+      try { v.pause(); } catch (_) {}
+      try { v.currentTime = 0; } catch (_) {}
     }
   }
 
@@ -517,24 +541,23 @@ function hideTooltip() {
 function handleChipClick(chip) {
   showTooltip(chip);
 
-  const vid = globalTooltip.querySelector("video");
+  const vids = [...globalTooltip.querySelectorAll("video")];
   const overlay = globalTooltip.querySelector("#lux-vid-overlay");
-  if (!vid) return;
+  if (!vids.length) return;
 
   chip.classList.add("lux-playing-lock");
 
-  vid.muted = false;
-  vid.volume = 1.0;
-  vid.currentTime = 0;
+  for (const v of vids) {
+    v.muted = false;
+    v.volume = 1.0;
+    try { v.currentTime = 0; } catch (_) {}
+  }
 
   if (overlay) overlay.style.display = "none";
 
-  vid.play().catch((e) => console.warn("Auto-play blocked", e));
-
-  vid.onended = () => {
-    chip.classList.remove("lux-playing-lock");
-    if (overlay) overlay.style.display = "flex";
-  };
+  for (const v of vids) {
+    try { v.play?.().catch?.(() => {}); } catch (_) {}
+  }
 }
 
 /* ====================== Utils ====================== */

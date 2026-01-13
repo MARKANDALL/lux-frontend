@@ -269,6 +269,9 @@ const phonemeAssets = {
   },
 };
 
+// Capture canonical keys BEFORE we add alias keys (prevents aliases from overwriting).
+const CANON_KEYS = Object.keys(phonemeAssets);
+
 /* ---------------------------------------------------------
    Compatibility aliases (additive; points to existing entries)
    - Adds Azure-friendly codes that your core.js already knows about
@@ -307,6 +310,19 @@ addAliasKey("θ", "th");
 addAliasKey("ð", "dh");
 
 /* ---------------------------------------------------------
+   Front-facing mouth videos (served from /public)
+   Convention: /vid/ph-front/<CANON_KEY>.mp4
+   (We URI-encode the key so unicode phones like ɾ/ʔ/tʃ work.)
+   --------------------------------------------------------- */
+const FRONT_BASE = "/vid/ph-front/";
+for (const k of CANON_KEYS) {
+  const a = phonemeAssets[k];
+  if (a && !a.videoFront) {
+    a.videoFront = FRONT_BASE + encodeURIComponent(k) + ".mp4";
+  }
+}
+
+/* ---------------------------------------------------------
    Build O(1) lookup by canonical IPA
    - We normalize before indexing to prevent drift.
    --------------------------------------------------------- */
@@ -315,12 +331,17 @@ const assetsByIPA = Object.create(null);
 Object.values(phonemeAssets).forEach((a) => {
   if (!a?.ipa || !a?.video) return;
   const ipa = norm(a.ipa);
-  if (!assetsByIPA[ipa]) assetsByIPA[ipa] = { ipa, video: a.video };
+  if (!assetsByIPA[ipa])
+    assetsByIPA[ipa] = { ipa, video: a.video, videoFront: a.videoFront || "" };
 });
 
 /* Defensive fallback: if ɚ ever goes missing, reuse the ɹ clip (better than null). */
 if (!assetsByIPA["ɚ"] && assetsByIPA["ɹ"]?.video) {
-  assetsByIPA["ɚ"] = { ipa: "ɚ", video: assetsByIPA["ɹ"].video };
+  assetsByIPA["ɚ"] = {
+    ipa: "ɚ",
+    video: assetsByIPA["ɹ"].video,
+    videoFront: assetsByIPA["ɹ"].videoFront || "",
+  };
 }
 
 /** Fast lookup by IPA (or Azure code—both normalized). */
