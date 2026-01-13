@@ -1,0 +1,129 @@
+/* ============================================================
+   TTS portal + drawer layering (critical for interactivity)
+   ============================================================ */
+
+/* Global-ish resets (kept from lux-convo.full.css for parity) */
+*{ box-sizing: border-box; }
+html, body{ height: 100%; }
+
+#tts-controls{
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: var(--z-drawer);
+  overflow: visible;
+  pointer-events: auto; /* keep TTS controls interactive */
+}
+
+/* Keep drawers above the conversation stage */
+.lux-tts-panel,
+.lux-sp-panel{
+  z-index: var(--z-drawer) !important;
+}
+
+/* Self-Playback (Left) */
+.lux-sp-panel{ left: 0 !important; right: auto !important; }
+.lux-sp-tab{ left: 20px !important; right: auto !important; }
+
+/* Text-to-Speech (Right) */
+.lux-tts-panel{ right: 0 !important; left: auto !important; }
+.lux-tts-tab{ right: 20px !important; left: auto !important; }
+
+html.lux-tts-open .lux-tts-panel{ transform: translate3d(0,0,0) !important; }
+html.lux-sp-open  .lux-sp-panel { transform: translate3d(0,0,0) !important; }
+
+/* Canonical gating: drawers exist ONLY in chat mode */
+html:not([data-lux-convo-mode="chat"]) #tts-controls,
+html:not([data-lux-convo-mode="chat"]) .lux-tts-tab,
+html:not([data-lux-convo-mode="chat"]) .lux-tts-panel,
+html:not([data-lux-convo-mode="chat"]) #self-playback-drawer-target,
+html:not([data-lux-convo-mode="chat"]) .lux-sp-tab,
+html:not([data-lux-convo-mode="chat"]) .lux-sp-panel{
+  display: none !important;
+}
+
+/* Canonical gating: Save Progress/Login button ONLY in chat mode */
+html:not([data-lux-convo-mode="chat"]) #lux-auth-btn{
+  display: none !important;
+}
+
+
+
+/* ============================================================
+   Stage wrapper
+   ============================================================ */
+#convoApp{
+  width: 100%;
+  max-width: 1280px;       /* match lux-layout #container max width */
+  min-height: calc(100vh - 20px);
+  position: relative;
+  overflow: hidden;
+
+  border-radius: var(--convo-radius-lg);
+  background:
+    radial-gradient(circle at 28% 22%, rgba(0,120,215,0.10), rgba(255,255,255,0) 58%),
+    radial-gradient(circle at 78% 62%, rgba(124,77,255,0.08), rgba(255,255,255,0) 60%),
+    var(--convo-card);
+  box-shadow: var(--convo-shadow-soft);
+
+  /* Parallax driver vars set by JS */
+  --lux-hue: 210;
+  --lux-mx: 0;
+  --lux-my: 0;
+
+  /* Parallax strength knobs */
+  --lux-par-bg: 2.8;
+  --lux-par-img: 3.2;
+  --lux-mxS: calc(var(--lux-mx) * var(--lux-par-bg));
+  --lux-myS: calc(var(--lux-my) * var(--lux-par-bg));
+  --lux-mxI: calc(var(--lux-mx) * var(--lux-par-img));
+  --lux-myI: calc(var(--lux-my) * var(--lux-par-img));
+}
+
+/* Full-bleed stage for intro + picker (chat stays boxed) */
+#convoApp[data-mode="intro"],
+#convoApp[data-mode="picker"]{
+  width: 100vw;
+  max-width: none;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  overflow: visible;
+
+  --lux-par-bg: 7.5;
+  --lux-par-img: 9.0;
+}
+
+
+/* Keep chat calmer */
+#convoApp[data-mode="chat"]{
+  --lux-par-bg: 2.4;
+  --lux-par-img: 2.8;
+  background: var(--convo-card) !important;
+}
+
+/* ============================================================
+   NEW: Intro must be viewport-locked (no scroll / pan)
+   ============================================================ */
+
+/* Lock page scrolling while intro is active (Edge supports :has()) */
+
+html:has(#convoApp[data-mode="intro"]),
+body:has(#convoApp[data-mode="intro"]){
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+/* Lock the intro stage to the viewport */
+#convoApp[data-mode="intro"]{
+  position: fixed;
+  inset: 0;
+  height: 100vh;
+  overflow: hidden;          /* overrides the earlier overflow:visible */
+  overscroll-behavior: none;
+  touch-action: none;        /* blocks drag-pan */
+}

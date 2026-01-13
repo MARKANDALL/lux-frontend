@@ -1,0 +1,199 @@
+/* =========================================================
+   Knobs drawer (shared: picker + convo)
+========================================================= */
+
+.lux-knobsOverlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.28);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+  z-index: 998;
+}
+.lux-knobsOverlay[data-open="1"]{
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.lux-knobsDrawer{
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 340px;
+  max-width: 92vw;
+
+  background: rgba(255,255,255,0.86);
+  backdrop-filter: blur(16px);
+  border-left: 1px solid rgba(0,0,0,0.10);
+
+  transform: translateX(110%);
+  transition: transform 220ms ease;
+  z-index: 999;
+
+  display: flex;
+  flex-direction: column;
+}
+.lux-knobsDrawer[data-open="1"]{
+  transform: translateX(0);
+}
+
+.lux-knobsHeader{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 14px 10px;
+}
+.lux-knobsTitle{
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+.lux-knobsClose{
+  border: 0;
+  background: transparent;
+  font-size: 1.1rem;
+  cursor: pointer;
+  opacity: 0.75;
+}
+.lux-knobsClose:hover{ opacity: 1; }
+
+.lux-knobsBody{
+  padding: 8px 14px 14px;
+  overflow: auto;
+}
+
+.lux-knobsGroup{
+  padding: 10px 0 12px;
+  border-top: 1px solid rgba(0,0,0,0.06);
+}
+.lux-knobsGroup:first-child{ border-top: 0; }
+
+.lux-knobsLabel{
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.lux-knobsChips{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.lux-knobsChips button{
+  border-radius: 999px;
+  padding: 7px 10px;
+  border: 1px solid rgba(0,0,0,0.14);
+  background: rgba(255,255,255,0.78);
+  cursor: pointer;
+}
+
+.lux-knobsChips button.is-on{
+  border-color: rgba(0,120,215,0.42);
+  box-shadow: 0 0 0 3px rgba(0,120,215,0.16);
+}
+
+/* Picker: inline knobs row under CTA */
+#convoApp[data-mode="picker"] .lux-deckKnobsRow{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+#convoApp[data-mode="picker"] .lux-deckKnobsBtn{
+  border-radius: 999px;
+  padding: 7px 10px;
+  border: 1px solid rgba(0,0,0,0.14);
+  background: rgba(255,255,255,0.82);
+  cursor: pointer;
+}
+
+#convoApp[data-mode="picker"] .lux-deckKnobsSummary{
+  font-size: 0.95rem;
+  opacity: 0.90;
+}
+
+
+
+/* ============================================================
+   LEGACY knobs drawer (keep for now; delete when migration is complete)
+   ============================================================ */
+
+/* ============================================================
+   Knobs drawer
+   ============================================================ */
+.lux-drawer{
+  position: fixed;
+  top: 0;
+  right: 0;
+
+  height: 100vh;
+  width: min(360px, 92vw);
+
+  background: rgba(255,255,255,0.96);
+  border-left: 1px solid rgba(0,0,0,0.10);
+  box-shadow: var(--convo-shadow);
+
+  backdrop-filter: blur(10px);
+
+  transform: translateX(102%);
+  transition: transform 260ms ease;
+
+  z-index: var(--z-modal);
+  display: flex;
+  flex-direction: column;
+}
+
+.lux-drawerHd{
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+
+  background: var(--convo-tint);
+}
+
+#convoApp.knobs-open .lux-drawer{ transform: translateX(0); }
+
+.lux-scrim{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease;
+  z-index: calc(var(--z-modal) - 1);
+}
+#convoApp.knobs-open .lux-scrim{
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Knobs form */
+.k{
+  display:flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.k label{ font-size: 12px; color: var(--convo-muted); }
+
+.k select{
+  width: 100%;
+  border-radius: 0.6rem;
+  border: 1px solid rgba(0,0,0,0.18);
+  background: #fff;
+  color: var(--convo-ink);
+  padding: 8px 10px;
+  font-weight: 850;
+  font-size: 0.95rem;
+}
+
+.small{
+  font-size: 12px;
+  color: var(--convo-muted);
+  line-height: 1.35;
+}

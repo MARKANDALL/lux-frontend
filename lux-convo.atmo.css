@@ -1,0 +1,216 @@
+/* ============================================================
+   Atmosphere
+   ============================================================ */
+.lux-atmo{
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+
+  /* Light fallback (used if intro overrides not active) */
+  background:
+    radial-gradient(circle at 22% 18%, rgba(0,120,215,0.18), rgba(255,255,255,0) 58%),
+    radial-gradient(circle at 78% 62%, rgba(124,77,255,0.16), rgba(255,255,255,0) 60%),
+    linear-gradient(180deg, rgba(250,252,255,0.92), rgba(246,248,255,0.96));
+}
+
+
+/* Intro: white stage (landing page background) */
+#convoApp[data-mode="intro"] .lux-atmo{
+  background: #fff;
+}
+
+
+/* Picker/Chat: no atmo (keeps deck + chat crisp + fast) */
+#convoApp[data-mode="picker"] .lux-atmo,
+#convoApp[data-mode="chat"]   .lux-atmo{
+  display: none !important;
+}
+
+/* Expensive blur layers: keep for none (we’re hiding .lux-atmo in picker/chat anyway).
+   For INTRO parallax smoothness: disable the heavy blurred layers entirely. */
+.lux-atmo-layer{
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  filter: blur(52px);
+  opacity: 1;
+  transform: translate3d(calc(var(--lux-mxS) * 18px), calc(var(--lux-myS) * 14px), 0);
+  transition: opacity 500ms ease;
+  z-index: 1;
+}
+.lux-atmo-layer.a{
+  background: radial-gradient(circle at 30% 30%,
+    var(--convo-atmo-a) 0%,
+    rgba(255,255,255,0) 62%);
+}
+.lux-atmo-layer.b{
+  background: radial-gradient(circle at 70% 60%,
+    var(--convo-atmo-b) 0%,
+    rgba(255,255,255,0) 66%);
+  transform: translate3d(calc(var(--lux-mxS) * -16px), calc(var(--lux-myS) * -12px), 0);
+}
+
+/* Intro perf: remove blur tax (Edge does not rely on huge live blur) */
+#convoApp[data-mode="intro"] .lux-atmo-layer{
+  display: none !important;
+}
+
+.lux-atmo-fog{
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+
+  background:
+    radial-gradient(circle at 50% 0%, rgba(0,120,215,0.10), rgba(255,255,255,0) 55%),
+    linear-gradient(180deg, rgba(255,255,255,0.52), rgba(255,255,255,0.74));
+  opacity: 0.55;
+}
+
+/* Intro: fog becomes subtle dark vignette */
+#convoApp[data-mode="intro"] .lux-atmo-fog{
+  background:
+    radial-gradient(circle at 50% 0%, rgba(0,0,0,0.35), rgba(0,0,0,0) 55%),
+    linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.30));
+  opacity: 0.65;
+}
+
+
+/* ============================================================
+   Floating tiles (parallax) — Edge-style physics
+   - Positions are JS-scattered (no more left/right “poles”)
+   - Each tile gets independent drift (desynced) + depth layering
+   ============================================================ */
+
+/* Typed custom props so drift can animate smoothly in modern Edge/Chrome */
+@property --lux-dx { syntax: "<length>"; inherits: false; initial-value: 0px; }
+@property --lux-dy { syntax: "<length>"; inherits: false; initial-value: 0px; }
+@property --lux-dr { syntax: "<angle>";  inherits: false; initial-value: 0deg; }
+
+.lux-scene-cards{
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  opacity: 1;
+  transition: opacity 400ms ease;
+  pointer-events: none;
+}
+
+#convoApp[data-mode="chat"] .lux-scene-cards{ opacity: 0; }
+
+.lux-scene-card{
+  position: absolute;
+
+  /* Anchors & sizing are injected by JS */
+  left: var(--ax, 0px);
+  top:  var(--ay, 0px);
+  width:  var(--w, 320px);
+  height: var(--h, 220px);
+
+  right: auto;
+  bottom: auto;
+
+  border-radius: var(--r, 22px);
+  overflow: hidden;
+  pointer-events: none;
+
+  /* “Full-bleed tile” look */
+  background: transparent;
+  border: 0;
+
+  /* SOLID tiles (no bleed-through) */
+  opacity: 1;
+
+  /* CRYSTAL clear (no depth blur on the tiles themselves) */
+  filter: none;
+
+  /* keep depth via scale + shadow + z only */
+  z-index: var(--z, 1);
+  scale: var(--s, 1);
+  box-shadow: 0 28px 80px rgba(0,0,0,var(--shadowA, 0.22));
+
+  /* Parallax + drift combine via translate property */
+  translate:
+    calc(var(--lux-dx) + calc(var(--lux-mxS) * var(--parX, 0px)))
+    calc(var(--lux-dy) + calc(var(--lux-myS) * var(--parY, 0px)));
+
+  rotate: calc(var(--baseRot, 0deg) + var(--lux-dr));
+
+  will-change: translate, rotate, filter, opacity;
+}
+
+/* Image fill (already correct; keep “no viewport sliding”) */
+.lux-scene-card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background: var(--img, linear-gradient(135deg, #2b84ff, #7a4dff));
+  background-size: cover;
+  background-position: center;
+  transform: scale(1.01);
+  filter: none;
+}
+
+/* Drift only when intro is active + parallax is on */
+#convoApp[data-mode="intro"][data-parallax="on"] .lux-scene-card{
+  animation: luxSceneDrift var(--driftDur, 18s) ease-in-out infinite;
+  animation-delay: var(--driftDelay, 0s);
+}
+
+#convoApp:not([data-mode="intro"]) .lux-scene-card{
+  animation: none;
+  --lux-dx: 0px;
+  --lux-dy: 0px;
+  --lux-dr: 0deg;
+}
+
+/* Independent drift path (per-tile amplitudes are vars) */
+@keyframes luxSceneDrift{
+  0%, 100%{
+    --lux-dx: 0px;
+    --lux-dy: 0px;
+    --lux-dr: 0deg;
+  }
+  22%{
+    --lux-dx: var(--driftX, 18px);
+    --lux-dy: calc(var(--driftY, 14px) * -0.45);
+    --lux-dr: calc(var(--driftR, 2deg) * -1);
+  }
+  50%{
+    --lux-dx: calc(var(--driftX, 18px) * -0.65);
+    --lux-dy: var(--driftY, 14px);
+    --lux-dr: var(--driftR, 2deg);
+  }
+  78%{
+    --lux-dx: calc(var(--driftX, 18px) * 0.35);
+    --lux-dy: calc(var(--driftY, 14px) * -1);
+    --lux-dr: calc(var(--driftR, 2deg) * 0.6);
+  }
+}
+
+/* Micro tiles (optional Edge-like “dust” fill) */
+.lux-scene-card.is-micro{
+  border-radius: 18px;
+  box-shadow: 0 18px 60px rgba(0,0,0,var(--shadowA, 0.16));
+}
+
+/* Image mapping ONLY (positions/sizes are no longer here) */
+.lux-scene-card.c1{ --img: url("/convo-img/coffee.webp"); }
+.lux-scene-card.c2{ --img: url("/convo-img/doctor.webp"); }
+.lux-scene-card.c3{ --img: url("/convo-img/job.webp"); }
+.lux-scene-card.c4{ --img: url("/convo-img/landlord.webp"); }
+.lux-scene-card.c5{ --img: url("/convo-img/airport.webp"); }
+.lux-scene-card.c6{ --img: url("/convo-img/restaurant.webp"); }
+.lux-scene-card.c7{ --img: url("/convo-img/school.webp"); }
+.lux-scene-card.c8{ --img: url("/convo-img/networking.webp"); }
+
+
+/* Reduced motion: freeze tiles completely */
+@media (prefers-reduced-motion: reduce){
+  #convoApp .lux-scene-card{
+    animation: none !important;
+    translate: 0 0 !important;
+    rotate: 0deg !important;
+    filter: none !important;
+  }
+}

@@ -1,0 +1,36 @@
+/* =========================
+   Convo tokens (map to Lux)
+   ========================= */
+:root{
+  --convo-ink: var(--lux-text-main);
+  --convo-muted: var(--lux-text-muted);
+
+  --convo-accent: var(--lux-blue-primary);
+  --convo-accent-hover: var(--lux-blue-hover);
+
+  --convo-card: #ffffff;
+  --convo-tint: #f8fbff;
+  --convo-border: rgba(0,0,0,0.10);
+
+  --convo-radius: 16px;
+  --convo-radius-lg: 22px;
+
+  --convo-shadow: 0 10px 28px rgba(0,0,0,0.10);
+  --convo-shadow-soft: 0 3px 10px rgba(0,0,0,0.08);
+
+  /* Light atmosphere colors (used for non-intro or fallback) */
+  --convo-atmo-a: rgba(0, 120, 215, 0.14);
+  --convo-atmo-b: rgba(124, 77, 255, 0.10);
+
+  /* Edge-like intro palette */
+  --edge-bg-a: #0b2a2b;
+  --edge-bg-b: #12402f;
+  --edge-bg-c: #0a1f2a;
+
+  --edge-panel: rgba(12, 40, 36, 0.70);
+  --edge-panel-border: rgba(255,255,255,0.14);
+  --edge-panel-shadow: 0 30px 90px rgba(0,0,0,0.55);
+
+  --edge-ink: rgba(255,255,255,0.92);
+  --edge-muted: rgba(255,255,255,0.72);
+}

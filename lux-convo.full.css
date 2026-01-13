@@ -1,0 +1,1517 @@
+/* lux-convo.css
+   Goal: Make AI Conversations visually match the primary Lux page by:
+   - NOT overriding global theme (lux-layout.css owns body/bg/font).
+   - Styling convo-only components (intro/deck/chat/knobs) with the Lux palette.
+   - Keeping TTS/SelfPB drawers correctly layered + clickable.
+
+   Update (Edge-like intro + smoother parallax):
+   - Intro stage becomes dark, higher-contrast (Edge-ish).
+   - Intro parallax avoids costly blur/backdrop-filter/filter work.
+   - Picker + Chat remain light Lux and smooth.
+*/
+
+/* =========================
+   Convo tokens (map to Lux)
+   ========================= */
+:root{
+  --convo-ink: var(--lux-text-main);
+  --convo-muted: var(--lux-text-muted);
+
+  --convo-accent: var(--lux-blue-primary);
+  --convo-accent-hover: var(--lux-blue-hover);
+
+  --convo-card: #ffffff;
+  --convo-tint: #f8fbff;
+  --convo-border: rgba(0,0,0,0.10);
+
+  --convo-radius: 16px;
+  --convo-radius-lg: 22px;
+
+  --convo-shadow: 0 10px 28px rgba(0,0,0,0.10);
+  --convo-shadow-soft: 0 3px 10px rgba(0,0,0,0.08);
+
+  /* Light atmosphere colors (used for non-intro or fallback) */
+  --convo-atmo-a: rgba(0, 120, 215, 0.14);
+  --convo-atmo-b: rgba(124, 77, 255, 0.10);
+
+  /* Edge-like intro palette */
+  --edge-bg-a: #0b2a2b;
+  --edge-bg-b: #12402f;
+  --edge-bg-c: #0a1f2a;
+
+  --edge-panel: rgba(12, 40, 36, 0.70);
+  --edge-panel-border: rgba(255,255,255,0.14);
+  --edge-panel-shadow: 0 30px 90px rgba(0,0,0,0.55);
+
+  --edge-ink: rgba(255,255,255,0.92);
+  --edge-muted: rgba(255,255,255,0.72);
+}
+
+*{ box-sizing: border-box; }
+html, body{ height: 100%; }
+
+/* IMPORTANT:
+   Do NOT style body here. lux-layout.css already sets Montserrat, white bg, etc. */
+
+
+/* ============================================================
+   TTS portal + drawer layering (critical for interactivity)
+   ============================================================ */
+#tts-controls{
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: var(--z-drawer);
+  overflow: visible;
+  pointer-events: auto; /* keep TTS controls interactive */
+}
+
+/* Keep drawers above the conversation stage */
+.lux-tts-panel,
+.lux-sp-panel{
+  z-index: var(--z-drawer) !important;
+}
+
+/* Self-Playback (Left) */
+.lux-sp-panel{ left: 0 !important; right: auto !important; }
+.lux-sp-tab{ left: 20px !important; right: auto !important; }
+
+/* Text-to-Speech (Right) */
+.lux-tts-panel{ right: 0 !important; left: auto !important; }
+.lux-tts-tab{ right: 20px !important; left: auto !important; }
+
+html.lux-tts-open .lux-tts-panel{ transform: translate3d(0,0,0) !important; }
+html.lux-sp-open  .lux-sp-panel { transform: translate3d(0,0,0) !important; }
+
+/* Canonical gating: drawers exist ONLY in chat mode */
+html:not([data-lux-convo-mode="chat"]) #tts-controls,
+html:not([data-lux-convo-mode="chat"]) .lux-tts-tab,
+html:not([data-lux-convo-mode="chat"]) .lux-tts-panel,
+html:not([data-lux-convo-mode="chat"]) #self-playback-drawer-target,
+html:not([data-lux-convo-mode="chat"]) .lux-sp-tab,
+html:not([data-lux-convo-mode="chat"]) .lux-sp-panel{
+  display: none !important;
+}
+
+/* Canonical gating: Save Progress/Login button ONLY in chat mode */
+html:not([data-lux-convo-mode="chat"]) #lux-auth-btn{
+  display: none !important;
+}
+
+
+
+/* ============================================================
+   Stage wrapper
+   ============================================================ */
+#convoApp{
+  width: 100%;
+  max-width: 1280px;       /* match lux-layout #container max width */
+  min-height: calc(100vh - 20px);
+  position: relative;
+  overflow: hidden;
+
+  border-radius: var(--convo-radius-lg);
+  background:
+    radial-gradient(circle at 28% 22%, rgba(0,120,215,0.10), rgba(255,255,255,0) 58%),
+    radial-gradient(circle at 78% 62%, rgba(124,77,255,0.08), rgba(255,255,255,0) 60%),
+    var(--convo-card);
+  box-shadow: var(--convo-shadow-soft);
+
+  /* Parallax driver vars set by JS */
+  --lux-hue: 210;
+  --lux-mx: 0;
+  --lux-my: 0;
+
+  /* Parallax strength knobs */
+  --lux-par-bg: 2.8;
+  --lux-par-img: 3.2;
+  --lux-mxS: calc(var(--lux-mx) * var(--lux-par-bg));
+  --lux-myS: calc(var(--lux-my) * var(--lux-par-bg));
+  --lux-mxI: calc(var(--lux-mx) * var(--lux-par-img));
+  --lux-myI: calc(var(--lux-my) * var(--lux-par-img));
+}
+
+/* Full-bleed stage for intro + picker (chat stays boxed) */
+#convoApp[data-mode="intro"],
+#convoApp[data-mode="picker"]{
+  width: 100vw;
+  max-width: none;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  overflow: visible;
+
+  --lux-par-bg: 7.5;
+  --lux-par-img: 9.0;
+}
+
+
+/* Keep chat calmer */
+#convoApp[data-mode="chat"]{
+  --lux-par-bg: 2.4;
+  --lux-par-img: 2.8;
+  background: var(--convo-card) !important;
+}
+
+/* ============================================================
+   NEW: Intro must be viewport-locked (no scroll / pan)
+   ============================================================ */
+
+/* Lock page scrolling while intro is active (Edge supports :has()) */
+
+html:has(#convoApp[data-mode="intro"]),
+body:has(#convoApp[data-mode="intro"]){
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+/* Lock the intro stage to the viewport */
+#convoApp[data-mode="intro"]{
+  position: fixed;
+  inset: 0;
+  height: 100vh;
+  overflow: hidden;          /* overrides the earlier overflow:visible */
+  overscroll-behavior: none;
+  touch-action: none;        /* blocks drag-pan */
+}
+
+/* ============================================================
+   Atmosphere
+   ============================================================ */
+.lux-atmo{
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+
+  /* Light fallback (used if intro overrides not active) */
+  background:
+    radial-gradient(circle at 22% 18%, rgba(0,120,215,0.18), rgba(255,255,255,0) 58%),
+    radial-gradient(circle at 78% 62%, rgba(124,77,255,0.16), rgba(255,255,255,0) 60%),
+    linear-gradient(180deg, rgba(250,252,255,0.92), rgba(246,248,255,0.96));
+}
+
+
+/* Intro: white stage (landing page background) */
+#convoApp[data-mode="intro"] .lux-atmo{
+  background: #fff;
+}
+
+
+/* Picker/Chat: no atmo (keeps deck + chat crisp + fast) */
+#convoApp[data-mode="picker"] .lux-atmo,
+#convoApp[data-mode="chat"]   .lux-atmo{
+  display: none !important;
+}
+
+/* Expensive blur layers: keep for none (we’re hiding .lux-atmo in picker/chat anyway).
+   For INTRO parallax smoothness: disable the heavy blurred layers entirely. */
+.lux-atmo-layer{
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  filter: blur(52px);
+  opacity: 1;
+  transform: translate3d(calc(var(--lux-mxS) * 18px), calc(var(--lux-myS) * 14px), 0);
+  transition: opacity 500ms ease;
+  z-index: 1;
+}
+.lux-atmo-layer.a{
+  background: radial-gradient(circle at 30% 30%,
+    var(--convo-atmo-a) 0%,
+    rgba(255,255,255,0) 62%);
+}
+.lux-atmo-layer.b{
+  background: radial-gradient(circle at 70% 60%,
+    var(--convo-atmo-b) 0%,
+    rgba(255,255,255,0) 66%);
+  transform: translate3d(calc(var(--lux-mxS) * -16px), calc(var(--lux-myS) * -12px), 0);
+}
+
+/* Intro perf: remove blur tax (Edge does not rely on huge live blur) */
+#convoApp[data-mode="intro"] .lux-atmo-layer{
+  display: none !important;
+}
+
+.lux-atmo-fog{
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+
+  background:
+    radial-gradient(circle at 50% 0%, rgba(0,120,215,0.10), rgba(255,255,255,0) 55%),
+    linear-gradient(180deg, rgba(255,255,255,0.52), rgba(255,255,255,0.74));
+  opacity: 0.55;
+}
+
+/* Intro: fog becomes subtle dark vignette */
+#convoApp[data-mode="intro"] .lux-atmo-fog{
+  background:
+    radial-gradient(circle at 50% 0%, rgba(0,0,0,0.35), rgba(0,0,0,0) 55%),
+    linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.30));
+  opacity: 0.65;
+}
+
+
+/* ============================================================
+   Floating tiles (parallax) — Edge-style physics
+   - Positions are JS-scattered (no more left/right “poles”)
+   - Each tile gets independent drift (desynced) + depth layering
+   ============================================================ */
+
+/* Typed custom props so drift can animate smoothly in modern Edge/Chrome */
+@property --lux-dx { syntax: "<length>"; inherits: false; initial-value: 0px; }
+@property --lux-dy { syntax: "<length>"; inherits: false; initial-value: 0px; }
+@property --lux-dr { syntax: "<angle>";  inherits: false; initial-value: 0deg; }
+
+.lux-scene-cards{
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  opacity: 1;
+  transition: opacity 400ms ease;
+  pointer-events: none;
+}
+
+#convoApp[data-mode="chat"] .lux-scene-cards{ opacity: 0; }
+
+.lux-scene-card{
+  position: absolute;
+
+  /* Anchors & sizing are injected by JS */
+  left: var(--ax, 0px);
+  top:  var(--ay, 0px);
+  width:  var(--w, 320px);
+  height: var(--h, 220px);
+
+  right: auto;
+  bottom: auto;
+
+  border-radius: var(--r, 22px);
+  overflow: hidden;
+  pointer-events: none;
+
+  /* “Full-bleed tile” look */
+  background: transparent;
+  border: 0;
+
+  /* SOLID tiles (no bleed-through) */
+  opacity: 1;
+
+  /* CRYSTAL clear (no depth blur on the tiles themselves) */
+  filter: none;
+
+  /* keep depth via scale + shadow + z only */
+  z-index: var(--z, 1);
+  scale: var(--s, 1);
+  box-shadow: 0 28px 80px rgba(0,0,0,var(--shadowA, 0.22));
+
+  /* Parallax + drift combine via translate property */
+  translate:
+    calc(var(--lux-dx) + calc(var(--lux-mxS) * var(--parX, 0px)))
+    calc(var(--lux-dy) + calc(var(--lux-myS) * var(--parY, 0px)));
+
+  rotate: calc(var(--baseRot, 0deg) + var(--lux-dr));
+
+  will-change: translate, rotate, filter, opacity;
+}
+
+/* Image fill (already correct; keep “no viewport sliding”) */
+.lux-scene-card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background: var(--img, linear-gradient(135deg, #2b84ff, #7a4dff));
+  background-size: cover;
+  background-position: center;
+  transform: scale(1.01);
+  filter: none;
+}
+
+/* Drift only when intro is active + parallax is on */
+#convoApp[data-mode="intro"][data-parallax="on"] .lux-scene-card{
+  animation: luxSceneDrift var(--driftDur, 18s) ease-in-out infinite;
+  animation-delay: var(--driftDelay, 0s);
+}
+
+#convoApp:not([data-mode="intro"]) .lux-scene-card{
+  animation: none;
+  --lux-dx: 0px;
+  --lux-dy: 0px;
+  --lux-dr: 0deg;
+}
+
+/* Independent drift path (per-tile amplitudes are vars) */
+@keyframes luxSceneDrift{
+  0%, 100%{
+    --lux-dx: 0px;
+    --lux-dy: 0px;
+    --lux-dr: 0deg;
+  }
+  22%{
+    --lux-dx: var(--driftX, 18px);
+    --lux-dy: calc(var(--driftY, 14px) * -0.45);
+    --lux-dr: calc(var(--driftR, 2deg) * -1);
+  }
+  50%{
+    --lux-dx: calc(var(--driftX, 18px) * -0.65);
+    --lux-dy: var(--driftY, 14px);
+    --lux-dr: var(--driftR, 2deg);
+  }
+  78%{
+    --lux-dx: calc(var(--driftX, 18px) * 0.35);
+    --lux-dy: calc(var(--driftY, 14px) * -1);
+    --lux-dr: calc(var(--driftR, 2deg) * 0.6);
+  }
+}
+
+/* Micro tiles (optional Edge-like “dust” fill) */
+.lux-scene-card.is-micro{
+  border-radius: 18px;
+  box-shadow: 0 18px 60px rgba(0,0,0,var(--shadowA, 0.16));
+}
+
+/* Image mapping ONLY (positions/sizes are no longer here) */
+.lux-scene-card.c1{ --img: url("/convo-img/coffee.webp"); }
+.lux-scene-card.c2{ --img: url("/convo-img/doctor.webp"); }
+.lux-scene-card.c3{ --img: url("/convo-img/job.webp"); }
+.lux-scene-card.c4{ --img: url("/convo-img/landlord.webp"); }
+.lux-scene-card.c5{ --img: url("/convo-img/airport.webp"); }
+.lux-scene-card.c6{ --img: url("/convo-img/restaurant.webp"); }
+.lux-scene-card.c7{ --img: url("/convo-img/school.webp"); }
+.lux-scene-card.c8{ --img: url("/convo-img/networking.webp"); }
+
+
+/* Reduced motion: freeze tiles completely */
+@media (prefers-reduced-motion: reduce){
+  #convoApp .lux-scene-card{
+    animation: none !important;
+    translate: 0 0 !important;
+    rotate: 0deg !important;
+    filter: none !important;
+  }
+}
+
+
+/* ============================================================
+   UI stage
+   ============================================================ */
+.lux-ui{
+  position: relative;
+  z-index: 1;
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 22px 16px;
+}
+
+/* Mode routing */
+.lux-intro, .lux-picker, .lux-chatwrap, .lux-convo-progress{
+  width: 100%;
+  display: none;
+}
+
+#convoApp[data-mode="intro"]  .lux-intro { display: grid; place-items: center; }
+#convoApp[data-mode="picker"] .lux-picker{ display: flex; flex-direction: column; align-items: center; gap: 14px; }
+
+#convoApp[data-mode="chat"]   .lux-chatwrap{
+  display: flex;
+  justify-content: center;
+}
+
+/* Progress widget: ONLY show in chat mode */
+#convoApp[data-mode="chat"] .lux-convo-progress{
+  display:flex;
+  justify-content:center;
+}
+
+/* Safety: never show it outside chat */
+#convoApp:not([data-mode="chat"]) .lux-convo-progress{
+  display:none !important;
+}
+
+
+
+/* ============================================================
+   Intro -> Picker “warp” transition (transform-only)
+   ============================================================ */
+#convoApp.lux-warp .lux-intro{
+  animation: luxWarpIntro 360ms cubic-bezier(.18,.9,.2,1) both;
+}
+#convoApp.lux-warp .lux-scene-cards{
+  animation: luxWarpTiles 360ms cubic-bezier(.18,.9,.2,1) both;
+}
+
+@keyframes luxWarpIntro{
+  0%{ transform: translate3d(0,0,0) scale(1); opacity: 1; }
+  100%{ transform: translate3d(0,-10px,0) scale(1.08); opacity: 0; }
+}
+@keyframes luxWarpTiles{
+  0%{ transform: translate3d(0,0,0) scale(1); opacity: 1; }
+  100%{ transform: translate3d(0,0,0) scale(1.06); opacity: 0.92; }
+}
+
+#convoApp.lux-arrive .lux-picker{
+  animation: luxArrivePicker 420ms cubic-bezier(.18,.9,.2,1) both;
+}
+@keyframes luxArrivePicker{
+  0%{ transform: translate3d(0,14px,0) scale(.985); opacity: 0; }
+  100%{ transform: translate3d(0,0,0) scale(1); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  #convoApp.lux-warp .lux-intro,
+  #convoApp.lux-warp .lux-scene-cards,
+  #convoApp.lux-arrive .lux-picker{
+    animation: none !important;
+  }
+}
+
+
+/* ============================================================
+   Shared panel chrome (matches Lux “card” language)
+   ============================================================ */
+.lux-panel{
+  background: var(--convo-card);
+  border: 1px solid var(--convo-border);
+  border-radius: var(--convo-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--convo-shadow);
+}
+
+.lux-hd{
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+  background: var(--convo-tint);
+
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 10px;
+
+  color: var(--convo-ink);
+}
+
+.lux-title{
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  color: var(--convo-ink);
+}
+
+.lux-sub{
+  color: var(--convo-muted);
+  font-size: 12px;
+}
+
+.lux-body{ padding: 12px 14px; }
+
+.lux-actions{
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+
+/* ============================================================
+   Intro hero (Edge-like)
+   ============================================================ */
+.lux-heroCard{
+  width: min(860px, 94vw);
+  border-radius: 26px;
+  background: rgba(255,255,255,0.88);
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow: var(--convo-shadow);
+  padding: 26px 24px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Intro: LIGHT frosted glass (keeps sheen + blur, not dark) */
+#convoApp[data-mode="intro"] .lux-heroCard{
+  width: min(820px, 92vw);
+  min-height: 420px;
+  padding: 56px 54px 46px;
+  border-radius: 38px;
+  text-align: center;
+
+  /* slightly “milkier” glass helps the depth read */
+  background: rgba(255,255,255,0.60);
+  border: 1px solid rgba(0,0,0,0.10);
+
+  /* pillowy depth + double border trick (outer rim + inner hairline) */
+  box-shadow:
+    0 32px 80px rgba(0,0,0,0.18),              /* main lift */
+    0 10px 26px rgba(0,0,0,0.10),              /* near shadow */
+    0 0 0 1px rgba(0,0,0,0.06),                /* subtle outer rim */
+    inset 0 0 0 1px rgba(255,255,255,0.42),    /* hairline inner border */
+    inset 0 1px 0 rgba(255,255,255,0.55),      /* top inner highlight */
+    inset 0 -10px 24px rgba(0,0,0,0.06);       /* bottom inner depth */
+
+  /* crisp rounded edge (helps it “read” as a thick card) */
+  outline: 1px solid rgba(255,255,255,0.35);
+  outline-offset: -1px;
+
+  -webkit-backdrop-filter: blur(18px) saturate(1.18);
+  backdrop-filter: blur(18px) saturate(1.18);
+}
+
+/* Soft internal “glass lighting” */
+#convoApp[data-mode="intro"] .lux-heroCard::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius: inherit;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 22% 18%, rgba(255,255,255,0.14), rgba(255,255,255,0) 58%),
+    radial-gradient(circle at 78% 68%, rgba(255,255,255,0.08), rgba(255,255,255,0) 55%);
+}
+
+/* Diagonal sheen sweep (every few seconds) */
+#convoApp[data-mode="intro"] .lux-heroCard::after{
+  content:"";
+  position:absolute;
+  inset:-40%;
+  pointer-events:none;
+  background: linear-gradient(115deg,
+    rgba(255,255,255,0) 42%,
+    rgba(255,255,255,0.28) 50%,
+    rgba(255,255,255,0) 58%);
+  transform: translateX(-120%);
+  opacity: 0;
+  animation: luxHeroSheen 6.8s ease-in-out infinite;
+  mix-blend-mode: overlay;
+}
+
+@keyframes luxHeroSheen{
+  0%,72%{ transform: translateX(-120%); opacity: 0; }
+  78%{ opacity: 0.85; }
+  100%{ transform: translateX(120%); opacity: 0; }
+}
+
+.lux-heroBrand{
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(0,0,0,0.55);
+}
+#convoApp[data-mode="intro"] .lux-heroBrand{
+  color: rgba(0,0,0,0.58);
+}
+
+.lux-heroTitle{
+  font-size: 38px;
+  font-weight: 860;
+  margin-top: 10px;
+  color: var(--convo-ink);
+}
+#convoApp[data-mode="intro"] .lux-heroTitle{
+  color: var(--convo-ink);
+  font-size: 58px;
+  line-height: 1.06;
+  margin-top: 14px;
+}
+
+.lux-heroSub{
+  margin-top: 12px;
+  font-size: 15px;
+  color: rgba(0,0,0,0.62);
+  line-height: 1.45;
+  max-width: 70ch;
+}
+#convoApp[data-mode="intro"] .lux-heroSub{
+  color: rgba(0,0,0,0.62);
+  font-size: 18px;
+  line-height: 1.45;
+  max-width: 60ch;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.lux-heroNext{
+  margin-top: 18px;
+  border: 1px solid rgba(0,0,0,0.10);
+  background: rgba(255,255,255,0.70);
+  color: var(--convo-ink);
+  border-radius: 14px;
+  padding: 12px 18px;
+  cursor: pointer;
+  font-weight: 800;
+}
+.lux-heroNext:hover{ background: rgba(255,255,255,0.92); }
+
+/* Intro CTA: Lux-style pill (light, not stark) */
+#convoApp[data-mode="intro"] .lux-heroNext{
+  background: rgba(255,255,255,0.78);
+  border: 1px solid rgba(0,0,0,0.12);
+  color: var(--convo-ink);
+  border-radius: 999px;
+  padding: 14px 28px;
+  font-size: 17px;
+  min-width: 170px;
+  box-shadow: 0 12px 26px rgba(0,0,0,0.12);
+}
+#convoApp[data-mode="intro"] .lux-heroNext:hover{
+  background-color: var(--lux-water-hover, rgba(233,246,255,1));
+  border-color: var(--lux-water-border, rgba(0,120,215,0.28));
+  box-shadow:
+    0 14px 28px rgba(0,0,0,0.12),
+    0 0 0 3px var(--lux-water-halo, rgba(0,120,215,0.16));
+}
+
+@media (prefers-reduced-motion: reduce){
+  #convoApp[data-mode="intro"] .lux-heroCard::after{
+    animation: none !important;
+    opacity: 0 !important;
+  }
+}
+
+
+/* ============================================================
+   Deck (scenario picker)
+   ============================================================ */
+.lux-deck{
+  position: relative;
+  width: min(980px, 94vw);
+  height: 440px;
+  transform-style: preserve-3d;
+}
+
+/* Picker sizing bump */
+#convoApp[data-mode="picker"] .lux-deck{
+  width: min(1120px, 96vw);
+  height: min(780px, 76vh);
+}
+
+/* The card adopts the media's NATURAL ratio.
+   Height is capped to viewport; width is derived automatically. */
+#convoApp[data-mode="picker"] .lux-deck-card{
+  height: min(var(--lux-media-h, 520px), 76vh);
+  aspect-ratio: var(--lux-media-ar, 16 / 9);
+  width: auto;
+}
+#convoApp[data-mode="picker"] .lux-deckTitle{ font-size: 44px; }
+#convoApp[data-mode="picker"] .lux-deckDesc{ font-size: 18px; }
+#convoApp[data-mode="picker"] .lux-navArrow,
+#convoApp[data-mode="picker"] .lux-navNext{
+  font-size: 16px;
+  padding: 12px 18px;
+}
+#convoApp[data-mode="picker"] .lux-navArrow{ min-width: 108px; }
+
+.lux-deck-card{
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  /* variable-sized cards must be vertically centered */
+  transform: translate(-50%, -50%);
+
+  border-radius: 26px;
+  overflow: hidden;
+  isolation: isolate;
+  background: rgba(255,255,255,0.88);
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow: var(--convo-shadow);
+
+  padding: 18px 18px 16px;
+  backdrop-filter: blur(10px);
+
+  transition: transform 520ms cubic-bezier(0.18, 0.9, 0.2, 1),
+              filter 520ms cubic-bezier(0.18, 0.9, 0.2, 1),
+              opacity 520ms cubic-bezier(0.18, 0.9, 0.2, 1);
+}
+
+/* Deck card media layering:
+   ::before = soft blurred fill (always)
+   ::after  = sharp still “poster” (contain)
+   .lux-cardMedia/.lux-cardVideo = video (contain), shown only when playing
+*/
+.lux-deck-card.has-img::before{
+  content:"";
+  position:absolute;
+  inset:-12%;
+  background-image: var(--lux-card-img);
+  background-size: cover;
+  background-position: center;
+  filter: blur(14px) saturate(1.08);
+  transform: scale(1.04);
+  opacity: 0.28;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.lux-deck-card.has-img::after{
+  content:"";
+  position:absolute;
+  inset: 0;
+  background-image: var(--lux-card-img);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.92;
+  transition: opacity 260ms ease;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* video layer sits under the sharp still; the still fades out while playing */
+.lux-cardMedia{
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.lux-cardVideo{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 50%;
+  opacity: 0;
+  transition: opacity 420ms ease;
+}
+
+/* PLAYING: show video, hide sharp still */
+.lux-deck-card.has-video[data-vstate="playing"] .lux-cardVideo{ opacity: 0.34; }
+.lux-deck-card.has-video[data-vstate="playing"]::after{ opacity: 0; }
+
+/* ENDED/ERROR: hide video, restore sharp still */
+.lux-deck-card.has-video[data-vstate="ended"] .lux-cardVideo{ opacity: 0; }
+.lux-deck-card.has-video[data-vstate="ended"]::after{ opacity: 0.92; }
+
+.lux-deck-card.has-video[data-vstate="error"] .lux-cardVideo{ opacity: 0; }
+.lux-deck-card.has-video[data-vstate="error"]::after{ opacity: 0.92; }
+
+/* text above all media */
+.lux-deck-card.has-img > *:not(.lux-cardMedia){
+  position: relative;
+  z-index: 3;
+}
+
+/* ============================================================
+   Deck text readability panel (scrim)
+   ============================================================ */
+.lux-deckText{
+  position: relative;
+  z-index: 3;
+  max-width: min(560px, 78%);
+  padding: 16px 18px;
+  border-radius: 18px;
+
+  /* dark scrim so white text reads on ANY photo/video */
+  background: linear-gradient(135deg,
+    rgba(0,0,0,0.64),
+    rgba(0,0,0,0.26)
+  );
+
+  backdrop-filter: blur(6px);
+  box-shadow: 0 14px 28px rgba(0,0,0,0.18);
+}
+
+/* Make the pill readable on media */
+.lux-deckText .lux-pill{
+  color: rgba(255,255,255,0.86);
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(255,255,255,0.22);
+}
+
+/* White text + subtle shadow */
+.lux-deckText .lux-deckTitle{
+  color: rgba(255,255,255,0.96);
+  text-shadow: 0 2px 10px rgba(0,0,0,0.35);
+}
+
+.lux-deckText .lux-deckDesc{
+  color: rgba(255,255,255,0.84);
+  text-shadow: 0 2px 10px rgba(0,0,0,0.28);
+}
+
+/* Expand/collapse (taller “fog box” reveal) */
+.lux-deckMore{
+  margin-top: 10px;
+  color: rgba(255,255,255,0.84);
+  text-shadow: 0 2px 10px rgba(0,0,0,0.28);
+
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(-4px);
+
+  transition:
+    max-height 240ms ease,
+    opacity 180ms ease,
+    transform 240ms ease;
+}
+
+.lux-deck-card.isExpanded .lux-deckMore{
+  max-height: 240px;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* CTA stands out (and is the only "enter" affordance) */
+.lux-deckText .lux-deckCta{
+  background: rgba(255,255,255,0.92);
+  border: 1px solid rgba(255,255,255,0.35);
+  color: rgba(0,0,0,0.86);
+  box-shadow: 0 12px 20px rgba(0,0,0,0.22);
+}
+.lux-deckText .lux-deckCta:hover{
+  background: rgba(255,255,255,0.98);
+}
+
+/* While video is playing, strengthen the scrim a bit */
+.lux-deck-card.has-video[data-vstate="playing"] .lux-deckText{
+  background: linear-gradient(135deg,
+    rgba(0,0,0,0.72),
+    rgba(0,0,0,0.32)
+  );
+}
+
+@media (prefers-reduced-motion: reduce){
+  .lux-cardVideo{ display: none !important; }
+  .lux-deck-card.has-img::after{ opacity: 0.92 !important; }
+}
+
+.lux-deck-card.is-active{
+  width: min(660px, 92vw);
+  z-index: 3;
+  opacity: 1;
+  filter: blur(0px);
+  cursor: pointer;
+}
+
+.lux-deck-card.is-preview{
+  width: min(520px, 86vw);
+  z-index: 1;
+  opacity: 0.62;       /* was 0.55 */
+  filter: blur(4.5px); /* was 6px */
+  cursor: pointer;
+}
+
+/* Overlap + left/right staggering (MORE separation) */
+#convoApp[data-side="left"]  .lux-deck-card.is-active { transform: translate(-50%, -50%) translateX(-110px) scale(1.00); }
+#convoApp[data-side="left"]  .lux-deck-card.is-preview{ transform: translate(-50%, -50%) translateX(190px)  scale(0.90); }
+
+#convoApp[data-side="right"] .lux-deck-card.is-active { transform: translate(-50%, -50%) translateX(110px)  scale(1.00); }
+#convoApp[data-side="right"] .lux-deck-card.is-preview{ transform: translate(-50%, -50%) translateX(-190px) scale(0.90); }
+
+.lux-pill{
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+
+  color: rgba(0,0,0,0.60);
+  background: rgba(0,0,0,0.04);
+  border: 1px solid rgba(0,0,0,0.08);
+
+  padding: 6px 10px;
+  border-radius: 999px;
+}
+
+.lux-deckTitle{
+  margin-top: 14px;
+  font-size: 28px;
+  font-weight: 820;
+  color: var(--convo-ink);
+}
+
+.lux-deckDesc{
+  margin-top: 10px;
+  font-size: 15px;
+  color: rgba(0,0,0,0.62);
+  line-height: 1.45;
+  max-width: 52ch;
+}
+
+.lux-deckCta{
+  margin-top: 16px;
+  background: rgba(0,120,215,0.10);
+  border: 1px solid rgba(0,120,215,0.22);
+  color: var(--convo-ink);
+  border-radius: 14px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-weight: 850;
+}
+.lux-deckCta:hover{ background: rgba(0,120,215,0.14); }
+
+/* =========================================================
+   Picker: thumbnail dots (bigger + actual image preview)
+   NOTE: Your DOM uses .lux-thumbs + .lux-thumb already.
+   This block upgrades them in picker mode (size + cover/center).
+========================================================= */
+
+#convoApp[data-mode="picker"] .lux-thumbs{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* base “dot” becomes a tiny thumbnail */
+#convoApp[data-mode="picker"] .lux-thumb{
+  width: 28px;              /* bigger than circles, still small */
+  height: 18px;
+  border-radius: 6px;
+
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  border: 1px solid rgba(0,0,0,0.10);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.10);
+
+  opacity: 0.70;
+  transform: translateY(0);
+  transition: transform 160ms ease, opacity 160ms ease, box-shadow 160ms ease;
+  cursor: pointer;
+}
+
+/* keep non-image fallback readable (single letter) */
+#convoApp[data-mode="picker"] .lux-thumb:not(.has-img){
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  line-height: 1;
+}
+
+#convoApp[data-mode="picker"] .lux-thumb:hover{
+  opacity: 0.95;
+  transform: translateY(-1px) scale(1.04);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.12);
+}
+
+#convoApp[data-mode="picker"] .lux-thumb.is-active{
+  opacity: 1;
+  border-color: rgba(0,120,215,0.45);
+  box-shadow:
+    0 12px 26px rgba(0,0,0,0.14),
+    0 0 0 3px rgba(0,120,215,0.18);
+}
+
+/* =========================================================
+   Knobs drawer (shared: picker + convo)
+========================================================= */
+
+.lux-knobsOverlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.28);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+  z-index: 998;
+}
+.lux-knobsOverlay[data-open="1"]{
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.lux-knobsDrawer{
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 340px;
+  max-width: 92vw;
+
+  background: rgba(255,255,255,0.86);
+  backdrop-filter: blur(16px);
+  border-left: 1px solid rgba(0,0,0,0.10);
+
+  transform: translateX(110%);
+  transition: transform 220ms ease;
+  z-index: 999;
+
+  display: flex;
+  flex-direction: column;
+}
+.lux-knobsDrawer[data-open="1"]{
+  transform: translateX(0);
+}
+
+.lux-knobsHeader{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 14px 10px;
+}
+.lux-knobsTitle{
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+.lux-knobsClose{
+  border: 0;
+  background: transparent;
+  font-size: 1.1rem;
+  cursor: pointer;
+  opacity: 0.75;
+}
+.lux-knobsClose:hover{ opacity: 1; }
+
+.lux-knobsBody{
+  padding: 8px 14px 14px;
+  overflow: auto;
+}
+
+.lux-knobsGroup{
+  padding: 10px 0 12px;
+  border-top: 1px solid rgba(0,0,0,0.06);
+}
+.lux-knobsGroup:first-child{ border-top: 0; }
+
+.lux-knobsLabel{
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.lux-knobsChips{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.lux-knobsChips button{
+  border-radius: 999px;
+  padding: 7px 10px;
+  border: 1px solid rgba(0,0,0,0.14);
+  background: rgba(255,255,255,0.78);
+  cursor: pointer;
+}
+
+.lux-knobsChips button.is-on{
+  border-color: rgba(0,120,215,0.42);
+  box-shadow: 0 0 0 3px rgba(0,120,215,0.16);
+}
+
+/* Picker: inline knobs row under CTA */
+#convoApp[data-mode="picker"] .lux-deckKnobsRow{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+#convoApp[data-mode="picker"] .lux-deckKnobsBtn{
+  border-radius: 999px;
+  padding: 7px 10px;
+  border: 1px solid rgba(0,0,0,0.14);
+  background: rgba(255,255,255,0.82);
+  cursor: pointer;
+}
+
+#convoApp[data-mode="picker"] .lux-deckKnobsSummary{
+  font-size: 0.95rem;
+  opacity: 0.90;
+}
+
+/* Thumbnails */
+.lux-thumbs{
+  width: min(980px, 94vw);
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 2px 4px;
+}
+.lux-thumb{
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,0.14);
+  background: rgba(255,255,255,0.70);
+  color: rgba(0,0,0,0.70);
+
+  font-size: 10px;
+  line-height: 14px;
+  text-align: center;
+
+  cursor: pointer;
+  padding: 0;
+}
+.lux-thumb.is-active{
+  background: rgba(0,120,215,0.14);
+  border-color: rgba(0,120,215,0.35);
+}
+
+/* Deck nav */
+.lux-deckNav{
+  width: min(980px, 94vw);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+.lux-navArrow,
+.lux-navNext{
+  border-radius: 14px;
+  padding: 10px 14px;
+  border: 1px solid rgba(0,0,0,0.10);
+  background: rgba(255,255,255,0.70);
+  color: var(--convo-ink);
+  cursor: pointer;
+  font-weight: 850;
+}
+.lux-navArrow:hover,
+.lux-navNext:hover{ background: rgba(255,255,255,0.92); }
+
+
+/* ============================================================
+   Chat panel (single centered)
+   ============================================================ */
+.lux-chatwrap{ width: 100%; }
+
+/* NEW: AI Conversations progress panel (only shown in chat mode via the mode-routing rules above)
+   - aligns to the same width as the chat box
+   - sits directly under the chat panel */
+.lux-convo-progress{
+  width: 100%;
+  margin-top: 14px;
+  padding: 0 16px 18px;
+  display: flex;            /* safe even when hidden; display gets overridden by mode routing */
+  justify-content: center;
+}
+.lux-convo-progress > *{
+  width: min(980px, 94vw);  /* match .lux-chat width */
+}
+
+.lux-chat{
+  width: min(980px, 94vw);
+  height: min(78vh, 760px);
+  min-height: 560px;
+  display:flex;
+  flex-direction: column;
+}
+
+
+
+.lux-msgs{
+  padding: 14px;
+  overflow:auto;
+  flex: 1;
+}
+
+.msg{
+  max-width: 88%;
+  padding: 10px 12px;
+
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: var(--convo-tint);
+
+  margin-bottom: 10px;
+  line-height: 1.35;
+  font-size: 14px;
+  color: var(--convo-ink);
+}
+.msg.assistant{ margin-right:auto; }
+.msg.user{
+  margin-left:auto;
+  background: #e9f1ff;
+  border-color: rgba(0,120,215,0.25);
+}
+
+/* Suggestions */
+.lux-sugs{
+  padding: 10px 14px 0;
+  display:flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.sug{
+  border: 1px solid rgba(0,0,0,0.10);
+  background: rgba(255,255,255,0.70);
+  color: #334155;
+  border-radius: 999px;
+
+  padding: 6px 10px;
+  cursor:pointer;
+
+  font-size: 12px;
+  font-weight: 850;
+  line-height: 1.2;
+}
+.sug:hover{ border-color: rgba(0,120,215,0.25); }
+
+/* Composer */
+.lux-compose{
+  border-top: 1px solid rgba(0,0,0,0.10);
+  padding: 12px;
+
+  display:grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+#convoApp.is-recording .lux-compose{
+  outline: 2px solid rgba(255, 80, 80, 0.7);
+  outline-offset: 4px;
+}
+
+.lux-in{
+  width:100%;
+  min-height: 44px;
+  resize: vertical;
+
+  border-radius: 0.8rem;
+  border: 1px solid rgba(0,0,0,0.18);
+  background: #fff;
+  color: var(--convo-ink);
+
+  padding: 10px 12px;
+  outline:none;
+
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+/* =========================
+   Target highlighting + coach tips
+   ========================= */
+.lux-hl{
+  background: rgba(250, 204, 21, 0.35);
+  border-radius: 6px;
+  padding: 0 2px;
+  font-weight: 900;
+}
+
+/* Phoneme-focus injected words */
+.lux-hl2{
+  background: rgba(59, 130, 246, 0.28);
+  border-radius: 6px;
+  padding: 0 2px;
+  font-weight: 900;
+}
+
+/* Double-hit (word-bank + phoneme-focus): blue base + yellow underline */
+.lux-hl.lux-hl2{
+  background: rgba(59, 130, 246, 0.28);
+  box-shadow: inset 0 -2px 0 rgba(250, 204, 21, 0.85);
+}
+
+/* Double-hit: word-bank + focus-sound at the same time
+   Keep it "never overwhelming": reuse yellow, add a subtle blue inset outline. */
+.lux-hl3{
+  background: rgba(250, 204, 21, 0.35);
+  border-radius: 6px;
+  padding: 0 2px;
+  font-weight: 900;
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.55) inset;
+}
+
+.lux-coachbar{
+  padding: 10px 14px 0;
+}
+.lux-coachcard{
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(15, 23, 42, 0.55);
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.20);
+  padding: 10px 12px;
+  display:flex;
+  gap: 10px;
+  align-items:flex-start;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.lux-coachcard .lux-coachtext{
+  color:#e5e7eb;
+  font-size: 13px;
+  line-height: 1.25rem;
+}
+.lux-coachcard .lux-coachtext strong{
+  display:block;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+.lux-coachcard .lux-coachmeta{
+  color: rgba(229,231,235,0.72);
+  font-size: 12px;
+  margin-top: 6px;
+}
+.lux-coachcard .lux-coachbtn{
+  white-space: nowrap;
+}
+
+.lux-sugsNote{
+  padding: 6px 14px 0;
+  color: rgba(226,232,240,0.82);
+  font-size: 12px;
+}
+
+/* Buttons */
+.btn{
+  border: none;
+  background: var(--convo-accent);
+  color: #fff;
+
+  border-radius: 0.7rem;
+  padding: 10px 14px;
+
+  cursor:pointer;
+  font-weight: 850;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+.btn:hover{ background: var(--convo-accent-hover); }
+
+.btn.ghost{
+  background: rgba(255,255,255,0.70);
+  color: var(--convo-ink);
+  border: 1px solid rgba(0,0,0,0.10);
+}
+.btn.ghost:hover{ background: rgba(255,255,255,0.92); }
+
+.btn.primary{
+  background: var(--convo-accent);
+  color: #fff;
+}
+.btn.danger{
+  background: #dc2626;
+  color: #fff;
+}
+.btn.danger:hover{ background: #b91c1c; }
+
+
+/* ============================================================
+   Knobs drawer
+   ============================================================ */
+.lux-drawer{
+  position: fixed;
+  top: 0;
+  right: 0;
+
+  height: 100vh;
+  width: min(360px, 92vw);
+
+  background: rgba(255,255,255,0.96);
+  border-left: 1px solid rgba(0,0,0,0.10);
+  box-shadow: var(--convo-shadow);
+
+  backdrop-filter: blur(10px);
+
+  transform: translateX(102%);
+  transition: transform 260ms ease;
+
+  z-index: var(--z-modal);
+  display: flex;
+  flex-direction: column;
+}
+
+.lux-drawerHd{
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+
+  background: var(--convo-tint);
+}
+
+#convoApp.knobs-open .lux-drawer{ transform: translateX(0); }
+
+.lux-scrim{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease;
+  z-index: calc(var(--z-modal) - 1);
+}
+#convoApp.knobs-open .lux-scrim{
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Knobs form */
+.k{
+  display:flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.k label{ font-size: 12px; color: var(--convo-muted); }
+
+.k select{
+  width: 100%;
+  border-radius: 0.6rem;
+  border: 1px solid rgba(0,0,0,0.18);
+  background: #fff;
+  color: var(--convo-ink);
+  padding: 8px 10px;
+  font-weight: 850;
+  font-size: 0.95rem;
+}
+
+.small{
+  font-size: 12px;
+  color: var(--convo-muted);
+  line-height: 1.35;
+}
+
+/* Chat typography bump */
+#convoApp[data-mode="chat"] .lux-title{ font-size: 20px; }
+#convoApp[data-mode="chat"] .lux-sub{ font-size: 14px; }
+
+#convoApp[data-mode="chat"] .lux-actions .btn{
+  font-size: 1.05rem;
+  padding: 10px 12px;
+}
+
+#convoApp[data-mode="chat"] .msg{
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+#convoApp[data-mode="chat"] .sug{
+  font-size: 14px;
+  padding: 8px 12px;
+}
+
+#convoApp[data-mode="chat"] .lux-in{
+  font-size: 1.1rem;
+  padding: 12px 12px;
+}
+
+
+/* ============================================================
+   Responsive tuning
+   ============================================================ */
+@media (max-width: 980px){
+  #convoApp{
+    min-height: auto;
+    border-radius: 18px;
+  }
+
+  .lux-chat{
+    min-height: 520px;
+    height: auto;
+  }
+
+  .lux-deck{
+    height: 420px;
+  }
+}
+
+@media (max-width: 520px){
+  .lux-heroTitle{ font-size: 30px; }
+  .lux-deckTitle{ font-size: 24px; }
+}

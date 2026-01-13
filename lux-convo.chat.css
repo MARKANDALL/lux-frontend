@@ -1,0 +1,265 @@
+/* ============================================================
+   Chat panel (single centered)
+   ============================================================ */
+.lux-chatwrap{ width: 100%; }
+
+/* NEW: AI Conversations progress panel (only shown in chat mode via the mode-routing rules above)
+   - aligns to the same width as the chat box
+   - sits directly under the chat panel */
+.lux-convo-progress{
+  width: 100%;
+  margin-top: 14px;
+  padding: 0 16px 18px;
+  display: flex;            /* safe even when hidden; display gets overridden by mode routing */
+  justify-content: center;
+}
+.lux-convo-progress > *{
+  width: min(980px, 94vw);  /* match .lux-chat width */
+}
+
+.lux-chat{
+  width: min(980px, 94vw);
+  height: min(78vh, 760px);
+  min-height: 560px;
+  display:flex;
+  flex-direction: column;
+}
+
+
+
+.lux-msgs{
+  padding: 14px;
+  overflow:auto;
+  flex: 1;
+}
+
+.msg{
+  max-width: 88%;
+  padding: 10px 12px;
+
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: var(--convo-tint);
+
+  margin-bottom: 10px;
+  line-height: 1.35;
+  font-size: 14px;
+  color: var(--convo-ink);
+}
+.msg.assistant{ margin-right:auto; }
+.msg.user{
+  margin-left:auto;
+  background: #e9f1ff;
+  border-color: rgba(0,120,215,0.25);
+}
+
+/* Suggestions */
+.lux-sugs{
+  padding: 10px 14px 0;
+  display:flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.sug{
+  border: 1px solid rgba(0,0,0,0.10);
+  background: rgba(255,255,255,0.70);
+  color: #334155;
+  border-radius: 999px;
+
+  padding: 6px 10px;
+  cursor:pointer;
+
+  font-size: 12px;
+  font-weight: 850;
+  line-height: 1.2;
+}
+.sug:hover{ border-color: rgba(0,120,215,0.25); }
+
+/* Composer */
+.lux-compose{
+  border-top: 1px solid rgba(0,0,0,0.10);
+  padding: 12px;
+
+  display:grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+#convoApp.is-recording .lux-compose{
+  outline: 2px solid rgba(255, 80, 80, 0.7);
+  outline-offset: 4px;
+}
+
+.lux-in{
+  width:100%;
+  min-height: 44px;
+  resize: vertical;
+
+  border-radius: 0.8rem;
+  border: 1px solid rgba(0,0,0,0.18);
+  background: #fff;
+  color: var(--convo-ink);
+
+  padding: 10px 12px;
+  outline:none;
+
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+/* =========================
+   Target highlighting + coach tips
+   ========================= */
+.lux-hl{
+  background: rgba(250, 204, 21, 0.35);
+  border-radius: 6px;
+  padding: 0 2px;
+  font-weight: 900;
+}
+
+/* Phoneme-focus injected words */
+.lux-hl2{
+  background: rgba(59, 130, 246, 0.28);
+  border-radius: 6px;
+  padding: 0 2px;
+  font-weight: 900;
+}
+
+/* Double-hit (word-bank + phoneme-focus): blue base + yellow underline */
+.lux-hl.lux-hl2{
+  background: rgba(59, 130, 246, 0.28);
+  box-shadow: inset 0 -2px 0 rgba(250, 204, 21, 0.85);
+}
+
+/* Double-hit: word-bank + focus-sound at the same time
+   Keep it "never overwhelming": reuse yellow, add a subtle blue inset outline. */
+.lux-hl3{
+  background: rgba(250, 204, 21, 0.35);
+  border-radius: 6px;
+  padding: 0 2px;
+  font-weight: 900;
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.55) inset;
+}
+
+.lux-coachbar{
+  padding: 10px 14px 0;
+}
+.lux-coachcard{
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(15, 23, 42, 0.55);
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.20);
+  padding: 10px 12px;
+  display:flex;
+  gap: 10px;
+  align-items:flex-start;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.lux-coachcard .lux-coachtext{
+  color:#e5e7eb;
+  font-size: 13px;
+  line-height: 1.25rem;
+}
+.lux-coachcard .lux-coachtext strong{
+  display:block;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+.lux-coachcard .lux-coachmeta{
+  color: rgba(229,231,235,0.72);
+  font-size: 12px;
+  margin-top: 6px;
+}
+.lux-coachcard .lux-coachbtn{
+  white-space: nowrap;
+}
+
+.lux-sugsNote{
+  padding: 6px 14px 0;
+  color: rgba(226,232,240,0.82);
+  font-size: 12px;
+}
+
+/* Buttons */
+.btn{
+  border: none;
+  background: var(--convo-accent);
+  color: #fff;
+
+  border-radius: 0.7rem;
+  padding: 10px 14px;
+
+  cursor:pointer;
+  font-weight: 850;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+.btn:hover{ background: var(--convo-accent-hover); }
+
+.btn.ghost{
+  background: rgba(255,255,255,0.70);
+  color: var(--convo-ink);
+  border: 1px solid rgba(0,0,0,0.10);
+}
+.btn.ghost:hover{ background: rgba(255,255,255,0.92); }
+
+.btn.primary{
+  background: var(--convo-accent);
+  color: #fff;
+}
+.btn.danger{
+  background: #dc2626;
+  color: #fff;
+}
+.btn.danger:hover{ background: #b91c1c; }
+
+
+/* Chat typography bump (parity w/ lux-convo.full.css) */
+#convoApp[data-mode="chat"] .lux-title{ font-size: 20px; }
+#convoApp[data-mode="chat"] .lux-sub{ font-size: 14px; }
+
+#convoApp[data-mode="chat"] .lux-actions .btn{
+  font-size: 1.05rem;
+  padding: 10px 12px;
+}
+
+#convoApp[data-mode="chat"] .msg{
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+#convoApp[data-mode="chat"] .sug{
+  font-size: 14px;
+  padding: 8px 12px;
+}
+
+#convoApp[data-mode="chat"] .lux-in{
+  font-size: 1.1rem;
+  padding: 12px 12px;
+}
+
+
+/* ============================================================
+   Responsive tuning
+   ============================================================ */
+@media (max-width: 980px){
+  #convoApp{
+    min-height: auto;
+    border-radius: 18px;
+  }
+
+  .lux-chat{
+    min-height: 520px;
+    height: auto;
+  }
+
+  .lux-deck{
+    height: 420px;
+  }
+}
+
+@media (max-width: 520px){
+  .lux-heroTitle{ font-size: 30px; }
+  .lux-deckTitle{ font-size: 24px; }
+}
