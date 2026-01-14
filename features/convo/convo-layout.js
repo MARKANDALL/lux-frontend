@@ -22,6 +22,9 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
       <div class="lux-scene-card c6"></div>
       <div class="lux-scene-card c7"></div>
       <div class="lux-scene-card c8"></div>
+      <div class="lux-scene-card c9"></div>
+      <div class="lux-scene-card c10"></div>
+      <div class="lux-scene-card c11"></div>
     </div>
 
     <div class="lux-atmo-fog"></div>

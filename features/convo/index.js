@@ -125,7 +125,12 @@ export function bootConvo() {
     paceSel,
   } = view;
 
-  const { applySceneVisuals, setParallaxEnabled } = initSceneAtmo({ root, atmo, state });
+  const { applySceneVisuals, setParallaxEnabled } = initSceneAtmo({
+    root,
+    atmo,
+    state,
+    scenarios: SCENARIOS,
+  });
 
   // Coach controller (after coachBar + input exist)
   const coach = createConvoCoach({ state, coachBar, input, el });

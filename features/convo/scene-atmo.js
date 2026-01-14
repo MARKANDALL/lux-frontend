@@ -1,6 +1,6 @@
 // features/convo/scene-atmo.js
 
-export function initSceneAtmo({ root, atmo, state }) {
+export function initSceneAtmo({ root, atmo, state, scenarios = [] }) {
   // --- Edge-style scene tiles (scatter + depth + independent drift) ---
   const sceneHost = atmo.querySelector(".lux-scene-cards");
 
@@ -12,8 +12,109 @@ export function initSceneAtmo({ root, atmo, state }) {
     { cls: "c5", w: 380, h: 240, rot: -4, parX: 16, parY: -14, depth: 0.64 },
     { cls: "c6", w: 400, h: 250, rot: 5, parX: -18, parY: -14, depth: 0.58 },
     { cls: "c7", w: 360, h: 230, rot: 3, parX: 14, parY: 12, depth: 0.5 },
-    { cls: "c8", w: 440, h: 280, rot: 7, parX: 22, parY: 16, depth: 0.70 },
+    { cls: "c8", w: 440, h: 280, rot: 7, parX: 22, parY: 16, depth: 0.7 },
+    { cls: "c9", w: 360, h: 230, rot: -8, parX: -20, parY: 14, depth: 0.68 },
+    { cls: "c10", w: 420, h: 260, rot: 10, parX: 18, parY: -12, depth: 0.54 },
+    { cls: "c11", w: 340, h: 220, rot: -2, parX: -14, parY: -10, depth: 0.46 },
   ];
+
+  // --- Scene image assignment (11 visible, rotate through full scenarios list) ---
+  const sceneCards = SCENE_SPECS
+    .map((spec) => sceneHost?.querySelector(`.lux-scene-card.${spec.cls}`))
+    .filter(Boolean);
+
+  const used = new Set(); // scenario indices currently shown
+  let queue = [];
+  let qi = 0;
+  let rotTimer = 0;
+
+  function shuffleInPlace(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function refillQueue() {
+    queue = Array.from({ length: scenarios.length }, (_, i) => i);
+    shuffleInPlace(queue);
+    qi = 0;
+  }
+
+  function nextScenarioIdx() {
+    if (!scenarios?.length) return -1;
+    if (!queue.length || qi >= queue.length) refillQueue();
+
+    // pick the next index not currently used (avoid duplicates on screen)
+    let safety = 0;
+    while (safety++ < scenarios.length * 2) {
+      if (qi >= queue.length) refillQueue();
+      const idx = queue[qi++];
+      if (!used.has(idx)) return idx;
+    }
+    // fallback (should be rare)
+    return Math.floor(Math.random() * scenarios.length);
+  }
+
+  function setCardScenario(cardEl, scenarioIdx) {
+    const s = scenarios?.[scenarioIdx];
+    if (!s) return;
+
+    // Prefer full-size image for crisp tiles
+    const img = s.img || s.thumb;
+    if (!img) return;
+
+    cardEl.dataset.sceneIdx = String(scenarioIdx);
+    cardEl.dataset.sceneId = s.id || "";
+    cardEl.style.setProperty("--img", `url("${img}")`);
+  }
+
+  function seedSceneImagesOnce() {
+    if (!sceneHost || !sceneCards.length || !scenarios?.length) return;
+    if (sceneHost.dataset.imgSeeded === "1") return;
+
+    sceneHost.dataset.imgSeeded = "1";
+    used.clear();
+    refillQueue();
+
+    for (const card of sceneCards) {
+      const idx = nextScenarioIdx();
+      used.add(idx);
+      setCardScenario(card, idx);
+    }
+
+    ensureRotation();
+  }
+
+  function ensureRotation() {
+    if (rotTimer) return;
+    if (!scenarios?.length || scenarios.length <= sceneCards.length) return;
+
+    const ROTATE_MS = 4200;
+    const FADE_MS = 520;
+
+    rotTimer = window.setInterval(() => {
+      if (state.mode !== "intro") return;
+
+      // make sure we’ve seeded (intro can be entered after a hash route)
+      seedSceneImagesOnce();
+
+      const card = sceneCards[Math.floor(Math.random() * sceneCards.length)];
+      if (!card) return;
+
+      const oldIdx = parseInt(card.dataset.sceneIdx || "-1", 10);
+      if (oldIdx >= 0) used.delete(oldIdx);
+
+      const nextIdx = nextScenarioIdx();
+      used.add(nextIdx);
+
+      // fade out → swap → fade in
+      card.classList.add("is-swap");
+      window.setTimeout(() => setCardScenario(card, nextIdx), Math.floor(FADE_MS * 0.55));
+      window.setTimeout(() => card.classList.remove("is-swap"), FADE_MS);
+    }, ROTATE_MS);
+  }
 
   const sRand = (a, b) => a + Math.random() * (b - a);
   const sClamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -49,6 +150,7 @@ export function initSceneAtmo({ root, atmo, state }) {
     // Don’t re-run constantly unless forced (resize / re-enter intro)
     if (!force && sceneHost.dataset.seeded === "1") return;
     sceneHost.dataset.seeded = "1";
+    seedSceneImagesOnce();
 
     const hostRect = sceneHost.getBoundingClientRect();
     const W = hostRect.width;
@@ -71,11 +173,11 @@ export function initSceneAtmo({ root, atmo, state }) {
     // Zones to avoid left/right poles and populate the center band
     const ZONES = sShuffle([
       { x0: 0.05, x1: 0.33, y0: 0.08, y1: 0.38 },
-      { x0: 0.33, x1: 0.67, y0: 0.02, y1: 0.30 },
+      { x0: 0.33, x1: 0.67, y0: 0.02, y1: 0.3 },
       { x0: 0.67, x1: 0.95, y0: 0.08, y1: 0.38 },
 
       { x0: 0.05, x1: 0.35, y0: 0.58, y1: 0.96 },
-      { x0: 0.30, x1: 0.70, y0: 0.46, y1: 0.94 },
+      { x0: 0.3, x1: 0.7, y0: 0.46, y1: 0.94 },
       { x0: 0.65, x1: 0.95, y0: 0.58, y1: 0.96 },
     ]);
 
@@ -97,7 +199,7 @@ export function initSceneAtmo({ root, atmo, state }) {
 
       // depth mapping: keep depth via size + z + shadow only
       const scale = 0.78 + d * 0.3; // ~0.83..1.07
-      const shadowA = 0.10 + d * 0.16; // ~0.13..0.26
+      const shadowA = 0.1 + d * 0.16; // ~0.13..0.26
       const z = Math.round(d * 100);
 
       const w = Math.round(it.spec.w * scale);
