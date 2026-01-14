@@ -122,6 +122,7 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
   const title = opts.title || "My Progress";
   const subtitle = opts.subtitle || "All practice (Pronunciation + AI Conversations)";
   const showActions = opts.showActions !== false; // default true
+  const showCoach = !!opts.showCoach;
 
   const topPh = (trouble.phonemesAll || []).slice(0, 12);
   const topWd = (trouble.wordsAll || []).slice(0, 12);
@@ -342,6 +343,17 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
           </div>
         </div>
       </details>
+
+      ${
+        showCoach
+          ? `
+      <!-- AI Coach (always-on) — placed at bottom of All Data page -->
+      <div id="aiFeedbackSection">
+        <div id="aiFeedback"></div>
+      </div>
+      `
+          : ``
+      }
     </section>
   `;
 

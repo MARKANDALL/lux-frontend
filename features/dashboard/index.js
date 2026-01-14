@@ -7,6 +7,7 @@ import * as UI from "./ui.js";
 import { fetchHistory, ensureUID } from "/src/api/index.js";
 import { computeRollups } from "../progress/rollups.js";
 import { renderProgressDashboard } from "../progress/render.js";
+import { mountAICoachAlwaysOn } from "../../ui/ui-ai-ai-logic.js";
 
 const ROOT_ID = "dashboard-root";
 const HUB_HREF = "./progress.html";
@@ -25,7 +26,9 @@ function fmtMini(totals = {}) {
   const avg = Math.round(Number(totals.avgScore || 0));
   const attempts = totals.attempts ?? 0;
   const last = totals.lastTS ? new Date(totals.lastTS) : null;
-  const lastStr = last ? last.toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "—";
+  const lastStr = last
+    ? last.toLocaleDateString(undefined, { month: "short", day: "numeric" })
+    : "—";
   return `Avg ${avg}% · Attempts ${attempts} · Last ${lastStr}`;
 }
 
@@ -39,7 +42,9 @@ export async function refreshHistory() {
   if (!root) return;
 
   // Hub page: always re-render fully.
-  const isHub = location.pathname.endsWith("/progress.html") || location.pathname.endsWith("progress.html");
+  const isHub =
+    location.pathname.endsWith("/progress.html") ||
+    location.pathname.endsWith("progress.html");
   if (isHub) {
     return await loadAndRenderHub(root);
   }
@@ -80,10 +85,39 @@ async function loadAndRenderHub(root) {
       title: "My Progress",
       subtitle: "All practice (Pronunciation + AI Conversations)",
       showActions: true,
+      showCoach: true,
+    });
+
+    // Always-on AI Coach shell (shows immediately, even before any clicks)
+    mountAICoachAlwaysOn(() => {
+      if (!Array.isArray(attempts) || !attempts.length) return null;
+
+      // pick latest attempt robustly
+      let latest = null;
+      let bestTS = -1;
+      for (const a of attempts) {
+        const ts =
+          Date.parse(
+            a?.ts || a?.created_at || a?.createdAt || a?.time || a?.localTime || ""
+          ) || 0;
+        if (ts > bestTS) {
+          bestTS = ts;
+          latest = a;
+        }
+      }
+      if (!latest) return null;
+
+      const azureResult =
+        latest?.azureResult || latest?.azure_result || latest?.azure || latest?.result || null;
+      const referenceText = latest?.text || "";
+      const firstLang = latest?.l1 || "universal";
+
+      return { azureResult, referenceText, firstLang };
     });
   } catch (err) {
     console.error("[Dashboard] Hub load failed:", err);
-    if (String(err).includes("404")) renderProgressDashboard(root, [], computeRollups([]), { showActions: true });
+    if (String(err).includes("404"))
+      renderProgressDashboard(root, [], computeRollups([]), { showActions: true });
     else UI.renderError("History unavailable.");
   }
 }
@@ -95,7 +129,9 @@ export async function initDashboard() {
   // expose refresh for auth + other flows
   window.refreshDashboard = refreshHistory;
 
-  const isHub = location.pathname.endsWith("/progress.html") || location.pathname.endsWith("progress.html");
+  const isHub =
+    location.pathname.endsWith("/progress.html") ||
+    location.pathname.endsWith("progress.html");
   if (isHub) {
     // Full page: render immediately
     await loadAndRenderHub(root);
@@ -132,7 +168,8 @@ export async function initDashboard() {
     if (loadedOnce) return;
     loadedOnce = true;
 
-    if (mountEl) mountEl.innerHTML = `<div style="color:#64748b; padding: 14px 16px;">Loading…</div>`;
+    if (mountEl)
+      mountEl.innerHTML = `<div style="color:#64748b; padding: 14px 16px;">Loading…</div>`;
 
     try {
       const uid = ensureUID();
@@ -153,7 +190,8 @@ export async function initDashboard() {
       console.error("[Dashboard] Drawer load failed:", err);
       loadedOnce = false; // allow retry on next open
       if (miniEl) miniEl.textContent = "History unavailable";
-      if (mountEl) mountEl.innerHTML = `<div style="color:#ef4444; padding: 14px 16px;">History unavailable.</div>`;
+      if (mountEl)
+        mountEl.innerHTML = `<div style="color:#ef4444; padding: 14px 16px;">History unavailable.</div>`;
     }
   }
 
