@@ -9,7 +9,8 @@ import {
   updateFooterButtons,
   showAIFeedbackError,
   clearAIFeedback,
-  getCurrentPersona // <--- NEW IMPORT
+  getCurrentPersona, // <--- NEW IMPORT
+  renderAIFeedbackMarkdown
 } from "./ui-ai-ai-dom.js";
 
 import { fetchAIFeedback, updateAttempt } from "/src/api/index.js";
@@ -49,6 +50,66 @@ export function promptUserForAI(azureResult, referenceText, firstLang) {
     onQuick: (persona) => startQuickMode(azureResult, referenceText, firstLang, persona),
     onDeep:  (persona) => startDeepMode(azureResult, referenceText, firstLang, persona),
     onPersonaChange: (newPersona) => onPersonaChanged(newPersona) // <--- Wire this up
+  });
+}
+
+/**
+ * Always-on AI Coach shell (for AI Conversations chat mode).
+ * Renders the panel UI immediately, even before any attempt exists.
+ *
+ * getContext() should return:
+ *   { azureResult, referenceText, firstLang }
+ */
+export function mountAICoachAlwaysOn(getContext) {
+  const section = document.getElementById("aiFeedbackSection");
+  if (!section) return;
+
+  // Idempotent mount (don’t rebuild every render tick)
+  if (section.dataset.convoMounted === "1") return;
+  section.dataset.convoMounted = "1";
+
+  renderEntryButtons({
+    onQuick: (persona) => {
+      const ctx = (typeof getContext === "function" ? getContext() : null) || {};
+      const azureResult = ctx.azureResult;
+      const referenceText = ctx.referenceText || "";
+      const firstLang = ctx.firstLang || "universal";
+
+      const nb = azureResult?.NBest?.[0];
+      const saidText = (azureResult?.DisplayText || nb?.Display || "").trim();
+      if (!nb || !saidText) {
+        clearAIFeedback();
+        renderAIFeedbackMarkdown(
+          `### AI Coach is ready\nRecord **one** reply in the conversation, then click **Quick Tips** (or **Deep Dive**).`
+        );
+        return;
+      }
+
+      lastContext = { azureResult, referenceText, firstLang };
+      resetState();
+      startQuickMode(azureResult, referenceText, firstLang, persona);
+    },
+    onDeep: (persona) => {
+      const ctx = (typeof getContext === "function" ? getContext() : null) || {};
+      const azureResult = ctx.azureResult;
+      const referenceText = ctx.referenceText || "";
+      const firstLang = ctx.firstLang || "universal";
+
+      const nb = azureResult?.NBest?.[0];
+      const saidText = (azureResult?.DisplayText || nb?.Display || "").trim();
+      if (!nb || !saidText) {
+        clearAIFeedback();
+        renderAIFeedbackMarkdown(
+          `### AI Coach is ready\nRecord **one** reply in the conversation, then click **Deep Dive** for a full breakdown.`
+        );
+        return;
+      }
+
+      lastContext = { azureResult, referenceText, firstLang };
+      resetState();
+      startDeepMode(azureResult, referenceText, firstLang, persona);
+    },
+    onPersonaChange: (newPersona) => onPersonaChanged(newPersona),
   });
 }
 

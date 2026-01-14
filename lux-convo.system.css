@@ -80,6 +80,13 @@ html:not([data-lux-convo-mode="chat"]) #lux-auth-btn{
   --lux-myI: calc(var(--lux-my) * var(--lux-par-img));
 }
 
+/* Allow the chat-mode knobs dock to extend past the rounded app card.
+   This is the direct fix for the “clipped by the outer white box” issue. */
+#convoApp[data-mode="chat"],
+#convoApp[data-mode="picker"]{
+  overflow: visible;
+}
+
 /* Full-bleed stage for intro + picker (chat stays boxed) */
 #convoApp[data-mode="intro"],
 #convoApp[data-mode="picker"]{

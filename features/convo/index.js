@@ -23,7 +23,7 @@ import {
   showConvoReportOverlay,
 } from "./convo-shared.js";
 
-import { promptUserForAI } from "../../ui/ui-ai-ai-logic.js";
+import { mountAICoachAlwaysOn } from "../../ui/ui-ai-ai-logic.js";
 import { highlightHtml, stripMarks } from "./convo-highlight.js";
 import { createConvoCoach } from "./convo-coach.js";
 
@@ -136,7 +136,17 @@ export function bootConvo() {
   const coach = createConvoCoach({ state, coachBar, input, el });
   coach.wireTypeTip();
 
-  function render() {}
+  function render() {
+    // Ensure the AI Coach shell exists as soon as we enter chat mode.
+    if (state.mode === "chat") {
+      mountAICoachAlwaysOn(() => {
+        const t = state.turns?.length ? state.turns[state.turns.length - 1] : null;
+        return t
+          ? { azureResult: t.azureResult, referenceText: t.userText, firstLang: "universal" }
+          : null;
+      });
+    }
+  }
 
   function setKnobs(open) {
     state.knobsOpen = !!open;
