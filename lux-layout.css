@@ -286,7 +286,13 @@ select {
 
 /* Wrapper (unchanged) */
 .lux-toplinks{
-  margin: 8px 0 10px;
+  margin: 18px auto 0;
+  width: min(980px, 94vw);
+  display:flex;
+  gap: 8px;
+
+  position: relative;
+  z-index: 50;
 }
 .lux-toplinks-cta{
   display: flex;

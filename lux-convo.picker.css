@@ -279,7 +279,7 @@
 .lux-deck{
   position: relative;
   width: min(980px, 94vw);
-  height: 440px;
+  height: min(var(--lux-media-h, 520px), 76vh);
   transform-style: preserve-3d;
 }
 
@@ -561,6 +561,20 @@
   align-items: center;
   gap: 8px;
   margin-top: 10px;
+
+  /* NEW: prevent wrap intrusion; make it a horizontal strip */
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+
+  width: min(980px, 94vw);
+  max-width: min(980px, 94vw);
+
+  padding: 6px 10px;
+  margin: 14px auto 0; /* give it breathing room */
+  position: relative;
+  z-index: 10;
 }
 
 /* base “dot” becomes a tiny thumbnail */
@@ -580,6 +594,9 @@
   transform: translateY(0);
   transition: transform 160ms ease, opacity 160ms ease, box-shadow 160ms ease;
   cursor: pointer;
+
+  /* NEW: keep each thumb from shrinking/wrapping */
+  flex: 0 0 auto;
 }
 
 /* keep non-image fallback readable (single letter) */
@@ -603,6 +620,22 @@
   box-shadow:
     0 12px 26px rgba(0,0,0,0.14),
     0 0 0 3px rgba(0,120,215,0.18);
+}
+
+/* Picker nav row (Back / Next) */
+#convoApp[data-mode="picker"] .lux-navrow{
+  width: min(980px, 94vw);
+  margin: 14px auto 0;
+  display:flex;
+  justify-content: space-between;
+  align-items:center;
+  position: relative;
+  z-index: 20;
+}
+
+#convoApp[data-mode="picker"] .lux-navbtn{
+  min-width: 110px;
+  text-align: center;
 }
 
 /* Thumbnails */

@@ -31,44 +31,121 @@ export function wirePickerDeck({
     }
   }
 
-  function scenarioThumbUrl(s){
-    // pick the “best available” image-like field without breaking older scenarios
-    return (
-      s.thumb ||
-      s.thumbnail ||
-      s.image ||
-      s.imageUrl ||
-      s.bg ||
-      s.background ||
-      (s.media && (s.media.poster || s.media.thumb)) ||
-      ""
-    );
+  // --- thumbs: lazy/progressive background-image hydration (prevents 24 immediate loads) ---
+  let _thumbIO = null;
+
+  function toThumbUrl(url){
+    const s = String(url || "");
+    if (!s) return "";
+    if (s.includes("/convo-img/thumbs/")) return s;
+
+    // Turn /convo-img/foo.(webp|png|jpg|jpeg) into /convo-img/thumbs/foo.webp
+    const m = s.match(/\/convo-img\/([^\/?#]+)\.(webp|png|jpe?g)(?:[?#].*)?$/i);
+    if (!m) return s;
+
+    return `/convo-img/thumbs/${m[1]}.webp`;
   }
 
-  function renderThumbs() {
-    if (!thumbs) return;
-    thumbs.innerHTML = "";
-    list.forEach((s, i) => {
-      const b = el("button", "lux-thumb" + (i === state.scenarioIdx ? " is-active" : ""));
-      b.type = "button";
+  function scenarioThumbUrl(s){
+    const t =
+      (s && (
+        s.thumb ||
+        s.thumbnail ||
+        s.preview ||
+        s.img ||
+        s.image ||
+        (s.media && (s.media.poster || s.media.thumb))
+      )) || "";
 
-      // keep your existing tooltip behavior
-      b.title = s.title || `Scenario ${i + 1}`;
+    const raw =
+      (typeof t === "string") ? t :
+      (t && typeof t === "object") ? (t.url || t.src || "") :
+      "";
+
+    return toThumbUrl(raw);
+  }
+
+  function applyThumb(btn){
+    if (!btn) return;
+    const u = btn.dataset.thumb;
+    if (!u || btn.dataset.thumbLoaded === "1") return;
+
+    btn.style.backgroundImage = `url("${u}")`;
+    btn.dataset.thumbLoaded = "1";
+  }
+
+  function hydrateThumbs(thumbsEl){
+    if (!thumbsEl) return;
+
+    if (_thumbIO) {
+      _thumbIO.disconnect();
+      _thumbIO = null;
+    }
+
+    const buttons = Array.from(thumbsEl.querySelectorAll(".lux-thumb[data-thumb]"));
+    const FIRST = 8;
+
+    // Fast initial fill (keeps UI feeling complete immediately)
+    buttons.slice(0, FIRST).forEach(applyThumb);
+
+    // Progressive fill for the rest (avoids competing with critical loads)
+    const rest = buttons.slice(FIRST);
+
+    const pump = () => {
+      let i = 0;
+      const tick = () => {
+        // a couple at a time so we don't stampede the network
+        for (let k = 0; k < 2 && i < rest.length; k++, i++) applyThumb(rest[i]);
+        if (i < rest.length) setTimeout(tick, 120);
+      };
+      tick();
+    };
+
+    if ("requestIdleCallback" in window) {
+      window.requestIdleCallback(pump, { timeout: 800 });
+    } else {
+      setTimeout(pump, 250);
+    }
+
+    // Also load on demand if the strip is scrollable
+    _thumbIO = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (e.isIntersecting) {
+          applyThumb(e.target);
+          _thumbIO.unobserve(e.target);
+        }
+      }
+    }, { root: thumbsEl, rootMargin: "120px 0px", threshold: 0.01 });
+
+    rest.forEach((b) => _thumbIO.observe(b));
+  }
+
+  function renderThumbs({ thumbs, list, selectedId, onPick }){
+    if (!thumbs) return;
+
+    thumbs.innerHTML = "";
+
+    list.forEach((s, i) => {
+      const isActive = i === state.scenarioIdx;
+      const b = el("button", "lux-thumb" + (isActive ? " is-active" : ""));
+      b.type = "button";
+      b.title = s?.title || `Scenario ${i + 1}`;
 
       // accessibility + "active" marker
       b.setAttribute("aria-label", b.title);
-      b.setAttribute("aria-current", i === state.scenarioIdx ? "true" : "false");
+      b.setAttribute("aria-current", isActive ? "true" : "false");
 
       const thumb = scenarioThumbUrl(s);
       if (thumb) {
+        b.dataset.thumb = thumb;     // store only
         b.classList.add("has-img");
-        b.style.backgroundImage = `url("${thumb}")`;
         b.textContent = "";
+        // DO NOT set backgroundImage here
       } else {
         // fallback (keeps your “color dots” behavior if a scenario has no image)
         const hue = (i * 37) % 360;
         b.style.backgroundImage = `linear-gradient(135deg, hsl(${hue} 55% 70%), hsl(${(hue+18)%360} 55% 62%))`;
-        b.textContent = (s.title || "?").trim().slice(0, 1).toUpperCase();
+        b.textContent = (s?.title || "?").trim().slice(0, 1).toUpperCase();
       }
 
       b.addEventListener("click", (e) => {
@@ -80,6 +157,8 @@ export function wirePickerDeck({
 
       thumbs.append(b);
     });
+
+    requestAnimationFrame(() => hydrateThumbs(thumbs));
   }
 
   function fillDeckCard(host, scenario, isActive) {
@@ -260,7 +339,7 @@ export function wirePickerDeck({
     applySceneVisuals?.();
 
     if (!list.length) {
-      renderThumbs();
+      renderThumbs({ thumbs, list, selectedId: null, onPick: () => {} });
       return;
     }
 
@@ -270,7 +349,18 @@ export function wirePickerDeck({
     fillDeckCard(deckActive, list[idx], true);
     fillDeckCard(deckPreview, list[next], false);
 
-    renderThumbs();
+    renderThumbs({
+      thumbs,
+      list,
+      selectedId: list[idx]?.id,
+      onPick: (id) => {
+        const i = list.findIndex((s) => s?.id === id);
+        if (i >= 0) {
+          state.scenarioIdx = i;
+          renderDeck();
+        }
+      }
+    });
   }
 
   // --- wire controls (once) ---
