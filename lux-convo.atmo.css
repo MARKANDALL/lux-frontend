@@ -136,6 +136,9 @@
 
   rotate: calc(var(--baseRot, 0deg) + var(--lux-dr));
 
+  /* SAFE DEFAULT: prevent CSS evaluation from auto-fetching images */
+  --img: none;
+
   will-change: translate, rotate, filter, opacity;
 }
 
@@ -194,15 +197,9 @@
   box-shadow: 0 18px 60px rgba(0,0,0,var(--shadowA, 0.16));
 }
 
-/* Image mapping ONLY (positions/sizes are no longer here) */
-.lux-scene-card.c1{ --img: url("/convo-img/coffee.webp"); }
-.lux-scene-card.c2{ --img: url("/convo-img/doctor.webp"); }
-.lux-scene-card.c3{ --img: url("/convo-img/job.webp"); }
-.lux-scene-card.c4{ --img: url("/convo-img/landlord.webp"); }
-.lux-scene-card.c5{ --img: url("/convo-img/airport.webp"); }
-.lux-scene-card.c6{ --img: url("/convo-img/restaurant.webp"); }
-.lux-scene-card.c7{ --img: url("/convo-img/school.webp"); }
-.lux-scene-card.c8{ --img: url("/convo-img/networking.webp"); }
+/* Image mapping removed:
+   We do NOT set --img via CSS to avoid “CSS evaluation = image download”.
+   JS can set --img when a tile is actually needed/visible. */
 
 
 /* Reduced motion: freeze tiles completely */
