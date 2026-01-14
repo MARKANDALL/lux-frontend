@@ -35,14 +35,19 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
   // Intro overlay
   const intro = el("div", "lux-intro");
   const hero = el("div", "lux-heroCard");
-  hero.append(
-    el("div", "lux-heroTitle", "AI Conversations"),
-    el(
-      "div",
-      "lux-heroSub",
-      "Pick a dialogue. Record your reply. We assess each turn silently and give you a session report at the end. Then take your results to the Practice Skills page to review them in detail."
-    )
+
+  // NOTE: build hero sub as nodes so we can wrap underline spans
+  const heroSub = el("div", "lux-heroSub");
+  heroSub.append(
+    "Pick a dialogue. Record your reply. We assess each turn silently and give you a ",
+    el("span", "lux-uline u1", "session report"),
+    " at the end. Then take your results to the ",
+    el("span", "lux-uline u2", "Practice Skills"),
+    " page to review them in detail."
   );
+
+  hero.append(el("div", "lux-heroTitle", "AI Conversations"), heroSub);
+
   const heroNext = el("button", "lux-heroNext", "Next");
   hero.append(heroNext);
   intro.append(hero);
