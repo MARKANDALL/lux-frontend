@@ -19,9 +19,12 @@
 #convoApp[data-mode="intro"]  .lux-intro { display: grid; place-items: center; }
 #convoApp[data-mode="picker"] .lux-picker{ display: flex; flex-direction: column; align-items: center; gap: 14px; }
 
-#convoApp[data-mode="chat"]   .lux-chatwrap{
+#convoApp[data-mode="chat"] .lux-chatwrap{
   display: flex;
-  justify-content: center;
+  flex-direction: column;   /* KEY: stack pill ABOVE chat box */
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
 }
 
 /* Progress widget: ONLY show in chat mode */

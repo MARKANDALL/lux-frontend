@@ -85,6 +85,15 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
 
   // Chat panel (single centered)
   const chatWrap = el("div", "lux-chatwrap");
+
+  // NEW: Chat mode top links (pill ABOVE the convo panel)
+  const chatToplinks = el("div", "lux-toplinks lux-toplinks-chat");
+  const chatHomePill = el("a", "lux-toplink lux-navpill", "Practice Skills");
+  chatHomePill.href = "./index.html";
+  chatHomePill.setAttribute("data-lux-ripple", "");
+  chatHomePill.setAttribute("data-lux-ripple", "");
+  chatToplinks.append(chatHomePill);
+
   const mid = el("div", "lux-panel lux-chat");
 
   const midHd = el("div", "lux-hd");
@@ -95,15 +104,10 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
 
   const actions = el("div", "lux-actions");
 
-  // Return link (ONLY appears in chat mode because it lives inside the chat header)
-  const chatHome = el("a", "btn ghost", "Practice Skills");
-  chatHome.href = "./index.html";
-  chatHome.setAttribute("data-lux-ripple", "");
-
   const scenBtn = el("button", "btn ghost", "Scenarios");
   const knobsBtn = el("button", "btn ghost", "Knobs");
   const endBtn = el("button", "btn danger", "End Session");
-  actions.append(chatHome, scenBtn, knobsBtn, endBtn);
+  actions.append(scenBtn, knobsBtn, endBtn);
 
   midHd.append(titleWrap, actions);
 
@@ -140,7 +144,8 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
   knobsDock.id = "convoKnobsDock";
   stage.append(knobsDock);
 
-  chatWrap.append(stage);
+  // NEW: include chatToplinks ABOVE the stage (outside the panel)
+  chatWrap.append(chatToplinks, stage);
 
   // Knobs drawer
   const drawer = el("div", "lux-drawer");

@@ -3,6 +3,23 @@
    ============================================================ */
 .lux-chatwrap{ width: 100%; }
 
+/* Chat: Practice Skills pill floats above-left of the chat panel */
+#convoApp[data-mode="chat"] .lux-toplinks-chat{
+  width: min(980px, 94vw);
+  margin: 8px auto -6px;     /* slight overlap with panel */
+  display: flex;
+  justify-content: flex-start;
+  position: relative;
+  z-index: 80;
+}
+
+/* Prevent any stretching weirdness */
+#convoApp[data-mode="chat"] .lux-toplinks-chat .lux-navpill{
+  align-self: flex-start;
+  width: min(420px, 92vw);   /* match your global pill size */
+  transform: translateX(-10px);
+}
+
 /* NEW: AI Conversations progress panel (only shown in chat mode via the mode-routing rules above)
    - aligns to the same width as the chat box
    - sits directly under the chat panel */
