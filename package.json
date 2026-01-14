@@ -8,6 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "thumbs": "node scripts/make-thumbs.mjs",
     "lux:snapshot": "powershell -ExecutionPolicy Bypass -File scripts/lux-snapshot.ps1",
     "lux:release": "powershell -ExecutionPolicy Bypass -File scripts/lux-release.ps1"
   },
@@ -20,6 +21,7 @@
   "license": "MIT",
   "devDependencies": {
     "serve": "11.2.0",
+    "sharp": "^0.34.5",
     "vite": "^6.0.0"
   },
   "dependencies": {
