@@ -67,32 +67,32 @@ export function wirePickerDeck({
 
   function applyThumb(btn){
     if (!btn) return;
-    const u = btn.dataset.thumb;
-    if (!u || btn.dataset.thumbLoaded === "1") return;
+    const u = btn.dataset.thumbSrc;
+    if (!u || btn.dataset.hydrated === "1") return;
 
     btn.style.backgroundImage = `url("${u}")`;
-    btn.dataset.thumbLoaded = "1";
+    btn.dataset.hydrated = "1";
   }
 
-  function hydrateThumbs(thumbsEl){
-    if (!thumbsEl) return;
+  function hydrateThumbButtons(container, { immediate = 8 } = {}) {
+    if (!container) return () => {};
 
+    // Kill any previous IO watcher to avoid leaks across re-renders
     if (_thumbIO) {
       _thumbIO.disconnect();
       _thumbIO = null;
     }
 
-    const buttons = Array.from(thumbsEl.querySelectorAll(".lux-thumb[data-thumb]"));
-    const FIRST = 8;
+    const btns = Array.from(container.querySelectorAll(".lux-thumb[data-thumb-src]"));
 
-    // Fast initial fill (keeps UI feeling complete immediately)
-    buttons.slice(0, FIRST).forEach(applyThumb);
+    // Load the first N immediately (what you expected to see: ~8)
+    btns.slice(0, immediate).forEach(applyThumb);
 
-    // Progressive fill for the rest (avoids competing with critical loads)
-    const rest = buttons.slice(FIRST);
+    // Then hydrate the rest gradually (doesn't dogpile the network)
+    const rest = btns.slice(immediate);
+    let i = 0;
 
     const pump = () => {
-      let i = 0;
       const tick = () => {
         // a couple at a time so we don't stampede the network
         for (let k = 0; k < 2 && i < rest.length; k++, i++) applyThumb(rest[i]);
@@ -101,13 +101,14 @@ export function wirePickerDeck({
       tick();
     };
 
+    // Prefer idle time if available
     if ("requestIdleCallback" in window) {
       window.requestIdleCallback(pump, { timeout: 800 });
     } else {
       setTimeout(pump, 250);
     }
 
-    // Also load on demand if the strip is scrollable
+    // Also load on demand if the strip is scrollable / off-screen thumbs
     _thumbIO = new IntersectionObserver((entries) => {
       for (const e of entries) {
         if (e.isIntersecting) {
@@ -115,9 +116,16 @@ export function wirePickerDeck({
           _thumbIO.unobserve(e.target);
         }
       }
-    }, { root: thumbsEl, rootMargin: "120px 0px", threshold: 0.01 });
+    }, { root: container, rootMargin: "120px 0px", threshold: 0.01 });
 
     rest.forEach((b) => _thumbIO.observe(b));
+
+    return () => {
+      if (_thumbIO) {
+        _thumbIO.disconnect();
+        _thumbIO = null;
+      }
+    };
   }
 
   function renderThumbs({ thumbs, list, selectedId, onPick }){
@@ -137,7 +145,7 @@ export function wirePickerDeck({
 
       const thumb = scenarioThumbUrl(s);
       if (thumb) {
-        b.dataset.thumb = thumb;     // store only
+        b.dataset.thumbSrc = thumb;     // store only
         b.classList.add("has-img");
         b.textContent = "";
         // DO NOT set backgroundImage here
@@ -157,8 +165,6 @@ export function wirePickerDeck({
 
       thumbs.append(b);
     });
-
-    requestAnimationFrame(() => hydrateThumbs(thumbs));
   }
 
   function fillDeckCard(host, scenario, isActive) {
@@ -335,6 +341,8 @@ export function wirePickerDeck({
     host.append(textWrap);
   }
 
+  let disposeThumbHydrator = null;
+
   function renderDeck() {
     applySceneVisuals?.();
 
@@ -361,6 +369,9 @@ export function wirePickerDeck({
         }
       }
     });
+
+    if (disposeThumbHydrator) disposeThumbHydrator();
+    disposeThumbHydrator = hydrateThumbButtons(thumbs, { immediate: 8 });
   }
 
   // --- wire controls (once) ---

@@ -284,7 +284,7 @@ select {
   initial-value: 0deg;
 }
 
-/* Wrapper (unchanged) */
+/* Wrapper */
 .lux-toplinks{
   margin: 18px auto 0;
   width: min(980px, 94vw);
@@ -292,19 +292,24 @@ select {
   gap: 8px;
 
   position: relative;
-  z-index: 50;
+  z-index: 200; /* stay above atmo/deck layers */
 }
+
+/* Centered CTA wrapper (if used on some pages) */
 .lux-toplinks-cta{
   display: flex;
   justify-content: center;
+  margin-bottom: 18px;
+
   position: relative;
-  z-index: 10;
-  margin-bottom: 18px;     /* a touch more space above #userMsg */
+  z-index: 200; /* match top links */
 }
+
 .lux-toplink{
   font-weight: 800;
   text-decoration: none;
 }
+
 
 /* Base: same pill size/shape everywhere */
 .lux-navpill {
