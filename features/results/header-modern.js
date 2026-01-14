@@ -42,16 +42,26 @@ export function renderResultsHeaderModern(data) {
 
   // 3. CHIP RENDERER
   const renderChip = (label, val, key, extra = "") => {
-      const cls = scoreClass(val); 
-      return `
-        <span class="${cls}" style="white-space:nowrap; margin-right:4px; display:inline-block;">
-          ${label}
-          <span class="tooltip result-tip tip-${key}">(?) 
-            <span class="tooltiptext">${TOOLTIPS[key] || ""}</span>
-          </span>
-          : ${fmtPct(val)}${extra}
+    const cls = scoreClass(val);
+
+    // Make "Prosody" clickable/focusable to toggle the prosody key panel
+    const labelHtml =
+      key === "Prosody"
+        ? `<span id="prosodyLegendToggle"
+                tabindex="0"
+                role="button"
+                title="Show/hide prosody bars key">${label}</span>`
+        : label;
+
+    return `
+      <span class="${cls}" style="white-space:nowrap; margin-right:4px; display:inline-block;">
+        ${labelHtml}
+        <span class="tooltip result-tip tip-${key}">(?) 
+          <span class="tooltiptext">${TOOLTIPS[key] || ""}</span>
         </span>
-      `;
+        : ${fmtPct(val)}${extra}
+      </span>
+    `;
   };
 
   const saidText = data?.DisplayText || nbest?.Display || "(No speech detected)";
@@ -74,12 +84,37 @@ export function renderResultsHeaderModern(data) {
           </div>
           <span class="label">Normal</span>
         </div>
+
         <div class="sample">
           <div class="prosody-ribbon">
             <span class="pr-seg pr-gap missing" style="width:20px"></span>
             <span class="pr-seg pr-tempo ok" style="width:28px"></span>
           </div>
           <span class="label">Pause</span>
+        </div>
+
+        <div class="sample">
+          <div class="prosody-ribbon">
+            <span class="pr-seg pr-gap unexpected" style="width:34px"></span>
+            <span class="pr-seg pr-tempo ok" style="width:28px"></span>
+          </div>
+          <span class="label">Long pause</span>
+        </div>
+
+        <div class="sample">
+          <div class="prosody-ribbon">
+            <span class="pr-seg pr-gap ok" style="width:12px"></span>
+            <span class="pr-seg pr-tempo fast" style="width:16px"></span>
+          </div>
+          <span class="label">Fast word</span>
+        </div>
+
+        <div class="sample">
+          <div class="prosody-ribbon">
+            <span class="pr-seg pr-gap ok" style="width:12px"></span>
+            <span class="pr-seg pr-tempo slow" style="width:60px"></span>
+          </div>
+          <span class="label">Slow word</span>
         </div>
       </div>
       <div class="note">Bars show pause (left) and tempo (right).</div>
@@ -142,4 +177,3 @@ export function renderResultsHeaderModern(data) {
     </details>
   `;
 }
- 
