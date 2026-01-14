@@ -240,7 +240,7 @@
 }
 #convoApp[data-mode="intro"] .lux-heroSub{
   color: rgba(0,0,0,0.62);
-  font-size: 22px;
+  font-size: 22px;   /* bigger body copy */
   line-height: 1.55;
   max-width: 60ch;
   margin-top: 0;

@@ -54,6 +54,14 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
 
   // Picker overlay (Edge deck)
   const picker = el("div", "lux-picker");
+
+  // Return link (ONLY appears in picker mode because it lives inside .lux-picker)
+  const pickerToplinks = el("div", "lux-toplinks");
+  const pickerHome = el("a", "lux-toplink lux-navpill", "Practice Skills");
+  pickerHome.href = "./index.html";
+  pickerHome.setAttribute("data-lux-ripple", "");
+  pickerToplinks.append(pickerHome);
+
   const deck = el("div", "lux-deck");
   const deckActive = el("div", "lux-deck-card is-active");
   const deckPreview = el("div", "lux-deck-card is-preview");
@@ -73,7 +81,7 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
   nav.append(backBtn, nextBtn);
 
   /* IMPORTANT: insert knobs row between thumbs and nav */
-  picker.append(deck, thumbs, pickerKnobsRow, nav);
+  picker.append(pickerToplinks, deck, thumbs, pickerKnobsRow, nav);
 
   // Chat panel (single centered)
   const chatWrap = el("div", "lux-chatwrap");
@@ -86,10 +94,16 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
   titleWrap.append(title, sub);
 
   const actions = el("div", "lux-actions");
+
+  // Return link (ONLY appears in chat mode because it lives inside the chat header)
+  const chatHome = el("a", "btn ghost", "Practice Skills");
+  chatHome.href = "./index.html";
+  chatHome.setAttribute("data-lux-ripple", "");
+
   const scenBtn = el("button", "btn ghost", "Scenarios");
   const knobsBtn = el("button", "btn ghost", "Knobs");
   const endBtn = el("button", "btn danger", "End Session");
-  actions.append(scenBtn, knobsBtn, endBtn);
+  actions.append(chatHome, scenBtn, knobsBtn, endBtn);
 
   midHd.append(titleWrap, actions);
 
