@@ -177,30 +177,26 @@ function injectTooltipCSS() {
       flex: 0 0 auto;
     }
 
-    #lux-global-ph-tooltip .lux-ph-panelText{
-      background:#0f172a;
-      color:#94a3b8;
-      font-size:12px;
-      padding: 6px 10px;
-      border-bottom:1px solid #334155;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+    /* Center the ✕ perfectly inside its button */
+    #lux-global-ph-tooltip #lux-ph-close{
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      line-height: 1;
     }
 
-    /* ---- Text carousel panels ---- */
-    #lux-global-ph-tooltip .lux-ph-viewport{ overflow:hidden; }
-    #lux-global-ph-tooltip .lux-ph-track{
-      display:flex;
-      width:300%;
-      transition: transform 220ms ease;
-    }
-    #lux-global-ph-tooltip .lux-ph-panel{
-      flex: 0 0 100%;
-      padding: 10px 12px 12px;
+    /* Single source of truth for the panel text (no duplicates) */
+    #lux-global-ph-tooltip .lux-ph-panelText{
+      background:#0f172a;
       color:#e2e8f0;
+      font-size:13px;
+      padding: 10px 12px 12px;
+      border-bottom:1px solid #334155;
+      white-space: normal;
     }
-    #lux-global-ph-tooltip .lux-ph-panel.is-empty{
+
+    #lux-global-ph-tooltip .lux-ph-panelText.is-empty{
       color:#94a3b8;
       font-style:italic;
     }
@@ -346,6 +342,7 @@ function injectTooltipCSS() {
       align-items: center;
       justify-content: space-between;
       gap: 10px;
+      flex-wrap: wrap;
     }
 
     .lux-ph-modalTitle{
@@ -353,17 +350,8 @@ function injectTooltipCSS() {
       font-weight: 900;
       font-size: 13px;
       opacity: 0.9;
-    }
-
-    .lux-ph-modalClose{
-      border: 0;
-      background: rgba(255,255,255,0.08);
-      color: #e2e8f0;
-      border-radius: 10px;
-      width: 34px;
-      height: 34px;
-      cursor: pointer;
-      font-size: 16px;
+      white-space: nowrap;
+      margin-right: 10px;
     }
 
     .lux-ph-modalGrid{
@@ -371,11 +359,56 @@ function injectTooltipCSS() {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 10px;
+      min-height: 0;
     }
 
+    /* Modal needs the same video tile rules (not scoped to tooltip id) */
     .lux-ph-modalCard .lux-ph-vidTile{
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #05070f;
+      cursor: pointer;
       height: 100%;
       aspect-ratio: auto; /* override */
+    }
+
+    .lux-ph-modalCard .lux-ph-vidTile video{
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scale(1.06);
+    }
+
+    .lux-ph-modalCard .lux-ph-vidOverlay{
+      position: absolute;
+      inset: 0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:rgba(0,0,0,0.25);
+      font-size:34px;
+      opacity:0.88;
+      transition: opacity 140ms ease;
+      pointer-events:none;
+    }
+
+    .lux-ph-modalCard .lux-ph-vidTile.is-playing .lux-ph-vidOverlay{
+      opacity:0;
+    }
+
+    .lux-ph-modalCard .lux-ph-vidLabel{
+      position:absolute;
+      left:8px;
+      bottom:8px;
+      background:rgba(0,0,0,0.55);
+      color:#e2e8f0;
+      font-size:11px;
+      padding:4px 8px;
+      border-radius:999px;
+      font-weight:800;
     }
   `;
   document.head.appendChild(style);
@@ -612,11 +645,7 @@ function showTooltip(chip, { pinned = false } = {}) {
   ];
 
   // Topbar examples string
-  const examplesStr = words.length
-    ? `(${words.map(escapeHTML).join(", ")})`
-    : displayLabel
-      ? escapeHTML(displayLabel)
-      : "";
+  const examplesStr = words.length ? `(${words.map(escapeHTML).join(", ")})` : displayLabel ? escapeHTML(displayLabel) : "";
 
   let html = `
     <div class="lux-ph-topbar">
@@ -634,19 +663,8 @@ function showTooltip(chip, { pinned = false } = {}) {
       <button id="lux-ph-close" class="lux-ph-closeBtn" type="button" aria-label="Close">✕</button>
     </div>
 
+    <!-- SINGLE panel text element (no duplicates anywhere else) -->
     <div id="lux-ph-panelText" class="lux-ph-panelText"></div>
-
-    <div class="lux-ph-viewport">
-      <div id="lux-ph-text-track" class="lux-ph-track">
-        ${panels
-          .map((p) => {
-            const has = (p.text || "").trim().length > 0;
-            const t = has ? p.text : p.empty;
-            return `<div class="lux-ph-panel${has ? "" : " is-empty"}">${escapeHTML(t)}</div>`;
-          })
-          .join("")}
-      </div>
-    </div>
   `;
 
   html += `
@@ -772,24 +790,24 @@ function showTooltip(chip, { pinned = false } = {}) {
 }
 
 function initTooltipTextCarousel(panels) {
-  const track = globalTooltip?.querySelector("#lux-ph-text-track");
   const title = globalTooltip?.querySelector("#lux-ph-modeTitle");
   const prev = globalTooltip?.querySelector("#lux-ph-panel-prev");
   const next = globalTooltip?.querySelector("#lux-ph-panel-next");
   const panelText = globalTooltip?.querySelector("#lux-ph-panelText");
 
-  if (!track || !title || !prev || !next || !panelText) return;
+  if (!title || !prev || !next || !panelText) return;
 
   const max = panels.length;
   let idx = 0;
 
   function render() {
-    track.style.transform = `translateX(-${idx * 100}%)`;
     title.textContent = panels[idx]?.title || "";
 
     const has = (panels[idx]?.text || "").trim().length > 0;
     const t = has ? panels[idx].text : panels[idx].empty;
+
     panelText.textContent = t;
+    panelText.classList.toggle("is-empty", !has);
 
     const disabled = max <= 1;
     prev.disabled = disabled;
@@ -996,6 +1014,183 @@ function initTooltipVideoControls() {
   applySpeed();
 }
 
+function initModalVideoControls(back) {
+  const sideVid = back?.querySelector('video[data-vid="side"]');
+  const frontVid = back?.querySelector('video[data-vid="front"]');
+
+  const tileSide = back?.querySelector('.lux-ph-vidTile[data-vid="side"]');
+  const tileFront = back?.querySelector('.lux-ph-vidTile[data-vid="front"]');
+
+  const btnSide = back?.querySelector("#lux-ph-m-side");
+  const btnFront = back?.querySelector("#lux-ph-m-front");
+  const btnBoth = back?.querySelector("#lux-ph-m-both");
+  const btnStop = back?.querySelector("#lux-ph-m-stop");
+  const btnShrink = back?.querySelector("#lux-ph-m-shrink");
+  const btnSound = back?.querySelector("#lux-ph-m-sound");
+  const btnLoop = back?.querySelector("#lux-ph-m-loop");
+  const speedSel = back?.querySelector("#lux-ph-m-speed");
+
+  if (!sideVid && !frontVid) return;
+
+  // Default sound ON
+  let soundOn = true;
+
+  // Default loop OFF
+  let loopOn = false;
+
+  function applySound() {
+    const txt = soundOn ? "🔊" : "🔇";
+    if (btnSound) {
+      btnSound.textContent = txt;
+      btnSound.setAttribute("data-sound", soundOn ? "1" : "0");
+    }
+    for (const v of [sideVid, frontVid]) {
+      if (!v) continue;
+      v.muted = !soundOn;
+      v.volume = 1.0;
+    }
+  }
+
+  function applyLoop() {
+    for (const v of [sideVid, frontVid]) {
+      if (!v) continue;
+      v.loop = loopOn;
+    }
+    if (btnLoop) {
+      btnLoop.textContent = loopOn ? "Repeat On" : "Repeat Off";
+      btnLoop.setAttribute("data-loop", loopOn ? "1" : "0");
+    }
+  }
+
+  function applySpeed() {
+    const rate = parseFloat(speedSel?.value || "1");
+    for (const v of [sideVid, frontVid]) {
+      if (!v) continue;
+      v.playbackRate = rate;
+    }
+  }
+
+  async function gesturePlay(v, { restart = true } = {}) {
+    if (!v) return;
+    try {
+      if (restart) v.currentTime = 0;
+    } catch (_) {}
+
+    v.muted = soundOn ? false : true;
+    v.volume = 1.0;
+
+    try {
+      await v.play();
+    } catch (_) {
+      try {
+        v.muted = true;
+        await v.play();
+      } catch (_) {}
+    }
+  }
+
+  function stopAll() {
+    for (const v of [sideVid, frontVid]) {
+      if (!v) continue;
+      try {
+        v.pause();
+      } catch (_) {}
+      try {
+        v.currentTime = 0;
+      } catch (_) {}
+    }
+  }
+
+  function bindTile(v, tile) {
+    if (!v || !tile) return;
+
+    const syncClass = () => {
+      tile.classList.toggle("is-playing", !v.paused);
+    };
+
+    v.addEventListener("play", syncClass);
+    v.addEventListener("pause", syncClass);
+    v.addEventListener("ended", syncClass);
+    syncClass();
+
+    tile.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (v.paused) await gesturePlay(v, { restart: false });
+      else v.pause();
+    });
+  }
+
+  bindTile(sideVid, tileSide);
+  bindTile(frontVid, tileFront);
+
+  btnSound?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    soundOn = !soundOn;
+    applySound();
+  });
+
+  btnLoop?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    loopOn = !loopOn;
+    applyLoop();
+  });
+
+  speedSel?.addEventListener("change", applySpeed);
+
+  btnSide?.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    await gesturePlay(sideVid, { restart: true });
+  });
+
+  btnFront?.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    await gesturePlay(frontVid, { restart: true });
+  });
+
+  btnBoth?.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    try {
+      if (sideVid) sideVid.currentTime = 0;
+    } catch (_) {}
+    try {
+      if (frontVid) frontVid.currentTime = 0;
+    } catch (_) {}
+
+    applySound();
+    applySpeed();
+
+    await Promise.all([
+      sideVid ? gesturePlay(sideVid, { restart: false }) : Promise.resolve(),
+      frontVid ? gesturePlay(frontVid, { restart: false }) : Promise.resolve(),
+    ]);
+  });
+
+  btnStop?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    stopAll();
+  });
+
+  btnShrink?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Modal close is handled by openVideoFocusModal() close()
+    back?.remove();
+  });
+
+  // Apply initial states
+  applySound();
+  applyLoop();
+  applySpeed();
+}
+
 function openVideoFocusModal({ sideSrc, frontSrc }) {
   // kill existing
   const existing = document.querySelector("#lux-ph-vidModalBack");
@@ -1005,11 +1200,40 @@ function openVideoFocusModal({ sideSrc, frontSrc }) {
   back.id = "lux-ph-vidModalBack";
   back.className = "lux-ph-modalBack";
 
+  // Only render buttons that actually apply
+  const hasSide = !!sideSrc;
+  const hasFront = !!frontSrc;
+  const hasBoth = hasSide && hasFront;
+
   back.innerHTML = `
     <div class="lux-ph-modalCard" role="dialog" aria-modal="true">
       <div class="lux-ph-modalTop">
         <div class="lux-ph-modalTitle">Video Focus</div>
-        <button class="lux-ph-modalClose" type="button" aria-label="Close">✕</button>
+
+        <div class="lux-ph-vidBtns">
+          ${hasSide ? `<button id="lux-ph-m-side" class="lux-ph-miniBtn" type="button">Side</button>` : ``}
+          ${hasFront ? `<button id="lux-ph-m-front" class="lux-ph-miniBtn" type="button">Front</button>` : ``}
+          ${hasBoth ? `<button id="lux-ph-m-both" class="lux-ph-miniBtn is-primary" type="button">Both</button>` : ``}
+          <button id="lux-ph-m-stop" class="lux-ph-miniBtn" type="button">Stop</button>
+          <button id="lux-ph-m-shrink" class="lux-ph-miniBtn" type="button">Shrink</button>
+          <button id="lux-ph-m-loop" class="lux-ph-miniBtn" type="button" data-loop="0">Repeat Off</button>
+
+          <select id="lux-ph-m-speed" class="lux-ph-speed">
+            <option value="0.4">0.4×</option>
+            <option value="0.5">0.5×</option>
+            <option value="0.6">0.6×</option>
+            <option value="0.7">0.7×</option>
+            <option value="0.8">0.8×</option>
+            <option value="0.9">0.9×</option>
+            <option value="1" selected>1×</option>
+            <option value="1.1">1.1×</option>
+            <option value="1.25">1.25×</option>
+            <option value="1.4">1.4×</option>
+            <option value="1.6">1.6×</option>
+          </select>
+
+          <button id="lux-ph-m-sound" class="lux-ph-miniBtn" type="button" data-sound="1">🔊</button>
+        </div>
       </div>
 
       <div class="lux-ph-modalGrid">
@@ -1040,7 +1264,8 @@ function openVideoFocusModal({ sideSrc, frontSrc }) {
 
   document.body.appendChild(back);
 
-  const closeBtn = back.querySelector(".lux-ph-modalClose");
+  const card = back.querySelector(".lux-ph-modalCard");
+  if (!card) return;
 
   function close() {
     // pause everything inside modal
@@ -1052,7 +1277,8 @@ function openVideoFocusModal({ sideSrc, frontSrc }) {
     back.remove();
   }
 
-  closeBtn?.addEventListener("click", (e) => {
+  // Shrink closes instantly
+  back.querySelector("#lux-ph-m-shrink")?.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
     close();
@@ -1063,7 +1289,15 @@ function openVideoFocusModal({ sideSrc, frontSrc }) {
     if (e.target === back) close();
   });
 
-  // Click tile toggles play/pause
+  // Prevent inside clicks from closing backdrop
+  card.addEventListener("click", (e) => {
+    e.stopPropagation();
+  });
+
+  // Wire modal controls (mirrors tooltip logic)
+  initModalVideoControls(back);
+
+  // Click tile toggles play/pause (kept — mirrors tooltip feel)
   back.querySelectorAll(".lux-ph-vidTile").forEach((tile) => {
     const v = tile.querySelector("video");
     tile.addEventListener("click", async (e) => {
