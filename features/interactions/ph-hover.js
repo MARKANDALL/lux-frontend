@@ -94,16 +94,48 @@ function injectTooltipCSS() {
     #lux-global-ph-tooltip video::-webkit-media-controls-enclosure { display:none !important; }
     #lux-global-ph-tooltip video::-webkit-media-controls-panel { display:none !important; }
 
-    /* ---- Text carousel (Plain / Technical / Common mix-ups) ---- */
-    #lux-global-ph-tooltip .lux-ph-text-head{
+    /* ---- Topbar (IPA + mode nav + close) ---- */
+    #lux-global-ph-tooltip .lux-ph-topbar{
+      background:#0f172a;
+      padding: 8px 10px;
+      border-bottom:1px solid rgba(255,255,255,0.06);
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:8px;
-      padding:8px 10px;
-      background:#0f172a;
-      border-bottom:1px solid #334155;
+      gap:10px;
     }
+
+    #lux-global-ph-tooltip .lux-ph-ipaBlock{
+      min-width: 0;
+      display:flex;
+      align-items:baseline;
+      gap:8px;
+      flex: 1;
+    }
+
+    #lux-global-ph-tooltip .lux-ph-ipa{
+      font-weight:900;
+      font-size: 1.1em;
+      color:#fff;
+      white-space:nowrap;
+    }
+
+    #lux-global-ph-tooltip .lux-ph-examples{
+      color:#94a3b8;
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
+    }
+
+    #lux-global-ph-tooltip .lux-ph-modeNav{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex: 0 0 auto;
+    }
+
     #lux-global-ph-tooltip .lux-ph-nav-btn{
       width:28px;
       height:28px;
@@ -118,18 +150,45 @@ function injectTooltipCSS() {
       justify-content:center;
       user-select:none;
     }
+
     #lux-global-ph-tooltip .lux-ph-nav-btn:disabled{
       opacity:0.35;
       cursor:default;
     }
-    #lux-global-ph-tooltip .lux-ph-title{
-      flex:1;
-      text-align:center;
+
+    #lux-global-ph-tooltip .lux-ph-modeTitle{
       font-size:12px;
       letter-spacing:0.02em;
       color:#cbd5e1;
-      font-weight:800;
+      font-weight:900;
+      white-space:nowrap;
     }
+
+    #lux-global-ph-tooltip .lux-ph-closeBtn{
+      border:0;
+      background:rgba(255,255,255,0.08);
+      color:#e2e8f0;
+      border-radius:10px;
+      width:30px;
+      height:30px;
+      cursor:pointer;
+      font-size:16px;
+      line-height:30px;
+      flex: 0 0 auto;
+    }
+
+    #lux-global-ph-tooltip .lux-ph-panelText{
+      background:#0f172a;
+      color:#94a3b8;
+      font-size:12px;
+      padding: 6px 10px;
+      border-bottom:1px solid #334155;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ---- Text carousel panels ---- */
     #lux-global-ph-tooltip .lux-ph-viewport{ overflow:hidden; }
     #lux-global-ph-tooltip .lux-ph-track{
       display:flex;
@@ -145,40 +204,11 @@ function injectTooltipCSS() {
       color:#94a3b8;
       font-style:italic;
     }
-    #lux-global-ph-tooltip .lux-ph-dots{
-      display:flex;
-      justify-content:center;
-      gap:6px;
-      padding: 8px 0 10px;
-      background:#0f172a;
-      border-bottom:1px solid #334155;
-    }
-    #lux-global-ph-tooltip .lux-ph-dot{
-      width:6px;
-      height:6px;
-      border-radius:999px;
-      background: rgba(255,255,255,0.55);
-      opacity:0.55;
-      transform: scale(1);
-      transition: transform 180ms ease, opacity 180ms ease;
-    }
-    #lux-global-ph-tooltip .lux-ph-dot.is-active{
-      opacity:1;
-      transform: scale(1.25);
-      background: rgba(255,255,255,0.9);
-    }
-    #lux-global-ph-tooltip .lux-ph-words{
-      padding: 10px 12px 12px;
-      font-size: 12px;
-      color:#94a3b8;
-      border-bottom:1px solid #334155;
-    }
-    #lux-global-ph-tooltip .lux-ph-words b{ color:#cbd5e1; }
 
     /* ---- Video block (bigger + clickable play system) ---- */
     #lux-global-ph-tooltip .lux-ph-vidBox{
       background:#000;
-      padding: 8px;
+      padding: 6px;
     }
 
     #lux-global-ph-tooltip .lux-ph-vidControls{
@@ -286,14 +316,66 @@ function injectTooltipCSS() {
       font-weight:800;
     }
 
-    #lux-global-ph-tooltip .lux-ph-vidHint{
-      margin-top:10px;
-      background:#0f172a;
-      color:#94a3b8;
-      font-size:11px;
-      text-align:center;
-      padding:7px;
-      border-radius:10px;
+    /* ---- Video Focus Modal ---- */
+    .lux-ph-modalBack{
+      position: fixed;
+      inset: 0;
+      background: rgba(2,6,23,0.62);
+      backdrop-filter: blur(2px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .lux-ph-modalCard{
+      width: min(980px, 96vw);
+      height: min(650px, 88vh);
+      background: #0b1020;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      box-shadow: 0 22px 70px rgba(0,0,0,0.55);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .lux-ph-modalTop{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .lux-ph-modalTitle{
+      color: #e2e8f0;
+      font-weight: 900;
+      font-size: 13px;
+      opacity: 0.9;
+    }
+
+    .lux-ph-modalClose{
+      border: 0;
+      background: rgba(255,255,255,0.08);
+      color: #e2e8f0;
+      border-radius: 10px;
+      width: 34px;
+      height: 34px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .lux-ph-modalGrid{
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .lux-ph-modalCard .lux-ph-vidTile{
+      height: 100%;
+      aspect-ratio: auto; /* override */
     }
   `;
   document.head.appendChild(style);
@@ -529,28 +611,30 @@ function showTooltip(chip, { pinned = false } = {}) {
     },
   ];
 
+  // Topbar examples string
+  const examplesStr = words.length
+    ? `(${words.map(escapeHTML).join(", ")})`
+    : displayLabel
+      ? escapeHTML(displayLabel)
+      : "";
+
   let html = `
-    <div style="background:#0f172a; padding:10px 12px; border-bottom:1px solid rgba(255,255,255,0.06); display:flex; justify-content:space-between; align-items:center;">
-      <div>
-        <span style="font-weight:800; font-size:1.2em; color:#fff;">/${escapeHTML(ipa)}/</span>
-        ${
-          displayLabel
-            ? `<span style="color:#94a3b8; font-size:0.95em; margin-left:8px;">${escapeHTML(displayLabel)}</span>`
-            : ""
-        }
+    <div class="lux-ph-topbar">
+      <div class="lux-ph-ipaBlock">
+        <span class="lux-ph-ipa">/${escapeHTML(ipa)}/</span>
+        ${examplesStr ? `<span class="lux-ph-examples">${examplesStr}</span>` : ``}
       </div>
 
-      <button id="lux-ph-close" type="button"
-        style="border:0; background:rgba(255,255,255,0.08); color:#e2e8f0; border-radius:10px; width:30px; height:30px; cursor:pointer; font-size:16px; line-height:30px;">
-        ✕
-      </button>
+      <div class="lux-ph-modeNav">
+        <button id="lux-ph-panel-prev" class="lux-ph-nav-btn" type="button" aria-label="Previous panel">‹</button>
+        <div id="lux-ph-modeTitle" class="lux-ph-modeTitle"></div>
+        <button id="lux-ph-panel-next" class="lux-ph-nav-btn" type="button" aria-label="Next panel">›</button>
+      </div>
+
+      <button id="lux-ph-close" class="lux-ph-closeBtn" type="button" aria-label="Close">✕</button>
     </div>
 
-    <div class="lux-ph-text-head">
-      <button id="lux-ph-text-prev" class="lux-ph-nav-btn" type="button" aria-label="Previous panel">‹</button>
-      <div id="lux-ph-text-title" class="lux-ph-title"></div>
-      <button id="lux-ph-text-next" class="lux-ph-nav-btn" type="button" aria-label="Next panel">›</button>
-    </div>
+    <div id="lux-ph-panelText" class="lux-ph-panelText"></div>
 
     <div class="lux-ph-viewport">
       <div id="lux-ph-text-track" class="lux-ph-track">
@@ -563,15 +647,7 @@ function showTooltip(chip, { pinned = false } = {}) {
           .join("")}
       </div>
     </div>
-
-    <div id="lux-ph-text-dots" class="lux-ph-dots">
-      ${panels.map((_, i) => `<span class="lux-ph-dot${i === 0 ? " is-active" : ""}"></span>`).join("")}
-    </div>
   `;
-
-  if (words.length) {
-    html += `<div class="lux-ph-words"><b>Examples:</b> ${words.map(escapeHTML).join(" • ")}</div>`;
-  }
 
   html += `
     ${
@@ -582,15 +658,25 @@ function showTooltip(chip, { pinned = false } = {}) {
       <div class="lux-ph-vidBtns">
         ${vidSrc ? `<button id="lux-ph-play-side" class="lux-ph-miniBtn" type="button">Side</button>` : ``}
         ${vidFrontSrc ? `<button id="lux-ph-play-front" class="lux-ph-miniBtn" type="button">Front</button>` : ``}
-        ${vidSrc && vidFrontSrc ? `<button id="lux-ph-play-both" class="lux-ph-miniBtn is-primary" type="button">Both</button>` : ``}
+        ${vidSrc && vidFrontSrc ? `<button id="lux-ph-play-both" class="lux-ph-miniBtn" type="button">Both</button>` : ``}
         <button id="lux-ph-stop" class="lux-ph-miniBtn" type="button">Stop</button>
+
+        <button id="lux-ph-expand" class="lux-ph-miniBtn is-primary" type="button">Expand</button>
+
         <button id="lux-ph-loop" class="lux-ph-miniBtn" type="button" data-loop="0">Repeat Off</button>
+
         <select id="lux-ph-speed" class="lux-ph-speed">
+          <option value="0.4">0.4×</option>
           <option value="0.5">0.5×</option>
-          <option value="0.75">0.75×</option>
+          <option value="0.6">0.6×</option>
+          <option value="0.7">0.7×</option>
+          <option value="0.8">0.8×</option>
+          <option value="0.9">0.9×</option>
           <option value="1" selected>1×</option>
+          <option value="1.1">1.1×</option>
           <option value="1.25">1.25×</option>
-          <option value="1.5">1.5×</option>
+          <option value="1.4">1.4×</option>
+          <option value="1.6">1.6×</option>
         </select>
       </div>
 
@@ -631,10 +717,6 @@ function showTooltip(chip, { pinned = false } = {}) {
       </div>`
           : ``
       }
-    </div>
-
-    <div class="lux-ph-vidHint">
-      Tap a video to play • Use “Both” to sync • Sound optional
     </div>
   </div>
 `
@@ -691,23 +773,23 @@ function showTooltip(chip, { pinned = false } = {}) {
 
 function initTooltipTextCarousel(panels) {
   const track = globalTooltip?.querySelector("#lux-ph-text-track");
-  const title = globalTooltip?.querySelector("#lux-ph-text-title");
-  const prev = globalTooltip?.querySelector("#lux-ph-text-prev");
-  const next = globalTooltip?.querySelector("#lux-ph-text-next");
-  const dotsWrap = globalTooltip?.querySelector("#lux-ph-text-dots");
+  const title = globalTooltip?.querySelector("#lux-ph-modeTitle");
+  const prev = globalTooltip?.querySelector("#lux-ph-panel-prev");
+  const next = globalTooltip?.querySelector("#lux-ph-panel-next");
+  const panelText = globalTooltip?.querySelector("#lux-ph-panelText");
 
-  if (!track || !title || !prev || !next || !dotsWrap) return;
+  if (!track || !title || !prev || !next || !panelText) return;
 
-  const dots = [...dotsWrap.querySelectorAll(".lux-ph-dot")];
   const max = panels.length;
-
   let idx = 0;
 
   function render() {
     track.style.transform = `translateX(-${idx * 100}%)`;
     title.textContent = panels[idx]?.title || "";
 
-    dots.forEach((d, i) => d.classList.toggle("is-active", i === idx));
+    const has = (panels[idx]?.text || "").trim().length > 0;
+    const t = has ? panels[idx].text : panels[idx].empty;
+    panelText.textContent = t;
 
     const disabled = max <= 1;
     prev.disabled = disabled;
@@ -746,6 +828,7 @@ function initTooltipVideoControls() {
   const btnFront = globalTooltip?.querySelector("#lux-ph-play-front");
   const btnBoth = globalTooltip?.querySelector("#lux-ph-play-both");
   const btnStop = globalTooltip?.querySelector("#lux-ph-stop");
+  const btnExpand = globalTooltip?.querySelector("#lux-ph-expand");
   const btnSound = globalTooltip?.querySelector("#lux-ph-sound");
   const btnLoop = globalTooltip?.querySelector("#lux-ph-loop");
   const speedSel = globalTooltip?.querySelector("#lux-ph-speed");
@@ -766,7 +849,6 @@ function initTooltipVideoControls() {
     }
     for (const v of [sideVid, frontVid]) {
       if (!v) continue;
-      // Sound preference affects play attempts, but default is unmuted.
       v.muted = !soundOn;
       v.volume = 1.0;
     }
@@ -797,8 +879,8 @@ function initTooltipVideoControls() {
       if (restart) v.currentTime = 0;
     } catch (_) {}
 
-    // Pressing play should auto-unmute by default (unless user toggled sound off)
-    v.muted = !soundOn ? true : false;
+    // Pressing play should auto-unmute (unless user turned sound off)
+    v.muted = soundOn ? false : true;
     v.volume = 1.0;
 
     try {
@@ -815,8 +897,12 @@ function initTooltipVideoControls() {
   function stopAll() {
     for (const v of [sideVid, frontVid]) {
       if (!v) continue;
-      try { v.pause(); } catch (_) {}
-      try { v.currentTime = 0; } catch (_) {}
+      try {
+        v.pause();
+      } catch (_) {}
+      try {
+        v.currentTime = 0;
+      } catch (_) {}
     }
   }
 
@@ -875,8 +961,12 @@ function initTooltipVideoControls() {
     e.preventDefault();
     e.stopPropagation();
     // Restart both to sync “as close as possible”
-    try { if (sideVid) sideVid.currentTime = 0; } catch (_) {}
-    try { if (frontVid) frontVid.currentTime = 0; } catch (_) {}
+    try {
+      if (sideVid) sideVid.currentTime = 0;
+    } catch (_) {}
+    try {
+      if (frontVid) frontVid.currentTime = 0;
+    } catch (_) {}
     applySound();
     applySpeed();
     await Promise.all([
@@ -891,10 +981,108 @@ function initTooltipVideoControls() {
     stopAll();
   });
 
+  btnExpand?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const sideSrc = sideVid?.getAttribute("src");
+    const frontSrc = frontVid?.getAttribute("src");
+    openVideoFocusModal({ sideSrc, frontSrc });
+  });
+
   // Apply initial states
   applySound();
   applyLoop();
   applySpeed();
+}
+
+function openVideoFocusModal({ sideSrc, frontSrc }) {
+  // kill existing
+  const existing = document.querySelector("#lux-ph-vidModalBack");
+  if (existing) existing.remove();
+
+  const back = document.createElement("div");
+  back.id = "lux-ph-vidModalBack";
+  back.className = "lux-ph-modalBack";
+
+  back.innerHTML = `
+    <div class="lux-ph-modalCard" role="dialog" aria-modal="true">
+      <div class="lux-ph-modalTop">
+        <div class="lux-ph-modalTitle">Video Focus</div>
+        <button class="lux-ph-modalClose" type="button" aria-label="Close">✕</button>
+      </div>
+
+      <div class="lux-ph-modalGrid">
+        ${
+          sideSrc
+            ? `
+          <div class="lux-ph-vidTile" data-vid="side">
+            <video data-vid="side" src="${sideSrc}" playsinline preload="metadata"></video>
+            <div class="lux-ph-vidOverlay" aria-hidden="true"><span>▶</span></div>
+            <div class="lux-ph-vidLabel">Side</div>
+          </div>`
+            : ``
+        }
+
+        ${
+          frontSrc
+            ? `
+          <div class="lux-ph-vidTile" data-vid="front">
+            <video data-vid="front" src="${frontSrc}" playsinline preload="metadata"></video>
+            <div class="lux-ph-vidOverlay" aria-hidden="true"><span>▶</span></div>
+            <div class="lux-ph-vidLabel">Front</div>
+          </div>`
+            : ``
+        }
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(back);
+
+  const closeBtn = back.querySelector(".lux-ph-modalClose");
+
+  function close() {
+    // pause everything inside modal
+    back.querySelectorAll("video").forEach((v) => {
+      try {
+        v.pause();
+      } catch (_) {}
+    });
+    back.remove();
+  }
+
+  closeBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    close();
+  });
+
+  // Click backdrop closes instantly
+  back.addEventListener("click", (e) => {
+    if (e.target === back) close();
+  });
+
+  // Click tile toggles play/pause
+  back.querySelectorAll(".lux-ph-vidTile").forEach((tile) => {
+    const v = tile.querySelector("video");
+    tile.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      try {
+        if (!v) return;
+        if (v.paused) {
+          v.muted = false;
+          v.volume = 1.0;
+          await v.play();
+          tile.classList.add("is-playing");
+        } else {
+          v.pause();
+          tile.classList.remove("is-playing");
+        }
+      } catch (_) {}
+    });
+  });
 }
 
 function hideTooltip() {
@@ -906,8 +1094,12 @@ function hideTooltip() {
 
     const vids = [...globalTooltip.querySelectorAll("video")];
     for (const v of vids) {
-      try { v.pause(); } catch (_) {}
-      try { v.currentTime = 0; } catch (_) {}
+      try {
+        v.pause();
+      } catch (_) {}
+      try {
+        v.currentTime = 0;
+      } catch (_) {}
     }
   }
 
