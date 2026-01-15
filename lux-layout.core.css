@@ -1,0 +1,180 @@
+/* lux-layout.core.css */
+
+/* Core application styles */
+
+#typewriterMsg {
+  white-space: pre;
+  opacity: 1;
+  transition: opacity 0.5s;
+}
+
+.hidden {
+  display: none !important;
+}
+
+@keyframes tipPop {
+  0% { transform: scale(0.2) rotate(-30deg); opacity: 0; color: #bbb; }
+  40% { transform: scale(1.4) rotate(10deg); opacity: 1; color: #1e90ff; }
+  70% { transform: scale(0.88) rotate(-5deg); color: #205080; }
+  85% { transform: scale(1.05) rotate(0); color: #0078d7; }
+  100% { transform: scale(1) rotate(0); color: inherit; }
+}
+
+#prettyResult a {
+  text-decoration: none !important;
+  font-weight: 700;
+}
+#prettyResult a:visited,
+#prettyResult a:active,
+#prettyResult a:focus {
+  text-decoration: none !important;
+  color: inherit !important;
+}
+#prettyResult a:hover {
+  text-decoration: underline dotted;
+  color: #0078d7;
+}
+
+.pop-in {
+  animation: tipPop 1.4s cubic-bezier(0.18, 1.7, 0.28, 1.01);
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  font-family: "Montserrat", system-ui, sans-serif;
+  background: #fff;
+  color: #333;
+  margin: 0;
+  line-height: 1.5;
+  padding: 10px;
+}
+
+#container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: calc(2vw + var(--lux-top-banner-offset, 0px)) 2vw 3vw;
+  box-sizing: border-box;
+}
+
+@keyframes slowSpin {
+  0% { transform: rotate(0); }
+  100% { transform: rotate(360deg); }
+}
+
+.ai-spinner {
+  display: inline-block;
+  animation: slowSpin 2.4s linear infinite;
+}
+
+button,
+#nextPartBtn {
+  transition: background 0.15s, transform 0.18s ease, filter 0.18s ease;
+}
+/* EDITED: Added :not(.lux-col-toggle) to prevent conflict with rotation transforms */
+button:hover:not(:disabled):not(.lux-col-toggle),
+#nextPartBtn:hover:not(:disabled) {
+  transform: scale(1.12);
+  filter: brightness(0.85);
+}
+
+/* ============================================================
+   RESULTS PILL BASE (CRITICAL FIX)
+   - Remove legacy scale + brightness from result word-pill hover
+   - Remove filter transition from result pills
+   - Do NOT define #prettyResult a:hover here anymore; let global
+     "interactive depth" handle transform/box-shadow (lift/press).
+   - Explicitly neutralize tooltip hover inside results to prevent
+     global .tooltip:hover darken from leaking into results.
+   ============================================================ */
+#prettyResult a,
+#prettyResult .tooltip {
+  display: inline-block;
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+
+/* Keep result tooltips consistent: lift + shadow only, no darken */
+#prettyResult .tooltip:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.28);
+  filter: none;
+}
+#prettyResult .tooltip:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.20);
+  filter: none;
+}
+
+/* --- Input Effects --- */
+#referenceText,
+#partsInfoTip {
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+#referenceText:hover,
+#partsInfoTip:hover {
+  transform: translateY(-2px);
+  filter: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.28);
+}
+
+.tooltip {
+  transition: transform 0.18s ease, filter 0.18s ease;
+}
+.tooltip:hover {
+  transform: scale(1.12);
+  filter: brightness(0.85);
+}
+
+h2 {
+  font-size: 2.25rem;
+  margin: 2rem 0 1rem;
+  text-align: center;
+}
+
+label {
+  font-size: 1.15rem;
+  display: inline-block;
+  text-align: center;
+  width: 100%;
+}
+
+#referenceText {
+  width: 95vw;
+  max-width: 880px;
+  min-height: 120px;
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.4;
+  padding: 1.2rem;
+  border-radius: 0.8rem;
+  resize: vertical;
+}
+
+input::placeholder {
+  color: #888 !important;
+  font-style: italic;
+  letter-spacing: 0.03em;
+  opacity: 1;
+  font-size: 1.12rem;
+}
+#referenceText::placeholder {
+  opacity: 1;
+  transition: opacity 0.45s ease;
+  font-style: italic;
+}
+#referenceText.placeholder-fade::placeholder {
+  opacity: 0;
+}
+
+select {
+  font-size: 1.17rem;
+  font-weight: 700;
+  padding: 0.5rem 1rem;
+  border: 1px solid #bbb;
+  border-radius: 0.6rem;
+  background: #f8f8f8;
+  margin: 0.3rem auto 1rem;
+}
