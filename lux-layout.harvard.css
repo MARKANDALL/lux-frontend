@@ -1,0 +1,50 @@
+/* lux-layout.harvard.css */
+
+/* Harvard picker: centered row under the passage select */
+.lux-harvard-picker{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+/* Harvard label should match "Select Passage:" label sizing */
+.lux-harvard-label{
+  font-size: 1.15rem;    /* matches your global label rule */
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* Make Harvard buttons a bit smaller (scoped to this row only) */
+.lux-harvard-picker button{
+  font-size: 1.0rem;
+  padding: 0.55rem 1.15rem;
+  border-radius: 0.6rem;
+}
+
+/* Arrows: slightly narrower so they don’t dominate */
+#harvardPrev,
+#harvardNext{
+  padding: 0.55rem 0.95rem;
+}
+
+/* Number input: slightly larger + rounder */
+.lux-harvard-picker input[type="number"]{
+  width: 76px;
+  padding: 8px 10px;
+  font-size: 1.05rem;
+  border-radius: 0.8rem;
+  text-align: center;
+}
+
+/* Optional: if you keep sr-only in HTML */
+.sr-only{
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
