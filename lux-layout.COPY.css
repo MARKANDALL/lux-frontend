@@ -1,5 +1,40 @@
 /* lux-layout.css */
-@import "./lux-layout.tokens.css";
+/* ============================================================================
+   THE LUX CONSTITUTION: Global Variables
+   Single Source of Truth for Layers & Theme
+   ============================================================================ */
+:root {
+  /* --- 1. Z-INDEX TIER SCALE (The Peace Treaty) --- 
+      FIXED: Elevated Drawer tier to 900 to sit above the new Modal/Blue Box tier (800) */
+  --z-base: 1;
+  --z-ui-low: 100;    /* Result pills, generic UI */
+  --z-popover: 600;   /* Standard Tooltips */
+  --z-modal: 800;     /* Blue Box, Context Menus, High-Priority Cards */
+  --z-drawer: 900;    /* Self-Playback & TTS Drawers (Must slide OVER the Blue Box) */
+  --z-toast: 950;     /* Error messages / Toasts */
+  --z-max: 1000;      /* The absolute ceiling (Onboarding Overlay) */
+
+  /* --- 2. GLOBAL COLORS --- */
+  --lux-blue-primary: #0078d7;
+  --lux-blue-hover: #005a9e;
+  --lux-bg-light: #ffffff;
+  --lux-text-main: #333333;
+  --lux-text-muted: #666666;
+
+  /* --- 3. RECORDING STATES (Moved from base.css) --- */
+  --rec-base: #eab308;
+  --rec-ink: #111;
+  --rec-glow-soft: rgba(234, 179, 8, 0.55);
+  --rec-glow-strong: rgba(234, 179, 8, 0.92);
+  --stripe-green-1: #34d399;
+  --stripe-green-2: #059669;
+
+  /* --- 4. NAV PILL WATER HOVER (CTA polish) --- */
+  --lux-water-hover: #e9f6ff;        /* light water blue */
+  --lux-water-hover-2: #dff1ff;      /* slightly deeper for active */
+  --lux-water-border: rgba(0,120,215,0.28);
+  --lux-water-halo: rgba(0,120,215,0.16);
+}
 
 /* Core application styles */
 
