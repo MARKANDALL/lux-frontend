@@ -1,0 +1,348 @@
+/* lux-layout.nav-cta.css */
+
+/* ===========================
+   AI Convo CTA — Apple Intelligence ring (v5)
+   Goals:
+   - Obvious motion (ring rotates + hotspot orbits)
+   - Visible “thickness ripple” (hotspot wedge riding the ring)
+   - One-time glass sheen sweep across the button interior on hover entry
+   - No weird interior artifacts (shimmer is its own layer, not baked into backgrounds)
+   =========================== */
+
+@property --luxRingAngle {
+  syntax: "<angle>";
+  inherits: true;          /* IMPORTANT: let ::after see it */
+  initial-value: 0deg;
+}
+@property --luxHotAngle {
+  syntax: "<angle>";
+  inherits: true;          /* IMPORTANT: let ::after see it */
+  initial-value: 0deg;
+}
+
+/* Wrapper */
+.lux-toplinks{
+  margin: 18px auto 0;
+  width: min(980px, 94vw);
+  display:flex;
+  gap: 8px;
+
+  position: relative;
+  z-index: 200; /* stay above atmo/deck layers */
+}
+
+/* Centered CTA wrapper (if used on some pages) */
+.lux-toplinks-cta{
+  display: flex;
+  justify-content: center;
+  margin-bottom: 18px;
+
+  position: relative;
+  z-index: 200; /* match top links */
+}
+
+.lux-toplink{
+  font-weight: 800;
+  text-decoration: none;
+}
+
+
+/* Base: same pill size/shape everywhere */
+.lux-navpill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: min(420px, 92vw);   /* SAME SIZE everywhere */
+  padding: 16px 30px;
+  font-size: 18px;
+  font-weight: 900;
+  text-decoration: none;
+  border-radius: 999px;
+  position: relative;
+  isolation: isolate;
+
+  color: #1f2a37;
+  background: rgba(255,255,255,0.98);
+  border: 1px solid rgba(0,0,0,0.10);
+  box-shadow: 0 12px 26px rgba(0,0,0,0.10);
+  transition:
+    transform 160ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 200ms ease,
+    color 180ms ease,
+    filter 180ms ease;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Hover: water-blue wash */
+.lux-navpill:hover:not(:disabled){
+  transform: translateY(-2px);
+  background-color: var(--lux-water-hover);
+  border-color: var(--lux-water-border);
+  box-shadow:
+    0 14px 28px rgba(0,0,0,0.10),
+    0 0 0 3px var(--lux-water-halo);
+}
+
+/* Press: slightly deeper “dip” */
+.lux-navpill:active:not(:disabled){
+  transform: translateY(0);
+  background-color: var(--lux-water-hover-2);
+  border-color: rgba(0,120,215,0.34);
+  box-shadow:
+    0 10px 18px rgba(0,0,0,0.12),
+    0 0 0 3px rgba(0,120,215,0.12);
+}
+
+.lux-navpill:focus-visible { outline: 3px solid rgba(0,120,215,0.35); outline-offset: 3px; }
+
+/* ========================================================================
+   DISABLED: Destination animation “to AI Conversations” = rainbow ring
+   (The “windmill” system)
+   ======================================================================== */
+
+/*
+.lux-navpill--to-convo {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.lux-navpill--to-convo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: conic-gradient(
+    from 0deg,
+    #3b82f6, #a855f7, #ec4899, #f97316, #f59e0b, #22c55e, #3b82f6
+  );
+  animation: luxNavRingSpin var(--luxRingDur, 4.2s) linear infinite;
+  z-index: -2;
+}
+
+.lux-navpill--to-convo::after {
+  content: "";
+  position: absolute;
+  inset: 3px;               ring thickness
+  border-radius: 999px;
+  background: rgba(255,255,255,0.98);
+  border: 1px solid rgba(0,0,0,0.10);
+  box-shadow: 0 12px 26px rgba(0,0,0,0.10);
+  z-index: -1;
+}
+
+@keyframes luxNavRingSpin {
+  to { transform: rotate(360deg); }
+}
+*/
+
+
+
+/* Use on any CTA you want to match the AI Conversations pill size */
+.lux-cta-same {
+  width: min(420px, 92vw);   /* consistent “big button” width, responsive */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* Ripple-ready: keeps filter effects from looking janky */
+[data-lux-ripple]{
+  display: inline-block;
+  transform: translateZ(0); /* encourage GPU compositing */
+  will-change: filter;
+}
+/* Don't let the ripple helper clobber navpill centering */
+.lux-navpill[data-lux-ripple]{
+  display: inline-flex;
+}
+
+
+/* Base button */
+a.lux-toplink-cta,
+button.lux-toplink-cta{
+  padding: 16px 30px;
+  font-size: 18px;
+  font-weight: 900;
+
+  --luxRingDur: 4.2s;      /* SPEED KNOB: lower = faster */
+  --luxHotDur: 2.6s;       /* hotspot moves faster than the ring */
+
+  position: relative;
+  isolation: isolate;
+
+  color: #1f2a37;
+  border: 1px solid rgba(0,0,0,0.10);
+  border-radius: 999px;
+  background: linear-gradient(rgba(255,255,255,0.98), rgba(255,255,255,0.98)) padding-box;
+
+  box-shadow: 0 12px 26px rgba(0,0,0,0.10);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+
+  /* important for button parity */
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+/* One-time “sun flash” glass sheen (interior only) */
+a.lux-toplink-cta::before,
+button.lux-toplink-cta::before{
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 2;
+
+  /* wider bright band + softer shoulders (bigger + more “glass”) */
+  background: linear-gradient(135deg,
+    rgba(255,255,255,0) 0%,
+    rgba(255,255,255,0) 28%,
+    rgba(255,255,255,0.30) 40%,
+    rgba(255,255,255,0.78) 50%,
+    rgba(255,255,255,0.98) 55%,
+    rgba(255,255,255,0.55) 66%,
+    rgba(255,255,255,0) 78%,
+    rgba(255,255,255,0) 100%
+  );
+
+  transform: translate3d(-160%, -26%, 0) rotate(12deg);
+  opacity: 0;
+  mix-blend-mode: screen; /* gives the “glass” vibe without muddying */
+}
+
+/* Outer glow halo (ring-only cutout) */
+a.lux-toplink-cta::after,
+button.lux-toplink-cta::after{
+  content: "";
+  position: absolute;
+  inset: -22px;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+
+  opacity: 0;
+
+  background: conic-gradient(
+    from var(--luxRingAngle),
+    rgba(255,55,95,0.85),
+    rgba(255,159,10,0.78),
+    rgba(255,214,10,0.74),
+    rgba(50,215,75,0.74),
+    rgba(100,210,255,0.78),
+    rgba(10,132,255,0.85),
+    rgba(191,90,242,0.85),
+    rgba(255,45,85,0.85),
+    rgba(255,55,95,0.85)
+  );
+
+  mix-blend-mode: screen;
+
+  /* ring-only cutout (prevents filling the center) */
+  padding: 18px;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+/* Hover: crisp rotating ring + moving thickness hotspot + one-time sheen */
+a.lux-toplink-cta:hover,
+a.lux-toplink-cta:focus-visible,
+button.lux-toplink-cta:hover,
+button.lux-toplink-cta:focus-visible{
+  transform: translateY(-1px) !important; /* override global a:hover */
+  box-shadow: 0 16px 36px rgba(0,0,0,0.14) !important;
+
+  border: 3px solid transparent;
+
+  background:
+    /* fill */
+    linear-gradient(rgba(255,255,255,0.98), rgba(255,255,255,0.98)) padding-box,
+
+    /* HOTSPOT (this is your “thickness ripple” cue) */
+    conic-gradient(
+      from var(--luxHotAngle),
+      rgba(255,255,255,0.00) 0deg,
+      rgba(255,255,255,0.00) 300deg,
+      rgba(255,255,255,0.85) 322deg,
+      rgba(255,255,255,0.15) 346deg,
+      rgba(255,255,255,0.00) 360deg
+    ) border-box,
+
+    /* main ring */
+    conic-gradient(
+      from var(--luxRingAngle),
+      #ff375f,
+      #ff9f0a,
+      #ffd60a,
+      #32d74b,
+      #64d2ff,
+      #0a84ff,
+      #bf5af2,
+      #ff2d55,
+      #ff375f
+    ) border-box;
+
+  /* Motion: ring rotates + hotspot orbits */
+  animation:
+    luxRingSpin var(--luxRingDur) linear infinite,
+    luxHotSpin var(--luxHotDur) linear infinite;
+}
+
+/* Start the halo + breathe it a bit */
+a.lux-toplink-cta:hover::after,
+a.lux-toplink-cta:focus-visible::after,
+button.lux-toplink-cta:hover::after,
+button.lux-toplink-cta:focus-visible::after{
+  opacity: 0.80;
+  filter: url(#luxCoronaFlare);
+  animation:
+    luxGlowBreath 3.4s ease-in-out infinite;
+}
+
+/* Sheen runs ONCE per hover entry */
+a.lux-toplink-cta:hover::before,
+a.lux-toplink-cta:focus-visible::before,
+button.lux-toplink-cta:hover::before,
+button.lux-toplink-cta:focus-visible::before{
+  opacity: 0.95;
+  animation: luxGlassSweep 980ms ease-out 1;
+}
+
+/* Animations */
+@keyframes luxRingSpin{ to { --luxRingAngle: 360deg; } }
+@keyframes luxHotSpin { to { --luxHotAngle: 360deg; } }
+
+@keyframes luxGlowBreath{
+  0%,100%{ opacity: 0.74; transform: scale(1); }
+  50%{    opacity: 0.92; transform: scale(1.035); }
+}
+
+@keyframes luxGlassSweep{
+  0%   { transform: translate3d(-160%, -26%, 0) rotate(12deg); opacity: 0; }
+  12%  { opacity: 0.85; }
+  100% { transform: translate3d(160%, 26%, 0) rotate(12deg); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  a.lux-toplink-cta:hover,
+  a.lux-toplink-cta:focus-visible,
+  button.lux-toplink-cta:hover,
+  button.lux-toplink-cta:focus-visible{ animation: none; }
+  a.lux-toplink-cta:hover::before,
+  a.lux-toplink-cta:focus-visible::before,
+  a.lux-toplink-cta:hover::after,
+  a.lux-toplink-cta:focus-visible::after,
+  button.lux-toplink-cta:hover::before,
+  button.lux-toplink-cta:focus-visible::before,
+  button.lux-toplink-cta:hover::after,
+  button.lux-toplink-cta:focus-visible::after{ animation: none; }
+}
