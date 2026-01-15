@@ -1,0 +1,64 @@
+/* lux-layout.interactions.css */
+
+/* ============================================================
+   Global Interactive Depth Effect (Generic)
+   ============================================================ */
+a,
+button,
+select,
+.tooltip,
+input[type="checkbox"],
+input[type="radio"],
+.clickable {
+  transition: box-shadow 0.18s ease, transform 0.18s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+}
+a:hover,
+button:hover,
+select:hover,
+input[type="checkbox"]:hover,
+input[type="radio"]:hover,
+.clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.28);
+}
+a:active,
+button:active,
+select:active,
+.tooltip:active,
+input[type="checkbox"]:active,
+input[type="radio"]:active,
+.clickable:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+a:focus-visible,
+button:focus-visible,
+select:focus-visible,
+.tooltip:focus-visible,
+input[type="checkbox"]:focus-visible,
+input[type="radio"]:focus-visible,
+.clickable:focus-visible {
+  outline: 2px solid #0078d7;
+  outline-offset: 2px;
+}
+
+@media (max-width: 650px) {
+  #container { padding: 1vw 0.5vw 4vw; }
+  h2 { font-size: 1.5rem; }
+  input[type="text"], button, #prettyResult, .score-table th, .score-table td { font-size: 1rem; }
+  input[type="text"] { width: 95vw; max-width: 99vw; }
+}
+
+@keyframes pulseOnce {
+  0% { box-shadow: 0 0 0 0 rgba(0, 140, 255, 0.6); }
+  70% { box-shadow: 0 0 0 12px rgba(0, 140, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 140, 255, 0); }
+}
+.pulse-once { animation: pulseOnce 1.7s ease-out 1; border-radius: 4px; }
+
+.hint-bubble {
+  position: absolute; background: #008cff; color: #fff; padding: 10px 14px; border-radius: 8px;
+  font-size: 1rem; line-height: 1.2; opacity: 0.9; white-space: nowrap; z-index: 9999;
+  pointer-events: none; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
