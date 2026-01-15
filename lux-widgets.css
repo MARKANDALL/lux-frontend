@@ -274,28 +274,43 @@
 .lux-scoreSummary{
   margin-top: 10px;
   display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
+  flex-direction: column;   /* ring above */
+  align-items: center;      /* centered */
+  gap: 12px;
 }
 
 .lux-scoreMain{
-  flex: none;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
 }
 
+/* Pronunciation label above ring */
+.lux-scoreMainLabel{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 6px;
+
+  color: #64748b;
+  font-size: 0.95rem;       /* slightly larger than before */
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+/* Pronunciation ring */
 .lux-scoreRing{
-  width: 86px;
-  height: 86px;
+  width: 88px;
+  height: 88px;
   border-radius: 50%;
   border: 4px solid var(--lux-score-ring, #2563eb);
   display: flex;
   align-items: center;
   justify-content: center;
 
-  font-size: 1.45rem;
+  font-size: 1.55rem;       /* slightly larger */
   font-weight: 900;
   color: #334155;
 
@@ -303,23 +318,24 @@
   box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
 }
 
+/* 4 metric tiles row */
 .lux-scoreGrid{
-  flex: 1;
-  min-width: 260px;
+  width: min(920px, 94vw);  /* keeps it from being “too stretched” */
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
+  gap: 10px;
 }
 
 .lux-scoreTile{
   border: 1px solid #e2e8f0;
   background: #f8fafc;
   border-radius: 12px;
-  padding: 10px 12px;
+  padding: 12px 14px;       /* bigger */
   text-align: center;
   box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
 }
 
+/* label bigger + clearer */
 .lux-scoreTile-label{
   display: flex;
   align-items: center;
@@ -327,22 +343,23 @@
   gap: 6px;
 
   color: #64748b;
-  font-size: 0.8rem;
+  font-size: 0.95rem;       /* bigger */
   font-weight: 900;
   letter-spacing: 0.02em;
 }
 
+/* value much bigger */
 .lux-scoreTile-value{
-  margin-top: 2px;
+  margin-top: 4px;
   color: #0f172a;
-  font-size: 1.05rem;
+  font-size: 1.35rem;       /* bigger */
   font-weight: 900;
 }
 
 .lux-scoreTile-meta{
   margin-top: 2px;
   color: #94a3b8;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 800;
 }
 

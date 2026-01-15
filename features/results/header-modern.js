@@ -148,6 +148,13 @@ export function renderResultsHeaderModern(data) {
 
         <div class="lux-scoreSummary">
           <div class="lux-scoreMain">
+            <div class="lux-scoreMainLabel">
+              Pronunciation
+              <span class="tooltip result-tip tip-Pronunciation">(?) 
+                <span class="tooltiptext">${TOOLTIPS["Pronunciation"] || ""}</span>
+              </span>
+            </div>
+
             <div
               class="lux-scoreRing"
               style="--lux-score-ring:${bigScoreColor};"
