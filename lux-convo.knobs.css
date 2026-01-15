@@ -237,6 +237,9 @@
 }
 .lux-convoStage.knobs-open .lux-knobsDock{
   pointer-events: auto;
+  /* Shadow belongs on the dock host (drawer shadow gets clipped by overflow:hidden) */
+  box-shadow: var(--convo-shadow);
+  border-radius: 0 18px 18px 0; /* only the OUTSIDE lip */
 }
 
 /* Override legacy viewport drawer ONLY when inside the dock */
@@ -246,9 +249,13 @@
   left: 0;
   height: 100%;
   width: 100%;
+  /* Subtle outline like other Lux panels (white-on-white separation) */
+  border: 1px solid rgba(0,0,0,0.08);
+  background: rgba(255,255,255,0.98);
   transform: translateX(-100%);
   opacity: 0;
   transition: transform 280ms ease, opacity 220ms ease;
+  border-radius: 0 18px 18px 0; /* only the OUTSIDE lip */
 }
 .lux-convoStage.knobs-open #convoKnobsDock .lux-drawer{
   transform: translateX(0);
