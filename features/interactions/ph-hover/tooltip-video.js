@@ -19,6 +19,40 @@ export function initTooltipVideoControls(globalTooltipEl, { openVideoFocusModal 
 
   if (!sideVid && !frontVid) return;
 
+  // Expand: if user hovers anywhere on the control podium for 2s, nudge-grow Expand once
+  const podium = globalTooltipEl?.querySelector(".lux-ph-vidControls");
+  if (podium && btnExpand) {
+    let hoverTimer = null;
+
+    const cancel = () => {
+      if (hoverTimer) clearTimeout(hoverTimer);
+      hoverTimer = null;
+    };
+
+    podium.addEventListener("mouseenter", () => {
+      cancel();
+      hoverTimer = setTimeout(() => {
+        if (!btnExpand.isConnected) return;
+
+        // retrigger animation reliably
+        btnExpand.classList.remove("lux-expand-attn");
+        void btnExpand.offsetWidth; // reflow
+        btnExpand.classList.add("lux-expand-attn");
+      }, 2000);
+    });
+
+    podium.addEventListener("mouseleave", () => {
+      cancel();
+      btnExpand.classList.remove("lux-expand-attn");
+    });
+
+    btnExpand.addEventListener("animationend", (e) => {
+      if (e.animationName === "luxExpandAttention") {
+        btnExpand.classList.remove("lux-expand-attn");
+      }
+    });
+  }
+
   // Default sound ON
   let soundOn = true;
 

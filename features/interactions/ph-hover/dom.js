@@ -211,6 +211,43 @@ export function injectTooltipCSS() {
       transform: translateY(1px);
     }
 
+    /* ---- Expand button micro-animations ---- */
+    #lux-global-ph-tooltip #lux-ph-expand{
+      transform-origin: center;
+      will-change: transform, filter;
+    }
+
+    /* Fires after 2s hovering on the controls podium (JS adds this class) */
+    #lux-global-ph-tooltip #lux-ph-expand.lux-expand-attn{
+      animation: luxExpandAttention 560ms cubic-bezier(.2,.9,.2,1) both;
+    }
+
+    /* Immediate bulge when hovering directly on Expand */
+    #lux-global-ph-tooltip #lux-ph-expand:hover:not(.lux-expand-attn){
+      animation: luxExpandBulge 240ms ease-out both;
+    }
+
+    @keyframes luxExpandAttention{
+      0%{
+        transform: scale(1);
+        filter: brightness(1) drop-shadow(0 0 0 rgba(96,165,250,0));
+      }
+      55%{
+        transform: scale(1.14);
+        filter: brightness(1.25) drop-shadow(0 0 16px rgba(96,165,250,0.45));
+      }
+      100%{
+        transform: scale(1);
+        filter: brightness(1) drop-shadow(0 0 0 rgba(96,165,250,0));
+      }
+    }
+
+    @keyframes luxExpandBulge{
+      0%{ transform: scale(1); }
+      65%{ transform: scale(1.16); }
+      100%{ transform: scale(1); }
+    }
+
     #lux-global-ph-tooltip .lux-ph-speed{
       background: rgba(255,255,255,0.10);
       color:#e2e8f0;
