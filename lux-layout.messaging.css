@@ -1,0 +1,87 @@
+/* lux-layout.messaging.css */
+
+#userMsg {
+  background: #e7f2fb;
+  color: #134e6f;
+  padding: 1em 0.7em;
+  border-radius: 0.7em;
+  opacity: 0;
+  transform: translateY(-40px);
+  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.47, 1.64, 0.41, 0.8);
+  pointer-events: none; /* don't block clicks while hidden */
+}
+#userMsg.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto; /* allow database tracking click once visible */
+}
+#userMsg ol {
+  margin: 0;
+  padding-left: 1.2em;
+}
+#userMsg li {
+  margin-bottom: 0.5em;
+  font-size: 1.09em;
+  line-height: 1.5;
+}
+
+#suggested-section {
+  margin: 32px 0 18px;
+  padding: 12px 0;
+  font-size: 1.25em;
+  background: #f3faff;
+  border-radius: 0.8em;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(40, 120, 255, 0.09);
+}
+
+.raw-data-section {
+  background: #f3f3f3;
+  margin: 1em auto;
+  padding: 15px;
+  border-radius: 6px;
+  font-size: 1.16em;
+  max-width: 96vw;
+  max-height: 340px;
+  overflow: auto;
+  display: none;
+  text-align: left;
+}
+
+.show-raw-link {
+  cursor: pointer;
+  color: #0083ff;
+  text-decoration: underline;
+  font-size: 1.12em;
+  margin-left: 8px;
+}
+
+.btn-group {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 1.3em;
+}
+
+button {
+  font-size: 1.25rem;
+  padding: 1rem 2.2rem;
+  border: none;
+  border-radius: 0.7rem;
+  background: #0078d7;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* ============================================================
+   REMOVED DUPLICATE BLOCKS HERE:
+   (Record buttons, Score Table, Word Chips, Tooltips)
+   These are now correctly handled by features-1.css
+   ============================================================ */
+
+/* Duplicate results-collapse block removed as requested */
