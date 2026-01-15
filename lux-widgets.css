@@ -266,6 +266,92 @@
 .score-warn::before { content: "⚠️"; }
 .score-bad::before { content: "✖"; }
 
+/* ================================
+   Results Score Summary (Modal Style)
+   Pronunciation ring + 4 metric cards
+==================================== */
+
+.lux-scoreSummary{
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.lux-scoreMain{
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lux-scoreRing{
+  width: 86px;
+  height: 86px;
+  border-radius: 50%;
+  border: 4px solid var(--lux-score-ring, #2563eb);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 1.45rem;
+  font-weight: 900;
+  color: #334155;
+
+  background: #fff;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+}
+
+.lux-scoreGrid{
+  flex: 1;
+  min-width: 260px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.lux-scoreTile{
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 10px 12px;
+  text-align: center;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+}
+
+.lux-scoreTile-label{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  color: #64748b;
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+.lux-scoreTile-value{
+  margin-top: 2px;
+  color: #0f172a;
+  font-size: 1.05rem;
+  font-weight: 900;
+}
+
+.lux-scoreTile-meta{
+  margin-top: 2px;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+@media (max-width: 520px){
+  .lux-scoreGrid{
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 .word-chip {
   display: inline-block;
   background: #eef7fb;

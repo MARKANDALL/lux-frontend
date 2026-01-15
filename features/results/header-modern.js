@@ -40,11 +40,23 @@ export function renderResultsHeaderModern(data) {
       }
   }
 
-  // 3. CHIP RENDERER
-  const renderChip = (label, val, key, extra = "") => {
-    const cls = scoreClass(val);
+  // Modal-style score formatting (matches Attempt Details header)
+  const fmtScore = (v) =>
+    v == null || !Number.isFinite(Number(v)) ? "—" : `${Math.round(Number(v))}%`;
 
-    // Make "Prosody" clickable/focusable to toggle the prosody key panel
+  const getRingColor = (v) => {
+    const n = Number(v);
+    if (!Number.isFinite(n)) return "#cbd5e1"; // neutral
+    if (n >= 80) return "#2563eb";            // good (blue)
+    if (n >= 60) return "#f59e0b";            // warn (amber)
+    return "#ef4444";                         // bad (red)
+  };
+
+  const bigScoreColor = getRingColor(overall);
+  const rateMeta = rateStr ? rateStr.replace(/^ • /, "") : "";
+
+  // Small card renderer (full labels, keeps tooltips, Prosody toggle)
+  const renderMetricTile = (label, val, key, meta = "") => {
     const labelHtml =
       key === "Prosody"
         ? `<span id="prosodyLegendToggle"
@@ -54,13 +66,18 @@ export function renderResultsHeaderModern(data) {
         : label;
 
     return `
-      <span class="${cls}" style="white-space:nowrap; margin-right:4px; display:inline-block;">
-        ${labelHtml}
-        <span class="tooltip result-tip tip-${key}">(?) 
-          <span class="tooltiptext">${TOOLTIPS[key] || ""}</span>
-        </span>
-        : ${fmtPct(val)}${extra}
-      </span>
+      <div class="lux-scoreTile" data-score-key="${key}">
+        <div class="lux-scoreTile-label">
+          ${labelHtml}
+          <span class="tooltip result-tip tip-${key}">(?) 
+            <span class="tooltiptext">${TOOLTIPS[key] || ""}</span>
+          </span>
+        </div>
+
+        <div class="lux-scoreTile-value">${fmtScore(val)}</div>
+
+        ${meta ? `<div class="lux-scoreTile-meta">${meta}</div>` : ``}
+      </div>
     `;
   };
 
@@ -126,14 +143,26 @@ export function renderResultsHeaderModern(data) {
   // display: block; height: auto; flex: none; -> Forces container to shrink to content.
   return `
     <div id="resultHeader" style="margin-bottom: 20px;">
-      <div style="margin-bottom: 12px; font-size: 1.1em;">
-        <b>Your Results:</b><br>
-        <div style="margin-top:8px; line-height: 2.2;">
-            ${renderChip("Prosody", prosody, "Prosody", rateStr)} | 
-            ${renderChip("Accuracy", accuracy, "Accuracy")} | 
-            ${renderChip("Fluency", fluency, "Fluency")} | 
-            ${renderChip("Completeness", completeness, "Completeness")} | 
-            ${renderChip("Pronunciation", overall, "Pronunciation")}
+      <div style="margin-bottom: 12px;">
+        <b style="font-size: 1.1em;">Your Results:</b>
+
+        <div class="lux-scoreSummary">
+          <div class="lux-scoreMain">
+            <div
+              class="lux-scoreRing"
+              style="--lux-score-ring:${bigScoreColor};"
+              title="Pronunciation"
+            >
+              ${fmtScore(overall)}
+            </div>
+          </div>
+
+          <div class="lux-scoreGrid">
+            ${renderMetricTile("Accuracy", accuracy, "Accuracy")}
+            ${renderMetricTile("Fluency", fluency, "Fluency")}
+            ${renderMetricTile("Completeness", completeness, "Completeness")}
+            ${renderMetricTile("Prosody", prosody, "Prosody", rateMeta)}
+          </div>
         </div>
       </div>
   
