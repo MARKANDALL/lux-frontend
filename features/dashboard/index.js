@@ -114,6 +114,17 @@ async function loadAndRenderHub(root) {
 
       return { azureResult, referenceText, firstLang };
     });
+
+    // Hub page: open AI Coach after first user interaction (click/tap/key)
+    const coachDrawer = document.getElementById("aiCoachDrawer");
+    if (coachDrawer) {
+      coachDrawer.open = false;
+      const openOnce = () => {
+        if (!coachDrawer.open) coachDrawer.open = true;
+      };
+      document.addEventListener("pointerdown", openOnce, { once: true, capture: true });
+      document.addEventListener("keydown", openOnce, { once: true, capture: true });
+    }
   } catch (err) {
     console.error("[Dashboard] Hub load failed:", err);
     if (String(err).includes("404"))

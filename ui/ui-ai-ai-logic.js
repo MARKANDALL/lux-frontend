@@ -10,7 +10,9 @@ import {
   showAIFeedbackError,
   clearAIFeedback,
   getCurrentPersona, // <--- NEW IMPORT
-  renderAIFeedbackMarkdown
+  renderAIFeedbackMarkdown,
+  openAICoachDrawer,
+  collapseAICoachDrawer,
 } from "./ui-ai-ai-dom.js";
 
 import { fetchAIFeedback, updateAttempt } from "/src/api/index.js";
@@ -23,7 +25,7 @@ let isFetching = false;
 let lastContext = {
   azureResult: null,
   referenceText: "",
-  firstLang: "universal"
+  firstLang: "universal",
 };
 
 // NEW: QuickTip paging state
@@ -45,11 +47,14 @@ export function promptUserForAI(azureResult, referenceText, firstLang) {
   lastContext = { azureResult, referenceText, firstLang };
   resetState();
 
+  // Practice Skills: auto-open after first usable result
+  openAICoachDrawer();
+
   // Render Entry with Sidebar Callback
   renderEntryButtons({
     onQuick: (persona) => startQuickMode(azureResult, referenceText, firstLang, persona),
-    onDeep:  (persona) => startDeepMode(azureResult, referenceText, firstLang, persona),
-    onPersonaChange: (newPersona) => onPersonaChanged(newPersona) // <--- Wire this up
+    onDeep: (persona) => startDeepMode(azureResult, referenceText, firstLang, persona),
+    onPersonaChange: (newPersona) => onPersonaChanged(newPersona), // <--- Wire this up
   });
 }
 
@@ -67,6 +72,9 @@ export function mountAICoachAlwaysOn(getContext) {
   // Idempotent mount (don’t rebuild every render tick)
   if (section.dataset.convoMounted === "1") return;
   section.dataset.convoMounted = "1";
+
+  // Keep collapsed on initial load (bubble bar only)
+  collapseAICoachDrawer();
 
   renderEntryButtons({
     onQuick: (persona) => {
@@ -164,8 +172,8 @@ export function onLanguageChanged(newLang) {
     // Re-render to ensure any internal language state in closures is fresh
     renderEntryButtons({
       onQuick: (p) => startQuickMode(lastContext.azureResult, lastContext.referenceText, newLang, p),
-      onDeep:  (p) => startDeepMode(lastContext.azureResult, lastContext.referenceText, newLang, p),
-      onPersonaChange: (p) => onPersonaChanged(p)
+      onDeep: (p) => startDeepMode(lastContext.azureResult, lastContext.referenceText, newLang, p),
+      onPersonaChange: (p) => onPersonaChanged(p),
     });
   }
 }
@@ -210,7 +218,7 @@ async function showQuickTipAt(i) {
       ...currentArgs,
       mode: "simple",
       tipIndex: i,
-      tipCount: quickTipState.count
+      tipCount: quickTipState.count,
     });
 
     const sections = res.sections || res.fallbackSections || [];
@@ -225,13 +233,14 @@ async function showQuickTipAt(i) {
     const next = i + 1;
     if (next < quickTipState.count && !quickTipState.cache[next]) {
       fetchAIFeedback({ ...currentArgs, mode: "simple", tipIndex: next, tipCount: quickTipState.count })
-        .then((r) => { quickTipState.cache[next] = r.sections || r.fallbackSections || []; })
+        .then((r) => {
+          quickTipState.cache[next] = r.sections || r.fallbackSections || [];
+        })
         .catch(() => {});
     }
 
     // Persist only the first viewed tip (keeps DB clean + fast)
     if (i === 0) persistFeedbackToDB(sections);
-
   } catch (err) {
     console.error(err);
     showAIFeedbackError("Could not load Quick Tip.");
@@ -252,7 +261,7 @@ function hideLoadingAndRenderQuick(i) {
     moreLabel: "Next Tip ➡",
     lessLabel: i === 0 ? "Back to Options ⬅" : "Previous Tip ⬅",
     onShowMore: () => showQuickTipAt(i + 1),
-    onShowLess: () => (i === 0 ? handleShowLess() : showQuickTipAt(i - 1))
+    onShowLess: () => (i === 0 ? handleShowLess() : showQuickTipAt(i - 1)),
   });
 }
 
@@ -276,12 +285,12 @@ async function fetchNextChunk() {
     // DeepDive: includeHistory ~1/3 of the time deterministically on chunk 1
     const attemptIdNum = Number(window.lastAttemptId);
     const includeHistory =
-      nextChunkId === 1 && Number.isFinite(attemptIdNum) ? (attemptIdNum % 3 === 0) : undefined;
+      nextChunkId === 1 && Number.isFinite(attemptIdNum) ? attemptIdNum % 3 === 0 : undefined;
 
     const res = await fetchAIFeedback({
       ...currentArgs,
       chunk: nextChunkId,
-      includeHistory
+      includeHistory,
     });
 
     const newSections = res.sections || res.fallbackSections || [];
@@ -309,9 +318,11 @@ function handleShowLess() {
 
     // Go back to entry buttons
     renderEntryButtons({
-      onQuick: (p) => startQuickMode(lastContext.azureResult, lastContext.referenceText, lastContext.firstLang, p),
-      onDeep:  (p) => startDeepMode(lastContext.azureResult, lastContext.referenceText, lastContext.firstLang, p),
-      onPersonaChange: (p) => onPersonaChanged(p)
+      onQuick: (p) =>
+        startQuickMode(lastContext.azureResult, lastContext.referenceText, lastContext.firstLang, p),
+      onDeep: (p) =>
+        startDeepMode(lastContext.azureResult, lastContext.referenceText, lastContext.firstLang, p),
+      onPersonaChange: (p) => onPersonaChanged(p),
     });
   } else {
     const allSections = chunkHistory.flat();
@@ -327,7 +338,7 @@ function refreshFooter() {
     onShowLess: () => handleShowLess(),
     canShowMore: currentCount < 3,
     canShowLess: true,
-    isLoading: isFetching
+    isLoading: isFetching,
   });
 }
 

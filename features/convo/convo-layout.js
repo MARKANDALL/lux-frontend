@@ -178,16 +178,20 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
 
   // =========================================================
   // AI Coach: always visible (no button), placed between chat + progress
-  // Move existing #aiFeedbackSection (from convo.html) into this stack.
+  // Move existing #aiCoachDrawer (from convo.html) into this stack.
+  // Fallback: move #aiFeedbackSection if drawer not present (older markup).
   // =========================================================
+  const aiCoachDrawer = document.getElementById("aiCoachDrawer");
   const aiCoachSection = document.getElementById("aiFeedbackSection");
-  if (aiCoachSection) {
-    aiCoachSection.style.display = ""; // remove inline display:none if present
-    aiCoachSection.style.marginTop = ""; // let CSS handle spacing
+  const aiCoachEl = aiCoachDrawer || aiCoachSection;
+
+  if (aiCoachEl) {
+    aiCoachEl.style.display = ""; // remove inline display:none if present
+    aiCoachEl.style.marginTop = ""; // let CSS handle spacing
   }
 
   // IMPORTANT: append progress AFTER chatWrap so it sits under the chat panel
-  if (aiCoachSection) ui.append(intro, picker, chatWrap, aiCoachSection, convoProgress);
+  if (aiCoachEl) ui.append(intro, picker, chatWrap, aiCoachEl, convoProgress);
   else ui.append(intro, picker, chatWrap, convoProgress);
 
   root.append(atmo, ui);

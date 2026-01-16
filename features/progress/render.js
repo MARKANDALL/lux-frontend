@@ -347,10 +347,20 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
       ${
         showCoach
           ? `
-      <!-- AI Coach (always-on) — placed at bottom of All Data page -->
-      <div id="aiFeedbackSection">
-        <div id="aiFeedback"></div>
-      </div>
+      <!-- AI Coach (collapsed on load; opens after interaction) -->
+      <details id="aiCoachDrawer" class="lux-progress-drawer lux-ai-drawer">
+        <summary class="lux-progress-drawer-summary">
+          <div class="lux-progress-drawer-left">
+            <div class="lux-progress-drawer-title">AI Coach</div>
+            <div class="lux-progress-drawer-mini">Tap to open</div>
+          </div>
+        </summary>
+        <div class="lux-progress-drawer-body">
+          <div id="aiFeedbackSection">
+            <div id="aiFeedback"></div>
+          </div>
+        </div>
+      </details>
       `
           : ``
       }
@@ -533,13 +543,14 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
         return;
       }
 
-const sess = (sessions || []).find((x) => String(x.sessionId) === String(sid)) || null;
+      const sess =
+        (sessions || []).find((x) => String(x.sessionId) === String(sid)) || null;
 
-openDetailsModal(a, attemptOverallScore(a), attemptDateStr(a), {
-  sid,
-  list,
-  session: sess,
-});
+      openDetailsModal(a, attemptOverallScore(a), attemptDateStr(a), {
+        sid,
+        list,
+        session: sess,
+      });
     });
   });
 

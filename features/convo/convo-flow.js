@@ -155,6 +155,12 @@ export function wireConvoFlow({
       state.turns.push({ turn: state.turns.length, userText, azureResult, attemptId: null });
     }
 
+    // Auto-open AI Coach after the first saved user turn
+    try {
+      const d = document.getElementById("aiCoachDrawer");
+      if (d && !d.open && state.turns.length === 1) d.open = true;
+    } catch (_) {}
+
     // refresh Conversation Skills progress (if present)
     if (window.refreshConvoProgress) {
       try {

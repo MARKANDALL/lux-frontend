@@ -8,14 +8,29 @@ function getSectionAndBox() {
   return { section, box };
 }
 
+function getCoachDrawerEl() {
+  const { section } = getSectionAndBox();
+  return section ? section.closest("details") : null;
+}
+
+export function openAICoachDrawer() {
+  const d = getCoachDrawerEl();
+  if (d) d.open = true;
+}
+
+export function collapseAICoachDrawer() {
+  const d = getCoachDrawerEl();
+  if (d) d.open = false;
+}
+
 // --- Layout Builder (The Sidebar + Scrollable Content) ---
 function ensureShell(box, onPersonaChange) {
   // If the shell exists, just return the content area
   const existingContent = box.querySelector(".ai-content");
   if (existingContent) {
-      // If we provided a callback, ensure the buttons are wired up to it
-      if (onPersonaChange) wireSidebarButtons(box, onPersonaChange);
-      return existingContent;
+    // If we provided a callback, ensure the buttons are wired up to it
+    if (onPersonaChange) wireSidebarButtons(box, onPersonaChange);
+    return existingContent;
   }
 
   // Otherwise, build the Grid Layout
@@ -25,7 +40,7 @@ function ensureShell(box, onPersonaChange) {
   // 1. Sidebar (Persistent)
   const sidebar = document.createElement("div");
   sidebar.className = "ai-sidebar";
-  
+
   const label = document.createElement("div");
   label.className = "ai-sidebar-label";
   label.textContent = "Coach Style";
@@ -35,10 +50,10 @@ function ensureShell(box, onPersonaChange) {
   const modes = [
     { id: "tutor", icon: "🧑‍🏫", label: "Tutor" },
     { id: "drill", icon: "🫡", label: "Sgt." },
-    { id: "linguist", icon: "🧐", label: "Expert" }
+    { id: "linguist", icon: "🧐", label: "Expert" },
   ];
 
-  modes.forEach(m => {
+  modes.forEach((m) => {
     const btn = document.createElement("button");
     btn.className = `ai-voice-btn ${m.id === "tutor" ? "active" : ""}`; // Default to tutor
     btn.dataset.value = m.id;
@@ -49,7 +64,7 @@ function ensureShell(box, onPersonaChange) {
   // 2. Main Content Area (Dynamic & Scrollable)
   const content = document.createElement("div");
   content.className = "ai-content custom-scrollbar";
-  
+
   // THE FIX: Constrain height and allow scrolling
   content.style.cssText = `
     max-height: 450px; 
@@ -70,36 +85,37 @@ function ensureShell(box, onPersonaChange) {
 }
 
 function wireSidebarButtons(box, callback) {
-    const sidebar = box.querySelector(".ai-sidebar");
-    if (!sidebar) return;
-    
-    const buttons = sidebar.querySelectorAll(".ai-voice-btn");
-    buttons.forEach(btn => {
-        // Remove old listeners to prevent duplicates (simple cloning trick)
-        const newBtn = btn.cloneNode(true);
-        btn.parentNode.replaceChild(newBtn, btn);
-        
-        newBtn.onclick = () => {
-            // Visual toggle
-            sidebar.querySelectorAll(".ai-voice-btn").forEach(b => b.classList.remove("active"));
-            newBtn.classList.add("active");
-            // Trigger logic
-            callback(newBtn.dataset.value);
-        };
-    });
+  const sidebar = box.querySelector(".ai-sidebar");
+  if (!sidebar) return;
+
+  const buttons = sidebar.querySelectorAll(".ai-voice-btn");
+  buttons.forEach((btn) => {
+    // Remove old listeners to prevent duplicates (simple cloning trick)
+    const newBtn = btn.cloneNode(true);
+    btn.parentNode.replaceChild(newBtn, btn);
+
+    newBtn.onclick = () => {
+      // Visual toggle
+      sidebar.querySelectorAll(".ai-voice-btn").forEach((b) => b.classList.remove("active"));
+      newBtn.classList.add("active");
+      // Trigger logic
+      callback(newBtn.dataset.value);
+    };
+  });
 }
 
 // Helper to get current persona from the DOM state
 export function getCurrentPersona() {
-    const activeBtn = document.querySelector(".ai-voice-btn.active");
-    return activeBtn ? activeBtn.dataset.value : "tutor";
+  const activeBtn = document.querySelector(".ai-voice-btn.active");
+  return activeBtn ? activeBtn.dataset.value : "tutor";
 }
 
 // ---------------------------
 
 export function hideAI() {
   const { section } = getSectionAndBox();
-  if (section) section.style.display = "none";
+  if (section) section.style.display = ""; // keep summary visible
+  collapseAICoachDrawer();
 }
 
 // UPDATED: Now uses Sidebar instead of Dropdown
@@ -110,7 +126,7 @@ export function renderEntryButtons({ onQuick, onDeep, onPersonaChange }) {
 
   // Build/Get the Shell
   const contentArea = ensureShell(box, onPersonaChange);
-  
+
   // Clear only the content area
   contentArea.innerHTML = "";
   box.style.display = "grid"; // Activate CSS Grid if hidden
@@ -131,8 +147,8 @@ export function renderEntryButtons({ onQuick, onDeep, onPersonaChange }) {
   btnQuick.innerHTML = "⚡ Quick Tips";
   btnQuick.className = "ai-action-btn secondary";
   btnQuick.onclick = () => {
-      const p = getCurrentPersona();
-      if (onQuick) onQuick(p);
+    const p = getCurrentPersona();
+    if (onQuick) onQuick(p);
   };
 
   // Deep Button
@@ -140,8 +156,8 @@ export function renderEntryButtons({ onQuick, onDeep, onPersonaChange }) {
   btnDeep.innerHTML = "🎓 Deep Dive";
   btnDeep.className = "ai-action-btn primary";
   btnDeep.onclick = () => {
-      const p = getCurrentPersona();
-      if (onDeep) onDeep(p);
+    const p = getCurrentPersona();
+    if (onDeep) onDeep(p);
   };
 
   btnRow.appendChild(btnQuick);
@@ -153,10 +169,11 @@ export function renderEntryButtons({ onQuick, onDeep, onPersonaChange }) {
 export function showLoading() {
   const { section, box } = getSectionAndBox();
   if (section) section.style.display = "";
-  
+  openAICoachDrawer();
+
   // Ensure shell exists (in case we jump straight here)
-  const contentArea = ensureShell(box, null); 
-  
+  const contentArea = ensureShell(box, null);
+
   contentArea.innerHTML = `
       <div style="text-align:center; padding: 40px 15px;">
          <div class="ai-spinner" style="font-size: 2.5rem; display:inline-block; margin-bottom:12px;">🤖</div>
@@ -169,20 +186,21 @@ export function showLoading() {
 export function renderSections(sections, count) {
   const { section, box } = getSectionAndBox();
   if (section) section.style.display = "";
-  
+
   const contentArea = ensureShell(box, null);
-  
+
   const toShow = sections.slice(0, count);
 
-  const html = toShow.map((sec, idx) => {
-      const titleEn = sec.title || sec.emoji || ""; 
-      const textEn = sec.en || sec.content || "";   
+  const html = toShow
+    .map((sec, idx) => {
+      const titleEn = sec.title || sec.emoji || "";
+      const textEn = sec.en || sec.content || "";
       const titleL1 = sec.titleL1 || "";
-      const textL1 = sec.l1;                        
+      const textL1 = sec.l1;
       const hasL1 = !!textL1;
 
       const icon = sec.emoji ? `<span style="margin-right:6px;">${sec.emoji}</span>` : "";
-      
+
       let headerHTML = `${icon} ${titleEn}`;
       if (titleL1 && titleL1 !== titleEn) {
         headerHTML += ` — ${titleL1}`;
@@ -213,13 +231,14 @@ export function renderSections(sections, count) {
         ${englishBlock}
       </div>
     `;
-  }).join("");
+    })
+    .join("");
 
   contentArea.innerHTML = html;
-  
+
   // Create a Footer specifically for this content area
   const footer = document.createElement("div");
-  footer.id = "ai-internal-footer"; 
+  footer.id = "ai-internal-footer";
   footer.style.marginTop = "20px";
   footer.style.textAlign = "center";
   contentArea.appendChild(footer);
@@ -227,10 +246,17 @@ export function renderSections(sections, count) {
   return { shown: toShow.length };
 }
 
-export function updateFooterButtons({ onShowMore, onShowLess, canShowMore, canShowLess, isLoading, lessLabel="Back ⬆" }) {
+export function updateFooterButtons({
+  onShowMore,
+  onShowLess,
+  canShowMore,
+  canShowLess,
+  isLoading,
+  lessLabel = "Back ⬆",
+}) {
   const footer = document.getElementById("ai-internal-footer");
   if (!footer) return;
-  
+
   footer.innerHTML = "";
   footer.style.display = "flex";
   footer.style.justifyContent = "center";

@@ -238,7 +238,19 @@
       <p id="status">Not recording</p>
       <div id="prettyResult"></div>
 
-      <div id="aiFeedbackSection"><div id="aiFeedback"></div></div>
+      <details id="aiCoachDrawer" class="lux-progress-drawer lux-ai-drawer">
+        <summary class="lux-progress-drawer-summary">
+          <div class="lux-progress-drawer-left">
+            <div class="lux-progress-drawer-title">AI Coach</div>
+            <div class="lux-progress-drawer-mini">Tap to open</div>
+          </div>
+        </summary>
+        <div class="lux-progress-drawer-body">
+          <div id="aiFeedbackSection">
+            <div id="aiFeedback"></div>
+          </div>
+        </div>
+      </details>
       <button id="showMoreBtn" style="display: none; margin: 1em auto; padding: 0.7em 1.3em; font-size: 1em;">
         Show More
       </button>

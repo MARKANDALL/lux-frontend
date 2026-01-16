@@ -42,17 +42,24 @@
   flex-direction: column;
 }
 
-/* AI Coach panel (Practice Skills parity): sits under chat and matches chat width */
-#aiFeedbackSection{
+/* AI Coach drawer wrapper: match chat width */
+#convoApp .lux-ai-drawer{
   width: min(980px, 94vw);
+  max-width: none;
+  padding: 0;
   margin: 14px auto 0;
 }
 
+#convoApp #aiCoachDrawer #aiFeedbackSection{
+  width: 100%;
+  margin: 0;
+}
+
 /* Only show coach in chat mode (prevents it appearing on intro/picker screens) */
-#convoApp:not([data-mode="chat"]) #aiFeedbackSection{
+#convoApp:not([data-mode="chat"]) #aiCoachDrawer{
   display: none;
 }
-#convoApp[data-mode="chat"] #aiFeedbackSection{
+#convoApp[data-mode="chat"] #aiCoachDrawer{
   display: block;
 }
 

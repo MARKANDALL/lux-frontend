@@ -374,3 +374,19 @@
   color: #475569;
   line-height: 1.35;
 }
+
+/* =========================================================
+   AI Coach drawer (collapsed on load)
+   ========================================================= */
+.lux-ai-drawer > summary::-webkit-details-marker{ display:none; }
+.lux-ai-drawer > summary::marker{ content:""; }
+
+/* Coach panel already has its own framing — keep drawer body clean */
+.lux-ai-drawer .lux-progress-drawer-body{
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.lux-ai-drawer #aiFeedbackSection{
+  margin: 0;
+}
