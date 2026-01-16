@@ -38,7 +38,9 @@ async function startRecordingFlow() {
   // Start the clock
   recordingStartTime = Date.now();
 
-  const success = await Mic.startMic(handleRecordingComplete);
+  const success = await Mic.startMic(handleRecordingComplete, {
+    onMeter: DOM.setRecordVizLevels
+  });
   
   if (!success) {
     DOM.setStatus("Microphone Error");

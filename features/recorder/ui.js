@@ -19,6 +19,27 @@ export function setStatus(msg) {
   logStatus(msg);
 }
 
+// Live mic level meter bars inside the Record button.
+// levels = array of 0..1 values (length = number of bars).
+export function setRecordVizLevels(levels = []) {
+  const btn = ui.recordBtn;
+  if (!btn) return;
+
+  const bars = btn.querySelectorAll(".lux-recBar");
+  if (!bars || !bars.length) return;
+
+  for (let i = 0; i < bars.length; i++) {
+    // baseline so it's never totally “dead”
+    const vRaw = (levels && typeof levels[i] === "number") ? levels[i] : 0.12;
+    const v = Math.max(0.08, Math.min(1, vRaw));
+    bars[i].style.setProperty("--y", v.toFixed(3));
+  }
+}
+
+export function resetRecordViz() {
+  setRecordVizLevels([]);
+}
+
 export function setVisualState(state) {
   const { recordBtn, stopBtn } = ui;
   if (!recordBtn || !stopBtn) return;
@@ -33,11 +54,13 @@ export function setVisualState(state) {
     recordBtn.classList.remove("record-intro", "record-glow");
     stopBtn.disabled = true;
     stopBtn.classList.add("processing");
+    resetRecordViz();
   } else {
     recordBtn.disabled = false;
     recordBtn.classList.remove("record-intro", "record-glow");
     stopBtn.disabled = true;
     stopBtn.classList.remove("is-armed", "processing");
+    resetRecordViz();
   }
 }
 

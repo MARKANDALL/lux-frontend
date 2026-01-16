@@ -213,7 +213,22 @@
       </div>
 
       <div class="btn-group">
-        <button id="record" data-lux-record>Record</button>
+        <button id="record" data-lux-record>
+          <span class="lux-recLabel">Record</span>
+          <!-- Mic level visualizer (shown only while recording) -->
+          <span class="lux-recViz" aria-hidden="true">
+            <span class="lux-recBar"></span>
+            <span class="lux-recBar"></span>
+            <span class="lux-recBar"></span>
+            <span class="lux-recBar"></span>
+            <span class="lux-recBar"></span>
+            <span class="lux-recBar"></span>
+            <span class="lux-recBar"></span>
+            <span class="lux-recBar"></span>
+            <span class="lux-recBar"></span>
+            <span class="lux-recBar"></span>
+          </span>
+        </button>
         <button id="stop" disabled>Stop</button>
       </div>
 
