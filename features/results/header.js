@@ -19,6 +19,7 @@ import { initScoreErrorCollapse } from "../interactions/score-collapse.js";
 import { animateMetricTips } from "../interactions/tips.js";
 import { initProsodyLegendToggle } from "../interactions/legend-toggle.js";
 import { initProsodyTooltips } from "../../prosody/prosody-help-bars.js";
+import { initMetricScoreModals, setMetricModalData } from "../interactions/metric-modal.js";
 
 // Helpers: call a global hook if it exists (kept for shims / parked features)
 function callGlobal(name, ...args) {
@@ -37,6 +38,8 @@ export function ensureHeader(data) {
     setTimeout(() => animateMetricTips?.(), 0);
     initProsodyLegendToggle?.();
     initProsodyTooltips?.();
+    setMetricModalData?.(data);
+    initMetricScoreModals?.();
     return;
   }
 
@@ -93,6 +96,9 @@ export function ensureHeader(data) {
 
   $out.insertAdjacentHTML("afterbegin", html);
 
+  setMetricModalData?.(data);
+  initMetricScoreModals?.();
+
   // Header slots + light UX (import-first; global fallback)
   callGlobal("fillProsodyAndContentSlots", data);
   setTimeout(() => animateMetricTips?.(), 0);
@@ -112,6 +118,8 @@ export function wirePostDom(data) {
     animateMetricTips?.();
     initProsodyLegendToggle?.();
     initProsodyTooltips?.();
+    setMetricModalData?.(data);
+    initMetricScoreModals?.();
 
     // Parked / optional features remain global-only for now
     callGlobal("initPhonemeClickPlay");

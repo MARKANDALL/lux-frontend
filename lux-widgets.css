@@ -442,6 +442,157 @@
   font-weight: 800;
 }
 
+/* ============================================================
+   Metric tiles: click-to-expand modal cards
+   ============================================================ */
+.lux-scoreTile,
+.lux-scoreRing{
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Subtle affordance (keeps your Lux vibe) */
+.lux-scoreTile:hover,
+.lux-scoreRing:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(0,0,0,0.06);
+}
+
+.lux-scoreTile:active,
+.lux-scoreRing:active{
+  transform: translateY(0px);
+}
+
+.lux-scoreTile:focus-visible,
+.lux-scoreRing:focus-visible{
+  outline: 3px solid rgba(37, 99, 235, 0.25);
+  outline-offset: 3px;
+}
+
+/* ============================================================
+   Metric Modal
+   ============================================================ */
+.lux-metricModal{
+  position: fixed;
+  inset: 0;
+  z-index: 10050;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.lux-metricCard{
+  width: min(740px, 96vw);
+  max-height: 90vh;
+  overflow: auto;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.22);
+  padding: 22px 22px 18px;
+  position: relative;
+}
+
+.lux-metricClose{
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,0.10);
+  background: rgba(255,255,255,0.92);
+  cursor: pointer;
+  font-size: 26px;
+  line-height: 1;
+  color: #64748b;
+}
+.lux-metricClose:hover{
+  background: #fff;
+  color: #0f172a;
+}
+
+/* Card typography */
+.lux-metricTop{ text-align: center; padding-top: 6px; }
+.lux-metricTitle{ font-weight: 950; font-size: 1.05rem; color:#334155; }
+.lux-metricBig{ font-weight: 1000; font-size: 2rem; color:#0f172a; margin-top: 6px; }
+.lux-metricBlurb{ margin-top: 8px; color:#64748b; font-weight: 800; line-height: 1.35; }
+
+.lux-metricSection{
+  border-top: 1px solid #e2e8f0;
+  padding-top: 12px;
+  margin-top: 12px;
+}
+.lux-metricSection-h{
+  font-weight: 950;
+  color:#0f172a;
+  margin-bottom: 8px;
+}
+.lux-metricSection-b{ color:#334155; }
+
+.lux-metricGrid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.lux-metricKV{
+  border: 1px solid rgba(0,0,0,0.08);
+  background: rgba(248,250,252,0.7);
+  border-radius: 14px;
+  padding: 10px 12px;
+}
+.lux-metricKV-k{
+  color:#64748b;
+  font-weight: 900;
+  font-size: 0.85rem;
+}
+.lux-metricKV-v{
+  color:#0f172a;
+  font-weight: 1000;
+  font-size: 1.05rem;
+  margin-top: 2px;
+}
+
+.lux-metricSubhead{
+  margin-top: 6px;
+  font-weight: 950;
+  color:#334155;
+}
+
+.lux-metricChips{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.lux-metricChip{
+  border: 1px solid rgba(0,0,0,0.10);
+  background: rgba(255,255,255,0.85);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-weight: 950;
+  color:#0f172a;
+  font-size: 0.85rem;
+}
+
+.lux-metricList{
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color:#334155;
+  font-weight: 800;
+  line-height: 1.4;
+}
+.lux-metricFoot{
+  border-top: 1px dashed rgba(0,0,0,0.12);
+  margin-top: 12px;
+  padding-top: 10px;
+  color:#475569;
+  font-weight: 800;
+}
+
 /* mobile: keep readable without blowing vertical space */
 @media (max-width: 640px){
   .lux-scoreRow{ flex-wrap: wrap; }
