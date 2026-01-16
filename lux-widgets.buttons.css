@@ -1,0 +1,53 @@
+/* lux-widgets.buttons.css */
+/* Global button system */
+
+/* ============================================================
+   Buttons → recording states & effects
+   ============================================================ */
+#record::before { content: "🎙️  "; display: inline-block; }
+#stop::before { content: "🛑  "; }
+#nextPartBtn::before { content: "➡️  "; }
+
+#record.record-intro,
+#record.record-glow,
+#record.record-intro:disabled,
+#record.record-glow:disabled {
+  background: var(--rec-base);
+  color: var(--rec-ink);
+}
+
+#record {
+  position: relative;
+  overflow: hidden;
+}
+
+#stop.processing {
+  position: relative;
+  overflow: hidden;
+  color: transparent;
+}
+
+#stop.processing::after {
+  content: "Stopping…";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #fff;
+  border-radius: inherit;
+  white-space: nowrap;
+  background: repeating-linear-gradient(
+    135deg,
+    #34d399 0 10px,
+    #059669 10px 20px
+  );
+  background-size: 200% 100%;
+  animation: stripeMove 1s linear infinite;
+}
+
+@keyframes stripeMove {
+  from { background-position: 0 0; }
+  to { background-position: 40px 0; }
+}

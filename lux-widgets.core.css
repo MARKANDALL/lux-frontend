@@ -1,0 +1,150 @@
+/* lux-widgets.core.css */
+/* Base widget styles + reusable helpers (pills/spinners/etc.) */
+
+/* ============================================================
+   Global utilities → link styles for results table
+   ============================================================ */
+#prettyResult a {
+  text-decoration: none !important;
+  font-weight: 700;
+}
+
+#prettyResult a:visited,
+#prettyResult a:active,
+#prettyResult a:focus {
+  text-decoration: none !important;
+}
+
+#prettyResult a:hover {
+  text-decoration: none !important;
+}
+
+/* ============================================================
+                           Spinner
+   ============================================================ */
+@keyframes slowSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.ai-spinner {
+  display: inline-block;
+  animation: slowSpin 2.4s linear infinite;
+}
+
+/* ============================================================
+                           Global interactive hover cues
+   ============================================================ */
+#prettyResult a,
+#prettyResult .tooltip {
+  display: inline-block;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+#prettyResult a:hover,
+#prettyResult .tooltip:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.28);
+}
+#prettyResult a:active,
+#prettyResult .tooltip:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+#prettyResult tbody a.word-chip {
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+#prettyResult th .phoneme-chip {
+  transition: box-shadow 0.18s ease, transform 0.16s ease, filter 0.18s ease;
+}
+#prettyResult th#phonemeHeader .phoneme-chip:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.28);
+}
+#prettyResult th#phonemeHeader .phoneme-chip:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+#referenceText,
+#partsInfoTip {
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+#referenceText:hover,
+#partsInfoTip:hover {
+  transform: translateY(-2px);
+  filter: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.28);
+}
+
+/* ============================================================
+                           Tooltip base
+   ============================================================ */
+.tooltip {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  margin-left: 3px;
+  border-bottom: none !important;
+}
+.result-tip {
+  border-bottom: none !important;
+}
+
+.tooltip .tooltiptext {
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.4s;
+  position: absolute;
+  left: 50%;
+  top: 99%;
+  transform: translateX(-50%);
+  background: #444;
+  color: #fff;
+  padding: 10px;
+  border-radius: 5px;
+  min-width: 240px;
+  max-width: 520px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  white-space: normal;
+  word-wrap: break-word;
+  overflow: hidden;
+  z-index: var(--z-popover);
+}
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}
+.tooltip:hover,
+.tooltip:focus-within {
+  z-index: var(--z-popover);
+}
+
+/* ============================================================
+                           Reusable chips (word)
+   ============================================================ */
+.word-chip {
+  display: inline-block;
+  background: #eef7fb;
+  color: #205080;
+  font-weight: 700;
+  font-size: 1.12em;
+  padding: 4px 18px;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(40, 120, 255, 0.13);
+  transition: box-shadow 0.18s, transform 0.16s, filter 0.18s, opacity 0.25s, transform 0.25s;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* ============================================================
+                           Visibility helpers
+   ============================================================ */
+.fade-vis {
+  opacity: 1;
+  transition: opacity 0.26s ease;
+}
+.fade-vis.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
