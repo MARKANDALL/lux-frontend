@@ -1,5 +1,6 @@
 /* lux-widgets.css (entry wrapper) */
 @import "./lux-widgets.core.css";
+@import "./lux-widgets.table.css";              /* ✅ restores score-table grid */
 @import "./lux-widgets.buttons.css";
 @import "./lux-widgets.score-tiles.css";
 @import "./lux-widgets.metric-modal.css";

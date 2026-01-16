@@ -1,0 +1,77 @@
+/* lux-widgets.table.css */
+/* Word & phoneme chart table (score-table) */
+
+/* ============================================================
+                           Table
+   ============================================================ */
+.score-table {
+  border-collapse: collapse;
+  width: 95%;
+  margin: 1em auto;
+  font-size: 1.09rem;
+  table-layout: fixed;
+}
+
+/* SYNCED ZOOM TRANSITION: Applied to word and phoneme equally */
+.score-table th,
+.score-table td {
+  border: 1px solid #bbb;
+  padding: 10px;
+  white-space: nowrap;
+  text-align: center;
+  transition:
+    width 0.35s cubic-bezier(0.45, 1.6, 0.4, 0.95),
+    min-width 0.35s cubic-bezier(0.45, 1.6, 0.4, 0.95),
+    max-width 0.35s cubic-bezier(0.45, 1.6, 0.4, 0.95),
+    padding 0.35s ease,
+    opacity 0.25s ease;
+  overflow: hidden;
+  word-wrap: break-word;
+  white-space: normal;
+}
+
+.score-table th {
+  background: #f3f7fa;
+  font-weight: 700;
+}
+
+/* table score pills */
+.score-good,
+.score-warn,
+.score-bad {
+  position: relative;
+  font-weight: 700;
+  padding: 2px 6px 2px 24px;
+  border-radius: 14px;
+}
+
+.score-good {
+  color: #2563eb;
+  background: #dbeafe;
+}
+.score-warn {
+  color: #d97706;
+  background: #fef3c7;
+}
+.score-bad {
+  color: #dc2626;
+  background: #fee2e2;
+}
+
+.score-good::before,
+.score-warn::before,
+.score-bad::before {
+  position: absolute;
+  left: 6px;
+  top: 1px;
+  font-size: 0.9em;
+}
+.score-good::before { content: "✔"; }
+.score-warn::before { content: "⚠️"; }
+.score-bad::before  { content: "✖"; }
+
+/* keep tooltip/hover content visible for the error column */
+#prettyResult .score-table td:nth-child(4),
+#prettyResult .score-table th:nth-child(4) {
+  overflow: visible !important;
+}
