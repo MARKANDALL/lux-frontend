@@ -19,7 +19,8 @@ const TOOLTIPS = {
   Completeness: "Did you say all the words in the reference?",
   Pronunciation: "Overall pronunciation quality.",
   Prosody: "Stress, intonation, rhythm, and pacing.",
-  Phoneme: "The smallest possible sound in a language." 
+  Phoneme: "The smallest possible sound in a language.",
+  Overall: "Aggregate score across all categories combined.",
 };
 
 export function renderResultsHeaderModern(data) {
@@ -40,22 +41,33 @@ export function renderResultsHeaderModern(data) {
       }
   }
 
-  // Modal-style score formatting (matches Attempt Details header)
-  const fmtScore = (v) =>
-    v == null || !Number.isFinite(Number(v)) ? "—" : `${Math.round(Number(v))}%`;
+  // 3) PYRAMID SCORE UI (Overall circle + 5 tiles)
 
-  const getRingColor = (v) => {
-    const n = Number(v);
-    if (!Number.isFinite(n)) return "#cbd5e1"; // neutral
-    if (n >= 80) return "#2563eb";            // good (blue)
-    if (n >= 60) return "#f59e0b";            // warn (amber)
-    return "#ef4444";                         // bad (red)
+  const fmtRoundPct = (v) =>
+    v == null || !Number.isFinite(+v) ? "—" : `${Math.round(+v)}%`;
+
+  const meanAvail = (...vals) => {
+    const v = vals.map((x) => +x).filter((x) => Number.isFinite(x));
+    if (!v.length) return null;
+    return v.reduce((a, b) => a + b, 0) / v.length;
   };
 
-  const bigScoreColor = getRingColor(overall);
-  const rateMeta = rateStr ? rateStr.replace(/^ • /, "") : "";
+  // Treat "overall" from Azure as Pronunciation (tile)
+  const pronunciation = overall;
 
-  // Small card renderer (full labels, keeps tooltips, Prosody toggle)
+  // Overall aggregate (your new blue circle)
+  const overallAgg = meanAvail(accuracy, fluency, completeness, prosody, pronunciation);
+
+  const getRingColor = (v) => {
+    const n = +v;
+    if (!Number.isFinite(n)) return "#cbd5e1";
+    if (n >= 80) return "#2563eb";
+    if (n >= 60) return "#d97706";
+    return "#dc2626";
+  };
+
+  const overallRingColor = getRingColor(overallAgg);
+
   const renderMetricTile = (label, val, key, meta = "") => {
     const labelHtml =
       key === "Prosody"
@@ -73,9 +85,7 @@ export function renderResultsHeaderModern(data) {
             <span class="tooltiptext">${TOOLTIPS[key] || ""}</span>
           </span>
         </div>
-
-        <div class="lux-scoreTile-value">${fmtScore(val)}</div>
-
+        <div class="lux-scoreTile-value">${fmtRoundPct(val)}</div>
         ${meta ? `<div class="lux-scoreTile-meta">${meta}</div>` : ``}
       </div>
     `;
@@ -83,11 +93,11 @@ export function renderResultsHeaderModern(data) {
 
   const saidText = data?.DisplayText || nbest?.Display || "(No speech detected)";
 
-  const headerScoreClass = overall != null ? scoreClass(overall) : "";
+  const headerScoreClass = overallAgg != null ? scoreClass(overallAgg) : "";
   const scoreHeaderAttrs = [
     'id="scoreHeader"',
     `class="toggle-col ${headerScoreClass}"`,
-    `data-overall-score="${overall || 0}"`
+    `data-overall-score="${overallAgg || 0}"`
   ].join(" ");
 
   // 4. PROSODY LEGEND
@@ -146,29 +156,33 @@ export function renderResultsHeaderModern(data) {
       <div style="margin-bottom: 12px;">
         <b style="font-size: 1.1em;">Your Results:</b>
 
-        <div class="lux-scoreSummary">
+        <div class="lux-scoreSummary lux-scoreSummary--pyramid">
+          <!-- Top: Overall aggregate -->
           <div class="lux-scoreMain">
             <div class="lux-scoreMainLabel">
-              Pronunciation
-              <span class="tooltip result-tip tip-Pronunciation">(?) 
-                <span class="tooltiptext">${TOOLTIPS["Pronunciation"] || ""}</span>
+              Overall
+              <span class="tooltip result-tip tip-Overall">(?) 
+                <span class="tooltiptext">${TOOLTIPS["Overall"] || ""}</span>
               </span>
             </div>
 
-            <div
-              class="lux-scoreRing"
-              style="--lux-score-ring:${bigScoreColor};"
-              title="Pronunciation"
-            >
-              ${fmtScore(overall)}
+            <div class="lux-scoreRing" style="--lux-score-ring:${overallRingColor};">
+              ${fmtRoundPct(overallAgg)}
             </div>
           </div>
 
-          <div class="lux-scoreGrid">
-            ${renderMetricTile("Accuracy", accuracy, "Accuracy")}
-            ${renderMetricTile("Fluency", fluency, "Fluency")}
-            ${renderMetricTile("Completeness", completeness, "Completeness")}
-            ${renderMetricTile("Prosody", prosody, "Prosody", rateMeta)}
+          <!-- Pyramid tiles -->
+          <div class="lux-scorePyramid">
+            <div class="lux-scoreRow lux-scoreRow-mid">
+              ${renderMetricTile("Prosody", prosody, "Prosody", rateStr ? rateStr.replace(/^ • /, "") : "")}
+              ${renderMetricTile("Pronunciation", pronunciation, "Pronunciation")}
+            </div>
+
+            <div class="lux-scoreRow lux-scoreRow-bottom">
+              ${renderMetricTile("Accuracy", accuracy, "Accuracy")}
+              ${renderMetricTile("Fluency", fluency, "Fluency")}
+              ${renderMetricTile("Completeness", completeness, "Completeness")}
+            </div>
           </div>
         </div>
       </div>

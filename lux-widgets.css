@@ -322,101 +322,123 @@
    Pronunciation ring + 4 metric cards
 ==================================== */
 
+/* ============================================================
+   LUX SCORE PYRAMID (Overall circle + 5 rubric tiles)
+   ============================================================ */
+
 .lux-scoreSummary{
   margin-top: 10px;
   display: flex;
-  flex-direction: column;   /* ring above */
-  align-items: center;      /* centered */
-  gap: 12px;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 }
 
 .lux-scoreMain{
-  display: flex;
+  display:flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  align-items:center;
+  justify-content:center;
 }
 
-/* Pronunciation label above ring */
 .lux-scoreMainLabel{
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display:flex;
+  align-items:center;
+  justify-content:center;
   gap: 6px;
   margin-bottom: 6px;
 
-  color: #64748b;
-  font-size: 0.95rem;       /* slightly larger than before */
+  color:#64748b;
+  font-size: 0.95rem;
   font-weight: 900;
   letter-spacing: 0.02em;
 }
 
-/* Pronunciation ring */
 .lux-scoreRing{
-  width: 88px;
-  height: 88px;
+  width: 82px;
+  height: 82px;
   border-radius: 50%;
   border: 4px solid var(--lux-score-ring, #2563eb);
-  display: flex;
-  align-items: center;
-  justify-content: center;
 
-  font-size: 1.55rem;       /* slightly larger */
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  font-size: 1.45rem;
   font-weight: 900;
-  color: #334155;
+  color:#334155;
 
-  background: #fff;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  background:#fff;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.06);
 }
 
-/* 4 metric tiles row */
-.lux-scoreGrid{
-  width: min(920px, 94vw);  /* keeps it from being “too stretched” */
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+.lux-scorePyramid{
+  width: min(920px, 94vw);
+  display:flex;
+  flex-direction: column;
   gap: 10px;
 }
 
+/* rows */
+.lux-scoreRow{
+  display:flex;
+  justify-content:center;
+  gap: 10px;
+  width: 100%;
+}
+
+/* pyramid shape: mid row a bit wider */
+.lux-scoreRow-mid .lux-scoreTile{
+  flex: 1 1 0;
+  max-width: 320px;
+}
+.lux-scoreRow-bottom .lux-scoreTile{
+  flex: 1 1 0;
+  max-width: 260px;
+}
+
+/* flatter tiles (squat pyramid goal) */
 .lux-scoreTile{
   border: 1px solid #e2e8f0;
   background: #f8fafc;
   border-radius: 12px;
-  padding: 12px 14px;       /* bigger */
+  padding: 10px 12px;
   text-align: center;
   box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
 }
 
-/* label bigger + clearer */
 .lux-scoreTile-label{
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display:flex;
+  align-items:center;
+  justify-content:center;
   gap: 6px;
 
-  color: #64748b;
-  font-size: 0.95rem;       /* bigger */
+  color:#64748b;
+  font-size: 0.92rem;
   font-weight: 900;
-  letter-spacing: 0.02em;
 }
 
-/* value much bigger */
 .lux-scoreTile-value{
-  margin-top: 4px;
-  color: #0f172a;
-  font-size: 1.35rem;       /* bigger */
+  margin-top: 3px;
+  color:#0f172a;
+  font-size: 1.28rem;
   font-weight: 900;
 }
 
 .lux-scoreTile-meta{
   margin-top: 2px;
-  color: #94a3b8;
-  font-size: 0.8rem;
+  color:#94a3b8;
+  font-size: 0.78rem;
   font-weight: 800;
 }
 
-@media (max-width: 520px){
-  .lux-scoreGrid{
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+/* mobile: keep readable without blowing vertical space */
+@media (max-width: 640px){
+  .lux-scoreRow{ flex-wrap: wrap; }
+  .lux-scoreRow-mid .lux-scoreTile,
+  .lux-scoreRow-bottom .lux-scoreTile{
+    max-width: none;
+    flex: 1 1 calc(50% - 10px);
   }
 }
 

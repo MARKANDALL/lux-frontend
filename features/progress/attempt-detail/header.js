@@ -29,6 +29,20 @@ export function buildAttemptDetailHeader({
   const compAvg = mean((list || []).map((a) => attemptMetric(a, "comp")));
   const prosAvg = mean((list || []).map((a) => attemptMetric(a, "pros")));
 
+  const fmtRoundPct = (v) =>
+    v == null || !Number.isFinite(+v) ? "—" : `${Math.round(+v)}%`;
+
+  // New: overall aggregate circle for the modal
+  const overallAgg = mean([accAvg, fluAvg, compAvg, prosAvg, pronAvg]);
+  const overallColor = getColorConfig(overallAgg).color;
+
+  const tileKV = (label, val) => `
+    <div class="lux-scoreTile">
+      <div class="lux-scoreTile-label">${esc(label)}</div>
+      <div class="lux-scoreTile-value">${fmtRoundPct(val)}</div>
+    </div>
+  `;
+
   function pillKV(label, val) {
     return `
       <div style="background:#f8fafc; padding:8px; border-radius:8px; text-align:center;">
@@ -85,20 +99,25 @@ export function buildAttemptDetailHeader({
       </p>
     </div>
 
-    <div style="display:flex; justify-content:center; margin-bottom: 14px;">
-      <div style="
-        width: 80px; height: 80px; border-radius: 50%;
-        border: 4px solid ${bigScoreColor};
-        display:flex; align-items:center; justify-content:center;
-        font-size: 1.5rem; font-weight: 900; color:#334155;
-      ">${Math.round(Number(pronAvg) || 0)}%</div>
-    </div>
+    <div class="lux-scoreSummary lux-scoreSummary--pyramid" style="margin-bottom:14px;">
+      <div class="lux-scoreMain">
+        <div class="lux-scoreMainLabel">Overall</div>
+        <div class="lux-scoreRing" style="--lux-score-ring:${overallColor};">
+          ${fmtRoundPct(overallAgg)}
+        </div>
+      </div>
 
-    <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px;">
-      ${pillKV("Acc", accAvg == null ? "—" : `${Math.round(accAvg)}%`)}
-      ${pillKV("Flu", fluAvg == null ? "—" : `${Math.round(fluAvg)}%`)}
-      ${pillKV("Comp", compAvg == null ? "—" : `${Math.round(compAvg)}%`)}
-      ${pillKV("Pro", prosAvg == null ? "—" : `${Math.round(prosAvg)}%`)}
+      <div class="lux-scorePyramid">
+        <div class="lux-scoreRow lux-scoreRow-mid">
+          ${tileKV("Prosody", prosAvg)}
+          ${tileKV("Pronunciation", pronAvg)}
+        </div>
+        <div class="lux-scoreRow lux-scoreRow-bottom">
+          ${tileKV("Accuracy", accAvg)}
+          ${tileKV("Fluency", fluAvg)}
+          ${tileKV("Completeness", compAvg)}
+        </div>
+      </div>
     </div>
 
     <div style="border-top:1px solid #e2e8f0; padding-top: 12px;">
