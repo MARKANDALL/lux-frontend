@@ -376,14 +376,14 @@
   width: min(920px, 94vw);
   display:flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 /* rows */
 .lux-scoreRow{
   display:flex;
   justify-content:center;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
 }
 
@@ -402,7 +402,10 @@
   border: 1px solid #e2e8f0;
   background: #f8fafc;
   border-radius: 12px;
-  padding: 10px 12px;
+
+  /* was ~10px 12px */
+  padding: 7px 12px;           /* ✅ squatter */
+
   text-align: center;
   box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
 }
@@ -413,20 +416,27 @@
   justify-content:center;
   gap: 6px;
 
+  /* keep same font-size */
+  line-height: 1.05;           /* ✅ tighter */
+
   color:#64748b;
   font-size: 0.92rem;
   font-weight: 900;
 }
 
 .lux-scoreTile-value{
-  margin-top: 3px;
+  margin-top: 1px;             /* ✅ was 3–4px */
+  line-height: 1.05;           /* ✅ tighter */
+
   color:#0f172a;
   font-size: 1.28rem;
   font-weight: 900;
 }
 
 .lux-scoreTile-meta{
-  margin-top: 2px;
+  margin-top: 1px;             /* ✅ was 2px */
+  line-height: 1.05;
+
   color:#94a3b8;
   font-size: 0.78rem;
   font-weight: 800;
