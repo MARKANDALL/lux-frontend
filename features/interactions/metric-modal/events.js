@@ -4,7 +4,7 @@
 import { buildModalHtml, esc } from "./render.js";
 
 let installed = false;
-let currentData = null;
+let currentCtx = { azureResult: null, referenceText: "" };
 
 function resolveMetricKeyFromEl(el) {
   if (!el) return null;
@@ -47,7 +47,7 @@ function decorateTiles() {
   });
 }
 
-function openMetricModal(metricKey, data) {
+function openMetricModal(metricKey, ctx) {
   const existing = document.getElementById("lux-metric-modal");
   if (existing) existing.remove();
 
@@ -86,18 +86,22 @@ function openMetricModal(metricKey, data) {
 
   card.appendChild(closeBtn);
 
-  if (!data) {
+  const azureResult = ctx?.azureResult || null;
+
+  if (!azureResult) {
     card.insertAdjacentHTML(
       "beforeend",
       `
-      <div style="font-weight:900; font-size:1.05rem; color:#0f172a;">${esc(metricKey)}</div>
+      <div style="font-weight:900; font-size:1.05rem; color:#0f172a;">${esc(
+        metricKey
+      )}</div>
       <div style="margin-top:10px; color:#64748b; font-weight:800;">
         No attempt data yet. Record once to unlock details.
       </div>
     `
     );
   } else {
-    card.insertAdjacentHTML("beforeend", buildModalHtml(metricKey, data));
+    card.insertAdjacentHTML("beforeend", buildModalHtml(metricKey, ctx));
   }
 
   modal.appendChild(card);
@@ -124,7 +128,7 @@ function onDocClick(e) {
   const metricKey = resolveMetricKeyFromEl(hit);
   if (!metricKey) return;
 
-  openMetricModal(metricKey, currentData);
+  openMetricModal(metricKey, currentCtx);
 }
 
 function onDocKeyDown(e) {
@@ -138,12 +142,25 @@ function onDocKeyDown(e) {
   if (!metricKey) return;
 
   e.preventDefault();
-  openMetricModal(metricKey, currentData);
+  openMetricModal(metricKey, currentCtx);
 }
 
 export function setMetricModalData(data) {
-  currentData = data || null;
+  // Accept either raw Azure payload or the richer ctx object
+  if (data && typeof data === "object" && "azureResult" in data) {
+    currentCtx = {
+      azureResult: data.azureResult || null,
+      referenceText: data.referenceText || "",
+    };
+  } else {
+    currentCtx = { azureResult: data || null, referenceText: "" };
+  }
+
   decorateTiles();
+}
+
+export function getMetricModalData() {
+  return currentCtx;
 }
 
 export function initMetricScoreModals() {

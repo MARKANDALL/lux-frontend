@@ -2,7 +2,14 @@
 // HTML builder for the metric explainer modal card.
 
 import { fmtPct } from "../../../core/scoring/index.js";
-import { getScorePack, deriveTimingStats, deriveErrorStats, prettyErrCounts } from "./derive.js";
+import {
+  getScorePack,
+  deriveTimingStats,
+  deriveErrorStats,
+  prettyErrCounts,
+  deriveCompletenessDiff,
+  derivePhonemeClassSplit,
+} from "./derive.js";
 
 export const METRIC_META = {
   Overall: {
@@ -57,154 +64,344 @@ function section(title, bodyHtml) {
   `;
 }
 
-export function buildModalHtml(metricKey, data) {
-  const meta = METRIC_META[metricKey] || { title: metricKey, blurb: "" };
-
-  const scores = getScorePack(data);
-  const timing = deriveTimingStats(data);
-  const errors = deriveErrorStats(data);
+function buildMeta(metricKey, pack) {
+  const base = METRIC_META[metricKey] || { title: metricKey, blurb: "" };
 
   const valMap = {
-    Overall: scores.overallAgg,
-    Pronunciation: scores.pronunciation,
-    Accuracy: scores.accuracy,
-    Fluency: scores.fluency,
-    Completeness: scores.completeness,
-    Prosody: scores.prosody,
+    Overall: pack.overallAgg,
+    Pronunciation: pack.pronunciation,
+    Accuracy: pack.accuracy,
+    Fluency: pack.fluency,
+    Completeness: pack.completeness,
+    Prosody: pack.prosody,
   };
 
-  const primaryVal = valMap[metricKey];
-  const bigPct = fmtPct(primaryVal);
+  return {
+    title: base.title || metricKey,
+    blurb: base.blurb || "",
+    value: valMap[metricKey],
+  };
+}
 
-  const snapshot = `
-    <div class="lux-metricGrid">
-      ${kv("Overall (aggregate)", fmtPct(scores.overallAgg))}
-      ${kv("Pronunciation", fmtPct(scores.pronunciation))}
-      ${kv("Accuracy", fmtPct(scores.accuracy))}
-      ${kv("Fluency", fmtPct(scores.fluency))}
-      ${kv("Completeness", fmtPct(scores.completeness))}
-      ${kv("Prosody", fmtPct(scores.prosody))}
-    </div>
-  `;
+export function buildModalHtml(metricKey, data) {
+  const azure = data?.azureResult || data;
+  const referenceText = data?.referenceText || "";
 
-  const timingBlock = timing
-    ? `
-      <div class="lux-metricGrid">
-        ${kv("Words", String(timing.wordCount))}
-        ${kv("Total time", timing.spanSec != null ? `${timing.spanSec.toFixed(2)}s` : "—")}
-        ${kv("Words / minute", timing.wpm != null ? `${timing.wpm.toFixed(0)} wpm` : "—")}
-        ${kv("Words / second", timing.wps != null ? `${timing.wps.toFixed(2)} w/s` : "—")}
-        ${kv("Articulation rate", timing.arWpm != null ? `${timing.arWpm.toFixed(0)} wpm` : "—")}
-        ${kv("Pause count", String(timing.pauseCount))}
-        ${kv("Total pause time", `${timing.pauseTotal.toFixed(2)}s`)}
-        ${kv("Longest pause", `${timing.pauseLongest.toFixed(2)}s`)}
-        ${kv(
-          "Tempo mix",
-          `fast ${timing.tempoCounts.fast || 0} • ok ${timing.tempoCounts.ok || 0} • slow ${
-            timing.tempoCounts.slow || 0
-          }`
-        )}
-      </div>
-    `
-    : `<div style="color:#64748b;">Timing stats not available for this attempt.</div>`;
+  const pack = getScorePack(azure);
+  const meta = buildMeta(metricKey, pack);
 
-  const errorBlock = errors
-    ? `
-      <div class="lux-metricSubhead">Most difficult words (this attempt)</div>
-      <div class="lux-metricChips">
-        ${
-          errors.worstWords.length
-            ? errors.worstWords
-                .map((w) => `<span class="lux-metricChip">${esc(w.word)} · ${fmtPct(w.acc)}</span>`)
-                .join("")
-            : `<span style="color:#64748b;">—</span>`
-        }
-      </div>
+  const timing = deriveTimingStats(azure);
+  const errs = deriveErrorStats(azure);
+  const diff = deriveCompletenessDiff(referenceText, azure);
+  const classSplit = derivePhonemeClassSplit(azure);
 
-      <div class="lux-metricSubhead" style="margin-top:10px;">Most difficult phonemes (this attempt)</div>
-      <div class="lux-metricChips">
-        ${
-          errors.worstPhonemes.length
-            ? errors.worstPhonemes
-                .map((p) => `<span class="lux-metricChip">${esc(p.phoneme)} · ${fmtPct(p.avg)}</span>`)
-                .join("")
-            : `<span style="color:#64748b;">—</span>`
-        }
-      </div>
+  const explainerBlock = section("How this score is measured", explainMetric(metricKey));
 
-      <div class="lux-metricSubhead" style="margin-top:10px;">Error types</div>
-      <div style="color:#334155; font-weight:800;">${esc(prettyErrCounts(errors.errCounts))}</div>
-    `
-    : `<div style="color:#64748b;">Error detail not available for this attempt.</div>`;
+  const uniqueBlock = section(
+    "What Lux found (unique)",
+    uniqueMetricPanel(metricKey, { pack, timing, errs, diff, classSplit })
+  );
 
-  const guidance = (() => {
-    switch (metricKey) {
-      case "Accuracy":
-        return `
-          <ul class="lux-metricList">
-            <li><b>Watch:</b> low phoneme scores and repeated low-scoring words.</li>
-            <li><b>Meaning:</b> your mouth shape or voicing differs from target sounds.</li>
-            <li><b>Try:</b> slow down slightly and exaggerate the hardest consonants/vowels.</li>
-          </ul>
-        `;
-      case "Fluency":
-        return `
-          <ul class="lux-metricList">
-            <li><b>Watch:</b> many pauses or a very slow/very fast rate.</li>
-            <li><b>Meaning:</b> you may be searching for words or restarting mid-phrase.</li>
-            <li><b>Try:</b> practice “chunking” — speak in short natural groups.</li>
-          </ul>
-        `;
-      case "Completeness":
-        return `
-          <ul class="lux-metricList">
-            <li><b>Watch:</b> omissions or insertions.</li>
-            <li><b>Meaning:</b> you skipped words or added extra ones.</li>
-            <li><b>Try:</b> follow the reference text with your eyes, and keep a steady pace.</li>
-          </ul>
-        `;
-      case "Prosody":
-        return `
-          <ul class="lux-metricList">
-            <li><b>Watch:</b> tempo mix (fast/slow words) and long pauses.</li>
-            <li><b>Meaning:</b> pacing/stress patterns may sound “non-native” even if sounds are correct.</li>
-            <li><b>Try:</b> copy the rhythm first (even monotone), then add intonation.</li>
-          </ul>
-        `;
-      case "Pronunciation":
-        return `
-          <ul class="lux-metricList">
-            <li><b>Watch:</b> whether pronunciation stays high even when accuracy dips.</li>
-            <li><b>Meaning:</b> it’s your overall sound quality combined, not one single error.</li>
-            <li><b>Try:</b> aim for consistency across the whole sentence.</li>
-          </ul>
-        `;
-      case "Overall":
-      default:
-        return `
-          <ul class="lux-metricList">
-            <li><b>Watch:</b> your lowest category — that’s usually your best “next focus.”</li>
-            <li><b>Try:</b> repeat once with one clear goal (pace, hardest sound, or missing words).</li>
-          </ul>
-        `;
-    }
-  })();
+  const interpretBlock = section("How to interpret it", interpretMetric(metricKey, pack));
+
+  const helpBlock = section("Need help?", helpCta(metricKey));
 
   return `
     <div class="lux-metricTop">
       <div class="lux-metricTitle">${esc(meta.title)}</div>
-      <div class="lux-metricBig">${esc(bigPct)}</div>
+      <div class="lux-metricBig">${esc(fmtPct(meta.value))}</div>
       <div class="lux-metricBlurb">${esc(meta.blurb || "")}</div>
     </div>
 
-    ${section("This attempt (snapshot)", snapshot)}
-    ${section("Timing & pacing (computed)", timingBlock)}
-    ${section("Error patterns (computed)", errorBlock)}
-    ${section("How to interpret this score", guidance)}
+    ${explainerBlock}
+    ${uniqueBlock}
+    ${interpretBlock}
+    ${helpBlock}
 
     <div class="lux-metricFoot">
       <span style="color:#64748b;">Tip:</span>
       These cards are “data + explanations.” The AI Coach stays separate and focuses on personalized strategy.
     </div>
+  `;
+}
+
+/* ============================================================================
+   New helpers (metric-specific modal sections)
+============================================================================ */
+
+function bullets(items = []) {
+  return `<ul class="lux-metricBullets">${(items || [])
+    .map((x) => `<li>${esc(x)}</li>`)
+    .join("")}</ul>`;
+}
+
+function explainMetric(metricKey) {
+  const map = {
+    Overall: {
+      simple: [
+        "A quick combined snapshot of all five categories.",
+        "Not a separate measurement — it’s just a simple blend.",
+        "Use it to track progress, then click a tile for specifics.",
+      ],
+      advanced:
+        "Lux currently computes Overall as an equal-weight mean of Accuracy, Fluency, Completeness, Prosody, and Pronunciation.",
+    },
+    Pronunciation: {
+      simple: [
+        "A big-picture score of how close your sounds were overall.",
+        "More global than Accuracy (which is phoneme-by-phoneme).",
+        "Great for tracking improvement across attempts.",
+      ],
+      advanced:
+        "Pronunciation summarizes overall sound quality and is often influenced by both segment accuracy and prosodic naturalness.",
+    },
+    Accuracy: {
+      simple: [
+        "How correct each sound (phoneme) was compared to the target.",
+        "Sensitive to substitutions, deletions, and insertions.",
+        "Best metric for pinpointing specific sound errors.",
+      ],
+      advanced:
+        "Accuracy reflects closeness to expected target phonemes and is the most “microscopic” score of the five.",
+    },
+    Fluency: {
+      simple: [
+        "Smoothness: pauses, stops, and interruptions between words.",
+        "Fluency is NOT about speaking fast — it’s about flow.",
+        "A few long pauses can drop this score quickly.",
+      ],
+      advanced:
+        "Fluency primarily reflects silent breaks and disfluency patterns across the utterance.",
+    },
+    Completeness: {
+      simple: [
+        "Did you say all expected words in the reference text?",
+        "Skipping small words (the / a / to) can lower this a lot.",
+        "Most improved by slowing down and reading fully.",
+      ],
+      advanced:
+        "Completeness is essentially a reference-match ratio: spoken words vs expected words.",
+    },
+    Prosody: {
+      simple: [
+        "How natural your speech sounds as a whole.",
+        "Includes stress, rhythm, intonation, and pacing.",
+        "You can have great sounds but low prosody (robotic rhythm).",
+      ],
+      advanced:
+        "Prosody relates to timing patterns, emphasis, and pitch movement — not just correctness of phonemes.",
+    },
+  };
+
+  const info = map[metricKey] || map.Overall;
+  return `
+    ${bullets(info.simple)}
+    <details class="lux-metricDetails">
+      <summary>More technical</summary>
+      <div class="lux-metricDetailsBody">${esc(info.advanced)}</div>
+    </details>
+  `;
+}
+
+function interpretMetric(metricKey, pack) {
+  void pack; // pack may be used later for more personalized tips
+
+  const tips = {
+    Overall: [
+      "Click the lowest tile — that’s what pulled the overall down most.",
+      "Big gaps between tiles = uneven skill profile (totally normal).",
+    ],
+    Pronunciation: [
+      "High Pronunciation + low Prosody usually means clear sounds but “flat” rhythm.",
+      "High Prosody + low Accuracy usually means good flow but wrong consonants/vowels.",
+    ],
+    Accuracy: [
+      "If Accuracy is low, focus on 1–2 sounds at a time (not everything).",
+      "Look for patterns: vowels vs consonants vs voicing.",
+    ],
+    Fluency: [
+      "A few long pauses hurt more than many tiny pauses.",
+      "Try chunking phrases (meaning groups) instead of word-by-word starts.",
+    ],
+    Completeness: [
+      "If Completeness is low, slow down and prioritize saying every word.",
+      "Function words matter: the / a / to / of / in.",
+    ],
+    Prosody: [
+      "Prosody improves fastest when you imitate short phrases with rhythm.",
+      "Aim for natural emphasis, not perfect speed.",
+    ],
+  };
+
+  return bullets(tips[metricKey] || tips.Overall);
+}
+
+function uniqueMetricPanel(metricKey, ctx) {
+  const { pack, timing, errs, diff, classSplit } = ctx;
+
+  // Common “quick insight” for all: what’s lowest?
+  const five = [
+    ["Accuracy", pack.accuracy],
+    ["Fluency", pack.fluency],
+    ["Completeness", pack.completeness],
+    ["Prosody", pack.prosody],
+    ["Pronunciation", pack.pronunciation],
+  ].filter(([, v]) => v != null);
+
+  const lowest = five.slice().sort((a, b) => (a[1] ?? 0) - (b[1] ?? 0))[0];
+
+  const base = `
+    <div class="lux-metricKVGrid">
+      <div class="lux-kv">
+        <div class="lux-kv-label">Lowest driver</div>
+        <div class="lux-kv-value">${esc(lowest?.[0] || "—")}</div>
+      </div>
+      <div class="lux-kv">
+        <div class="lux-kv-label">Lowest score</div>
+        <div class="lux-kv-value">${esc(fmtPct(lowest?.[1]))}</div>
+      </div>
+    </div>
+  `;
+
+  // Completeness: show missing/extra vs reference
+  if (metricKey === "Completeness") {
+    if (!diff) {
+      return base + `<div class="lux-muted">Reference text not available for this attempt.</div>`;
+    }
+
+    return (
+      base +
+      `
+      <div class="lux-metricKVGrid">
+        <div class="lux-kv">
+          <div class="lux-kv-label">Expected words</div>
+          <div class="lux-kv-value">${esc(String(diff.refCount))}</div>
+        </div>
+        <div class="lux-kv">
+          <div class="lux-kv-label">You said</div>
+          <div class="lux-kv-value">${esc(String(diff.saidCount))}</div>
+        </div>
+        <div class="lux-kv">
+          <div class="lux-kv-label">Missing</div>
+          <div class="lux-kv-value">${
+            diff.missing.length ? esc(diff.missing.join(", ")) : "None ✅"
+          }</div>
+        </div>
+        <div class="lux-kv">
+          <div class="lux-kv-label">Extra</div>
+          <div class="lux-kv-value">${
+            diff.extra.length ? esc(diff.extra.join(", ")) : "None ✅"
+          }</div>
+        </div>
+      </div>
+    `
+    );
+  }
+
+  // Accuracy/Pronunciation: vowel vs consonant weakness split
+  if (metricKey === "Accuracy" || metricKey === "Pronunciation") {
+    if (!classSplit) return base;
+
+    return (
+      base +
+      `
+      <div class="lux-metricKVGrid">
+        <div class="lux-kv">
+          <div class="lux-kv-label">Weak vowels</div>
+          <div class="lux-kv-value">${esc(
+            `${Math.round(classSplit.weakShareVowels * 100)}%`
+          )}</div>
+        </div>
+        <div class="lux-kv">
+          <div class="lux-kv-label">Weak consonants</div>
+          <div class="lux-kv-value">${esc(
+            `${Math.round(classSplit.weakShareConsonants * 100)}%`
+          )}</div>
+        </div>
+      </div>
+    `
+    );
+  }
+
+  // Fluency/Prosody/Overall: timing & pacing sanity + pause ratios
+  if (metricKey === "Fluency" || metricKey === "Prosody" || metricKey === "Overall") {
+    if (!timing?.isSane) {
+      return base + `<div class="lux-muted">Timing stats not available for this attempt.</div>`;
+    }
+
+    return (
+      base +
+      `
+      <div class="lux-metricKVGrid">
+        <div class="lux-kv"><div class="lux-kv-label">Words</div><div class="lux-kv-value">${esc(
+          String(timing.wordsCount)
+        )}</div></div>
+        <div class="lux-kv"><div class="lux-kv-label">Span</div><div class="lux-kv-value">${esc(
+          timing.spanSec != null ? `${timing.spanSec.toFixed(2)}s` : "—"
+        )}</div></div>
+        <div class="lux-kv"><div class="lux-kv-label">WPM</div><div class="lux-kv-value">${esc(
+          timing.wpm != null ? `${timing.wpm.toFixed(0)}` : "—"
+        )}</div></div>
+        <div class="lux-kv"><div class="lux-kv-label">Pause count</div><div class="lux-kv-value">${esc(
+          String(timing.pauseCount)
+        )}</div></div>
+        <div class="lux-kv"><div class="lux-kv-label">Pause share</div><div class="lux-kv-value">${esc(
+          timing.pauseRatio != null ? `${Math.round(timing.pauseRatio * 100)}%` : "—"
+        )}</div></div>
+        <div class="lux-kv"><div class="lux-kv-label">Longest pause</div><div class="lux-kv-value">${esc(
+          timing.longestPause != null ? `${timing.longestPause.toFixed(2)}s` : "—"
+        )}</div></div>
+      </div>
+    `
+    );
+  }
+
+  // Default: concise error fingerprint (if present)
+  if (errs) {
+    const topPh = (errs.worstPhonemes || [])
+      .slice(0, 3)
+      .map((x) => x.phoneme)
+      .filter(Boolean)
+      .join(", ");
+
+    const topW = (errs.worstWords || [])
+      .slice(0, 3)
+      .map((x) => x.word)
+      .filter(Boolean)
+      .join(", ");
+
+    const errTypes = prettyErrCounts(errs.errCounts);
+
+    return (
+      base +
+      `
+      <div class="lux-metricKVGrid">
+        <div class="lux-kv">
+          <div class="lux-kv-label">Top weak sounds</div>
+          <div class="lux-kv-value">${esc(topPh || "—")}</div>
+        </div>
+        <div class="lux-kv">
+          <div class="lux-kv-label">Top weak words</div>
+          <div class="lux-kv-value">${esc(topW || "—")}</div>
+        </div>
+        <div class="lux-kv" style="grid-column:1 / -1;">
+          <div class="lux-kv-label">Error types</div>
+          <div class="lux-kv-value">${esc(errTypes || "—")}</div>
+        </div>
+      </div>
+    `
+    );
+  }
+
+  return base;
+}
+
+function helpCta(metricKey) {
+  const topic = String(metricKey || "").toLowerCase();
+  return `
+    <button class="lux-helpBtn" type="button"
+      onclick="window.openLuxHelp ? window.openLuxHelp('${esc(topic)}') : alert('Lux Help is coming soon.')">
+      Ask Lux Help about ${esc(metricKey)} →
+    </button>
   `;
 }

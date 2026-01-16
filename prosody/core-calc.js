@@ -64,38 +64,43 @@ export function median(nums) {
   return a.length % 2 ? a[mid] : (a[mid - 1] + a[mid]) / 2;
 }
 
-export function computeTimings(words) {
-  words = words || [];
-  var out = new Array(words.length);
-  for (var i = 0; i < words.length; i++) {
-    var w = words[i] || {};
-    var start =
-      toSec(
-        w.Offset ??
-          w.offset ??
-          w.Start ??
-          w.start ??
-          w.Begin ??
-          w.begin ??
-          w.Time ??
-          w.time
-      ) ?? null;
-    var dur =
-      toSec(
-        w.Duration ?? w.duration ?? w.Length ?? w.length ?? w.Dur ?? w.dur
-      ) ?? null;
-    var end =
-      toSec(w.End ?? w.end ?? w.Stop ?? w.stop ?? w.Finish ?? w.finish) ?? null;
-    if (start != null && dur != null && end == null) end = start + dur;
-    if (start != null && end != null && dur == null) dur = end - start;
+export function computeTimings(words = []) {
+  const out = [];
+
+  for (const w of words || []) {
+    if (!w) continue;
+
+    let start = null;
+    let end = null;
+    let dur = null;
+
+    // ✅ Azure Pronunciation Assessment word timings are ALWAYS 100ns ticks.
+    // This avoids the "2902s / 0 wpm" bug caused by misclassifying values as ms.
+    const ticksToSec = (v) =>
+      v == null || !Number.isFinite(+v) ? null : +v / 1e7;
+
+    if (w.Offset != null) start = ticksToSec(w.Offset);
+    if (w.Duration != null) dur = ticksToSec(w.Duration);
+    if (w.Offset != null && w.Duration != null)
+      end = ticksToSec(+w.Offset + +w.Duration);
+
+    // Fallbacks for other shapes
+    if (w.Start != null) start = toSec(w.Start);
+    if (w.End != null) end = toSec(w.End);
+
     if (dur != null && end != null && start == null) start = end - dur;
-    if (!Number.isFinite(start)) start = null;
-    if (!Number.isFinite(dur)) dur = null;
-    if (!Number.isFinite(end)) end = null;
-    if (start != null && dur != null && end == null) end = start + dur;
-    if (start != null && end != null && dur == null) dur = end - start;
-    out[i] = { start: start, end: end, durationSec: dur };
+    if (dur != null && start != null && end == null) end = start + dur;
+    if (dur == null && start != null && end != null)
+      dur = Math.max(0, end - start);
+
+    out.push({
+      ...w,
+      start,
+      end,
+      durationSec: dur,
+    });
   }
+
   return out;
 }
 

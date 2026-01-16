@@ -38,7 +38,12 @@ export function ensureHeader(data) {
     setTimeout(() => animateMetricTips?.(), 0);
     initProsodyLegendToggle?.();
     initProsodyTooltips?.();
-    setMetricModalData?.(data);
+
+    const refEl = document.getElementById("referenceText");
+    const referenceText =
+      (refEl && "value" in refEl ? refEl.value : refEl?.textContent) || "";
+    setMetricModalData?.({ azureResult: data, referenceText });
+
     initMetricScoreModals?.();
     return;
   }
@@ -96,7 +101,10 @@ export function ensureHeader(data) {
 
   $out.insertAdjacentHTML("afterbegin", html);
 
-  setMetricModalData?.(data);
+  const refEl = document.getElementById("referenceText");
+  const referenceText =
+    (refEl && "value" in refEl ? refEl.value : refEl?.textContent) || "";
+  setMetricModalData?.({ azureResult: data, referenceText });
   initMetricScoreModals?.();
 
   // Header slots + light UX (import-first; global fallback)
@@ -118,7 +126,12 @@ export function wirePostDom(data) {
     animateMetricTips?.();
     initProsodyLegendToggle?.();
     initProsodyTooltips?.();
-    setMetricModalData?.(data);
+
+    const refEl = document.getElementById("referenceText");
+    const referenceText =
+      (refEl && "value" in refEl ? refEl.value : refEl?.textContent) || "";
+    setMetricModalData?.({ azureResult: data, referenceText });
+
     initMetricScoreModals?.();
 
     // Parked / optional features remain global-only for now
