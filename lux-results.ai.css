@@ -1,0 +1,110 @@
+/* lux-results.ai.css */
+/* AI coaching sidebar layout (polished) */
+
+/* ============================================================
+   AI COACHING SIDEBAR LAYOUT (Polished)
+   ============================================================ */
+.ai-grid-container {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  min-height: 220px;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #c9e2ff;
+  box-shadow: 0 2px 16px rgba(60, 90, 155, 0.06);
+  margin-top: 25px;
+  overflow: hidden;
+  padding: 0 !important;
+}
+
+.ai-sidebar {
+  background: #f1f5f9;
+  border-right: 1px solid #cbd5e1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 6px;
+  gap: 8px;
+}
+
+.ai-sidebar-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 800;
+  color: #64748b;
+  margin-bottom: 4px;
+  text-align: center;
+  width: 100%;
+}
+
+.ai-voice-btn {
+  appearance: none;
+  border: 1px solid transparent;
+  background: #fff;
+  border-color: #cbd5e1;
+  border-radius: 8px;
+  width: 100%;
+  padding: 10px 4px;
+  cursor: pointer;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+
+  color: #64748b;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+
+.ai-voice-btn span:first-child {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+.ai-voice-btn span:last-child {
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.ai-voice-btn:hover {
+  transform: translateY(-1px);
+  border-color: #94a3b8;
+  color: #334155;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.ai-voice-btn.active {
+  background: #fff;
+  border-color: #0078d7;
+  color: #0078d7;
+  box-shadow: 0 0 0 1px #0078d7 inset, 0 4px 8px rgba(0, 120, 215, 0.15);
+}
+
+.ai-content {
+  padding: 20px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+}
+
+.ai-action-btn {
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+  font-size: 0.95rem;
+}
+
+.ai-action-btn.secondary {
+  background: #fff;
+  border-color: #cbd5e1;
+  color: #334155;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.ai-action-btn.secondary:hover {
+  border-color: #94a3b8;
+  background: #f8fafc;
+}

@@ -1,0 +1,55 @@
+/* lux-results.legacy.css */
+/* Old AI panel styles (legacy support) */
+
+/* ============================================================
+   OLD AI Panel Styles (Legacy support)
+   ============================================================ */
+/* We target :not(.ai-grid-container) to avoid conflicts */
+#aiFeedback:not(.ai-grid-container) {
+  background: #eef7fe; padding: 1.1em 1em; border: 1px solid #c9e2ff; border-radius: 1em;
+  margin-top: 12px;
+  font-size: 1.14em; line-height: 1.68; color: #223; box-shadow: 0 2px 16px rgba(60, 90, 155, 0.06);
+}
+#aiFeedback h2, #aiFeedback h3, #aiFeedback strong {
+  color: #096; display: block; margin-top: 0.7em; margin-bottom: 0.25em; font-size: 1.1em;
+  position: relative; overflow: hidden;
+}
+#aiFeedback h2::after, #aiFeedback h3::after, #aiFeedback strong::after {
+  content: ""; position: absolute; bottom: 0; left: 0; height: 2px; width: 100%;
+  background: currentColor; transform: scaleX(0); transform-origin: left; transition: transform 1.5s ease;
+}
+.underline-start::after { transform: scaleX(1); }
+
+#aiFeedback ul { margin: 0.2em 0 1em 1.5em; padding: 0; list-style: disc inside; }
+#aiFeedback li { margin: 0.14em 0; }
+#aiFeedback em { color: #296aac; }
+
+.ai-progress {
+  position: relative; height: 4px; margin-top: 8px; background: #cfe5ff; overflow: hidden; border-radius: 2px;
+}
+.ai-progress::before {
+  content: ""; position: absolute; inset: 0; width: 40%;
+  background: linear-gradient(90deg, #0078d7 0%, #44a8ff 50%, #0078d7 100%);
+  animation: aiLoad 1.2s linear infinite;
+}
+@keyframes aiLoad {
+  from { left: -40%; }
+  to { left: 100%; }
+}
+
+.toggle-en-btn {
+  margin: 0.5em 0; padding: 0.35em 1em; font-size: 0.97em; cursor: pointer;
+  background: #f6f6f6; border: 1px solid #ddd; border-radius: 6px; font-weight: 600; color: #222;
+  transition: background 0.18s;
+}
+.toggle-en-btn:hover { background: #e0e0e0; }
+
+/* Keep the result container permissive for hover/popovers */
+#prettyResult {
+  overflow-x: auto;
+  overflow-y: visible !important;
+  overflow: visible !important;
+  max-height: none !important;
+  height: auto !important;
+  padding-bottom: 4px;
+}
