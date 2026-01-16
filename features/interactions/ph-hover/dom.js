@@ -211,10 +211,34 @@ export function injectTooltipCSS() {
       transform: translateY(1px);
     }
 
-    /* ---- Expand button micro-animations ---- */
+    /* ---- Expand button: subtle always-on breathe + bigger hover bulge ---- */
     #lux-global-ph-tooltip #lux-ph-expand{
+      position: relative;
+      isolation: isolate;            /* keeps ::after behind the pill reliably */
       transform-origin: center;
       will-change: transform, filter;
+    }
+
+    /* Always-on “breathe” halo (does not fight transform bulge) */
+    #lux-global-ph-tooltip #lux-ph-expand::after{
+      content: "";
+      position: absolute;
+      inset: -10px;
+      border-radius: 999px;
+      pointer-events: none;
+      z-index: -1;
+
+      /* soft, Lux-ish glow */
+      background: radial-gradient(
+        circle at 50% 50%,
+        rgba(96,165,250,0.24) 0%,
+        rgba(96,165,250,0.10) 40%,
+        rgba(96,165,250,0.00) 72%
+      );
+
+      opacity: 0.10;
+      filter: blur(10px);
+      animation: luxExpandBreathe 2600ms ease-in-out infinite;
     }
 
     /* Fires after 2s hovering on the controls podium (JS adds this class) */
@@ -222,9 +246,27 @@ export function injectTooltipCSS() {
       animation: luxExpandAttention 560ms cubic-bezier(.2,.9,.2,1) both;
     }
 
-    /* Immediate bulge when hovering directly on Expand */
+    /* Bigger bulge than the other buttons */
     #lux-global-ph-tooltip #lux-ph-expand:hover:not(.lux-expand-attn){
-      animation: luxExpandBulge 240ms ease-out both;
+      animation: luxExpandBulge 260ms ease-out both;
+    }
+
+    @keyframes luxExpandBreathe{
+      0%{
+        opacity: 0.08;
+        transform: scale(0.985);
+        filter: blur(10px);
+      }
+      55%{
+        opacity: 0.22;
+        transform: scale(1.03);
+        filter: blur(12px);
+      }
+      100%{
+        opacity: 0.08;
+        transform: scale(0.985);
+        filter: blur(10px);
+      }
     }
 
     @keyframes luxExpandAttention{
@@ -242,10 +284,20 @@ export function injectTooltipCSS() {
       }
     }
 
+    /* Hover bulge is intentionally more dramatic than other controls */
     @keyframes luxExpandBulge{
-      0%{ transform: scale(1); }
-      65%{ transform: scale(1.16); }
-      100%{ transform: scale(1); }
+      0%{
+        transform: scale(1);
+        filter: brightness(1);
+      }
+      60%{
+        transform: scale(1.26);
+        filter: brightness(1.18);
+      }
+      100%{
+        transform: scale(1.12);      /* stays a touch bigger while hovered */
+        filter: brightness(1.08);
+      }
     }
 
     #lux-global-ph-tooltip .lux-ph-speed{
