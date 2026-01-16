@@ -211,92 +211,65 @@ export function injectTooltipCSS() {
       transform: translateY(1px);
     }
 
-    /* ---- Expand button: subtle always-on breathe + bigger hover bulge ---- */
+    /* ---- Expand button: visible breathe + stable bigger hover ---- */
     #lux-global-ph-tooltip #lux-ph-expand{
       position: relative;
-      isolation: isolate;            /* keeps ::after behind the pill reliably */
       transform-origin: center;
-      will-change: transform, filter;
+      will-change: transform, filter, box-shadow;
+
+      /* IMPORTANT: make hover “stay expanded” (no twitch) */
+      transform: scale(1);
+      transition:
+        transform 180ms cubic-bezier(.2,.9,.2,1),
+        filter 180ms ease,
+        box-shadow 240ms ease;
+
+      /* Always-on breathe (VISIBLE, but subtle) */
+      animation: luxExpandBreathe 2400ms ease-in-out infinite;
     }
 
-    /* Always-on “breathe” halo (does not fight transform bulge) */
-    #lux-global-ph-tooltip #lux-ph-expand::after{
-      content: "";
-      position: absolute;
-      inset: -10px;
-      border-radius: 999px;
-      pointer-events: none;
-      z-index: -1;
-
-      /* soft, Lux-ish glow */
-      background: radial-gradient(
-        circle at 50% 50%,
-        rgba(96,165,250,0.24) 0%,
-        rgba(96,165,250,0.10) 40%,
-        rgba(96,165,250,0.00) 72%
-      );
-
-      opacity: 0.10;
-      filter: blur(10px);
-      animation: luxExpandBreathe 2600ms ease-in-out infinite;
+    /* Bigger bulge than other buttons — and it STAYS while hovered */
+    #lux-global-ph-tooltip #lux-ph-expand:hover{
+      transform: scale(1.22);                 /* hair bigger than before */
+      filter: brightness(1.14);
+      box-shadow: 0 0 18px rgba(96,165,250,0.38);
+      animation-play-state: paused;           /* prevents “breathing jitter” while hovering */
     }
 
-    /* Fires after 2s hovering on the controls podium (JS adds this class) */
+    /* The delayed 2s “attention nudge” — keep it non-transform to avoid fighting hover scale */
     #lux-global-ph-tooltip #lux-ph-expand.lux-expand-attn{
       animation: luxExpandAttention 560ms cubic-bezier(.2,.9,.2,1) both;
     }
 
-    /* Bigger bulge than the other buttons */
-    #lux-global-ph-tooltip #lux-ph-expand:hover:not(.lux-expand-attn){
-      animation: luxExpandBulge 260ms ease-out both;
-    }
-
+    /* box-shadow/brightness pulse so it’s actually visible */
     @keyframes luxExpandBreathe{
       0%{
-        opacity: 0.08;
-        transform: scale(0.985);
-        filter: blur(10px);
+        filter: brightness(1.02);
+        box-shadow: 0 0 0 rgba(96,165,250,0.00);
       }
       55%{
-        opacity: 0.22;
-        transform: scale(1.03);
-        filter: blur(12px);
+        filter: brightness(1.10);
+        box-shadow: 0 0 16px rgba(96,165,250,0.22);
       }
       100%{
-        opacity: 0.08;
-        transform: scale(0.985);
-        filter: blur(10px);
+        filter: brightness(1.02);
+        box-shadow: 0 0 0 rgba(96,165,250,0.00);
       }
     }
 
+    /* Attention pulse (no transform = no hover twitch) */
     @keyframes luxExpandAttention{
       0%{
-        transform: scale(1);
-        filter: brightness(1) drop-shadow(0 0 0 rgba(96,165,250,0));
+        filter: brightness(1.02);
+        box-shadow: 0 0 0 rgba(96,165,250,0.00);
       }
       55%{
-        transform: scale(1.14);
-        filter: brightness(1.25) drop-shadow(0 0 16px rgba(96,165,250,0.45));
+        filter: brightness(1.22);
+        box-shadow: 0 0 22px rgba(96,165,250,0.42);
       }
       100%{
-        transform: scale(1);
-        filter: brightness(1) drop-shadow(0 0 0 rgba(96,165,250,0));
-      }
-    }
-
-    /* Hover bulge is intentionally more dramatic than other controls */
-    @keyframes luxExpandBulge{
-      0%{
-        transform: scale(1);
-        filter: brightness(1);
-      }
-      60%{
-        transform: scale(1.26);
-        filter: brightness(1.18);
-      }
-      100%{
-        transform: scale(1.12);      /* stays a touch bigger while hovered */
-        filter: brightness(1.08);
+        filter: brightness(1.02);
+        box-shadow: 0 0 0 rgba(96,165,250,0.00);
       }
     }
 
