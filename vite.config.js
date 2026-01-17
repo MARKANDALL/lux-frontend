@@ -16,6 +16,7 @@ export default defineConfig({
         main: resolve(__dirname, "index.html"),
         convo: resolve(__dirname, "convo.html"),
         progress: resolve(__dirname, "progress.html"),
+        wordcloud: resolve(__dirname, "wordcloud.html"),
 
         adminIndex: resolve(__dirname, "admin/index.html"),
         adminOverview: resolve(__dirname, "admin/overview.html"),

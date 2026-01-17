@@ -1,0 +1,79 @@
+/* lux-wordcloud.css */
+
+.lux-wc-shell{
+  background: rgba(255,255,255,0.86);
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 16px;
+  box-shadow: 0 14px 42px rgba(0,0,0,0.10);
+  overflow: hidden;
+}
+
+.lux-wc-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap: 12px;
+  padding: 14px 14px 12px;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  background: linear-gradient(to bottom, rgba(255,255,255,0.9), rgba(248,250,252,0.85));
+}
+
+.lux-wc-title{
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: 0.2px;
+}
+
+.lux-wc-sub{
+  margin-top: 4px;
+  color: #64748b;
+  font-weight: 800;
+  font-size: 0.92rem;
+}
+
+.lux-wc-actions{
+  display:flex;
+  gap: 10px;
+  align-items:center;
+  flex-wrap: wrap;
+}
+
+.lux-wc-body{
+  padding: 14px;
+}
+
+.lux-wc-canvasWrap{
+  position: relative;
+  width: 100%;
+  height: min(520px, 62vh);
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 14px;
+  background: radial-gradient(circle at 30% 20%, rgba(219,234,254,0.55), rgba(255,255,255,0.92) 55%, rgba(254,243,199,0.25));
+  overflow: hidden;
+}
+
+.lux-wc-canvas{
+  width: 100%;
+  height: 100%;
+  display:block;
+}
+
+.lux-wc-legend{
+  margin-top: 12px;
+  display:flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items:center;
+  color:#64748b;
+  font-weight: 900;
+  font-size: 0.88rem;
+}
+
+.lux-wc-dot{
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  display:inline-block;
+  margin-right: 6px;
+  transform: translateY(1px);
+}

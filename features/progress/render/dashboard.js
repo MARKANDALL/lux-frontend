@@ -88,6 +88,9 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
 <button class="lux-pbtn" id="luxGenerateNextPractice" data-lux-generate-next>
   ✨ Generate my next practice
 </button>
+<button class="lux-pbtn lux-pbtn--ghost" id="luxOpenWordCloud">
+  ☁️ Word Cloud
+</button>
             <button class="lux-pbtn" id="luxDownloadReport">Download report</button>
             <button class="lux-pbtn lux-pbtn--ghost" id="luxDownloadTrouble">Download troubleshooting report</button>
           </div>
@@ -210,7 +213,7 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
                 }`
               )}">
                 <span>${esc(w.word)}</span>
-                <span class="lux-pill ${scoreClass(w.avg)}">${fmtScore(w.avg)}</span>
+                <span class="lux-pill ${scoreClass(w.avg)}">${fmtScore(p.avg)}</span>
               </span>
             `
                     )
@@ -403,6 +406,12 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
         window.location.assign("./convo.html#chat");
       });
     }
+
+    const wc = document.getElementById("luxOpenWordCloud");
+    if (wc)
+      wc.addEventListener("click", () => {
+        window.location.assign("./wordcloud.html");
+      });
 
     const dl = document.getElementById("luxDownloadReport");
     if (dl)

@@ -32,8 +32,12 @@
      FIX 2 — Closed “white card stub” reveal
      - Matches Self Playback behavior
      ========================================================================== */
-  --lux-tts-shell-h: 360px;          /* was 320px (optional bump) */
-  --lux-tts-shell-reveal: 44px;      /* was -12px (stub was invisible) */
+  --lux-tts-shell-h: 420px;        /* makes the blank card tall */
+  --lux-tts-shell-reveal: 88px;    /* makes the visible stub feel intentional */
+
+  --lux-tts-top-gap: 64px;        /* leaves space for Save Progress */
+  --lux-tts-tab-h: 38px;
+  --lux-tts-tab-protrude: 150px;  /* how far the tab sticks into the page */
 }
 
 /* ==========================================================================
@@ -41,11 +45,13 @@
    ========================================================================== */
 .lux-tts-panel {
   position: fixed;
-  inset: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) auto auto !important;
+  top: calc(env(safe-area-inset-top, 0) + var(--lux-tts-top-gap)) !important;
+  right: env(safe-area-inset-right, 0) !important;
+  left: auto !important;
+  bottom: auto !important;
   z-index: 9999;
 
   height: var(--lux-tts-shell-h);
-  min-height: 0 !important;
   max-height: var(--lux-tts-panel-max-h);
 
   width: var(--lux-tts-panel-w);
@@ -57,7 +63,7 @@
   border-bottom-left-radius: var(--lux-tts-radius);
   box-shadow: var(--lux-tts-shadow);
 
-  overflow: hidden;
+  overflow: visible;
 
   /* CLOSED: slide out, but leave a visible “stub” behind */
   transform: translate3d(calc(100% - var(--lux-tts-shell-reveal)), 0, 0);
@@ -68,6 +74,18 @@
 
 .lux-tts-open .lux-tts-panel {
   transform: translate3d(0, 0, 0);
+}
+
+/* --- CLOSED peek must have physical presence (blank white card) --- */
+html:not(.lux-tts-open) .lux-tts-panel{
+  min-height: 340px; /* tune: 300–420 depending on your open height */
+}
+
+.lux-tts-shell{
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
 }
 
 .lux-tts-panel #tts-controls {
@@ -84,17 +102,20 @@
 /* ==========================================================================
    FLOATING “PEEKABOO” TAB (Matched to SPB 0.18s)
    ========================================================================== */
-.lux-tts-tab {
-  position: fixed;
-  top: 14px;
-  right: 20px;
-  z-index: 10000;
+.lux-tts-tab{
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  left: calc(var(--lux-tts-tab-protrude) * -1);
+  width: auto;
+  height: var(--lux-tts-tab-h);
+  z-index: 2;
 
   display: inline-flex;
   align-items: center;
   justify-content: center;
 
-  padding: 10px 14px;
+  padding: 0 16px;
   border: 0;
   border-radius: 999px;
   background: var(--lux-tts-tab-bg);
@@ -105,14 +126,11 @@
   cursor: pointer;
 
   box-shadow: 0 6px 18px rgba(16, 130, 255, 0.28);
-
-  /* FIXED: 0.18s ease — EXACT match to Self Playback tab */
   transition: transform 0.18s ease, filter 0.18s ease;
   transform: translateZ(0);
   will-change: transform;
 
-  /* Keep label visible when the tab is “peeking” (panel closed) */
-  overflow: hidden; /* important for the inner slide */
+  overflow: hidden; /* keep your inner slide clean */
 }
 
 .lux-tts-tab-inner {
