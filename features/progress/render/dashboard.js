@@ -213,7 +213,7 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
                 }`
               )}">
                 <span>${esc(w.word)}</span>
-                <span class="lux-pill ${scoreClass(w.avg)}">${fmtScore(p.avg)}</span>
+                <span class="lux-pill ${scoreClass(w.avg)}">${fmtScore(w.avg)}</span>
               </span>
             `
                     )
