@@ -27,6 +27,13 @@
 
   --lux-ease-drawer: cubic-bezier(0.18, 0.9, 0.2, 1);
   --lux-ease-pop: cubic-bezier(0.18, 1.25, 0.2, 1);
+
+  /* ==========================================================================
+     FIX 2 — Closed “white card stub” reveal
+     - Matches Self Playback behavior
+     ========================================================================== */
+  --lux-tts-shell-h: 360px;          /* was 320px (optional bump) */
+  --lux-tts-shell-reveal: 44px;      /* was -12px (stub was invisible) */
 }
 
 /* ==========================================================================
@@ -36,18 +43,25 @@
   position: fixed;
   inset: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) auto auto !important;
   z-index: 9999;
-  height: auto !important;
+
+  height: var(--lux-tts-shell-h);
   min-height: 0 !important;
   max-height: var(--lux-tts-panel-max-h);
+
   width: var(--lux-tts-panel-w);
   max-width: var(--lux-tts-panel-max-w);
+
   background: #fff;
   border-left: var(--lux-tts-border);
   border-bottom: var(--lux-tts-border);
   border-bottom-left-radius: var(--lux-tts-radius);
   box-shadow: var(--lux-tts-shadow);
+
   overflow: hidden;
-  transform: translate3d(110%, 0, 0);
+
+  /* CLOSED: slide out, but leave a visible “stub” behind */
+  transform: translate3d(calc(100% - var(--lux-tts-shell-reveal)), 0, 0);
+
   transition: transform var(--lux-drawer-dur) var(--lux-ease-drawer);
   will-change: transform;
 }
@@ -64,7 +78,8 @@
 }
 
 .lux-tts-panel .tts-box { gap: 10px; }
-.lux-tts-panel, .lux-tts-panel * { box-sizing: border-box; }
+.lux-tts-panel,
+.lux-tts-panel * { box-sizing: border-box; }
 
 /* ==========================================================================
    FLOATING “PEEKABOO” TAB (Matched to SPB 0.18s)
@@ -74,50 +89,59 @@
   top: 14px;
   right: 20px;
   z-index: 10000;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
+
   padding: 10px 14px;
   border: 0;
   border-radius: 999px;
   background: var(--lux-tts-tab-bg);
   color: var(--lux-tts-tab-ink);
+
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
+
   box-shadow: 0 6px 18px rgba(16, 130, 255, 0.28);
-  
+
   /* FIXED: 0.18s ease — EXACT match to Self Playback tab */
   transition: transform 0.18s ease, filter 0.18s ease;
-  transform: translateZ(0); 
+  transform: translateZ(0);
   will-change: transform;
-}
 
-/* Keep label visible when the tab is “peeking” (panel closed) */
-.lux-tts-tab {
+  /* Keep label visible when the tab is “peeking” (panel closed) */
   overflow: hidden; /* important for the inner slide */
 }
 
-.lux-tts-tab-inner{
+.lux-tts-tab-inner {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+
   width: 100%;
   white-space: nowrap;
+
   transition: transform var(--lux-tab-dur) var(--lux-ease-pop);
   will-change: transform;
   box-sizing: border-box;
-  padding: 0 18px;            /* NEW */
+
+  padding: 0 18px;
 }
 
 /* OPEN => centered */
-html.lux-tts-open .lux-tts-tab-inner { transform: translateX(0); }
+html.lux-tts-open .lux-tts-tab-inner {
+  transform: translateX(0);
+}
 
 /* CLOSED => shift content toward the visible side (left side of the peeking tab) */
-html:not(.lux-tts-open) .lux-tts-tab-inner { transform: translateX(calc(-44% + 22px)); }
+html:not(.lux-tts-open) .lux-tts-tab-inner {
+  transform: translateX(calc(-44% + 22px));
+}
 
-.lux-tts-tab-icon{
+.lux-tts-tab-icon {
   display: inline-block;
   will-change: transform;
   transform-origin: 50% 50%;
@@ -128,6 +152,7 @@ html:not(.lux-tts-open) .lux-tts-tab-inner { transform: translateX(calc(-44% + 2
   60%  { transform: rotate(220deg); }  /* tiny overshoot */
   100% { transform: rotate(180deg); }
 }
+
 @keyframes luxTTSArrowClose {
   0%   { transform: rotate(180deg); }
   60%  { transform: rotate(-40deg); }  /* tiny overshoot */
@@ -138,19 +163,18 @@ html:not(.lux-tts-open) .lux-tts-tab-inner { transform: translateX(calc(-44% + 2
    CLOSED = ◀ (0deg), OPEN = ▶ (180deg)
    Force both directions to animate (wins against other rules). */
 html.lux-tts-open .lux-tts-tab .lux-tts-tab-icon,
-.lux-tts-tab[aria-expanded="true"] .lux-tts-tab-icon{
+.lux-tts-tab[aria-expanded="true"] .lux-tts-tab-icon {
   transform: rotate(180deg) !important;
   animation: luxTTSArrowOpen var(--lux-arrow-dur) var(--lux-ease-pop) both !important;
   animation-delay: var(--lux-arrow-delay) !important;
 }
 
 html:not(.lux-tts-open) .lux-tts-tab .lux-tts-tab-icon,
-.lux-tts-tab[aria-expanded="false"] .lux-tts-tab-icon{
+.lux-tts-tab[aria-expanded="false"] .lux-tts-tab-icon {
   transform: rotate(0deg) !important;
   animation: luxTTSArrowClose var(--lux-arrow-dur) var(--lux-ease-pop) both !important;
   animation-delay: var(--lux-arrow-delay) !important;
 }
-
 
 .lux-tts-tab:hover,
 .lux-tts-tab:focus-visible {
@@ -164,7 +188,9 @@ html:not(.lux-tts-open) .lux-tts-tab .lux-tts-tab-icon,
   filter: brightness(0.98);
 }
 
-.lux-tts-open .lux-tts-tab[aria-expanded="true"] { opacity: 0.95; }
+.lux-tts-open .lux-tts-tab[aria-expanded="true"] {
+  opacity: 0.95;
+}
 
 /* ==========================================================================
    NUDGE ANIMATION
@@ -173,6 +199,7 @@ html:not(.lux-tts-open) .lux-tts-tab .lux-tts-tab-icon,
   0%, 40%, 100% { box-shadow: 0 0 0 0 rgba(16,130,255,0); }
   20%, 60% { box-shadow: 0 0 0 10px rgba(16,130,255,0.12), 0 0 22px rgba(16,130,255,0.45); }
 }
+
 @keyframes luxTTSWiggle {
   0%, 100% { transform: translateX(0) rotate(0); }
   15% { transform: translateX(-3px) rotate(-2deg); }
@@ -181,23 +208,39 @@ html:not(.lux-tts-open) .lux-tts-tab .lux-tts-tab-icon,
   60% { transform: translateX(1px) rotate(0.8deg); }
   75% { transform: translateX(-1px) rotate(-0.6deg); }
 }
+
 .lux-tts-tab.lux-tts-nudge {
   animation: luxTTSGlow 1.4s ease-in-out, luxTTSWiggle 0.7s ease-in-out;
 }
 
-@media (prefers-reduced-motion: reduce){
+@media (prefers-reduced-motion: reduce) {
   .lux-tts-panel, .lux-sp-panel,
-  .lux-tts-tab-inner, .lux-sp-tab-inner{
+  .lux-tts-tab-inner, .lux-sp-tab-inner {
     transition: none !important;
   }
-  .lux-tts-tab-icon, .lux-sp-tab-icon{
+  .lux-tts-tab-icon, .lux-sp-tab-icon {
     animation: none !important;
   }
 }
 
 /* Responsive */
 @media (max-width: 480px) {
-  :root { --lux-tts-panel-w: 92vw; --lux-tts-panel-max-w: 92vw; --lux-tts-panel-max-h: min(82vh, 640px); }
-  .lux-tts-tab { right: 12px; top: 10px; padding: 8px 12px; font-size: 0.95rem; }
+  :root {
+    --lux-tts-panel-w: 92vw;
+    --lux-tts-panel-max-w: 92vw;
+    --lux-tts-panel-max-h: min(82vh, 640px);
+  }
+  .lux-tts-tab {
+    right: 12px;
+    top: 10px;
+    padding: 8px 12px;
+    font-size: 0.95rem;
+  }
 }
-@media print { .lux-tts-panel, .lux-tts-tab { display: none !important; } }
+
+@media print {
+  .lux-tts-panel,
+  .lux-tts-tab {
+    display: none !important;
+  }
+}

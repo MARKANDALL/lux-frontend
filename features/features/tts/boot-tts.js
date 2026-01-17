@@ -1,97 +1,107 @@
 // features/features/tts/boot-tts.js
-// Handles the "Peekaboo" drawer initialization.
-// v2: Idempotent - Ensures the TAB exists even if the panel was cached.
+// Peekaboo drawer initialization (TTS)
+// ✅ Uses EXISTING tts-peekaboo.css animation (text slides + arrow flips)
+// ✅ Loads ONLY the heavy player UI + inner TTS styling on first open
 
 const GUARD_ID = "lux-tts-guard-style";
+
+// Heavy inner styling (controls UI)
+const CSS_CORE = "/features/features/tts.css";
+
+function ensureCSS(href, contains = "") {
+  const needle = contains || href;
+  const has = [...document.styleSheets].some((ss) => (ss.href || "").includes(needle));
+  if (has) return;
+
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = href;
+  document.head.appendChild(link);
+}
+
+let _playerBooted = false;
 
 function ensurePanel() {
   const host = document.getElementById("tts-controls");
   if (!host) return false;
 
+  // ✅ Always start CLOSED (so closed-state CSS applies immediately)
+  document.documentElement.classList.remove("lux-tts-open");
+
+  // Panel container
   let panel = document.querySelector(".lux-tts-panel");
-  
-  // 1. Create Panel Shell if missing
   if (!panel) {
     panel = document.createElement("aside");
     panel.className = "lux-tts-panel";
     document.body.appendChild(panel);
   }
 
-  // 2. CRITICAL FIX: Ensure Tab Exists (Even if panel was already there)
+  // Shell (blank white card behind the tab)
+  let shell = panel.querySelector(".lux-tts-shell");
+  if (!shell) {
+    shell = document.createElement("div");
+    shell.className = "lux-tts-shell";
+    panel.appendChild(shell);
+  }
+
+  // Tab button (driven by tts-peekaboo.css)
   let tab = panel.querySelector(".lux-tts-tab");
   if (!tab) {
     tab = document.createElement("button");
     tab.className = "lux-tts-tab";
-    // UPDATED: HTML structure to match Self Playback (Icon + Text)
-    // Icon matches the "pull" direction (Left for a right-side panel)
-    tab.innerHTML = `
-      <span class="lux-tts-tab-inner">
-        <span class="lux-tts-tab-icon">◀</span>
-        <span class="lux-tts-tab-label">Text-to-Speech</span>
-      </span>
-    `;
+    tab.type = "button";
     tab.setAttribute("aria-expanded", "false");
     tab.setAttribute("aria-controls", "tts-controls");
-    
-    // Insert tab at the start of the panel
-    panel.prepend(tab); 
-    
-    // Wire Toggle Logic
-    tab.addEventListener("click", () => {
+
+    tab.innerHTML = `
+      <span class="lux-tts-tab-inner">
+        <span class="lux-tts-tab-label">Text-to-Speech</span>
+        <span class="lux-tts-tab-icon">◀</span>
+      </span>
+    `;
+
+    // Put tab BEFORE shell
+    panel.insertBefore(tab, shell);
+
+    tab.addEventListener("click", async () => {
       const willOpen = !document.documentElement.classList.contains("lux-tts-open");
       document.documentElement.classList.toggle("lux-tts-open", willOpen);
       tab.setAttribute("aria-expanded", String(willOpen));
+
+      // ✅ Lazy boot ONLY on first open
+      if (!willOpen || _playerBooted) return;
+      _playerBooted = true;
+
+      // Load inner control styling (NOT overlay positioning CSS)
+      ensureCSS(CSS_CORE, "tts.css");
+
+      try {
+        const mod = await import("./player-ui.js");
+        const mountHost = document.getElementById("tts-controls");
+        if (mod?.mountTTSPlayer) {
+          mod.mountTTSPlayer(mountHost);
+          console.info("[Lux] TTS Player mounted (lazy).");
+        }
+      } catch (e) {
+        console.warn("[Lux] TTS lazy mount failed:", e);
+        _playerBooted = false; // allow retry
+      }
     });
   }
 
-  // 3. Move host into panel if not already there
-  if (!panel.contains(host)) {
-    panel.appendChild(host);
-  }
+  // Ensure host lives inside the shell (this gives you the blank card when closed)
+  if (!shell.contains(host)) shell.appendChild(host);
 
-  // 4. Cleanup Guard & Show Loading
+  // Remove guard that hides it
   document.getElementById(GUARD_ID)?.remove();
   host.dataset.luxHidden = "0";
-  
-  if (!host.firstElementChild) {
-    const ph = document.createElement("div");
-    ph.className = "lux-tts-loading";
-    ph.textContent = "Loading Text-to-Speech…";
-    host.appendChild(ph);
-  }
-  
-  window.__ttsHost = host;
 
-  // 5. Expose Nudge API
-  window.luxTTS = Object.assign(window.luxTTS || {}, {
-    nudge() {
-      if (tab) {
-        tab.classList.remove("lux-tts-nudge");
-        void tab.offsetWidth; 
-        tab.classList.add("lux-tts-nudge");
-        setTimeout(() => tab.classList.remove("lux-tts-nudge"), 1400);
-      }
-    },
-  });
-
-  console.info("[Lux] TTS Peekaboo panel initialized.");
+  console.info("[Lux] TTS Peekaboo panel initialized (lazy).");
   return true;
 }
 
-async function lateMount() {
-  if (!ensurePanel()) return setTimeout(lateMount, 120);
-
-  try {
-    const mod = await import("./player-ui.js");
-    const host = window.__ttsHost || document.getElementById("tts-controls");
-    
-    if (mod?.mountTTSPlayer) {
-      mod.mountTTSPlayer(host);
-      console.info("[Lux] TTS Player logic mounted.");
-    }
-  } catch (e) {
-    console.warn("[Lux] TTS late mount failed:", e);
-  }
+function lateMount() {
+  if (!ensurePanel()) setTimeout(lateMount, 120);
 }
 
 export function bootTTS() {

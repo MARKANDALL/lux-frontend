@@ -55,12 +55,27 @@ function kv(label, val) {
   `;
 }
 
-function section(title, bodyHtml) {
+/* ============================================================================
+   Section helpers
+============================================================================ */
+
+/** Standard section block */
+function section(title, body) {
   return `
-    <div class="lux-metricSection">
-      <div class="lux-metricSection-h">${esc(title)}</div>
-      <div class="lux-metricSection-b">${bodyHtml}</div>
-    </div>
+    <section class="lux-metricSection">
+      <h3 class="lux-metricSectionTitle">${esc(title)}</h3>
+      <div class="lux-metricSectionBody">${body}</div>
+    </section>
+  `;
+}
+
+/** Collapsible (details/summary) section block */
+function sectionDetails(title, body, { open = false } = {}) {
+  return `
+    <details class="lux-metricSection lux-metricSection--details" ${open ? "open" : ""}>
+      <summary class="lux-metricSectionTitle">${esc(title)}</summary>
+      <div class="lux-metricSectionBody">${body}</div>
+    </details>
   `;
 }
 
@@ -95,6 +110,23 @@ export function buildModalHtml(metricKey, data) {
   const diff = deriveCompletenessDiff(referenceText, azure);
   const classSplit = derivePhonemeClassSplit(azure);
 
+  const score = meta.value;
+
+  // ✅ TOP BLOCK (with subtle meter bar)
+  const top = `
+    <div class="lux-metricTop">
+      <div class="lux-metricTitle">${esc(metricKey)}</div>
+      <div class="lux-metricScore">${esc(fmtPct(score))}</div>
+      <div class="lux-metricMeter" aria-hidden="true">
+        <div class="lux-metricMeterFill" style="width:${Math.max(
+          0,
+          Math.min(100, Number(score) || 0)
+        )}%"></div>
+      </div>
+      <div class="lux-metricBlurb">${esc(meta.blurb || "")}</div>
+    </div>
+  `;
+
   const explainerBlock = section("How this score is measured", explainMetric(metricKey));
 
   const uniqueBlock = section(
@@ -102,16 +134,17 @@ export function buildModalHtml(metricKey, data) {
     uniqueMetricPanel(metricKey, { pack, timing, errs, diff, classSplit })
   );
 
-  const interpretBlock = section("How to interpret it", interpretMetric(metricKey, pack));
+  // ✅ COLLAPSED BY DEFAULT (no “wall of text” on first glance)
+  const interpretBlock = sectionDetails(
+    "How to interpret it",
+    interpretMetric(metricKey, pack),
+    { open: false }
+  );
 
   const helpBlock = section("Need help?", helpCta(metricKey));
 
   return `
-    <div class="lux-metricTop">
-      <div class="lux-metricTitle">${esc(meta.title)}</div>
-      <div class="lux-metricBig">${esc(fmtPct(meta.value))}</div>
-      <div class="lux-metricBlurb">${esc(meta.blurb || "")}</div>
-    </div>
+    ${top}
 
     ${explainerBlock}
     ${uniqueBlock}
@@ -405,3 +438,4 @@ function helpCta(metricKey) {
     </button>
   `;
 }
+  

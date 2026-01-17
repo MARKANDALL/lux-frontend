@@ -1,5 +1,6 @@
 // features/harvard/index.js
 import { setPassage, updatePartsInfoTip } from "../passages/index.js";
+import { ensureHarvardPassages } from "../../src/data/index.js";
 
 function pad2(n) {
   return String(n).padStart(2, "0");
@@ -21,17 +22,38 @@ export function wireHarvardPicker() {
 
   if (!num || !prev || !next || !load || !rnd) return;
 
-  const apply = (raw) => {
-    const n = clamp(parseInt(raw, 10) || 1, 1, 72);
-    num.value = String(n);
+  const loadLabel = load?.textContent || "Load";
 
-    const key = harvardKey(n);
-    setPassage(key);
+  async function apply(raw) {
+    const n = clamp(parseInt(raw, 10) || 1, 1, 72);
+
+    if (num) num.value = String(n);
+    try {
+      localStorage.setItem("LUX_HARVARD_LAST", String(n));
+    } catch {}
+
+    // ✅ Lazy-load the big dataset ONLY when Harvard is actually requested
+    try {
+      if (load) {
+        load.disabled = true;
+        load.textContent = "Loading…";
+      }
+      await ensureHarvardPassages();
+    } catch (e) {
+      console.error("[Harvard] Failed to lazy-load Harvard lists", e);
+      return;
+    } finally {
+      if (load) {
+        load.disabled = false;
+        load.textContent = loadLabel;
+      }
+    }
+
+    setPassage(harvardKey(n));
     updatePartsInfoTip();
 
     if (out) out.textContent = `Loaded: Harvard List ${pad2(n)}`;
-    try { localStorage.setItem("LUX_HARVARD_LAST", String(n)); } catch {}
-  };
+  }
 
   // restore last used
   try {
@@ -40,10 +62,16 @@ export function wireHarvardPicker() {
   } catch {}
 
   load.addEventListener("click", () => apply(num.value));
-  num.addEventListener("keydown", (e) => { if (e.key === "Enter") apply(num.value); });
+  num.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") apply(num.value);
+  });
 
-  prev.addEventListener("click", () => apply((parseInt(num.value, 10) || 1) - 1));
-  next.addEventListener("click", () => apply((parseInt(num.value, 10) || 1) + 1));
+  prev.addEventListener("click", () =>
+    apply((parseInt(num.value, 10) || 1) - 1)
+  );
+  next.addEventListener("click", () =>
+    apply((parseInt(num.value, 10) || 1) + 1)
+  );
 
   rnd.addEventListener("click", () => {
     const n = Math.floor(Math.random() * 72) + 1;

@@ -5,9 +5,9 @@
   const OPEN_CLASS = "lux-sp-open";
   const PANEL_SEL = ".lux-sp-panel";
   const BODY_SEL = ".lux-sp-body";
-  const HOST_ID = "selfpb-lite"; 
+  const HOST_ID = "selfpb-lite";
   const CSS_HREF = "./features/features/selfpb-peekaboo.css";
-  
+
   let isLoaded = false;
   let isLoading = false;
 
@@ -61,59 +61,92 @@
 
     // If already open, just close it
     if (document.documentElement.classList.contains(OPEN_CLASS)) {
-        close();
-        return;
+      close();
+      return;
     }
 
     // If not loaded yet, load the heavy stuff
     if (!isLoaded) {
-        if (isLoading) return; // Prevent double-clicks
-        isLoading = true;
-        
-        // Show spinner
-        if(loader) loader.style.display = "block";
-        tab.style.opacity = "0.7";
+      if (isLoading) return; // Prevent double-clicks
+      isLoading = true;
 
-        try {
-            console.log("[Lux] Lazy-loading Self Playback...");
-            
-            // DYNAMIC IMPORT: This is where we save the CPU on page load!
-            const module = await import("./selfpb/ui.js");
-            
-            // Mount the heavy UI
-            if (module && module.mountSelfPlaybackLite) {
-                module.mountSelfPlaybackLite();
-            }
+      // Show spinner
+      if (loader) loader.style.display = "block";
+      tab.style.opacity = "0.7";
 
-            // Move the new host into our panel
-            const host = document.getElementById(HOST_ID);
-            const body = panel.querySelector(BODY_SEL);
-            
-            if (host && body) {
-                host.removeAttribute("style"); // Remove fixed positioning from the lite module
-                host.dataset.luxHidden = "0";
-                
-                // Ensure we don't duplicate if something weird happened
-                if (!body.contains(host)) {
-                    body.appendChild(host);
-                }
-            }
+      try {
+        console.log("[Lux] Lazy-loading Self Playback...");
 
-            // Hydrate audio if recording already happened (nudge the waveform)
-            const audioEl = document.getElementById("playbackAudio");
-            if (audioEl && audioEl.src) {
-                 audioEl.dispatchEvent(new Event("loadedmetadata"));
-            }
+        // ✅ 1) Ensure inner controls CSS only when opened (FIXED PATH)
+        (function ensureInnerCSS() {
+          const href = "/features/features/self-playback.css";
+          const has = [...document.styleSheets].some((ss) =>
+            (ss.href || "").includes("self-playback.css")
+          );
+          if (!has) {
+            const link = document.createElement("link");
+            link.rel = "stylesheet";
+            link.href = href;
+            document.head.appendChild(link);
+          }
+        })();
 
-            isLoaded = true;
-        } catch (e) {
-            console.error("Failed to load Self Playback:", e);
-            alert("Could not load audio tools. Please refresh.");
-        } finally {
-            isLoading = false;
-            if(loader) loader.style.display = "none";
-            tab.style.opacity = "1";
+        // ✅ 2) Lazy-load WaveSurfer ONLY now (FIXED PATH)
+        await (async function ensureWaveSurfer() {
+          const has = [...document.scripts].some((s) =>
+            (s.src || "").includes("wavesurfer-7.8.11.min.js")
+          );
+          if (has) return;
+
+          const src = "/vendor/wavesurfer-7.8.11.min.js";
+
+          await new Promise((resolve, reject) => {
+            const script = document.createElement("script");
+            script.src = src;
+            script.async = true;
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+          });
+        })();
+
+        // ✅ 3) Now import the heavy UI
+        const module = await import("./selfpb/ui.js");
+
+        // Mount the heavy UI
+        if (module && module.mountSelfPlaybackLite) {
+          module.mountSelfPlaybackLite();
         }
+
+        // Move the new host into our panel
+        const host = document.getElementById(HOST_ID);
+        const body = panel.querySelector(BODY_SEL);
+
+        if (host && body) {
+          host.removeAttribute("style"); // Remove fixed positioning from the lite module
+          host.dataset.luxHidden = "0";
+
+          // Ensure we don't duplicate if something weird happened
+          if (!body.contains(host)) {
+            body.appendChild(host);
+          }
+        }
+
+        // Hydrate audio if recording already happened (nudge the waveform)
+        const audioEl = document.getElementById("playbackAudio");
+        if (audioEl && audioEl.src) {
+          audioEl.dispatchEvent(new Event("loadedmetadata"));
+        }
+
+        isLoaded = true;
+      } catch (e) {
+        console.error("Failed to load Self Playback:", e);
+        alert("Could not load audio tools. Please refresh.");
+      } finally {
+        isLoading = false;
+        if (loader) loader.style.display = "none";
+        tab.style.opacity = "1";
+      }
     }
 
     open();
@@ -133,13 +166,16 @@
   }
 
   // Expose control API
-  window.luxSP = Object.assign(window.luxSP || {}, { open, close, toggle: handleToggle });
+  window.luxSP = Object.assign(window.luxSP || {}, {
+    open,
+    close,
+    toggle: handleToggle,
+  });
 
   // 5) Boot the Shell
   if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", buildShell);
+    document.addEventListener("DOMContentLoaded", buildShell);
   } else {
-      buildShell();
+    buildShell();
   }
-
 })();

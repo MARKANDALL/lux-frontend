@@ -3,31 +3,32 @@
 
 import { ensureUID } from "../api/identity.js";
 
-import { 
-  wirePassageSelect, 
+import {
+  wirePassageSelect,
   wireNextBtn
-} from '../features/passages/index.js';
+} from "../features/passages/index.js";
 
 import { wireHarvardPicker } from "../features/harvard/index.js";
 
-import { 
-  initLuxRecorder, 
-  wireRecordingButtons 
-} from '../features/recorder/index.js';
+import {
+  initLuxRecorder,
+  wireRecordingButtons
+} from "../features/recorder/index.js";
 
-import { 
-  showSummary 
-} from '../features/results/index.js';
+import {
+  showSummary
+} from "../features/results/index.js";
 
 import {
   allPartsResults,
   currentParts
-} from '../app-core/state.js';
+} from "../app-core/state.js";
 
-import { initAudioSink } from '../app-core/audio-sink.js';
+import { initAudioSink } from "../app-core/audio-sink.js";
+import { bootTTS } from "../features/features/tts/boot-tts.js";
 
 // NEW: Import the language change handler for auto-updates
-import { onLanguageChanged } from '../ui/ui-ai-ai-logic.js';
+import { onLanguageChanged } from "../ui/ui-ai-ai-logic.js";
 
 // Lazy-load controller for the Self-Playback drawer
 import "../features/features/08-selfpb-peekaboo.js";
@@ -36,20 +37,19 @@ import "../features/features/08-selfpb-peekaboo.js";
 import { maybeShowOnboarding } from "../features/onboarding/lux-onboarding.js";
 
 // Dashboard
-import { initDashboard } from '../features/dashboard/index.js'; 
+import { initDashboard } from "../features/dashboard/index.js";
 
 // Authentication (NEW)
-import { initAuthUI } from '../ui/auth-dom.js';
+import { initAuthUI } from "../ui/auth-dom.js";
 
 // Arrow trail (NEW)
 import { initArrowTrail } from "../ui/ui-arrow-trail.js";
 
-
-// --- VISUALS: Typewriter Effect --- 
-let typewriterTimeout; 
+// --- VISUALS: Typewriter Effect ---
+let typewriterTimeout;
 
 function startTypewriter() {
-  const input = document.getElementById('referenceText');
+  const input = document.getElementById("referenceText");
   if (!input) return;
 
   const phrases = [
@@ -79,7 +79,7 @@ function startTypewriter() {
     "Go over exactly what you'll say when you propose...",
     "Speech closer: “In short, here’s why...”"
   ];
-  
+
   let i = 0;
   let charIndex = 0;
   let isDeleting = false;
@@ -98,27 +98,27 @@ function startTypewriter() {
       charIndex++;
     }
 
-    input.setAttribute('placeholder', currentPhrase);
+    input.setAttribute("placeholder", currentPhrase);
 
-    let speed = 40; 
-    if (isDeleting) speed = 20; 
+    let speed = 40;
+    if (isDeleting) speed = 20;
 
     if (!isDeleting && charIndex === fullPhrase.length) {
-      speed = 2000; 
+      speed = 2000;
       isDeleting = true;
     } else if (isDeleting && charIndex === 0) {
       isDeleting = false;
       i = (i + 1) % phrases.length;
-      speed = 500; 
+      speed = 500;
     }
 
     typewriterTimeout = setTimeout(type, speed);
   }
-  
+
   type();
 }
 
-// --- MAIN BOOT SEQUENCE --- 
+// --- MAIN BOOT SEQUENCE ---
 async function bootApp() {
   console.log("[Lux] Booting features...");
 
@@ -128,63 +128,66 @@ async function bootApp() {
   // 1. Initialize Audio Infrastructure
   initAudioSink();
 
+  // ✅ Boot TTS panel (lazy player mount on open)
+  bootTTS();
+
   // 2. Setup Passages
-  wirePassageSelect();     
-  wireNextBtn();           
+  wirePassageSelect();
+  wireNextBtn();
 
   wireHarvardPicker(); // ✅ new
 
   // 3. Setup Dropdown Logic
-  const passageSelect = document.getElementById('passageSelect');
-  const textInput = document.getElementById('referenceText');
-  
+  const passageSelect = document.getElementById("passageSelect");
+  const textInput = document.getElementById("referenceText");
+
   // --- NEW: Wire up the Language Selector for Auto-Updates ---
-  const langSelect = document.getElementById('l1Select');
+  const langSelect = document.getElementById("l1Select");
   if (langSelect) {
-      langSelect.addEventListener('change', (e) => {
-          // Tell the AI logic that language changed immediately
-          onLanguageChanged(e.target.value);
-      });
+    langSelect.addEventListener("change", (e) => {
+      // Tell the AI logic that language changed immediately
+      onLanguageChanged(e.target.value);
+    });
   }
   // ----------------------------------------------------------
 
   if (passageSelect && textInput) {
-      passageSelect.addEventListener('change', (e) => {
-          const val = e.target.value;
-          if (val === 'write-own') {
-              textInput.value = "";
-              textInput.focus(); 
-          } else if (val === 'clear') {
-              textInput.value = "";
-              passageSelect.value = ""; 
-              textInput.blur(); 
-              startTypewriter(); 
-          }
-      });
+    passageSelect.addEventListener("change", (e) => {
+      const val = e.target.value;
+      if (val === "write-own") {
+        textInput.value = "";
+        textInput.focus();
+      } else if (val === "clear") {
+        textInput.value = "";
+        passageSelect.value = "";
+        textInput.blur();
+        startTypewriter();
+      }
+    });
 
-      textInput.addEventListener('focus', () => {
-          if(typewriterTimeout) clearTimeout(typewriterTimeout);
-          textInput.setAttribute('placeholder', "Type whatever you like here...");
-      });
-      
-      textInput.addEventListener('blur', () => {
-          if (textInput.value.trim() === "") {
-              startTypewriter();
-          }
-      });
+    textInput.addEventListener("focus", () => {
+      if (typewriterTimeout) clearTimeout(typewriterTimeout);
+      textInput.setAttribute("placeholder", "Type whatever you like here...");
+    });
+
+    textInput.addEventListener("blur", () => {
+      if (textInput.value.trim() === "") {
+        startTypewriter();
+      }
+    });
   }
 
   // 4. Setup Recorder
-  await initLuxRecorder(); 
+  await initLuxRecorder();
   wireRecordingButtons();
 
   // 5. Setup Summary Button
-  const summaryBtn = document.getElementById('showSummaryBtn');
+  const summaryBtn = document.getElementById("showSummaryBtn");
   if (summaryBtn) {
-    summaryBtn.addEventListener('click', () => {
-      showSummary({ 
-        allPartsResults: allPartsResults, 
-        currentParts: currentParts 
+    summaryBtn.addEventListener("click", () => {
+      showSummary({
+        allPartsResults: allPartsResults,
+        currentParts: currentParts
       });
     });
   }
@@ -215,13 +218,13 @@ async function bootApp() {
 
   // 7. Boot Dashboard
   await initDashboard();
-  
+
   // 8. Boot Authentication
   initAuthUI();
 
   // 9. Boot New Onboarding Deck (CSS is loaded via index.html <link>)
   maybeShowOnboarding();
-  
+
   console.log("[Lux] App fully initialized.");
 }
 
@@ -278,7 +281,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Load state
   let collapsed = false;
-  try { collapsed = localStorage.getItem("bannerCollapsed") === "true"; } catch {}
+  try {
+    collapsed = localStorage.getItem("bannerCollapsed") === "true";
+  } catch {}
   banner.classList.toggle("is-collapsed", collapsed);
 
   // If user previously collapsed it, we still want the handle visible immediately
@@ -286,7 +291,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const setCollapsed = (next) => {
     banner.classList.toggle("is-collapsed", !!next);
-    try { localStorage.setItem("bannerCollapsed", next ? "true" : "false"); } catch {}
+    try {
+      localStorage.setItem("bannerCollapsed", next ? "true" : "false");
+    } catch {}
 
     requestAnimationFrame(() => {
       updateTopBannerLayout();
@@ -308,8 +315,8 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // Run Boot
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', bootApp);
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", bootApp);
 } else {
   bootApp();
 }

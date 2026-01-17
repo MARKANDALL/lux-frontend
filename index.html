@@ -13,17 +13,15 @@
     <link rel="stylesheet" href="lux-widgets.css" />
     <link rel="stylesheet" href="lux-results.css" />
     <link rel="stylesheet" href="lux-progress.css" />
+<link rel="stylesheet" href="tts-peekaboo.css" />
+<link rel="stylesheet" href="/features/features/tts/tts-overlay.css" />
+
     <link
       href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap"
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="./features/features/tts-peekaboo.css" />
-    <link rel="stylesheet" href="./features/features/tts/tts-overlay.css" />
-    <link rel="stylesheet" href="./features/features/tts.css" />
-
-    <link rel="stylesheet" href="./features/features/selfpb-peekaboo.css" />
-    <link rel="stylesheet" href="./features/features/self-playback.css" />
+    <!-- Keep only core page CSS here -->
     <link rel="stylesheet" href="./ui/ui-arrow-trail.css" />
     <link rel="stylesheet" href="./ui/warp.css" />
 
@@ -32,8 +30,6 @@
         display: none !important;
       }
     </style>
-
-    <script src="./vendor/wavesurfer-7.8.11.min.js"></script>
 
     <script type="importmap">
       {
@@ -46,6 +42,7 @@
 
     <script src="lux-popover.js" defer></script>
   </head>
+
   <body>
     <!-- Top-of-viewport Tips Banner (fixed; tab remains clickable when collapsed) -->
     <div id="lux-top-banner" class="lux-top-banner" aria-label="Tips banner">
@@ -176,7 +173,7 @@
         <button id="harvardLoad" type="button">Load</button>
         <button id="harvardRandom" type="button">🎲</button>
 
-        <span id="harvardLoaded" style="margin-left:10px; font-size: 13px; opacity: 0.75;"></span>
+        <span id="harvardLoaded" style="margin-left: 10px; font-size: 13px; opacity: 0.75"></span>
       </div>
 
       <label style="display: block; margin-top: 14px">
@@ -201,7 +198,11 @@
 
       <label style="margin-top: 20px">
         <span id="typewriterMsg" style="display: block; margin-bottom: 0.7em"></span>
-        <textarea id="referenceText" placeholder="Paste or type everything you’ll read here." rows="3"></textarea>
+        <textarea
+          id="referenceText"
+          placeholder="Paste or type everything you’ll read here."
+          rows="3"
+        ></textarea>
       </label>
 
       <div id="ghostControls">
@@ -215,6 +216,7 @@
       <div class="btn-group">
         <button id="record" data-lux-record>
           <span class="lux-recLabel">Record</span>
+
           <!-- Mic level visualizer (shown only while recording) -->
           <span class="lux-recViz" aria-hidden="true">
             <span class="lux-recBar"></span>
@@ -245,13 +247,18 @@
             <div class="lux-progress-drawer-mini">Tap to open</div>
           </div>
         </summary>
+
         <div class="lux-progress-drawer-body">
           <div id="aiFeedbackSection">
             <div id="aiFeedback"></div>
           </div>
         </div>
       </details>
-      <button id="showMoreBtn" style="display: none; margin: 1em auto; padding: 0.7em 1.3em; font-size: 1em;">
+
+      <button
+        id="showMoreBtn"
+        style="display: none; margin: 1em auto; padding: 0.7em 1.3em; font-size: 1em"
+      >
         Show More
       </button>
 
@@ -268,32 +275,32 @@
           loop
           autoplay
         ></video>
-        <div id="unmuteTip" style="display:none;">🔊 Click to unmute</div>
+        <div id="unmuteTip" style="display: none">🔊 Click to unmute</div>
       </div>
 
       <div id="phPreview">
         <video
           id="phDemo"
           src="https://video.wixstatic.com/video/0d5d6f_e100780f16524e51bd9c8e49f1c8c71c/480p/mp4/file.mp4"
-          style="width: 100%; height: 100%; display: block; object-fit: contain; background: #000;"
+          style="
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: contain;
+            background: #000;
+          "
           muted
           playsinline
           loop
           preload="metadata"
         ></video>
-        <div id="phUnmuteTip" style="display:none;">🔊 Click to toggle audio</div>
+        <div id="phUnmuteTip" style="display: none">🔊 Click to toggle audio</div>
       </div>
     </div>
 
     <div id="tts-controls" data-luxHidden="1"></div>
 
     <script type="module" src="./src/main.js"></script>
-
-    <script type="module">
-      import { bootTTS } from './features/features/tts/boot-tts.js';
-      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootTTS);
-      else bootTTS();
-    </script>
 
     <script>
       window.typeWriter = window.typeWriter || function () {};
@@ -306,9 +313,16 @@
       height="0"
       aria-hidden="true"
       focusable="false"
-      style="position:absolute; width:0; height:0; overflow:hidden"
+      style="position: absolute; width: 0; height: 0; overflow: hidden"
     >
-      <filter id="luxCoronaFlare" x="-70%" y="-70%" width="240%" height="240%" color-interpolation-filters="sRGB">
+      <filter
+        id="luxCoronaFlare"
+        x="-70%"
+        y="-70%"
+        width="240%"
+        height="240%"
+        color-interpolation-filters="sRGB"
+      >
         <!-- Base “slow drift” noise -->
         <feTurbulence type="fractalNoise" baseFrequency="0.010" numOctaves="2" seed="9" result="n1">
           <animate attributeName="baseFrequency" dur="8.0s" values="0.008;0.014;0.010" repeatCount="indefinite" />
@@ -331,7 +345,6 @@
         <!-- Turn noise into an alpha “flare mask” with high contrast (patchy, not uniform) -->
         <feColorMatrix in="noise" type="luminanceToAlpha" result="noiseA" />
         <feComponentTransfer in="noiseA" result="flareMask">
-          <!-- table values = threshold-ish; tweak middle to change how “spotty” it is -->
           <feFuncA type="table" tableValues="0 0 0 0.05 0.18 0.75 1 1" />
         </feComponentTransfer>
 
@@ -351,7 +364,14 @@
         </feDisplacementMap>
 
         <!-- Base wobble for the whole halo (subtler than the flares) -->
-        <feDisplacementMap in="fat" in2="noise" scale="22" xChannelSelector="R" yChannelSelector="G" result="baseDisp">
+        <feDisplacementMap
+          in="fat"
+          in2="noise"
+          scale="22"
+          xChannelSelector="R"
+          yChannelSelector="G"
+          result="baseDisp"
+        >
           <animate attributeName="scale" dur="2.6s" values="14;28;18;24;16" repeatCount="indefinite" />
         </feDisplacementMap>
 
