@@ -24,6 +24,9 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
   const showActions = opts.showActions !== false; // default true
   const showCoach = !!opts.showCoach;
 
+  // ✅ NEW (All Data-only): metric trends section (acc/flu/comp/pron)
+  const showMetricTrends = !!opts.showMetricTrends && !!model?.metrics;
+
   const topPh = (trouble.phonemesAll || []).slice(0, 12);
   const topWd = (trouble.wordsAll || []).slice(0, 12);
 
@@ -113,6 +116,27 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
         </div>
       </div>
 
+      ${
+        showMetricTrends
+          ? `
+      <details class="lux-progress-sec" open>
+        <summary>📈 Score trends (by category)</summary>
+        <div class="lux-sec-body">
+          <div class="lux-metricTrendsGrid">
+            ${renderMetricTrendCard(model.metrics.acc)}
+            ${renderMetricTrendCard(model.metrics.flu)}
+            ${renderMetricTrendCard(model.metrics.comp)}
+            ${renderMetricTrendCard(model.metrics.pron)}
+          </div>
+          <div class="lux-metricTrendsNote">
+            Prosody trend will be added once we store/compute it.
+          </div>
+        </div>
+      </details>
+      `
+          : ``
+      }
+
       <details class="lux-progress-sec" open>
         <summary>🎯 Snapshot</summary>
         <div class="lux-sec-body">
@@ -120,8 +144,8 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
             <div class="lux-kv">
               <div class="lux-k">Best day</div>
               <div class="lux-v">${fmtDate(totals.bestDayTS)} · ${
-    totals.bestDayScore == null ? "—" : fmtScore(totals.bestDayScore)
-  }</div>
+                totals.bestDayScore == null ? "—" : fmtScore(totals.bestDayScore)
+              }</div>
             </div>
             <div class="lux-kv">
               <div class="lux-k">Most practiced</div>
@@ -394,4 +418,27 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
         downloadBlob(name, JSON.stringify({ attempts }, null, 2), "application/json");
       });
   }
+}
+
+function renderMetricTrendCard(m) {
+  if (!m) return "";
+  const fmtPct = (v) =>
+    v == null || !Number.isFinite(+v) ? "—" : `${Math.round(+v)}%`;
+  const best =
+    m.bestDay?.avg != null ? `${m.bestDay.day} • ${fmtPct(m.bestDay.avg)}` : "—";
+
+  return `
+    <div class="lux-pcard lux-metricTrendCard">
+      <div class="lux-metricTrendTop">
+        <div class="lux-pcard-label">${esc(m.label)}</div>
+        <div class="lux-metricTrendValue">${fmtPct(m.avg30)}</div>
+      </div>
+      <div class="lux-spark">${sparklineSvg(m.trend || [], { width: 240, height: 42 })}</div>
+      <div class="lux-metricTrendMeta">
+        <span>Last: <b>${fmtPct(m.last)}</b></span>
+        <span>7d: <b>${fmtPct(m.avg7)}</b></span>
+        <span>Best: <b>${best}</b></span>
+      </div>
+    </div>
+  `;
 }

@@ -187,14 +187,59 @@
   opacity: 0.92;
 }
 
+/* =========================================================
+   NEW: Metric trends grid + card meta
+   ========================================================= */
+
+.lux-metricTrendsGrid{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.lux-metricTrendCard .lux-spark{
+  margin-top: 8px;
+}
+
+.lux-metricTrendTop{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.lux-metricTrendValue{
+  font-weight: 900;
+  font-size: 1.1rem;
+  color:#0f172a;
+}
+
+.lux-metricTrendMeta{
+  margin-top: 10px;
+  display:flex;
+  flex-wrap:wrap;
+  gap: 10px;
+  color:#64748b;
+  font-size: 0.9rem;
+}
+
+.lux-metricTrendsNote{
+  margin-top: 10px;
+  color:#64748b;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
 .lux-mini-progress{
   max-width: 1100px;
   margin: 18px auto 0;
   padding: 0 16px;
 }
+
 /* =========================================================
    My Progress Drawer (collapsed on main pages)
    ========================================================= */
+
 .lux-progress-drawer{
   max-width: 1100px;
   margin: 18px auto 0;
@@ -278,6 +323,7 @@
 /* =========================================================
    History drill-in (👉) detail cards
    ========================================================= */
+
 .lux-hright{
   display: flex;
   align-items: center;
@@ -378,6 +424,7 @@
 /* =========================================================
    AI Coach drawer (collapsed on load)
    ========================================================= */
+
 .lux-ai-drawer > summary::-webkit-details-marker{ display:none; }
 .lux-ai-drawer > summary::marker{ content:""; }
 

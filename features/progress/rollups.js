@@ -43,7 +43,9 @@ function pickTS(attempt) {
 function localDayKey(ts) {
   const d = new Date(ts);
   // "en-CA" gives YYYY-MM-DD in most browsers
-  try { return d.toLocaleDateString("en-CA"); } catch (_) {}
+  try {
+    return d.toLocaleDateString("en-CA");
+  } catch (_) {}
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const da = String(d.getDate()).padStart(2, "0");
@@ -62,9 +64,9 @@ function priorityFromFull({ avg, count, daysSeen, lastTS }) {
   const c = Number.isFinite(count) ? count : 0;
   const ds = Number.isFinite(daysSeen) ? daysSeen : 0;
 
-  const errorRate = Math.max(0, Math.min(1, (100 - a) / 100));     // 0..1
-  const exposure = Math.log1p(Math.max(0, c));                     // grows slowly
-  const persistence = Math.min(1, ds / 5);                         // 1.0 at 5 days
+  const errorRate = Math.max(0, Math.min(1, (100 - a) / 100)); // 0..1
+  const exposure = Math.log1p(Math.max(0, c)); // grows slowly
+  const persistence = Math.min(1, ds / 5); // 1.0 at 5 days
   const recency = 0.3 + 0.7 * Math.exp(-daysAgoFrom(lastTS) / 14); // never hits 0
 
   return errorRate * exposure * persistence * recency;
@@ -88,8 +90,12 @@ export function computeRollups(attempts = [], opts = {}) {
   const minWordCountRaw = Number(opts.minWordCount);
   const minPhonCountRaw = Number(opts.minPhonCount);
 
-  const minWordCount = Number.isFinite(minWordCountRaw) ? Math.max(1, Math.floor(minWordCountRaw)) : 2;
-  const minPhonCount = Number.isFinite(minPhonCountRaw) ? Math.max(1, Math.floor(minPhonCountRaw)) : 3;
+  const minWordCount = Number.isFinite(minWordCountRaw)
+    ? Math.max(1, Math.floor(minWordCountRaw))
+    : 2;
+  const minPhonCount = Number.isFinite(minPhonCountRaw)
+    ? Math.max(1, Math.floor(minPhonCountRaw))
+    : 3;
 
   const phon = new Map(); // ipa -> {ipa,count,sum,examples:Set,days:Set,lastTS,lowCount}
   const words = new Map(); // word -> {word,count,sum,days:Set,lastTS}
@@ -99,6 +105,16 @@ export function computeRollups(attempts = [], opts = {}) {
 
   const phonDays = new Map(); // ipa -> Set(dayKey)
   const wordDays = new Map(); // word -> Set(dayKey)
+
+  // Plan A: metric-specific trend capture (Prosody later)
+  const METRICS = [
+    ["acc", "Accuracy"],
+    ["flu", "Fluency"],
+    ["comp", "Completeness"],
+    ["pron", "Pronunciation"],
+  ];
+  const byDayMetric = Object.fromEntries(METRICS.map(([k]) => [k, new Map()])); // k -> Map(dayKey -> {count,sum})
+  const seriesMetric = Object.fromEntries(METRICS.map(([k]) => [k, []])); // k -> [{ts,v}]
 
   let lastTS = 0;
   let scoreSum = 0;
@@ -113,7 +129,7 @@ export function computeRollups(attempts = [], opts = {}) {
     scoreSum += score;
     scoreCount += 1;
 
-    // Trend
+    // Trend (overall)
     const day = localDayKey(ts);
     const dayAgg = byDay.get(day) || { count: 0, sum: 0 };
     dayAgg.count += 1;
@@ -124,10 +140,33 @@ export function computeRollups(attempts = [], opts = {}) {
     const sid = pickSessionId(a) || `nosess:${day}`;
     const pk = pickPassageKey(a);
     const sum = pickSummary(a);
-    const hasAI = !!(sum && sum.ai_feedback && sum.ai_feedback.sections && sum.ai_feedback.sections.length);
+    const hasAI = !!(
+      sum &&
+      sum.ai_feedback &&
+      sum.ai_feedback.sections &&
+      sum.ai_feedback.sections.length
+    );
+
+    // metric trends: acc / flu / comp / pron
+    for (const [k] of METRICS) {
+      const v = num(sum?.[k]);
+      if (v == null) continue;
+
+      const aggM = byDayMetric[k].get(day) || { count: 0, sum: 0 };
+      aggM.count += 1;
+      aggM.sum += v;
+      byDayMetric[k].set(day, aggM);
+
+      seriesMetric[k].push({ ts: tsNum, v });
+    }
 
     // Snapshot: most-practiced passage across these attempts
-    const pAgg = byPassage.get(pk) || { passageKey: pk, count: 0, sumScore: 0, lastTS: 0 };
+    const pAgg = byPassage.get(pk) || {
+      passageKey: pk,
+      count: 0,
+      sumScore: 0,
+      lastTS: 0,
+    };
     pAgg.count += 1;
     pAgg.sumScore += score;
     pAgg.lastTS = Math.max(pAgg.lastTS, +new Date(ts));
@@ -164,7 +203,14 @@ export function computeRollups(attempts = [], opts = {}) {
 
         const wScore = num(w?.AccuracyScore);
         if (wScore != null) {
-          const wAgg = words.get(word) || { word, count: 0, sum: 0, days: new Set(), lastTS: 0 };
+          const wAgg =
+            words.get(word) || {
+              word,
+              count: 0,
+              sum: 0,
+              days: new Set(),
+              lastTS: 0,
+            };
           wAgg.count += 1;
           wAgg.sum += wScore;
           wAgg.days.add(day);
@@ -188,8 +234,15 @@ export function computeRollups(attempts = [], opts = {}) {
           if (pScore == null) continue;
 
           const pAgg =
-            phon.get(ipa) ||
-            { ipa, count: 0, sum: 0, examples: new Set(), days: new Set(), lastTS: 0, lowCount: 0 };
+            phon.get(ipa) || {
+              ipa,
+              count: 0,
+              sum: 0,
+              examples: new Set(),
+              days: new Set(),
+              lastTS: 0,
+              lowCount: 0,
+            };
 
           pAgg.count += 1;
           pAgg.sum += pScore;
@@ -220,7 +273,14 @@ export function computeRollups(attempts = [], opts = {}) {
         const cnt = Number.isFinite(cntRaw) && cntRaw > 0 ? cntRaw : 1;
         if (!word || avg == null) continue;
 
-        const wAgg = words.get(word) || { word, count: 0, sum: 0, days: new Set(), lastTS: 0 };
+        const wAgg =
+          words.get(word) || {
+            word,
+            count: 0,
+            sum: 0,
+            days: new Set(),
+            lastTS: 0,
+          };
         wAgg.count += cnt;
         wAgg.sum += avg * cnt;
         wAgg.days.add(day);
@@ -236,14 +296,22 @@ export function computeRollups(attempts = [], opts = {}) {
       const phStats = sum?.stats?.phonemes;
       if (phStats && typeof phStats === "object") {
         for (const [rawIpa, v] of Object.entries(phStats)) {
-          const ipa = norm(String(rawIpa || "").trim()) || String(rawIpa || "").trim();
+          const ipa =
+            norm(String(rawIpa || "").trim()) || String(rawIpa || "").trim();
           const occ = Number(v?.occ);
           const avg = num(v?.avg);
           if (!ipa || !Number.isFinite(occ) || occ <= 0 || avg == null) continue;
 
           const pAgg =
-            phon.get(ipa) ||
-            { ipa, count: 0, sum: 0, examples: new Set(), days: new Set(), lastTS: 0, lowCount: 0 };
+            phon.get(ipa) || {
+              ipa,
+              count: 0,
+              sum: 0,
+              examples: new Set(),
+              days: new Set(),
+              lastTS: 0,
+              lowCount: 0,
+            };
 
           pAgg.count += occ;
           pAgg.sum += avg * occ;
@@ -271,8 +339,15 @@ export function computeRollups(attempts = [], opts = {}) {
           const ipa = norm(raw) || raw;
 
           const pAgg =
-            phon.get(ipa) ||
-            { ipa, count: 0, sum: 0, examples: new Set(), days: new Set(), lastTS: 0, lowCount: 0 };
+            phon.get(ipa) || {
+              ipa,
+              count: 0,
+              sum: 0,
+              examples: new Set(),
+              days: new Set(),
+              lastTS: 0,
+              lowCount: 0,
+            };
 
           pAgg.count += 1;
           pAgg.sum += pScore;
@@ -306,7 +381,9 @@ export function computeRollups(attempts = [], opts = {}) {
 
   let bestDayTS = null;
   if (bestDayKey) {
-    const [yy, mm, dd] = String(bestDayKey).split("-").map((x) => Number(x));
+    const [yy, mm, dd] = String(bestDayKey)
+      .split("-")
+      .map((x) => Number(x));
     if (yy && mm && dd) bestDayTS = +new Date(yy, mm - 1, dd);
   }
 
@@ -330,15 +407,18 @@ export function computeRollups(attempts = [], opts = {}) {
         count: x.count,
         avg,
         days,
-        priority: priorityFromFull({ avg, count: x.count, daysSeen: days, lastTS: x.lastTS }),
+        priority: priorityFromFull({
+          avg,
+          count: x.count,
+          daysSeen: days,
+          lastTS: x.lastTS,
+        }),
         examples: Array.from(x.examples || []).slice(0, 3),
       };
     })
     .filter((x) => x.count >= minPhonCount)
-    .sort((a, b) =>
-      (b.priority - a.priority) ||
-      (a.avg - b.avg) ||
-      (b.count - a.count)
+    .sort(
+      (a, b) => b.priority - a.priority || a.avg - b.avg || b.count - a.count
     );
 
   const troubleWordsAll = Array.from(words.values())
@@ -350,17 +430,20 @@ export function computeRollups(attempts = [], opts = {}) {
         count: x.count,
         avg,
         days,
-        priority: priorityFromFull({ avg, count: x.count, daysSeen: days, lastTS: x.lastTS }),
+        priority: priorityFromFull({
+          avg,
+          count: x.count,
+          daysSeen: days,
+          lastTS: x.lastTS,
+        }),
       };
     })
     .filter((x) => x.count >= minWordCount)
-    .sort((a, b) =>
-      (b.priority - a.priority) ||
-      (a.avg - b.avg) ||
-      (b.count - a.count)
+    .sort(
+      (a, b) => b.priority - a.priority || a.avg - b.avg || b.count - a.count
     );
 
-  // Trend points (last windowDays)
+  // Trend points (last windowDays) — overall score
   const now = new Date();
   const days = [];
   for (let i = windowDays - 1; i >= 0; i--) {
@@ -372,6 +455,58 @@ export function computeRollups(attempts = [], opts = {}) {
       avg: agg ? agg.sum / agg.count : null,
     });
   }
+
+  // Build metric rollups: { acc:{label,trend[],avg7,avg30,last,bestDay}, ... }
+  const buildMetric = (k, label) => {
+    const pts = [];
+    const nowMs = Date.now();
+
+    for (let i = windowDays - 1; i >= 0; i--) {
+      const d = new Date(nowMs - i * 86400000);
+      const key = localDayKey(d);
+      const agg = byDayMetric[k].get(key);
+      const avg = agg && agg.count ? agg.sum / agg.count : null;
+      pts.push({ day: key, avg });
+    }
+
+    const vals30 = pts.map((p) => num(p.avg)).filter((v) => v != null);
+    const avg30 = vals30.length
+      ? vals30.reduce((a, b) => a + b, 0) / vals30.length
+      : null;
+
+    const vals7 = pts
+      .slice(-7)
+      .map((p) => num(p.avg))
+      .filter((v) => v != null);
+    const avg7 = vals7.length
+      ? vals7.reduce((a, b) => a + b, 0) / vals7.length
+      : null;
+
+    let bestDay = null;
+    for (const p of pts) {
+      const v = num(p.avg);
+      if (v == null) continue;
+      if (!bestDay || v > bestDay.avg) bestDay = { day: p.day, avg: v };
+    }
+
+    const series = (seriesMetric[k] || [])
+      .slice()
+      .sort((a, b) => (b.ts || 0) - (a.ts || 0));
+    const last = series.length ? num(series[0].v) : null;
+
+    return {
+      label,
+      trend: pts.map((p) => ({ avg: p.avg ?? null })),
+      avg7,
+      avg30,
+      last,
+      bestDay,
+    };
+  };
+
+  const metrics = Object.fromEntries(
+    METRICS.map(([k, label]) => [k, buildMetric(k, label)])
+  );
 
   const sessionArr = Array.from(sessions.values())
     .map((s) => ({
@@ -398,6 +533,7 @@ export function computeRollups(attempts = [], opts = {}) {
       wordsAll: troubleWordsAll,
     },
     trend: days,
+    metrics, // ✅ NEW STRUCTURE
     sessions: sessionArr,
   };
 }

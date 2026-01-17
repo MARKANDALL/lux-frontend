@@ -65,6 +65,8 @@ export async function refreshHistory() {
         title: "My Progress",
         subtitle: "Practice Results (word + phoneme practice)",
         showActions: false,
+        // IMPORTANT: drawer should NOT show category trend grid
+        // showMetricTrends: false (default)
       });
     }
   } catch (err) {
@@ -86,6 +88,8 @@ async function loadAndRenderHub(root) {
       subtitle: "All practice (Pronunciation + AI Conversations)",
       showActions: true,
       showCoach: true,
+      // ✅ ONLY the All Data page gets the new category trend block
+      showMetricTrends: true,
     });
 
     // Always-on AI Coach shell (shows immediately, even before any clicks)
@@ -195,6 +199,8 @@ export async function initDashboard() {
           title: "My Progress",
           subtitle: "Practice Results (word + phoneme practice)",
           showActions: false,
+          // IMPORTANT: drawer should NOT show category trend grid
+          // showMetricTrends: false (default)
         });
       }
     } catch (err) {
