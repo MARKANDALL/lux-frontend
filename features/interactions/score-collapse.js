@@ -16,7 +16,12 @@ export function initScoreErrorCollapse() {
     const cell = e.target.closest("td,th");
     const table = cell && cell.closest("table");
     if (!cell || !table || !Number.isInteger(cell.cellIndex)) return;
-    if (cell.cellIndex === 1) table.classList.toggle("collapsed-score");
-    else if (cell.cellIndex === 2) table.classList.toggle("collapsed-error");
+
+    const hasSyllables = !!table.querySelector("#syllableHeader");
+    const scoreIdx = hasSyllables ? 2 : 1;
+    const errorIdx = hasSyllables ? 3 : 2;
+
+    if (cell.cellIndex === scoreIdx) table.classList.toggle("collapsed-score");
+    else if (cell.cellIndex === errorIdx) table.classList.toggle("collapsed-error");
   });
 }

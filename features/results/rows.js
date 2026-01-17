@@ -12,6 +12,7 @@ import { scoreClass } from "../../core/scoring/index.js";
 
 // Logic import
 import { calculateWordStats } from "./rows-logic.js";
+import { renderSyllableStrip } from "./syllables.js";
 
 // View helper imports
 import { renderProsodyRibbon } from "./deps.js";
@@ -32,6 +33,8 @@ export function buildRows(words, timings, med) {
         typeof renderProsodyRibbon === "function"
           ? renderProsodyRibbon(i, words, timings, med)
           : "";
+
+      const syllablesHtml = renderSyllableStrip(word);
 
       // 3. Render Phonemes (CLEAN VERSION)
       // We do NOT render .tooltiptext or <video> here anymore.
@@ -76,7 +79,12 @@ export function buildRows(words, timings, med) {
               ${word.Word}
             </a>
           </td>
-          <td>${
+
+          <td class="syllable-cell">
+            ${syllablesHtml}
+          </td>
+
+          <td class="score-cell">${
             word.AccuracyScore !== undefined
               ? `${rawScore}%` +
                 (penalty
@@ -84,7 +92,7 @@ export function buildRows(words, timings, med) {
                   : "")
               : "–"
           }</td>
-          <td>${errText || ""}</td>
+          <td class="error-cell">${errText || ""}</td>
           <td>
             <div style="display:flex; flex-wrap:wrap; gap:6px; justify-content:center;">
               ${phonemesHtml}

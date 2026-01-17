@@ -78,6 +78,11 @@ export function ensureHeader(data) {
             <th id="wordHeader">
               <span class="word-chip clickable">Word</span>
             </th>
+
+            <th id="syllableHeader">
+              <span class="word-chip syllable-chip">Syllable</span>
+            </th>
+
             <th id="scoreHeader" class="toggle-col">
               Score ▸
             </th>

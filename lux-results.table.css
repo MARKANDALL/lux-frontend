@@ -41,39 +41,55 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   text-overflow: clip !important;
 }
 
-/* Collapsed States: fully hide Score/Error BODY cells so they can't stack text */
-#prettyResult table.collapsed-score td:nth-child(2),
-#prettyResult table.collapsed-error td:nth-child(3) {
+/* ============================================================
+   Score + Error collapse (CLASS-BASED = robust after new columns)
+   ============================================================ */
+
+/* Prevent that “vertical letter stacking” look */
+#prettyResult td.score-cell,
+#prettyResult td.error-cell,
+#prettyResult th#scoreHeader,
+#prettyResult th#errorHeader{
+  white-space: nowrap !important;
+}
+
+/* COLLAPSED: hide the body cells */
+#prettyResult table.collapsed-score td.score-cell,
+#prettyResult table.collapsed-error td.error-cell{
   width: 0 !important;
   min-width: 0 !important;
   max-width: 0 !important;
   padding: 0 !important;
-  overflow: hidden !important;
-
-  /* critical: remove text height so rows stop ballooning */
-  font-size: 0 !important;
-  line-height: 0 !important;
   opacity: 0 !important;
-
   pointer-events: none !important;
-  white-space: nowrap !important;
+  font-size: 0 !important;
+  border-left: none;
+  border-right: none;
 }
 
-/* Open States */
-#prettyResult table:not(.collapsed-score) th#scoreHeader,
-#prettyResult table:not(.collapsed-score) td:nth-child(2),
-#prettyResult table:not(.collapsed-error) th#errorHeader,
-#prettyResult table:not(.collapsed-error) td:nth-child(3) {
-  width: 110px;
-  min-width: 80px;
-  max-width: 160px;
-  padding-left: 10px;
-  padding-right: 10px;
-  opacity: 1;
+/* OPEN: restore the body cells */
+#prettyResult table:not(.collapsed-score) td.score-cell,
+#prettyResult table:not(.collapsed-score) th#scoreHeader{
+  width: 110px !important;
+  min-width: 85px !important;
+  max-width: 140px !important;
+  padding: 10px !important;
+  opacity: 1 !important;
+  font-size: 1em !important;
 }
 
-#prettyResult .score-table td:nth-child(2),
-#prettyResult .score-table td:nth-child(3) { cursor: pointer; }
+#prettyResult table:not(.collapsed-error) td.error-cell,
+#prettyResult table:not(.collapsed-error) th#errorHeader{
+  width: 170px !important;
+  min-width: 140px !important;
+  max-width: 220px !important;
+  padding: 10px !important;
+  opacity: 1 !important;
+  font-size: 1em !important;
+}
+
+#prettyResult .score-table td.score-cell,
+#prettyResult .score-table td.error-cell { cursor: pointer; }
 
 /* ============================================================
    Collapsible Word & Phoneme columns (NEW)
@@ -126,7 +142,7 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
 
 /* Collapse the body cells */
 #prettyResult table.collapsed-word td:nth-child(1),
-#prettyResult table.collapsed-phoneme td:nth-child(4) {
+#prettyResult table.collapsed-phoneme td:nth-child(5) {
   width: 0 !important;
   min-width: 0 !important;
   max-width: 0 !important;
@@ -188,15 +204,98 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   transform: rotate(0deg);
 }
 
-#wordHeader, #phonemeHeader {
-  background: #f3f7fa; border: 1px solid #bbb; padding: 18px 0;
-  display: flex; justify-content: center; align-items: center;
-  position: relative; perspective: 700px; overflow: visible !important; z-index: 5;
+/* SAFE TABLE VERSION: keep headers as proper table-cells */
+#wordHeader, #syllableHeader, #phonemeHeader{
+  background: #f3f7fa;
+  border: 1px solid #bbb;
+  padding: 18px 0;
+  position: relative;
+  overflow: visible !important;
+  z-index: 5;
+
+  /* IMPORTANT: keep table-cell behavior */
+  text-align: center;
+  vertical-align: middle;
 }
+
 #prettyResult .score-table th {
   color: #223; text-align: center; font-weight: 700; vertical-align: middle;
   font-size: 1.14em; padding: 14px 0 12px 0;
   transition: background 0.16s, box-shadow 0.18s, transform 0.14s;
+}
+
+/* ============================================================
+   Syllable column (expected stress glow)
+   ============================================================ */
+
+#syllableHeader{
+  background: #f3f7fa;
+  border: 1px solid #bbb;
+  padding: 18px 0;
+  position: relative;
+  overflow: visible !important;
+  z-index: 5;
+
+  text-align: center;
+  vertical-align: middle;
+}
+
+.word-chip.syllable-chip{
+  background: #eef7fb;
+  color: #205080;
+  box-shadow: 0 2px 8px rgba(40, 120, 255, 0.13);
+}
+
+/* Column sizing */
+#prettyResult th#syllableHeader,
+#prettyResult td.syllable-cell{
+  width: 240px;
+  min-width: 170px;
+  max-width: 340px;
+}
+
+/* Bracketed syllable chips */
+#prettyResult .lux-sylStrip{
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+}
+
+#prettyResult .lux-syl{
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  font-weight: 900;
+  font-size: 0.95em;
+  padding: 3px 8px;
+  border-radius: 999px;
+
+  background: rgba(15, 23, 42, 0.05);
+  color: #0f172a;
+}
+
+#prettyResult .lux-syl::before{
+  content: "[";
+  opacity: 0.55;
+  margin-right: 2px;
+}
+
+#prettyResult .lux-syl::after{
+  content: "]";
+  opacity: 0.55;
+  margin-left: 2px;
+}
+
+/* Expected-stress glow */
+#prettyResult .lux-syl.is-stress{
+  background: rgba(245, 158, 11, 0.20);
+  box-shadow:
+    0 0 0 1px rgba(245, 158, 11, 0.60),
+    0 10px 26px rgba(245, 158, 11, 0.18);
 }
 
 /* Clickable Header Backgrounds */
@@ -295,7 +394,7 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
   transform: none !important;
 }
 #prettyResult table.collapsed-word td:nth-child(1),
-#prettyResult table.collapsed-phoneme td:nth-child(4) {
+#prettyResult table.collapsed-phoneme td:nth-child(5) {
   width: 0 !important; min-width: 0 !important; max-width: 0 !important;
   padding: 0 !important;
   overflow: hidden; opacity: 0.15; pointer-events: none;

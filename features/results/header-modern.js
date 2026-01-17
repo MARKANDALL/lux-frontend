@@ -211,6 +211,11 @@ export function renderResultsHeaderModern(data) {
                   <button class="lux-col-toggle" type="button" data-col="word" aria-label="Collapse/expand Word column" title="Collapse/expand Word column">▸</button>
                   <span class="word-chip clickable">Word</span>
                 </th>
+
+                <th id="syllableHeader">
+                  <span class="word-chip syllable-chip">Syllable</span>
+                </th>
+
                 <th ${scoreHeaderAttrs}>Score ▸</th>
                 <th id="errorHeader" class="toggle-col">Error ▸</th>
                 <th id="phonemeHeader">

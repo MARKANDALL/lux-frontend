@@ -17,7 +17,6 @@
 .score-table td {
   border: 1px solid #bbb;
   padding: 10px;
-  white-space: nowrap;
   text-align: center;
   transition:
     width 0.35s cubic-bezier(0.45, 1.6, 0.4, 0.95),
@@ -25,9 +24,11 @@
     max-width 0.35s cubic-bezier(0.45, 1.6, 0.4, 0.95),
     padding 0.35s ease,
     opacity 0.25s ease;
+
   overflow: hidden;
-  word-wrap: break-word;
-  white-space: normal;
+
+  /* IMPORTANT: stop wrapping which creates stacked/jumbled cells */
+  white-space: nowrap;
 }
 
 .score-table th {
@@ -70,8 +71,8 @@
 .score-warn::before { content: "⚠️"; }
 .score-bad::before  { content: "✖"; }
 
-/* keep tooltip/hover content visible for the error column */
-#prettyResult .score-table td:nth-child(4),
-#prettyResult .score-table th:nth-child(4) {
+/* keep tooltip/hover content visible for the ERROR column (now td.error-cell) */
+#prettyResult .score-table td.error-cell,
+#prettyResult .score-table th#errorHeader{
   overflow: visible !important;
 }
