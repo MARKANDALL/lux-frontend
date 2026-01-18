@@ -20,9 +20,22 @@ const ROOT_ID = "wordcloud-root";
 const AUTO_REFRESH_MS = 10 * 60 * 1000;
 const TOP_N = 20;
 
-// Persist state
-const STATE_KEY = "lux.cloud.state.v2";
+// Persist
+const STATE_KEY = "lux.cloud.state.v3";
 const THEME_KEY = "lux.cloud.theme.v1";
+
+const FAV_KEY = "lux.cloud.favs.v1";
+const PIN_KEY = "lux.cloud.pins.v1";
+
+function clamp(n, a, b) {
+  return Math.max(a, Math.min(b, n));
+}
+function lower(s) {
+  return String(s || "").trim().toLowerCase();
+}
+function log1p(n) {
+  return Math.log(1 + Math.max(0, Number(n || 0)));
+}
 
 function readState() {
   try {
@@ -32,19 +45,54 @@ function readState() {
     return {};
   }
 }
-
 function writeState(next) {
   try {
     localStorage.setItem(STATE_KEY, JSON.stringify(next || {}));
   } catch (_) {}
 }
 
-function clamp(n, a, b) {
-  return Math.max(a, Math.min(b, n));
+function readSaved(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    const obj = raw ? JSON.parse(raw) : {};
+    return {
+      words: Array.isArray(obj.words) ? obj.words : [],
+      phonemes: Array.isArray(obj.phonemes) ? obj.phonemes : [],
+    };
+  } catch (_) {
+    return { words: [], phonemes: [] };
+  }
+}
+function writeSaved(key, next) {
+  try {
+    localStorage.setItem(key, JSON.stringify(next));
+  } catch (_) {}
 }
 
-function lower(s) {
-  return String(s || "").trim().toLowerCase();
+function savedListForMode(key, mode) {
+  const s = readSaved(key);
+  return mode === "phonemes" ? s.phonemes : s.words;
+}
+
+function addManySaved(key, mode, ids) {
+  const s = readSaved(key);
+  const list = mode === "phonemes" ? s.phonemes : s.words;
+
+  const add = [];
+  const seen = new Set(list.map(lower));
+  for (const id of ids) {
+    const v = String(id || "").trim();
+    if (!v) continue;
+    const k = lower(v);
+    if (seen.has(k)) continue;
+    seen.add(k);
+    add.push(v);
+  }
+
+  const merged = [...add, ...list].slice(0, 30);
+  if (mode === "phonemes") s.phonemes = merged;
+  else s.words = merged;
+  writeSaved(key, s);
 }
 
 function rangeLabel(r) {
@@ -53,13 +101,15 @@ function rangeLabel(r) {
   if (r === "30d") return "30 days";
   return "All time";
 }
-
 function sortLabel(s) {
   if (s === "freq") return "Frequent";
   if (s === "diff") return "Difficult";
   if (s === "recent") return "Recent";
   if (s === "persist") return "Persistent";
   return "Priority";
+}
+function mixLabel(m) {
+  return m === "smart" ? "Smart Mix" : "View-based";
 }
 
 function idFromItem(mode, x) {
@@ -135,25 +185,51 @@ function persistentScore(x) {
   return Math.pow(days + 1, 1.2) * Math.pow(count + 1, 0.65) * (0.35 + bad);
 }
 
-// Recent matchers (Action Sheet)
+// ---------- URL STATE (Phase E) ----------
+function readUrlState() {
+  const p = new URLSearchParams(window.location.search);
+  const out = {};
+  if (p.has("mode")) out.mode = p.get("mode");
+  if (p.has("sort")) out.sort = p.get("sort");
+  if (p.has("range")) out.range = p.get("range");
+  if (p.has("q")) out.q = p.get("q") || "";
+  if (p.has("theme")) out.theme = p.get("theme");
+  if (p.has("cluster")) out.cluster = p.get("cluster");
+  if (p.has("mix")) out.mix = p.get("mix");
+  return out;
+}
+
+function writeUrlState({ mode, sort, range, q, theme, clusterMode, mix }) {
+  const p = new URLSearchParams();
+
+  p.set("mode", mode);
+  p.set("sort", sort);
+  p.set("range", range);
+  if (q) p.set("q", q);
+
+  p.set("theme", theme);
+  p.set("cluster", clusterMode ? "1" : "0");
+  p.set("mix", mix);
+
+  const next = `${window.location.pathname}?${p.toString()}`;
+  window.history.replaceState(null, "", next);
+}
+
+// ---------- Action Sheet helpers ----------
 function attemptOverallScore(a) {
   const sum = pickSummary(a) || {};
   if (sum.pron != null) return Number(sum.pron) || 0;
   const az = pickAzure(a);
   return Number(az?.NBest?.[0]?.PronScore) || 0;
 }
-
 function attemptWhen(a) {
   const ts = pickTS(a);
-  if (!ts) return "";
-  return new Date(ts).toLocaleString();
+  return ts ? new Date(ts).toLocaleString() : "";
 }
-
 function attemptTitle(a) {
   const pk = pickPassageKey(a);
   return titleFromPassageKey(pk);
 }
-
 function findRecentAttemptsForWord(attempts, word, limit = 6) {
   const needle = lower(word);
   if (!needle) return [];
@@ -167,12 +243,9 @@ function findRecentAttemptsForWord(attempts, word, limit = 6) {
 
     const az = pickAzure(a);
     const W = az?.NBest?.[0]?.Words || [];
-    let found = false;
+    if (!Array.isArray(W) || !W.length) continue;
 
-    if (Array.isArray(W) && W.length) {
-      found = W.some((w) => lower(w?.Word) === needle);
-    }
-
+    const found = W.some((w) => lower(w?.Word) === needle);
     if (!found) continue;
 
     out.push({
@@ -182,10 +255,8 @@ function findRecentAttemptsForWord(attempts, word, limit = 6) {
       score: attemptOverallScore(a),
     });
   }
-
   return out;
 }
-
 function findRecentAttemptsForPhoneme(attempts, ipa, limit = 6) {
   const needle = String(ipa || "").trim();
   if (!needle) return [];
@@ -199,19 +270,16 @@ function findRecentAttemptsForPhoneme(attempts, ipa, limit = 6) {
 
     const az = pickAzure(a);
     const W = az?.NBest?.[0]?.Words || [];
-    let found = false;
+    if (!Array.isArray(W) || !W.length) continue;
 
-    if (Array.isArray(W) && W.length) {
-      for (const w of W) {
-        const P = Array.isArray(w?.Phonemes) ? w.Phonemes : [];
-        if (!P.length) continue;
-        if (P.some((p) => String(p?.Phoneme || "").trim() === needle)) {
-          found = true;
-          break;
-        }
+    let found = false;
+    for (const w of W) {
+      const P = Array.isArray(w?.Phonemes) ? w.Phonemes : [];
+      if (P.some((p) => String(p?.Phoneme || "").trim() === needle)) {
+        found = true;
+        break;
       }
     }
-
     if (!found) continue;
 
     out.push({
@@ -221,7 +289,6 @@ function findRecentAttemptsForPhoneme(attempts, ipa, limit = 6) {
       score: attemptOverallScore(a),
     });
   }
-
   return out;
 }
 
@@ -261,11 +328,58 @@ function buildCloudPlan(model, state) {
   return base;
 }
 
+// ---------- Smart Mix (Phase E) ----------
+function smartTop3(mode, pool) {
+  const items = Array.isArray(pool) ? pool.slice() : [];
+  if (!items.length) return [];
+
+  // thresholds to avoid noise
+  const minCount = mode === "phonemes" ? 3 : 2;
+
+  const candidates = items.filter((x) => Number(x.count || 0) >= minCount);
+
+  if (!candidates.length) return items.slice(0, 3);
+
+  // normalize stats
+  const counts = candidates.map((x) => log1p(x.count || 0));
+  const days = candidates.map((x) => log1p(x.days || 0));
+  const recs = candidates.map((x) => Number(x.lastSeenTS || 0));
+  const maxC = Math.max(1e-6, ...counts);
+  const maxD = Math.max(1e-6, ...days);
+  const maxR = Math.max(1, ...recs);
+
+  const score = (x) => {
+    const diff = clamp((100 - Number(x.avg || 0)) / 100, 0, 1);
+    const freq = clamp(log1p(x.count || 0) / maxC, 0, 1);
+    const pers = clamp(log1p(x.days || 0) / maxD, 0, 1);
+    const rec = clamp((Number(x.lastSeenTS || 0)) / maxR, 0, 1);
+
+    // Lux-friendly, stable weights
+    return 0.45 * diff + 0.25 * pers + 0.20 * freq + 0.10 * rec;
+  };
+
+  candidates.sort((a, b) => score(b) - score(a));
+
+  // Pick 3 distinct, stable
+  const out = [];
+  const seen = new Set();
+  for (const x of candidates) {
+    const id = lower(idFromItem(mode, x));
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    out.push(x);
+    if (out.length >= 3) break;
+  }
+
+  return out;
+}
+
 export async function initWordCloudPage() {
   const root = document.getElementById(ROOT_ID);
   if (!root) return;
 
   const st = readState();
+  const urlSt = readUrlState();
 
   let _mode = st.mode === "phonemes" ? "phonemes" : "words";
   let _sort = ["priority", "freq", "diff", "recent", "persist"].includes(st.sort)
@@ -274,36 +388,26 @@ export async function initWordCloudPage() {
   let _range = ["all", "30d", "7d", "today"].includes(st.range) ? st.range : "all";
   let _query = String(st.query || "");
 
+  let _mix = st.mix === "view" ? "view" : "smart"; // Phase E default = smart
+  let _clusterMode = !!st.clusterMode;
+
+  // URL overrides (Phase E)
+  if (urlSt.mode === "phonemes" || urlSt.mode === "words") _mode = urlSt.mode;
+  if (["priority", "freq", "diff", "recent", "persist"].includes(urlSt.sort)) _sort = urlSt.sort;
+  if (["all", "30d", "7d", "today"].includes(urlSt.range)) _range = urlSt.range;
+  if (typeof urlSt.q === "string") _query = urlSt.q;
+  if (urlSt.cluster === "1" || urlSt.cluster === "0") _clusterMode = urlSt.cluster === "1";
+  if (urlSt.mix === "smart" || urlSt.mix === "view") _mix = urlSt.mix;
+
   let _theme = (localStorage.getItem(THEME_KEY) || "light").toLowerCase();
   if (_theme !== "night") _theme = "light";
+  if (urlSt.theme === "night" || urlSt.theme === "light") _theme = urlSt.theme;
 
   let _attemptsAll = [];
   let _lastModel = null;
 
-  // Phase D state + storage
-  const FAV_KEY = "lux.cloud.favs.v1";
-  const PIN_KEY = "lux.cloud.pins.v1";
-
-  let _clusterMode = !!st.clusterMode; // persistable Phase D
-  let _lastItems = []; // current view items
-
-  function readSaved(key) {
-    try {
-      const raw = localStorage.getItem(key);
-      const obj = raw ? JSON.parse(raw) : {};
-      return {
-        words: Array.isArray(obj.words) ? obj.words : [],
-        phonemes: Array.isArray(obj.phonemes) ? obj.phonemes : [],
-      };
-    } catch (_) {
-      return { words: [], phonemes: [] };
-    }
-  }
-
-  function savedListForMode(key) {
-    const s = readSaved(key);
-    return _mode === "phonemes" ? s.phonemes : s.words;
-  }
+  let _lastItems = [];
+  let _lastPool = [];
 
   root.innerHTML = `
     <section class="lux-wc-shell" id="luxWcShell">
@@ -349,6 +453,7 @@ export async function initWordCloudPage() {
             <button class="lux-wc-chipBtn" data-range="today">Today</button>
           </div>
 
+          <!-- Phase D power row -->
           <div class="lux-wc-powerRow">
             <button class="lux-pbtn lux-wc-genTop" id="luxWcGenTop">
               ✨ Generate from Top 3
@@ -363,8 +468,25 @@ export async function initWordCloudPage() {
             </button>
           </div>
 
+          <!-- Phase E mix toggle -->
+          <div class="lux-wc-mixRow" aria-label="Top target mix">
+            <span class="lux-wc-mixLabel">Top 3:</span>
+            <button class="lux-wc-chipBtn" id="luxWcMixView" data-mix="view">View-based</button>
+            <button class="lux-wc-chipBtn" id="luxWcMixSmart" data-mix="smart">Smart Mix</button>
+          </div>
+
           <div class="lux-wc-targetStrip" id="luxWcTargets"></div>
           <div class="lux-wc-savedStrip" id="luxWcSaved"></div>
+
+          <!-- Phase E Coach Lane -->
+          <div class="lux-wc-coachLane" id="luxWcCoach">
+            <div class="lux-wc-coachTitle">Coach Lane</div>
+            <div class="lux-wc-coachBtns">
+              <button class="lux-pbtn" id="luxWcCoachQuick">⚡ Quick drill</button>
+              <button class="lux-pbtn lux-pbtn--ghost" id="luxWcCoachPinTop">📌 Pin Top 3</button>
+            </div>
+            <div class="lux-wc-coachHint" id="luxWcCoachHint"></div>
+          </div>
         </div>
 
         <div class="lux-wc-canvasWrap">
@@ -397,24 +519,26 @@ export async function initWordCloudPage() {
   const search = root.querySelector("#luxWcSearch");
   const clear = root.querySelector("#luxWcClear");
 
-  // Phase D DOM refs
   const btnGenTop = root.querySelector("#luxWcGenTop");
   const btnCluster = root.querySelector("#luxWcCluster");
   const btnSnap = root.querySelector("#luxWcSnapshot");
+
+  const mixView = root.querySelector("#luxWcMixView");
+  const mixSmart = root.querySelector("#luxWcMixSmart");
+
   const targetsStrip = root.querySelector("#luxWcTargets");
   const savedStrip = root.querySelector("#luxWcSaved");
 
-  // One shared array object so chip openers always see the latest range list
-  const _chipAttempts = [];
+  const coachHint = root.querySelector("#luxWcCoachHint");
+  const coachQuick = root.querySelector("#luxWcCoachQuick");
+  const coachPinTop = root.querySelector("#luxWcCoachPinTop");
 
   function applyTheme() {
     const isNight = _theme === "night";
     shell.classList.toggle("lux-wc--night", isNight);
     btnTheme.textContent = isNight ? "☀️" : "🌙";
     btnTheme.title = isNight ? "Switch to light theme" : "Switch to night theme";
-    try {
-      localStorage.setItem(THEME_KEY, _theme);
-    } catch (_) {}
+    try { localStorage.setItem(THEME_KEY, _theme); } catch (_) {}
   }
 
   function persist() {
@@ -424,11 +548,23 @@ export async function initWordCloudPage() {
       range: _range,
       query: _query,
       clusterMode: _clusterMode,
+      mix: _mix,
+    });
+  }
+
+  function syncUrl() {
+    writeUrlState({
+      mode: _mode,
+      sort: _sort,
+      range: _range,
+      q: _query?.trim() || "",
+      theme: _theme,
+      clusterMode: _clusterMode,
+      mix: _mix,
     });
   }
 
   function setModeStory() {
-    if (!sub) return;
     sub.textContent =
       _mode === "phonemes"
         ? "Sounds that show up often + cause trouble (size = frequency, color = Lux difficulty)"
@@ -439,14 +575,17 @@ export async function initWordCloudPage() {
     pills.forEach((b) => b.classList.toggle("is-active", b.dataset.mode === _mode));
     sortBtns.forEach((b) => b.classList.toggle("is-on", b.dataset.sort === _sort));
     rangeBtns.forEach((b) => b.classList.toggle("is-on", b.dataset.range === _range));
+
+    btnCluster.classList.toggle("is-on", _clusterMode);
+
+    mixView.classList.toggle("is-on", _mix === "view");
+    mixSmart.classList.toggle("is-on", _mix === "smart");
   }
 
-  // Phase D helpers
-  function top3FromItems(items) {
+  function top3FromView(items) {
     const out = [];
     const seen = new Set();
-
-    for (const x of items) {
+    for (const x of items || []) {
       const id = lower(idFromItem(_mode, x));
       if (!id || seen.has(id)) continue;
       seen.add(id);
@@ -456,10 +595,28 @@ export async function initWordCloudPage() {
     return out;
   }
 
-  function renderTargetsStrip(items) {
-    if (!targetsStrip) return;
+  function getTop3() {
+    if (_mix === "smart") {
+      return smartTop3(_mode, _lastPool);
+    }
+    return top3FromView(_lastItems);
+  }
 
-    const top = top3FromItems(items);
+  function updateCoachHint() {
+    const top = getTop3();
+    if (!top.length) {
+      coachHint.textContent = "";
+      return;
+    }
+    const names = top.map((x) => idFromItem(_mode, x)).slice(0, 3);
+    coachHint.textContent =
+      _mode === "phonemes"
+        ? `Targets: /${names.join("/, /")}/`
+        : `Targets: ${names.join(", ")}`;
+  }
+
+  function renderTargetsStrip(attemptsInRange) {
+    const top = getTop3();
 
     if (!top.length) {
       targetsStrip.innerHTML = "";
@@ -467,27 +624,25 @@ export async function initWordCloudPage() {
     }
 
     targetsStrip.innerHTML = `
-      <div class="lux-wc-stripLabel">Top targets</div>
+      <div class="lux-wc-stripLabel">Top targets (${mixLabel(_mix)})</div>
       <div class="lux-wc-stripRow">
-        ${top
-          .map((x) => {
-            const id = idFromItem(_mode, x);
-            const avg = Math.round(Number(x.avg || 0));
-            return `<button class="lux-wc-chipTarget" data-open="${id}">
-              <span class="lux-wc-chipTxt">${_mode === "phonemes" ? `/${id}/` : id}</span>
-              <span class="lux-wc-chipPct">${avg}%</span>
-            </button>`;
-          })
-          .join("")}
+        ${top.map((x) => {
+          const id = idFromItem(_mode, x);
+          const avg = Math.round(Number(x.avg || 0));
+          return `<button class="lux-wc-chipTarget" data-open="${id}">
+            <span class="lux-wc-chipTxt">${_mode === "phonemes" ? `/${id}/` : id}</span>
+            <span class="lux-wc-chipPct">${avg}%</span>
+          </button>`;
+        }).join("")}
       </div>
     `;
+
+    updateCoachHint();
   }
 
-  function renderSavedStrip(items) {
-    if (!savedStrip) return;
-
-    const pins = savedListForMode(PIN_KEY).slice(0, 10);
-    const favs = savedListForMode(FAV_KEY).slice(0, 10);
+  function renderSavedStrip() {
+    const pins = savedListForMode(PIN_KEY, _mode).slice(0, 10);
+    const favs = savedListForMode(FAV_KEY, _mode).slice(0, 10);
 
     const mkRow = (title, arr, icon) => {
       if (!arr.length) return "";
@@ -495,79 +650,77 @@ export async function initWordCloudPage() {
         <div class="lux-wc-savedRow">
           <div class="lux-wc-stripLabel">${icon} ${title}</div>
           <div class="lux-wc-stripRow">
-            ${arr
-              .map(
-                (id) => `
+            ${arr.map((id) => `
               <button class="lux-wc-chipSaved" data-open="${id}">
                 ${_mode === "phonemes" ? `/${id}/` : id}
               </button>
-            `
-              )
-              .join("")}
+            `).join("")}
           </div>
         </div>
       `;
     };
 
-    savedStrip.innerHTML = mkRow("Pinned", pins, "📌") + mkRow("Favorites", favs, "⭐");
-
-    // if none, keep it clean
-    if (!pins.length && !favs.length) savedStrip.innerHTML = "";
+    const html = mkRow("Pinned", pins, "📌") + mkRow("Favorites", favs, "⭐");
+    savedStrip.innerHTML = html || "";
   }
 
-  function wireChipOpeners(attemptsInRange) {
-    // one delegated listener is enough
-    root.addEventListener(
-      "click",
-      (e) => {
-        const btn = e.target?.closest?.("[data-open]");
-        if (!btn) return;
+  function pinnedSetNow() {
+    const pins = savedListForMode(PIN_KEY, _mode);
+    return new Set(pins.map(lower));
+  }
 
-        const id = String(btn.getAttribute("data-open") || "").trim();
-        if (!id) return;
+  async function ensureData(force = false) {
+    if (_attemptsAll.length && !force) return;
+    const uid = ensureUID();
+    _attemptsAll = await fetchHistory(uid);
+  }
 
-        // find meta from current items (best)
-        const hitItem = (_lastItems || []).find(
-          (x) => lower(idFromItem(_mode, x)) === lower(id)
-        );
+  function computeItemsForView(attemptsInRange) {
+    _lastModel = computeRollups(attemptsInRange);
 
-        const kind = _mode === "phonemes" ? "phoneme" : "word";
-        const title = kind === "phoneme" ? `/${id}/` : id;
+    const raw =
+      _mode === "phonemes"
+        ? (_lastModel?.trouble?.phonemesAll || [])
+        : (_lastModel?.trouble?.wordsAll || []);
 
-        const avg = hitItem ? Number(hitItem.avg || 0) : 0;
-        const count = hitItem ? Number(hitItem.count || 0) : 0;
+    // pool for smartMix + better candidate recall
+    let pool = raw.slice(0, 60);
 
-        const recents =
-          kind === "word"
-            ? findRecentAttemptsForWord(attemptsInRange, id, 6)
-            : findRecentAttemptsForPhoneme(attemptsInRange, id, 6);
-
-        sheet.open({
-          kind,
-          id,
-          title,
-          avg,
-          count,
-          days: hitItem?.days ?? null,
-          priority: hitItem?.priority ?? null,
-          examples: Array.isArray(hitItem?.examples) ? hitItem.examples : [],
-          recents,
-        });
-      },
-      { passive: true }
+    const ids = pool.map((x) => idFromItem(_mode, x));
+    const lastSeen = computeLastSeenMap(
+      _mode === "phonemes" ? "phonemes" : "words",
+      attemptsInRange,
+      ids
     );
+
+    pool = pool.map((x) => {
+      const id = lower(idFromItem(_mode, x));
+      return { ...x, lastSeenTS: lastSeen.get(id) || 0 };
+    });
+
+    // view sort rules shape cloud
+    let items = pool.slice();
+
+    if (_sort === "freq") items.sort((a, b) => Number(b.count || 0) - Number(a.count || 0));
+    else if (_sort === "diff") items.sort((a, b) => Number(a.avg || 0) - Number(b.avg || 0));
+    else if (_sort === "recent") items.sort((a, b) => Number(b.lastSeenTS || 0) - Number(a.lastSeenTS || 0));
+    else if (_sort === "persist") items.sort((a, b) => persistentScore(b) - persistentScore(a));
+    else items.sort((a, b) => Number(b.priority || 0) - Number(a.priority || 0));
+
+    // search ordering
+    const q = lower(_query);
+    if (q) {
+      const match = (x) => lower(idFromItem(_mode, x)).includes(q);
+      const hits = items.filter(match);
+      const rest = items.filter((x) => !match(x));
+      items = [...hits, ...rest];
+    }
+
+    _lastPool = pool;
+    return items.slice(0, TOP_N);
   }
 
-  btnBack?.addEventListener("click", () => {
-    window.location.assign("./progress.html");
-  });
-
-  btnTheme?.addEventListener("click", () => {
-    _theme = _theme === "night" ? "light" : "night";
-    applyTheme();
-  });
-
-  // ✅ Phase A Action Sheet (+ Phase D store change hook)
+  // ---------- Action Sheet ----------
   const sheet = createCloudActionSheet({
     onGenerate: (state) => {
       const plan = buildCloudPlan(_lastModel, state);
@@ -587,65 +740,48 @@ export async function initWordCloudPage() {
       });
     },
     onStoreChange: () => {
-      renderSavedStrip(_lastItems);
+      renderSavedStrip();
+      draw(false);
     },
   });
 
-  // ✅ Call ONCE after sheet create (array content updates on each draw)
-  wireChipOpeners(_chipAttempts);
+  // delegated opener for target/saved chips
+  root.addEventListener("click", (e) => {
+    const btn = e.target?.closest?.("[data-open]");
+    if (!btn) return;
 
-  async function ensureData(force = false) {
-    if (_attemptsAll.length && !force) return;
-    const uid = ensureUID();
-    _attemptsAll = await fetchHistory(uid);
-  }
+    const attemptsInRange = filterAttemptsByRange(_attemptsAll, _range);
 
-  function computeItemsForView(attemptsInRange) {
-    _lastModel = computeRollups(attemptsInRange);
+    const id = String(btn.getAttribute("data-open") || "").trim();
+    if (!id) return;
 
-    const raw =
-      _mode === "phonemes"
-        ? (_lastModel?.trouble?.phonemesAll || [])
-        : (_lastModel?.trouble?.wordsAll || []);
+    const hitItem = (_lastPool || []).find((x) => lower(idFromItem(_mode, x)) === lower(id));
 
-    let items = raw.slice(0, 60);
+    const kind = _mode === "phonemes" ? "phoneme" : "word";
+    const title = kind === "phoneme" ? `/${id}/` : id;
 
-    const ids = items.map((x) => idFromItem(_mode, x));
-    const lastSeen = computeLastSeenMap(
-      _mode === "phonemes" ? "phonemes" : "words",
-      attemptsInRange,
-      ids
-    );
+    const avg = hitItem ? Number(hitItem.avg || 0) : 0;
+    const count = hitItem ? Number(hitItem.count || 0) : 0;
 
-    items = items.map((x) => {
-      const id = lower(idFromItem(_mode, x));
-      return { ...x, lastSeenTS: lastSeen.get(id) || 0 };
+    const recents =
+      kind === "word"
+        ? findRecentAttemptsForWord(attemptsInRange, id, 6)
+        : findRecentAttemptsForPhoneme(attemptsInRange, id, 6);
+
+    sheet.open({
+      kind,
+      id,
+      title,
+      avg,
+      count,
+      days: hitItem?.days ?? null,
+      priority: hitItem?.priority ?? null,
+      examples: Array.isArray(hitItem?.examples) ? hitItem.examples : [],
+      recents,
     });
+  }, { passive: true });
 
-    if (_sort === "freq") {
-      items.sort((a, b) => Number(b.count || 0) - Number(a.count || 0));
-    } else if (_sort === "diff") {
-      items.sort((a, b) => Number(a.avg || 0) - Number(b.avg || 0));
-    } else if (_sort === "recent") {
-      items.sort((a, b) => Number(b.lastSeenTS || 0) - Number(a.lastSeenTS || 0));
-    } else if (_sort === "persist") {
-      items.sort((a, b) => persistentScore(b) - persistentScore(a));
-    } else {
-      items.sort((a, b) => Number(b.priority || 0) - Number(a.priority || 0));
-    }
-
-    // search ordering (matches float up)
-    const q = lower(_query);
-    if (q) {
-      const match = (x) => lower(idFromItem(_mode, x)).includes(q);
-      const hits = items.filter(match);
-      const rest = items.filter((x) => !match(x));
-      items = [...hits, ...rest];
-    }
-
-    return items.slice(0, TOP_N);
-  }
-
+  // ---------- draw ----------
   async function draw(forceFetch = false) {
     meta.textContent = "Loading…";
 
@@ -659,17 +795,12 @@ export async function initWordCloudPage() {
     await ensureData(forceFetch);
 
     const attemptsInRange = filterAttemptsByRange(_attemptsAll, _range);
-
-    // keep chip-open recents accurate for current range
-    _chipAttempts.length = 0;
-    _chipAttempts.push(...attemptsInRange);
-
     const items = computeItemsForView(attemptsInRange);
 
-    // Phase D: store current view + render strips
     _lastItems = items;
-    renderTargetsStrip(items);
-    renderSavedStrip(items);
+
+    renderSavedStrip();
+    renderTargetsStrip(attemptsInRange);
 
     if (!items.length) {
       meta.textContent =
@@ -686,7 +817,10 @@ export async function initWordCloudPage() {
     renderWordCloudCanvas(canvas, items, {
       focusTest,
       clusterMode: _clusterMode,
+      pinnedSet: pinnedSetNow(),
       onSelect: (hit) => {
+        const attemptsRange = filterAttemptsByRange(_attemptsAll, _range);
+
         const metaObj = hit?.meta || {};
         const isPh = _mode === "phonemes" || metaObj.ipa != null;
 
@@ -699,8 +833,8 @@ export async function initWordCloudPage() {
 
         const recents =
           kind === "word"
-            ? findRecentAttemptsForWord(attemptsInRange, id, 6)
-            : findRecentAttemptsForPhoneme(attemptsInRange, id, 6);
+            ? findRecentAttemptsForWord(attemptsRange, id, 6)
+            : findRecentAttemptsForPhoneme(attemptsRange, id, 6);
 
         sheet.open({
           kind,
@@ -718,45 +852,53 @@ export async function initWordCloudPage() {
 
     const label = _mode === "phonemes" ? "Phonemes" : "Words";
     meta.textContent =
-      `Updated ${new Date().toLocaleString()} · ${label} · ${rangeLabel(_range)} · Sort: ${sortLabel(_sort)}` +
+      `Updated ${new Date().toLocaleString()} · ${label} · ${rangeLabel(_range)} · Sort: ${sortLabel(_sort)} · Mix: ${mixLabel(_mix)}` +
       (q ? ` · Search: “${_query.trim()}”` : "");
+
+    persist();
+    syncUrl();
+    setActiveButtons();
+    setModeStory();
   }
 
-  // ---- Events ----
+  // ---------- events ----------
+  btnBack?.addEventListener("click", () => window.location.assign("./progress.html"));
+
+  btnTheme?.addEventListener("click", () => {
+    _theme = _theme === "night" ? "light" : "night";
+    applyTheme();
+    persist();
+    syncUrl();
+  });
+
   btnRefresh?.addEventListener("click", () => draw(true));
 
-  pills.forEach((b) => {
-    b.addEventListener("click", () => {
-      _mode = b.dataset.mode;
-      setModeStory();
-      setActiveButtons();
-      persist();
-      draw(false);
-    });
-  });
+  pills.forEach((b) => b.addEventListener("click", () => {
+    _mode = b.dataset.mode;
+    persist();
+    syncUrl();
+    draw(false);
+  }));
 
-  sortBtns.forEach((b) => {
-    b.addEventListener("click", () => {
-      _sort = b.dataset.sort;
-      setActiveButtons();
-      persist();
-      draw(false);
-    });
-  });
+  sortBtns.forEach((b) => b.addEventListener("click", () => {
+    _sort = b.dataset.sort;
+    persist();
+    syncUrl();
+    draw(false);
+  }));
 
-  rangeBtns.forEach((b) => {
-    b.addEventListener("click", () => {
-      _range = b.dataset.range;
-      setActiveButtons();
-      persist();
-      draw(false);
-    });
-  });
+  rangeBtns.forEach((b) => b.addEventListener("click", () => {
+    _range = b.dataset.range;
+    persist();
+    syncUrl();
+    draw(false);
+  }));
 
   search.value = _query;
   search.addEventListener("input", () => {
     _query = search.value || "";
     persist();
+    syncUrl();
     draw(false);
   });
 
@@ -764,15 +906,15 @@ export async function initWordCloudPage() {
     _query = "";
     search.value = "";
     persist();
+    syncUrl();
     draw(false);
     search.focus();
   });
 
-  // Phase D buttons
   btnCluster?.addEventListener("click", () => {
     _clusterMode = !_clusterMode;
-    btnCluster.classList.toggle("is-on", _clusterMode);
     persist();
+    syncUrl();
     draw(false);
   });
 
@@ -785,29 +927,40 @@ export async function initWordCloudPage() {
     } catch (_) {}
   });
 
+  mixView?.addEventListener("click", () => {
+    _mix = "view";
+    persist();
+    syncUrl();
+    draw(false);
+  });
+
+  mixSmart?.addEventListener("click", () => {
+    _mix = "smart";
+    persist();
+    syncUrl();
+    draw(false);
+  });
+
   btnGenTop?.addEventListener("click", () => {
     if (!_lastModel) return;
 
-    const top = top3FromItems(_lastItems);
+    const top = getTop3();
     if (!top.length) return;
 
     const base = buildNextActivityPlanFromModel(_lastModel, {
       source: "cloud-top3",
       maxWords: 6,
     });
-
     if (!base) return;
 
     if (_mode === "words") {
-      const chosen = top
-        .map((x) => ({
-          word: String(x.word || "").trim(),
-          avg: Number(x.avg || 0) || null,
-          count: Number(x.count || 0) || null,
-          days: Number(x.days || 0) || null,
-          priority: Number(x.priority || 0) || null,
-        }))
-        .filter((x) => x.word);
+      const chosen = top.map((x) => ({
+        word: String(x.word || "").trim(),
+        avg: Number(x.avg || 0) || null,
+        count: Number(x.count || 0) || null,
+        days: Number(x.days || 0) || null,
+        priority: Number(x.priority || 0) || null,
+      })).filter((x) => x.word);
 
       const rest = (base.targets?.words || []).filter(
         (w) => !chosen.some((c) => lower(c.word) === lower(w?.word))
@@ -829,15 +982,26 @@ export async function initWordCloudPage() {
     window.location.assign("./convo.html#chat");
   });
 
-  // ---- Initial ----
+  // Coach Lane
+  coachQuick?.addEventListener("click", () => {
+    if (!_lastModel) return;
+    // Quick = generate from top3 (same engine, just “intent” metadata)
+    btnGenTop.click();
+  });
+
+  coachPinTop?.addEventListener("click", () => {
+    const top = getTop3();
+    const ids = top.map((x) => idFromItem(_mode, x)).filter(Boolean);
+    if (!ids.length) return;
+    addManySaved(PIN_KEY, _mode, ids);
+    renderSavedStrip();
+    draw(false);
+  });
+
+  // initial
   applyTheme();
-  setModeStory();
   setActiveButtons();
-  persist();
-
-  // ensure cluster button reflects persisted state
-  btnCluster?.classList.toggle("is-on", _clusterMode);
-
+  setModeStory();
   await draw(false);
 
   setInterval(() => {

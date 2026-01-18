@@ -5,6 +5,10 @@ function clamp(n, a, b) {
   return Math.max(a, Math.min(b, n));
 }
 
+function lower(s) {
+  return String(s || "").trim().toLowerCase();
+}
+
 function idOfWord(d) {
   const meta = d?.meta || {};
   return String(meta.word ?? meta.ipa ?? d?.text ?? "").trim().toLowerCase();
@@ -22,9 +26,10 @@ function hexToRgba(hex = "#000000", a = 0.2) {
 /**
  * renderWordCloudCanvas(canvas, items, opts?)
  * opts:
- *  - focusTest(idLower) => boolean  (search highlighting)
- *  - onSelect(hit)      => click handler override
- *  - clusterMode        => boolean  (optional clustering drift by score bands)
+ *  - focusTest(idLower) => boolean
+ *  - onSelect(hit)
+ *  - clusterMode: boolean
+ *  - pinnedSet: Set<string lower>
  */
 export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
   if (!canvas) return;
@@ -33,7 +38,7 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
   const w = Math.max(320, wrap?.clientWidth || 800);
   const h = Math.max(280, wrap?.clientHeight || 460);
 
-  // HiDPI crispness
+  // HiDPI
   const dpr = window.devicePixelRatio || 1;
   canvas.width = Math.floor(w * dpr);
   canvas.height = Math.floor(h * dpr);
@@ -43,11 +48,11 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
   const ctx = canvas.getContext("2d");
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  // Clear
   ctx.clearRect(0, 0, w, h);
   if (!items.length) return;
 
-  // Size scale based on frequency
+  const pinnedSet = opts?.pinnedSet instanceof Set ? opts.pinnedSet : new Set();
+
   const counts = items.map((x) => Number(x.count || 0));
   const maxC = Math.max(1, ...counts);
   const minC = Math.min(...counts);
@@ -58,15 +63,25 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
     return clamp(s, 16, 62);
   };
 
-  const words = items.map((x) => ({
-    text: String(x.word ?? x.ipa ?? x.text ?? "").trim(),
-    count: Number(x.count || 0),
-    avg: Number.isFinite(Number(x.avg)) ? Number(x.avg) : 0,
-    size: sizeForCount(x.count),
-    meta: x,
-  }));
+  const PIN_BOOST = 1.16;     // pinned appear bigger
+  const PIN_CENTER = 0.86;    // pinned float toward center (cloud-like)
 
-  // d3-cloud attaches either to d3.layout.cloud or window.cloud depending on build
+  const words = items.map((x) => {
+    const text = String(x.word ?? x.ipa ?? x.text ?? "").trim();
+    const id = lower(String(x.word ?? x.ipa ?? x.text ?? ""));
+    const baseSize = sizeForCount(x.count);
+
+    return {
+      text,
+      count: Number(x.count || 0),
+      avg: Number.isFinite(Number(x.avg)) ? Number(x.avg) : 0,
+      size: baseSize,
+      meta: x,
+      _id: id,
+      _pinned: pinnedSet.has(id),
+    };
+  });
+
   const d3 = window.d3;
   const cloudFactory = d3?.layout?.cloud || window.cloud;
   if (!cloudFactory) {
@@ -77,14 +92,13 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
   }
 
   // Phase C state
-  let placed = null; // layout words after cloud finishes
+  let placed = null;
   let boxes = [];
   let hoverIdx = -1;
   let mouse = { x: 0, y: 0 };
   let ripple = null;
   let rafId = 0;
 
-  // Fade-in thaw after redraw
   let fadeStart = performance.now();
   const FADE_MS = 220;
 
@@ -101,7 +115,7 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
     const cx = w / 2;
     const cy = h / 2;
 
-    // Focus (search)
+    // search focus
     const focusFn = typeof opts?.focusTest === "function" ? opts.focusTest : null;
     let focusActive = false;
     if (focusFn) {
@@ -114,107 +128,102 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
       }
     }
 
-    // Fade alpha
+    // fade thaw
     const tNow = performance.now();
     const fadeAlpha = clamp((tNow - fadeStart) / FADE_MS, 0, 1);
 
-    // Ripple progress
+    // ripple progress
     let rippleP = 0;
-    let rippleAlive = false;
     if (ripple) {
       rippleP = clamp((tNow - ripple.t0) / ripple.dur, 0, 1);
-      rippleAlive = rippleP < 1;
-      if (!rippleAlive) ripple = null;
+      if (rippleP >= 1) ripple = null;
     }
 
-    // draw words
     boxes = [];
 
     for (let i = 0; i < placed.length; i++) {
       const d = placed[i];
+
       const col = getColorConfig(d.avg).color;
       const glow = hexToRgba(col, 0.22);
 
       const id = idOfWord(d);
       const isMatch = focusActive && focusFn ? !!focusFn(id) : true;
-      const isHover = i === hoverIdx;
 
-      // Base opacity rule:
-      // - If searching: non-matches dim (but hovered always pops)
-      // - Otherwise: full
+      const isHover = i === hoverIdx;
+      const isPinned = !!d._pinned;
+
       let alpha = 1;
       if (focusActive) alpha = isMatch || isHover ? 1 : 0.16;
-
-      // Fade-in thaw multiplier
       alpha *= fadeAlpha;
 
-      // Magnetic pull (hover only)
+      // magnetic pull
       let pullX = 0;
       let pullY = 0;
-
       if (isHover) {
         const wx = cx + d.x;
         const wy = cy + d.y;
         const vx = mouse.x - wx;
         const vy = mouse.y - wy;
         const dist = Math.max(1, Math.hypot(vx, vy));
-
-        // pull strength tapers with distance (max ~10px)
         const strength = 10 * (1 - clamp(dist / 180, 0, 1));
         pullX = (vx / dist) * strength;
         pullY = (vy / dist) * strength;
       }
 
-      ctx.save();
-
-      // Cluster drift (Phase D) — OFF by default
+      // Phase D cluster drift (optional)
       let driftX = 0;
       let driftY = 0;
 
       if (opts?.clusterMode) {
         const avg = Number(d.avg || 0);
-        const dx = w * 0.17; // cluster spread
+        const dx = w * 0.17;
         const dy = h * 0.06;
 
         if (avg >= 80) {
-          // good (blue)
-          driftX = -dx;
-          driftY = -dy;
+          driftX = -dx; driftY = -dy;
         } else if (avg >= 60) {
-          // warn (orange)
-          driftX = 0;
-          driftY = dy * 1.2;
+          driftX = 0; driftY = dy * 1.2;
         } else {
-          // needs work (red)
-          driftX = dx;
-          driftY = -dy;
+          driftX = dx; driftY = -dy;
         }
 
-        // soften it so it stays cloud-like, not rigid
         driftX *= 0.65;
         driftY *= 0.65;
       }
 
-      ctx.translate(cx + d.x + pullX + driftX, cy + d.y + pullY + driftY);
-      ctx.rotate(0);
+      // Phase E pinned dominance: closer to center
+      const pinMul = isPinned ? PIN_CENTER : 1;
 
-      const size = isHover ? d.size * 1.08 : d.size;
+      ctx.save();
+      ctx.translate(
+        cx + (d.x * pinMul) + pullX + driftX,
+        cy + (d.y * pinMul) + pullY + driftY
+      );
+
+      const baseSize = d.size;
+      const size = (isPinned ? baseSize * PIN_BOOST : baseSize) * (isHover ? 1.08 : 1);
 
       ctx.font = `900 ${size}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
 
-      // Halo (subtle for all, stronger on hover)
+      // pinned halo ring behind text (subtle)
+      if (isPinned) {
+        ctx.globalAlpha = 0.22 * fadeAlpha;
+        ctx.beginPath();
+        ctx.arc(0, 0, size * 0.72, 0, Math.PI * 2);
+        ctx.fillStyle = hexToRgba(col, 0.10);
+        ctx.fill();
+      }
+
       ctx.shadowColor = isHover ? glow : hexToRgba(col, 0.14);
       ctx.shadowBlur = isHover ? 18 : 10;
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 0;
 
       ctx.globalAlpha = alpha;
       ctx.fillStyle = col;
       ctx.fillText(d.text, 0, 0);
 
-      // Hover pop stroke (premium crispness)
       if (isHover) {
         ctx.shadowBlur = 0;
         ctx.globalAlpha = Math.max(alpha, 0.55);
@@ -226,7 +235,7 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
         ctx.fillText(d.text, 0, 0);
       }
 
-      // bbox (rough, but good enough with rotate=0)
+      // bbox
       ctx.shadowBlur = 0;
       const tw = ctx.measureText(d.text).width;
       const th = size * 1.05;
@@ -236,26 +245,23 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
         avg: d.avg,
         count: d.count,
         meta: d.meta,
-        x: cx + d.x + pullX + driftX - tw / 2,
-        y: cy + d.y + pullY + driftY - th / 2,
+        x: cx + (d.x * pinMul) + pullX + driftX - tw / 2,
+        y: cy + (d.y * pinMul) + pullY + driftY - th / 2,
         w: tw,
         h: th,
-        cx: cx + d.x + pullX + driftX,
-        cy: cy + d.y + pullY + driftY,
+        cx: cx + (d.x * pinMul) + pullX + driftX,
+        cy: cy + (d.y * pinMul) + pullY + driftY,
         col,
       });
 
       ctx.restore();
     }
 
-    // Ripple ring (click delight)
+    // ripple ring
     if (ripple && ripple.idx != null && boxes[ripple.idx]) {
       const b = boxes[ripple.idx];
       const ease = 1 - Math.pow(1 - rippleP, 2);
-      const r0 = 10;
-      const r1 = 44;
-
-      const rr = r0 + (r1 - r0) * ease;
+      const rr = 10 + (44 - 10) * ease;
       const a = 0.32 * (1 - rippleP);
 
       ctx.save();
@@ -266,7 +272,6 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
       ctx.stroke();
       ctx.restore();
 
-      // Keep animating until finished
       if (!rafId) {
         rafId = requestAnimationFrame(() => {
           rafId = 0;
@@ -283,11 +288,7 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
   }
 
   function startRipple(idx) {
-    ripple = {
-      idx,
-      t0: performance.now(),
-      dur: 520,
-    };
+    ripple = { idx, t0: performance.now(), dur: 520 };
     stopRAF();
     rafId = requestAnimationFrame(() => {
       rafId = 0;
@@ -309,20 +310,16 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
     .padding(2)
     .rotate(() => 0)
     .font("system-ui")
-    .fontSize((d) => d.size)
+    .fontSize((d) => (d._pinned ? d.size * PIN_BOOST : d.size))
     .on("end", layoutAndDraw)
     .start();
 
-  // Mouse interactions
   canvas.onmousemove = (e) => {
     const r = canvas.getBoundingClientRect();
-    const mx = e.clientX - r.left;
-    const my = e.clientY - r.top;
+    mouse.x = e.clientX - r.left;
+    mouse.y = e.clientY - r.top;
 
-    mouse.x = mx;
-    mouse.y = my;
-
-    const idx = hitTest(mx, my);
+    const idx = hitTest(mouse.x, mouse.y);
     const hit = idx >= 0 ? boxes[idx] : null;
 
     canvas.style.cursor = hit ? "pointer" : "default";
@@ -335,7 +332,6 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
       stopRAF();
       paint();
     } else if (hoverIdx >= 0) {
-      // magnetic pull updates as you move
       stopRAF();
       rafId = requestAnimationFrame(() => {
         rafId = 0;
@@ -365,10 +361,8 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
     const hit = boxes[idx];
     if (!hit) return;
 
-    // ✅ call into page controller
     if (typeof opts?.onSelect === "function") {
       opts.onSelect(hit);
-      return;
     }
   };
 }

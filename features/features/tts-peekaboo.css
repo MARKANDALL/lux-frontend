@@ -93,7 +93,7 @@ html:not(.lux-tts-open) .lux-tts-panel{
   display: block;
 
   /* tighter bezel + still glued under the tab */
-  padding: calc(var(--lux-tts-tab-h) + 12px) 12px 8px;
+  padding: calc(var(--lux-tts-tab-h) + 12px) 8px 8px;
 
   max-height: calc(var(--lux-tts-panel-max-h) - 8px);
   overflow: auto;
@@ -150,7 +150,6 @@ html:not(.lux-tts-open) .lux-tts-panel{
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  flex-direction: row-reverse;
 
   justify-content: center;
   width: 100%;
@@ -158,13 +157,22 @@ html:not(.lux-tts-open) .lux-tts-panel{
 
   transition: transform var(--lux-tab-dur) var(--lux-ease-pop);
   will-change: transform;
+  box-sizing: border-box;
 
-padding: 0 16px 0 8px;
+  /* give the arrow breathing room at the OUTER cap */
+  padding: 0 18px 0 12px;
 }
 
-/* CLOSED => push content HARDER toward the visible end */
+/* Force the label left, arrow right (outer end) */
+.lux-tts-tab-label{ order: 1; }
+.lux-tts-tab-icon{
+  order: 2;
+  flex: 0 0 auto;
+}
+
+/* CLOSED => nudge toward the visible end without clipping the arrow */
 html:not(.lux-tts-open) .lux-tts-tab-inner{
-  transform: translateX(calc(-50% + 34px));
+  transform: translateX(26px);
 }
 
 

@@ -303,3 +303,62 @@
 .lux-wc--night .lux-wc-chipPct{
   color: rgba(255,255,255,0.72);
 }
+/* =========================
+   Phase E: Smart Mix + Coach Lane
+========================= */
+
+.lux-wc-mixRow{
+  margin-top: 8px;
+  display:flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items:center;
+}
+
+.lux-wc-mixLabel{
+  font-weight: 950;
+  color: #64748b;
+  margin-right: 6px;
+}
+
+.lux-wc-coachLane{
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: rgba(255,255,255,0.86);
+}
+
+.lux-wc-coachTitle{
+  font-weight: 950;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+.lux-wc-coachBtns{
+  display:flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.lux-wc-coachHint{
+  margin-top: 8px;
+  font-weight: 900;
+  color: rgba(100,116,139,0.85);
+  font-size: 0.92rem;
+}
+
+/* Night */
+.lux-wc--night .lux-wc-mixLabel{
+  color: rgba(255,255,255,0.70);
+}
+.lux-wc--night .lux-wc-coachLane{
+  background: rgba(20,30,58,0.62);
+  border: 1px solid rgba(255,255,255,0.10);
+}
+.lux-wc--night .lux-wc-coachTitle{
+  color: rgba(255,255,255,0.92);
+}
+.lux-wc--night .lux-wc-coachHint{
+  color: rgba(255,255,255,0.68);
+}
