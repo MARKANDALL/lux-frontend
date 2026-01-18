@@ -60,6 +60,9 @@ import {
 // ✅ COMMIT 13: view data engine extracted
 import { computeItemsForView } from "./view-logic.js";
 
+// ✅ COMMIT 14: UI sync layer extracted
+import { createWordcloudUIManager } from "./ui-manager.js";
+
 const ROOT_ID = "wordcloud-root";
 const AUTO_REFRESH_MS = 10 * 60 * 1000;
 const TOP_N = 20;
@@ -84,33 +87,8 @@ export async function initWordCloudPage() {
   root.innerHTML = wordcloudTemplateHtml();
   const dom = getWordcloudDom(root);
 
-  // ✅ COMMIT 12B — strips UI controller
-  const strips = createWordcloudStrips({
-    ctx,
-    dom,
-    getState: () => S,
-    mixLabel,
-    smartTop3,
-    idFromItem,
-    lower,
-    savedListForMode,
-    PIN_KEY,
-    FAV_KEY,
-  });
-
   // Render sequencing guard (prevents old async layouts hiding new overlay)
   const _renderSeq = { value: 0 };
-
-  function setBusy(on, title = "Loading…", subText = "") {
-    if (!dom.overlay) return;
-
-    dom.overlay.hidden = !on;
-    dom.overlay.style.display = on ? "flex" : "none"; // ✅ override any CSS conflict
-    dom.overlay.setAttribute("aria-busy", on ? "true" : "false");
-
-    if (dom.overlayTitle) dom.overlayTitle.textContent = title;
-    if (dom.overlaySub) dom.overlaySub.textContent = subText || "";
-  }
 
   // Ensures the overlay becomes visible BEFORE heavy work starts
   function waitTwoFrames() {
@@ -124,43 +102,26 @@ export async function initWordCloudPage() {
     return `${pos}d ago`;
   }
 
-  function applyTimelineUI() {
-    const show = S.range === "timeline";
-    if (dom.timelineRow) dom.timelineRow.style.display = show ? "flex" : "none";
+  // ✅ COMMIT 14 — UI sync layer owns all look/active-state updating
+  const ui = createWordcloudUIManager({
+    dom,
+    getState: () => S,
+    fmtDaysAgo,
+  });
 
-    if (dom.winSlider) dom.winSlider.value = String(S.timelineWin);
-    if (dom.posSlider) dom.posSlider.value = String(S.timelinePos);
-
-    if (dom.winVal) dom.winVal.textContent = `${S.timelineWin}d`;
-    if (dom.posVal) dom.posVal.textContent = fmtDaysAgo(S.timelinePos);
-  }
-
-  function setModeStory() {
-    if (!dom.sub) return;
-    dom.sub.textContent =
-      S.mode === "phonemes"
-        ? "Sounds that show up often + cause trouble (size = frequency, color = Lux difficulty)"
-        : "Words you use often + struggle with most (size = frequency, color = Lux difficulty)";
-  }
-
-  function setActiveButtons() {
-    (dom.pills || []).forEach((b) =>
-      b.classList.toggle("is-active", b.dataset.mode === S.mode)
-    );
-    (dom.sortBtns || []).forEach((b) =>
-      b.classList.toggle("is-on", b.dataset.sort === S.sort)
-    );
-    (dom.rangeBtns || []).forEach((b) =>
-      b.classList.toggle("is-on", b.dataset.range === S.range)
-    );
-
-    if (dom.btnCluster) dom.btnCluster.classList.toggle("is-on", S.clusterMode);
-
-    if (dom.mixView) dom.mixView.classList.toggle("is-on", S.mix === "view");
-    if (dom.mixSmart) dom.mixSmart.classList.toggle("is-on", S.mix === "smart");
-
-    applyTimelineUI();
-  }
+  // ✅ COMMIT 12B — strips UI controller
+  const strips = createWordcloudStrips({
+    ctx,
+    dom,
+    getState: () => S,
+    mixLabel,
+    smartTop3,
+    idFromItem,
+    lower,
+    savedListForMode,
+    PIN_KEY,
+    FAV_KEY,
+  });
 
   // ✅ MINIMAL FIX (ONLY HERE)
   // Mutate the existing attemptsAll array so render.js always sees the same reference.
@@ -252,7 +213,7 @@ export async function initWordCloudPage() {
 
       renderSeqRef: _renderSeq,
 
-      setBusy,
+      setBusy: ui.setBusy,
       waitTwoFrames,
 
       metaEl: dom.meta,
@@ -289,8 +250,8 @@ export async function initWordCloudPage() {
       persist: () => ctx.persist(),
       syncUrl: () => ctx.syncUrl(),
 
-      setActiveButtons,
-      setModeStory,
+      setActiveButtons: ui.setActiveButtons,
+      setModeStory: ui.setModeStory,
 
       setLastItems: (items) => {
         ctx.setLastItems(items || []);
@@ -309,27 +270,27 @@ export async function initWordCloudPage() {
     getRange: () => S.range,
     setRange: (nextRange) => {
       ctx.set({ range: nextRange });
-      setActiveButtons();
-      applyTimelineUI();
+      ui.setActiveButtons();
+      ui.applyTimelineUI();
     },
 
     getWin: () => S.timelineWin,
     setWin: (val) => {
       ctx.set({ timelineWin: val });
-      applyTimelineUI();
+      ui.applyTimelineUI();
       draw(false);
     },
 
     getPos: () => S.timelinePos,
     setPos: (val) => {
       ctx.set({ timelinePos: val });
-      applyTimelineUI();
+      ui.applyTimelineUI();
       draw(false);
     },
 
     // UI helpers
     fmtDaysAgo,
-    applyTimelineUI,
+    applyTimelineUI: ui.applyTimelineUI,
 
     // redraw hook (controller calls when replay ticks)
     requestDraw: () => draw(false),
@@ -347,7 +308,7 @@ export async function initWordCloudPage() {
 
     setMode: (mode) => {
       ctx.set({ mode });
-      setModeStory();
+      ui.setModeStory();
       draw(false);
     },
 
@@ -365,7 +326,7 @@ export async function initWordCloudPage() {
       if (next !== "timeline") timeline.stop?.();
 
       ctx.set({ range: next });
-      setActiveButtons();
+      ui.setActiveButtons();
       draw(false);
     },
 
@@ -452,9 +413,9 @@ export async function initWordCloudPage() {
 
   // initial
   ctx.applyTheme(dom);
-  setActiveButtons();
-  setModeStory();
-  applyTimelineUI();
+  ui.setActiveButtons();
+  ui.setModeStory();
+  ui.applyTimelineUI();
   timeline.syncButton?.(); // optional (controller can update replay button text on load)
   await draw(false);
 
