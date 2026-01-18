@@ -158,7 +158,7 @@ html.lux-tts-open .lux-tts-tab-inner {
 
 /* CLOSED => shift content toward the visible side (left side of the peeking tab) */
 html:not(.lux-tts-open) .lux-tts-tab-inner {
-  transform: translateX(calc(-32% + 16px));
+  transform: translateX(calc(-32% + 28px));
 }
 
 .lux-tts-tab-icon {
@@ -241,6 +241,17 @@ html:not(.lux-tts-open) .lux-tts-tab .lux-tts-tab-icon,
   .lux-tts-tab-icon, .lux-sp-tab-icon {
     animation: none !important;
   }
+}
+
+/* Closed peek size: only before the user ever opens TTS */
+html:not(.lux-tts-booted) .lux-tts-panel{
+  height: var(--lux-tts-shell-h);
+}
+
+/* After first open, keep the full-size drawer always */
+html.lux-tts-booted .lux-tts-panel{
+  height: auto;
+  min-height: 520px; /* tune: 500–620 depending on your preferred full size */
 }
 
 /* Responsive */

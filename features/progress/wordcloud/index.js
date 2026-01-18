@@ -15,17 +15,23 @@ export async function initWordCloudPage() {
   const root = document.getElementById(ROOT_ID);
   if (!root) return;
 
+  // ✅ Header + toggle pills (Words / Phonemes)
   root.innerHTML = `
     <section class="lux-wc-shell">
       <div class="lux-wc-head">
         <div>
-          <div class="lux-wc-title">☁️ Your Word Cloud</div>
+          <div class="lux-wc-title">☁️ Cloud Visuals</div>
           <div class="lux-wc-sub">
-            Size = how often you say it · Color = how difficult it is (Lux scoring)
+            Size = frequency · Color = difficulty (Lux scoring)
           </div>
         </div>
 
         <div class="lux-wc-actions">
+          <div class="lux-wc-toggle" role="tablist" aria-label="Cloud mode">
+            <button class="lux-wc-pill is-active" data-mode="words">Words</button>
+            <button class="lux-wc-pill" data-mode="phonemes">Phonemes</button>
+          </div>
+
           <button class="lux-pbtn" id="luxWcRefresh">Refresh</button>
           <button class="lux-pbtn lux-pbtn--ghost" id="luxWcBack">← Back</button>
         </div>
@@ -53,6 +59,9 @@ export async function initWordCloudPage() {
   const btnRefresh = root.querySelector("#luxWcRefresh");
   const btnBack = root.querySelector("#luxWcBack");
 
+  // ✅ Toggle state
+  let _mode = "words"; // "words" | "phonemes"
+
   btnBack?.addEventListener("click", () => {
     window.location.assign("./progress.html");
   });
@@ -74,21 +83,41 @@ export async function initWordCloudPage() {
     // ✅ Use existing rollups model (same data + same scoring)
     const model = computeRollups(attempts);
 
-    // Pick “most logical top 10–20” = top by priority
-    const items = (model?.trouble?.wordsAll || []).slice(0, TOP_N);
+    // ✅ Pick items based on current mode
+    const items =
+      _mode === "phonemes"
+        ? (model?.trouble?.phonemesAll || []).slice(0, TOP_N)
+        : (model?.trouble?.wordsAll || []).slice(0, TOP_N);
 
     if (!items.length) {
-      meta.textContent = "Not enough word data yet — do a little more practice first.";
+      meta.textContent =
+        _mode === "phonemes"
+          ? "Not enough phoneme data yet — do a little more practice first."
+          : "Not enough word data yet — do a little more practice first.";
       renderWordCloudCanvas(canvas, []); // clears
       return;
     }
 
     renderWordCloudCanvas(canvas, items);
 
-    meta.textContent = `Updated ${new Date().toLocaleString()} · Showing top ${items.length}`;
+    const label = _mode === "phonemes" ? "Phonemes" : "Words";
+    meta.textContent = `Updated ${new Date().toLocaleString()} · ${label} · Showing top ${items.length}`;
   }
 
   btnRefresh?.addEventListener("click", loadAndDraw);
+
+  // ✅ Wire pills (right under the button hooks)
+  const pills = Array.from(root.querySelectorAll(".lux-wc-pill"));
+
+  function setMode(next) {
+    _mode = next;
+    pills.forEach((b) => b.classList.toggle("is-active", b.dataset.mode === next));
+    loadAndDraw();
+  }
+
+  pills.forEach((b) => {
+    b.addEventListener("click", () => setMode(b.dataset.mode));
+  });
 
   // First render
   await loadAndDraw();

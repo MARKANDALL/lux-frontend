@@ -40,7 +40,7 @@ export function renderWordCloudCanvas(canvas, items = []) {
   };
 
   const words = items.map((x) => ({
-    text: String(x.word || "").trim(),
+text: String(x.word ?? x.ipa ?? x.text ?? "").trim(),
     count: Number(x.count || 0),
     avg: Number.isFinite(Number(x.avg)) ? Number(x.avg) : 0,
     size: sizeForCount(x.count),

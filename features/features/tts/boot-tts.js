@@ -81,6 +81,7 @@ function ensurePanel() {
         if (mod?.mountTTSPlayer) {
           mod.mountTTSPlayer(mountHost);
           console.info("[Lux] TTS Player mounted (lazy).");
+          document.documentElement.classList.add("lux-tts-booted");
         }
       } catch (e) {
         console.warn("[Lux] TTS lazy mount failed:", e);
