@@ -103,6 +103,7 @@ html:not(.lux-tts-open) .lux-tts-panel{
 
 /* Inner card gets its own shadow (stacked effect like Self Playback) */
 .lux-tts-panel #tts-controls .tts-box{
+  margin: 0;
   border-radius: 14px;
   box-shadow: 0 10px 24px rgba(0,0,0,0.14);
   border: 1px solid rgba(0,0,0,0.05);
@@ -119,7 +120,7 @@ html:not(.lux-tts-open) .lux-tts-panel{
   position: absolute;
   top: 8px;
   right: 8px;
-  left: calc(var(--lux-tts-tab-protrude) * -1);
+  left: auto;
   width: auto;
   height: 34px;
   z-index: 2;
@@ -143,6 +144,11 @@ html:not(.lux-tts-open) .lux-tts-panel{
   will-change: transform;
 
   overflow: hidden; /* keep your inner slide clean */
+}
+
+/* CLOSED: panel is pushed off-screen, so pull the tab back into view */
+html:not(.lux-tts-open) .lux-tts-tab{
+  right: calc(8px + (var(--lux-tts-panel-w) - var(--lux-tts-shell-reveal)));
 }
 
 /* Mirror TTS tab layout (right-side drawer): arrow sits on OUTSIDE edge */
@@ -170,9 +176,14 @@ html:not(.lux-tts-open) .lux-tts-panel{
   flex: 0 0 auto;
 }
 
-/* CLOSED => nudge toward the visible end without clipping the arrow */
+/* OPEN => center */
+html.lux-tts-open .lux-tts-tab-inner{
+  transform: translateX(0);
+}
+
+/* CLOSED => push content toward the rounded end */
 html:not(.lux-tts-open) .lux-tts-tab-inner{
-  transform: translateX(26px);
+  transform: translateX(34px);
 }
 
 

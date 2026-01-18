@@ -99,6 +99,7 @@ function rangeLabel(r) {
   if (r === "today") return "Today";
   if (r === "7d") return "7 days";
   if (r === "30d") return "30 days";
+  if (r === "timeline") return "Timeline";
   return "All time";
 }
 function sortLabel(s) {
@@ -117,7 +118,7 @@ function idFromItem(mode, x) {
   return String(x?.word ?? x?.text ?? "").trim();
 }
 
-function filterAttemptsByRange(attempts, rangeKey) {
+function filterAttemptsByRange(attempts, rangeKey, winDays = 14, posDays = 0) {
   const list = Array.isArray(attempts) ? attempts : [];
   if (rangeKey === "all") return list;
 
@@ -128,6 +129,16 @@ function filterAttemptsByRange(attempts, rangeKey) {
     d.setHours(0, 0, 0, 0);
     const start = +d;
     return list.filter((a) => +new Date(pickTS(a) || 0) >= start);
+  }
+
+  if (rangeKey === "timeline") {
+    const end = now - (posDays * 24 * 60 * 60 * 1000);
+    const start = end - (winDays * 24 * 60 * 60 * 1000);
+
+    return list.filter((a) => {
+      const ts = +new Date(pickTS(a) || 0);
+      return ts >= start && ts <= end;
+    });
   }
 
   const days = rangeKey === "7d" ? 7 : 30;
@@ -196,10 +207,12 @@ function readUrlState() {
   if (p.has("theme")) out.theme = p.get("theme");
   if (p.has("cluster")) out.cluster = p.get("cluster");
   if (p.has("mix")) out.mix = p.get("mix");
+  if (p.has("win")) out.win = p.get("win");
+  if (p.has("pos")) out.pos = p.get("pos");
   return out;
 }
 
-function writeUrlState({ mode, sort, range, q, theme, clusterMode, mix }) {
+function writeUrlState({ mode, sort, range, q, theme, clusterMode, mix, win, pos }) {
   const p = new URLSearchParams();
 
   p.set("mode", mode);
@@ -210,6 +223,11 @@ function writeUrlState({ mode, sort, range, q, theme, clusterMode, mix }) {
   p.set("theme", theme);
   p.set("cluster", clusterMode ? "1" : "0");
   p.set("mix", mix);
+
+  if (range === "timeline") {
+    p.set("win", String(win || 14));
+    p.set("pos", String(pos || 0));
+  }
 
   const next = `${window.location.pathname}?${p.toString()}`;
   window.history.replaceState(null, "", next);
@@ -385,19 +403,31 @@ export async function initWordCloudPage() {
   let _sort = ["priority", "freq", "diff", "recent", "persist"].includes(st.sort)
     ? st.sort
     : "priority";
-  let _range = ["all", "30d", "7d", "today"].includes(st.range) ? st.range : "all";
+  let _range = ["all", "30d", "7d", "today", "timeline"].includes(st.range) ? st.range : "all";
   let _query = String(st.query || "");
 
   let _mix = st.mix === "view" ? "view" : "smart"; // Phase E default = smart
   let _clusterMode = !!st.clusterMode;
 
+  // Phase F: Timeline scrub + replay
+  let _timelineWin = Number(st.timelineWin || 14);     // days in window
+  let _timelinePos = Number(st.timelinePos || 0);      // days ago the window ENDs (0 = now)
+  let _isReplay = false;
+  let _replayTimer = null;
+
+  _timelineWin = Math.max(7, Math.min(60, _timelineWin || 14));
+  _timelinePos = Math.max(0, Math.min(90, _timelinePos || 0));
+
   // URL overrides (Phase E)
   if (urlSt.mode === "phonemes" || urlSt.mode === "words") _mode = urlSt.mode;
   if (["priority", "freq", "diff", "recent", "persist"].includes(urlSt.sort)) _sort = urlSt.sort;
-  if (["all", "30d", "7d", "today"].includes(urlSt.range)) _range = urlSt.range;
+  if (["all", "30d", "7d", "today", "timeline"].includes(urlSt.range)) _range = urlSt.range;
   if (typeof urlSt.q === "string") _query = urlSt.q;
   if (urlSt.cluster === "1" || urlSt.cluster === "0") _clusterMode = urlSt.cluster === "1";
   if (urlSt.mix === "smart" || urlSt.mix === "view") _mix = urlSt.mix;
+
+  if (urlSt.win != null) _timelineWin = Math.max(7, Math.min(60, Number(urlSt.win) || 14));
+  if (urlSt.pos != null) _timelinePos = Math.max(0, Math.min(90, Number(urlSt.pos) || 0));
 
   let _theme = (localStorage.getItem(THEME_KEY) || "light").toLowerCase();
   if (_theme !== "night") _theme = "light";
@@ -451,6 +481,25 @@ export async function initWordCloudPage() {
             <button class="lux-wc-chipBtn" data-range="30d">30d</button>
             <button class="lux-wc-chipBtn" data-range="7d">7d</button>
             <button class="lux-wc-chipBtn" data-range="today">Today</button>
+            <button class="lux-wc-chipBtn" data-range="timeline">Timeline</button>
+          </div>
+
+          <div class="lux-wc-timelineRow" id="luxWcTimelineRow">
+            <div class="lux-wc-timelineLabel">Timeline</div>
+
+            <div class="lux-wc-timelineGroup">
+              <div class="lux-wc-tlineMini">Window</div>
+              <input id="luxWcWin" type="range" min="7" max="60" step="1" />
+              <div class="lux-wc-tlineVal" id="luxWcWinVal"></div>
+            </div>
+
+            <div class="lux-wc-timelineGroup">
+              <div class="lux-wc-tlineMini">Ends</div>
+              <input id="luxWcPos" type="range" min="0" max="90" step="1" />
+              <div class="lux-wc-tlineVal" id="luxWcPosVal"></div>
+            </div>
+
+            <button class="lux-pbtn lux-pbtn--ghost" id="luxWcReplay">▶ Replay</button>
           </div>
 
           <!-- Phase D power row -->
@@ -533,6 +582,13 @@ export async function initWordCloudPage() {
   const coachQuick = root.querySelector("#luxWcCoachQuick");
   const coachPinTop = root.querySelector("#luxWcCoachPinTop");
 
+  const timelineRow = root.querySelector("#luxWcTimelineRow");
+  const winSlider = root.querySelector("#luxWcWin");
+  const posSlider = root.querySelector("#luxWcPos");
+  const winVal = root.querySelector("#luxWcWinVal");
+  const posVal = root.querySelector("#luxWcPosVal");
+  const btnReplay = root.querySelector("#luxWcReplay");
+
   function applyTheme() {
     const isNight = _theme === "night";
     shell.classList.toggle("lux-wc--night", isNight);
@@ -549,6 +605,8 @@ export async function initWordCloudPage() {
       query: _query,
       clusterMode: _clusterMode,
       mix: _mix,
+      timelineWin: _timelineWin,
+      timelinePos: _timelinePos,
     });
   }
 
@@ -561,7 +619,60 @@ export async function initWordCloudPage() {
       theme: _theme,
       clusterMode: _clusterMode,
       mix: _mix,
+      win: _timelineWin,
+      pos: _timelinePos,
     });
+  }
+
+  function fmtDaysAgo(pos) {
+    if (pos === 0) return "Now";
+    return `${pos}d ago`;
+  }
+
+  function applyTimelineUI() {
+    const show = _range === "timeline";
+    if (timelineRow) timelineRow.style.display = show ? "flex" : "none";
+
+    if (winSlider) winSlider.value = String(_timelineWin);
+    if (posSlider) posSlider.value = String(_timelinePos);
+
+    if (winVal) winVal.textContent = `${_timelineWin}d`;
+    if (posVal) posVal.textContent = fmtDaysAgo(_timelinePos);
+  }
+
+  function stopReplay() {
+    _isReplay = false;
+    if (_replayTimer) {
+      clearInterval(_replayTimer);
+      _replayTimer = null;
+    }
+    if (btnReplay) btnReplay.textContent = "▶ Replay";
+  }
+
+  function startReplay() {
+    stopReplay();
+    _isReplay = true;
+    if (btnReplay) btnReplay.textContent = "⏸ Pause";
+
+    // start from oldest-to-newest within slider max
+    let p = 90;
+    _timelinePos = p;
+
+    _replayTimer = setInterval(() => {
+      if (!_isReplay) return;
+
+      p -= 1;
+      if (p < 0) {
+        stopReplay();
+        return;
+      }
+
+      _timelinePos = p;
+      persist();
+      syncUrl();
+      applyTimelineUI();
+      draw(false);
+    }, 420);
   }
 
   function setModeStory() {
@@ -580,6 +691,8 @@ export async function initWordCloudPage() {
 
     mixView.classList.toggle("is-on", _mix === "view");
     mixSmart.classList.toggle("is-on", _mix === "smart");
+
+    applyTimelineUI();
   }
 
   function top3FromView(items) {
@@ -750,7 +863,7 @@ export async function initWordCloudPage() {
     const btn = e.target?.closest?.("[data-open]");
     if (!btn) return;
 
-    const attemptsInRange = filterAttemptsByRange(_attemptsAll, _range);
+    const attemptsInRange = filterAttemptsByRange(_attemptsAll, _range, _timelineWin, _timelinePos);
 
     const id = String(btn.getAttribute("data-open") || "").trim();
     if (!id) return;
@@ -794,7 +907,7 @@ export async function initWordCloudPage() {
 
     await ensureData(forceFetch);
 
-    const attemptsInRange = filterAttemptsByRange(_attemptsAll, _range);
+    const attemptsInRange = filterAttemptsByRange(_attemptsAll, _range, _timelineWin, _timelinePos);
     const items = computeItemsForView(attemptsInRange);
 
     _lastItems = items;
@@ -819,7 +932,7 @@ export async function initWordCloudPage() {
       clusterMode: _clusterMode,
       pinnedSet: pinnedSetNow(),
       onSelect: (hit) => {
-        const attemptsRange = filterAttemptsByRange(_attemptsAll, _range);
+        const attemptsRange = filterAttemptsByRange(_attemptsAll, _range, _timelineWin, _timelinePos);
 
         const metaObj = hit?.meta || {};
         const isPh = _mode === "phonemes" || metaObj.ipa != null;
@@ -851,8 +964,12 @@ export async function initWordCloudPage() {
     });
 
     const label = _mode === "phonemes" ? "Phonemes" : "Words";
+    const tl =
+      _range === "timeline"
+        ? ` · Window: ${_timelineWin}d ending ${fmtDaysAgo(_timelinePos)}`
+        : "";
     meta.textContent =
-      `Updated ${new Date().toLocaleString()} · ${label} · ${rangeLabel(_range)} · Sort: ${sortLabel(_sort)} · Mix: ${mixLabel(_mix)}` +
+      `Updated ${new Date().toLocaleString()} · ${label} · ${rangeLabel(_range)}${tl} · Sort: ${sortLabel(_sort)} · Mix: ${mixLabel(_mix)}` +
       (q ? ` · Search: “${_query.trim()}”` : "");
 
     persist();
@@ -889,6 +1006,10 @@ export async function initWordCloudPage() {
 
   rangeBtns.forEach((b) => b.addEventListener("click", () => {
     _range = b.dataset.range;
+
+    // safety: stop replay if user leaves timeline
+    if (_range !== "timeline") stopReplay();
+
     persist();
     syncUrl();
     draw(false);
@@ -982,6 +1103,33 @@ export async function initWordCloudPage() {
     window.location.assign("./convo.html#chat");
   });
 
+  // Timeline controls
+  winSlider?.addEventListener("input", () => {
+    _timelineWin = Math.max(7, Math.min(60, Number(winSlider.value) || 14));
+    persist();
+    syncUrl();
+    applyTimelineUI();
+    draw(false);
+  });
+
+  posSlider?.addEventListener("input", () => {
+    _timelinePos = Math.max(0, Math.min(90, Number(posSlider.value) || 0));
+    persist();
+    syncUrl();
+    applyTimelineUI();
+    draw(false);
+  });
+
+  btnReplay?.addEventListener("click", () => {
+    if (_range !== "timeline") {
+      _range = "timeline";
+      setActiveButtons();
+      applyTimelineUI();
+    }
+    if (_isReplay) stopReplay();
+    else startReplay();
+  });
+
   // Coach Lane
   coachQuick?.addEventListener("click", () => {
     if (!_lastModel) return;
@@ -1002,6 +1150,7 @@ export async function initWordCloudPage() {
   applyTheme();
   setActiveButtons();
   setModeStory();
+  applyTimelineUI();
   await draw(false);
 
   setInterval(() => {

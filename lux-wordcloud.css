@@ -362,3 +362,64 @@
 .lux-wc--night .lux-wc-coachHint{
   color: rgba(255,255,255,0.68);
 }
+/* =========================
+   Phase F: Timeline Scrub + Replay
+========================= */
+
+.lux-wc-timelineRow{
+  margin-top: 10px;
+  display: none; /* only shows in Timeline mode */
+  gap: 14px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: rgba(255,255,255,0.78);
+}
+
+.lux-wc-timelineLabel{
+  font-weight: 950;
+  color: #0f172a;
+  margin-right: 6px;
+}
+
+.lux-wc-timelineGroup{
+  display:flex;
+  align-items:center;
+  gap: 8px;
+}
+
+.lux-wc-tlineMini{
+  font-weight: 900;
+  color: rgba(100,116,139,0.9);
+  font-size: 0.92rem;
+  min-width: 52px;
+}
+
+.lux-wc-tlineVal{
+  font-weight: 950;
+  color: #0f172a;
+  min-width: 62px;
+  text-align: right;
+}
+
+.lux-wc-timelineRow input[type="range"]{
+  width: 210px;
+  accent-color: #2563eb;
+}
+
+/* Night */
+.lux-wc--night .lux-wc-timelineRow{
+  background: rgba(20,30,58,0.55);
+  border: 1px solid rgba(255,255,255,0.10);
+}
+.lux-wc--night .lux-wc-timelineLabel{
+  color: rgba(255,255,255,0.92);
+}
+.lux-wc--night .lux-wc-tlineMini{
+  color: rgba(255,255,255,0.70);
+}
+.lux-wc--night .lux-wc-tlineVal{
+  color: rgba(255,255,255,0.88);
+}
