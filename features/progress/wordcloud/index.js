@@ -7,6 +7,8 @@ import { ensureWordCloudLibs } from "./libs.js";
 import { createCloudActionSheet } from "./action-sheet.js";
 
 import {
+  readState,
+  writeState,
   savedListForMode,
   addManySaved,
   THEME_KEY,
@@ -14,6 +16,7 @@ import {
   PIN_KEY,
 } from "./state-store.js";
 
+import { readUrlState, writeUrlState } from "./url-state.js";
 import { rangeLabel, sortLabel, mixLabel } from "./labels.js";
 
 import {
@@ -28,7 +31,6 @@ import {
 import {
   attemptOverallScore,
   attemptWhen,
-  attemptTitle,
   findRecentAttemptsForWord,
   findRecentAttemptsForPhoneme,
 } from "./attempt-utils.js";
@@ -45,7 +47,8 @@ import {
 
 import { openDetailsModal } from "../attempt-detail-modal.js";
 
-import { createWordcloudContext } from "./context.js";
+// ✅ COMMIT 10: extract DOM querying into dom.js
+import { getWordcloudDom } from "./dom.js";
 
 const ROOT_ID = "wordcloud-root";
 const AUTO_REFRESH_MS = 10 * 60 * 1000;
@@ -91,42 +94,75 @@ export async function initWordCloudPage() {
   const root = document.getElementById(ROOT_ID);
   if (!root) return;
 
-  // ✅ NEW: single state source
-  const ctx = createWordcloudContext();
+  const st = readState();
+  const urlSt = readUrlState();
+
+  let _mode = st.mode === "phonemes" ? "phonemes" : "words";
+  let _sort = ["priority", "freq", "diff", "recent", "persist"].includes(st.sort)
+    ? st.sort
+    : "priority";
+  let _range = ["all", "30d", "7d", "today", "timeline"].includes(st.range)
+    ? st.range
+    : "all";
+  let _query = String(st.query || "");
+
+  let _mix = st.mix === "view" ? "view" : "smart"; // Phase E default = smart
+  let _clusterMode = !!st.clusterMode;
 
   // Phase F: Timeline scrub + replay
+  let _timelineWin = Number(st.timelineWin || 14); // days in window
+  let _timelinePos = Number(st.timelinePos || 0); // days ago the window ENDs (0 = now)
   let _isReplay = false;
   let _replayTimer = null;
 
-  let _attemptsAll = [];
-  let _lastModel = null;
+  _timelineWin = Math.max(7, Math.min(60, _timelineWin || 14));
+  _timelinePos = Math.max(0, Math.min(90, _timelinePos || 0));
 
+  // URL overrides (Phase E)
+  if (urlSt.mode === "phonemes" || urlSt.mode === "words") _mode = urlSt.mode;
+  if (["priority", "freq", "diff", "recent", "persist"].includes(urlSt.sort))
+    _sort = urlSt.sort;
+  if (["all", "30d", "7d", "today", "timeline"].includes(urlSt.range))
+    _range = urlSt.range;
+  if (typeof urlSt.q === "string") _query = urlSt.q;
+  if (urlSt.cluster === "1" || urlSt.cluster === "0")
+    _clusterMode = urlSt.cluster === "1";
+  if (urlSt.mix === "smart" || urlSt.mix === "view") _mix = urlSt.mix;
+
+  if (urlSt.win != null)
+    _timelineWin = Math.max(7, Math.min(60, Number(urlSt.win) || 14));
+  if (urlSt.pos != null)
+    _timelinePos = Math.max(0, Math.min(90, Number(urlSt.pos) || 0));
+
+  let _theme = (localStorage.getItem(THEME_KEY) || "light").toLowerCase();
+  if (_theme !== "night") _theme = "light";
+  if (urlSt.theme === "night" || urlSt.theme === "light") _theme = urlSt.theme;
+
+  // IMPORTANT:
+  // Keep this as a stable array reference so render.js always sees updates.
+  // ✅ Minimal fix: mutate instead of reassigning inside ensureData()
+  let _attemptsAll = [];
+
+  let _lastModel = null;
   let _lastItems = [];
   let _lastPool = [];
 
+  // ✅ mount template, then grab all DOM in one call
   root.innerHTML = wordcloudTemplateHtml();
-
-  const shell = root.querySelector("#luxWcShell");
-  const canvas = root.querySelector("#luxWcCanvas");
-  const meta = root.querySelector("#luxWcMeta");
-  const sub = root.querySelector("#luxWcSub");
-
-  // Loading overlay (center canvas)
-  const overlay = root.querySelector("#luxWcOverlay");
-  const overlayTitle = root.querySelector("#luxWcOverlayTitle");
-  const overlaySub = root.querySelector("#luxWcOverlaySub");
+  const dom = getWordcloudDom(root);
 
   // Render sequencing guard (prevents old async layouts hiding new overlay)
   const _renderSeq = { value: 0 };
 
   function setBusy(on, title = "Loading…", subText = "") {
-    if (!overlay) return;
-    overlay.hidden = !on;
-    overlay.style.display = on ? "flex" : "none"; // ✅ override any CSS conflict
-    overlay.setAttribute("aria-busy", on ? "true" : "false");
+    if (!dom.overlay) return;
 
-    if (overlayTitle) overlayTitle.textContent = title;
-    if (overlaySub) overlaySub.textContent = subText || "";
+    dom.overlay.hidden = !on;
+    dom.overlay.style.display = on ? "flex" : "none"; // ✅ override any CSS conflict
+    dom.overlay.setAttribute("aria-busy", on ? "true" : "false");
+
+    if (dom.overlayTitle) dom.overlayTitle.textContent = title;
+    if (dom.overlaySub) dom.overlaySub.textContent = subText || "";
   }
 
   // Ensures the overlay becomes visible BEFORE heavy work starts
@@ -136,38 +172,46 @@ export async function initWordCloudPage() {
     });
   }
 
-  const btnTheme = root.querySelector("#luxWcThemeToggle");
-
-  const pills = Array.from(root.querySelectorAll(".lux-wc-pill"));
-  const sortBtns = Array.from(root.querySelectorAll("[data-sort]"));
-  const rangeBtns = Array.from(root.querySelectorAll("[data-range]"));
-
-  const btnCluster = root.querySelector("#luxWcCluster");
-  const mixView = root.querySelector("#luxWcMixView");
-  const mixSmart = root.querySelector("#luxWcMixSmart");
-
-  const targetsStrip = root.querySelector("#luxWcTargets");
-  const savedStrip = root.querySelector("#luxWcSaved");
-
-  const coachHint = root.querySelector("#luxWcCoachHint");
-
-  const timelineRow = root.querySelector("#luxWcTimelineRow");
-  const winSlider = root.querySelector("#luxWcWin");
-  const posSlider = root.querySelector("#luxWcPos");
-  const winVal = root.querySelector("#luxWcWinVal");
-  const posVal = root.querySelector("#luxWcPosVal");
-  const btnReplay = root.querySelector("#luxWcReplay");
-
   function applyTheme() {
-    const S = ctx.get();
-    const isNight = S.theme === "night";
-    shell.classList.toggle("lux-wc--night", isNight);
-    if (btnTheme) btnTheme.textContent = isNight ? "☀️" : "🌙";
-    if (btnTheme)
-      btnTheme.title = isNight ? "Switch to light theme" : "Switch to night theme";
+    const isNight = _theme === "night";
+    if (dom.shell) dom.shell.classList.toggle("lux-wc--night", isNight);
+
+    if (dom.btnTheme) dom.btnTheme.textContent = isNight ? "☀️" : "🌙";
+    if (dom.btnTheme)
+      dom.btnTheme.title = isNight
+        ? "Switch to light theme"
+        : "Switch to night theme";
+
     try {
-      localStorage.setItem(THEME_KEY, S.theme);
+      localStorage.setItem(THEME_KEY, _theme);
     } catch (_) {}
+  }
+
+  function persist() {
+    writeState({
+      mode: _mode,
+      sort: _sort,
+      range: _range,
+      query: _query,
+      clusterMode: _clusterMode,
+      mix: _mix,
+      timelineWin: _timelineWin,
+      timelinePos: _timelinePos,
+    });
+  }
+
+  function syncUrl() {
+    writeUrlState({
+      mode: _mode,
+      sort: _sort,
+      range: _range,
+      q: _query?.trim() || "",
+      theme: _theme,
+      clusterMode: _clusterMode,
+      mix: _mix,
+      win: _timelineWin,
+      pos: _timelinePos,
+    });
   }
 
   function fmtDaysAgo(pos) {
@@ -176,15 +220,14 @@ export async function initWordCloudPage() {
   }
 
   function applyTimelineUI() {
-    const S = ctx.get();
-    const show = S.range === "timeline";
-    if (timelineRow) timelineRow.style.display = show ? "flex" : "none";
+    const show = _range === "timeline";
+    if (dom.timelineRow) dom.timelineRow.style.display = show ? "flex" : "none";
 
-    if (winSlider) winSlider.value = String(S.timelineWin);
-    if (posSlider) posSlider.value = String(S.timelinePos);
+    if (dom.winSlider) dom.winSlider.value = String(_timelineWin);
+    if (dom.posSlider) dom.posSlider.value = String(_timelinePos);
 
-    if (winVal) winVal.textContent = `${S.timelineWin}d`;
-    if (posVal) posVal.textContent = fmtDaysAgo(S.timelinePos);
+    if (dom.winVal) dom.winVal.textContent = `${_timelineWin}d`;
+    if (dom.posVal) dom.posVal.textContent = fmtDaysAgo(_timelinePos);
   }
 
   function stopReplay() {
@@ -193,17 +236,17 @@ export async function initWordCloudPage() {
       clearInterval(_replayTimer);
       _replayTimer = null;
     }
-    if (btnReplay) btnReplay.textContent = "▶ Replay";
+    if (dom.btnReplay) dom.btnReplay.textContent = "▶ Replay";
   }
 
   function startReplay() {
     stopReplay();
     _isReplay = true;
-    if (btnReplay) btnReplay.textContent = "⏸ Pause";
+    if (dom.btnReplay) dom.btnReplay.textContent = "⏸ Pause";
 
     // start from oldest-to-newest within slider max
     let p = 90;
-    ctx.set({ timelinePos: p });
+    _timelinePos = p;
 
     _replayTimer = setInterval(() => {
       if (!_isReplay) return;
@@ -214,93 +257,100 @@ export async function initWordCloudPage() {
         return;
       }
 
-      ctx.set({ timelinePos: p });
+      _timelinePos = p;
+      persist();
+      syncUrl();
       applyTimelineUI();
       draw(false);
     }, 420);
   }
 
   function setModeStory() {
-    const S = ctx.get();
-    sub.textContent =
-      S.mode === "phonemes"
+    if (!dom.sub) return;
+    dom.sub.textContent =
+      _mode === "phonemes"
         ? "Sounds that show up often + cause trouble (size = frequency, color = Lux difficulty)"
         : "Words you use often + struggle with most (size = frequency, color = Lux difficulty)";
   }
 
   function setActiveButtons() {
-    const S = ctx.get();
+    (dom.pills || []).forEach((b) =>
+      b.classList.toggle("is-active", b.dataset.mode === _mode)
+    );
+    (dom.sortBtns || []).forEach((b) =>
+      b.classList.toggle("is-on", b.dataset.sort === _sort)
+    );
+    (dom.rangeBtns || []).forEach((b) =>
+      b.classList.toggle("is-on", b.dataset.range === _range)
+    );
 
-    pills.forEach((b) => b.classList.toggle("is-active", b.dataset.mode === S.mode));
-    sortBtns.forEach((b) => b.classList.toggle("is-on", b.dataset.sort === S.sort));
-    rangeBtns.forEach((b) => b.classList.toggle("is-on", b.dataset.range === S.range));
+    if (dom.btnCluster) dom.btnCluster.classList.toggle("is-on", _clusterMode);
 
-    if (btnCluster) btnCluster.classList.toggle("is-on", !!S.clusterMode);
-
-    if (mixView) mixView.classList.toggle("is-on", S.mix === "view");
-    if (mixSmart) mixSmart.classList.toggle("is-on", S.mix === "smart");
+    if (dom.mixView) dom.mixView.classList.toggle("is-on", _mix === "view");
+    if (dom.mixSmart) dom.mixSmart.classList.toggle("is-on", _mix === "smart");
 
     applyTimelineUI();
   }
 
   function top3FromView(items) {
-    const S = ctx.get();
     const out = [];
     const seen = new Set();
+
     for (const x of items || []) {
-      const id = lower(idFromItem(S.mode, x));
+      const id = lower(idFromItem(_mode, x));
       if (!id || seen.has(id)) continue;
       seen.add(id);
       out.push(x);
       if (out.length >= 3) break;
     }
+
     return out;
   }
 
   function getTop3() {
-    const S = ctx.get();
-    if (S.mix === "smart") {
-      return smartTop3(S.mode, _lastPool);
-    }
+    if (_mix === "smart") return smartTop3(_mode, _lastPool);
     return top3FromView(_lastItems);
   }
 
   function updateCoachHint() {
-    const S = ctx.get();
+    if (!dom.coachHint) return;
+
     const top = getTop3();
     if (!top.length) {
-      coachHint.textContent = "";
+      dom.coachHint.textContent = "";
       return;
     }
-    const names = top.map((x) => idFromItem(S.mode, x)).slice(0, 3);
-    coachHint.textContent =
-      S.mode === "phonemes"
+
+    const names = top.map((x) => idFromItem(_mode, x)).slice(0, 3);
+    dom.coachHint.textContent =
+      _mode === "phonemes"
         ? `Targets: /${names.join("/, /")}/`
         : `Targets: ${names.join(", ")}`;
   }
 
-  function renderTargetsStrip(attemptsInRange) {
-    const S = ctx.get();
-    const top = getTop3();
+  function renderTargetsStrip() {
+    if (!dom.targetsStrip) return;
 
+    const top = getTop3();
     if (!top.length) {
-      targetsStrip.innerHTML = "";
+      dom.targetsStrip.innerHTML = "";
+      updateCoachHint();
       return;
     }
 
-    targetsStrip.innerHTML = `
-      <div class="lux-wc-stripLabel">Top targets (${mixLabel(S.mix)})</div>
+    dom.targetsStrip.innerHTML = `
+      <div class="lux-wc-stripLabel">Top targets (${mixLabel(_mix)})</div>
       <div class="lux-wc-stripRow">
         ${top
           .map((x) => {
-            const id = idFromItem(S.mode, x);
+            const id = idFromItem(_mode, x);
             const avg = Math.round(Number(x.avg || 0));
             return `<button class="lux-wc-chipTarget" data-open="${id}">
-            <span class="lux-wc-chipTxt">${
-              S.mode === "phonemes" ? `/${id}/` : id
-            }</span>
-            <span class="lux-wc-chipPct">${avg}%</span>
-          </button>`;
+              <span class="lux-wc-chipTxt">${
+                _mode === "phonemes" ? `/${id}/` : id
+              }</span>
+              <span class="lux-wc-chipPct">${avg}%</span>
+            </button>`;
           })
           .join("")}
       </div>
@@ -310,10 +360,10 @@ export async function initWordCloudPage() {
   }
 
   function renderSavedStrip() {
-    const S = ctx.get();
+    if (!dom.savedStrip) return;
 
-    const pins = savedListForMode(PIN_KEY, S.mode).slice(0, 10);
-    const favs = savedListForMode(FAV_KEY, S.mode).slice(0, 10);
+    const pins = savedListForMode(PIN_KEY, _mode).slice(0, 10);
+    const favs = savedListForMode(FAV_KEY, _mode).slice(0, 10);
 
     const mkRow = (title, arr, icon) => {
       if (!arr.length) return "";
@@ -324,10 +374,10 @@ export async function initWordCloudPage() {
             ${arr
               .map(
                 (id) => `
-              <button class="lux-wc-chipSaved" data-open="${id}">
-                ${S.mode === "phonemes" ? `/${id}/` : id}
-              </button>
-            `
+                  <button class="lux-wc-chipSaved" data-open="${id}">
+                    ${_mode === "phonemes" ? `/${id}/` : id}
+                  </button>
+                `
               )
               .join("")}
           </div>
@@ -336,65 +386,70 @@ export async function initWordCloudPage() {
     };
 
     const html = mkRow("Pinned", pins, "📌") + mkRow("Favorites", favs, "⭐");
-    savedStrip.innerHTML = html || "";
+    dom.savedStrip.innerHTML = html || "";
   }
 
   function pinnedSetNow() {
-    const S = ctx.get();
-    const pins = savedListForMode(PIN_KEY, S.mode);
+    const pins = savedListForMode(PIN_KEY, _mode);
     return new Set(pins.map(lower));
   }
 
+  // ✅ MINIMAL FIX (ONLY HERE)
+  // Mutate the existing _attemptsAll array so render.js always sees the same reference.
   async function ensureData(force = false) {
     if (_attemptsAll.length && !force) return;
-    const uid = ensureUID();
-    _attemptsAll = await fetchHistory(uid);
 
-    // ✅ LOG A — right after history is fetched
+    const uid = ensureUID();
+    const next = await fetchHistory(uid);
+
+    _attemptsAll.length = 0;
+    _attemptsAll.push(...(next || []));
+
     console.log("[wc] history attempts:", _attemptsAll?.length, _attemptsAll?.[0]);
   }
 
   function computeItemsForView(attemptsInRange) {
-    const S = ctx.get();
     _lastModel = computeRollups(attemptsInRange);
 
     const raw =
-      S.mode === "phonemes"
+      _mode === "phonemes"
         ? _lastModel?.trouble?.phonemesAll || []
         : _lastModel?.trouble?.wordsAll || [];
 
     // pool for smartMix + better candidate recall
     let pool = raw.slice(0, 60);
 
-    const ids = pool.map((x) => idFromItem(S.mode, x));
+    const ids = pool.map((x) => idFromItem(_mode, x));
     const lastSeen = computeLastSeenMap(
-      S.mode === "phonemes" ? "phonemes" : "words",
+      _mode === "phonemes" ? "phonemes" : "words",
       attemptsInRange,
       ids
     );
 
     pool = pool.map((x) => {
-      const id = lower(idFromItem(S.mode, x));
+      const id = lower(idFromItem(_mode, x));
       return { ...x, lastSeenTS: lastSeen.get(id) || 0 };
     });
 
     // view sort rules shape cloud
     let items = pool.slice();
 
-    if (S.sort === "freq")
+    if (_sort === "freq")
       items.sort((a, b) => Number(b.count || 0) - Number(a.count || 0));
-    else if (S.sort === "diff")
+    else if (_sort === "diff")
       items.sort((a, b) => Number(a.avg || 0) - Number(b.avg || 0));
-    else if (S.sort === "recent")
-      items.sort((a, b) => Number(b.lastSeenTS || 0) - Number(a.lastSeenTS || 0));
-    else if (S.sort === "persist")
+    else if (_sort === "recent")
+      items.sort(
+        (a, b) => Number(b.lastSeenTS || 0) - Number(a.lastSeenTS || 0)
+      );
+    else if (_sort === "persist")
       items.sort((a, b) => persistentScore(b) - persistentScore(a));
     else items.sort((a, b) => Number(b.priority || 0) - Number(a.priority || 0));
 
     // search ordering
-    const q = lower(S.query);
+    const q = lower(_query);
     if (q) {
-      const match = (x) => lower(idFromItem(S.mode, x)).includes(q);
+      const match = (x) => lower(idFromItem(_mode, x)).includes(q);
       const hits = items.filter(match);
       const rest = items.filter((x) => !match(x));
       items = [...hits, ...rest];
@@ -412,6 +467,7 @@ export async function initWordCloudPage() {
       saveNextActivityPlan(plan);
       window.location.assign("./convo.html#chat");
     },
+
     onOpenAttempt: (attempt) => {
       if (!attempt) return;
       const score = attemptOverallScore(attempt);
@@ -422,6 +478,7 @@ export async function initWordCloudPage() {
         session: null,
       });
     },
+
     onStoreChange: () => {
       renderSavedStrip();
       draw(false);
@@ -429,21 +486,19 @@ export async function initWordCloudPage() {
   });
 
   function openSheetForId(id) {
-    const S = ctx.get();
-
     // ✅ CORRECT ORDER: (allAttempts, range, timelineWin, timelinePos)
     const attemptsInRange = filterAttemptsByRange(
       _attemptsAll,
-      S.range,
-      S.timelineWin,
-      S.timelinePos
+      _range,
+      _timelineWin,
+      _timelinePos
     );
 
     const hitItem = (_lastPool || []).find(
-      (x) => lower(idFromItem(S.mode, x)) === lower(id)
+      (x) => lower(idFromItem(_mode, x)) === lower(id)
     );
 
-    const kind = S.mode === "phonemes" ? "phoneme" : "word";
+    const kind = _mode === "phonemes" ? "phoneme" : "word";
     const title = kind === "phoneme" ? `/${id}/` : id;
 
     const avg = hitItem ? Number(hitItem.avg || 0) : 0;
@@ -474,18 +529,16 @@ export async function initWordCloudPage() {
     const filterAttemptsByRangeLogged = (allAttempts, range, win, pos) => {
       const attemptsInRange = filterAttemptsByRange(allAttempts, range, win, pos);
 
-      const S = ctx.get();
-
       // ✅ LOG B — right after range filter
       console.log(
         "[wc] attempts in range:",
         attemptsInRange?.length,
         "range=",
-        S.range,
+        _range,
         "win=",
-        S.timelineWin,
+        _timelineWin,
         "pos=",
-        S.timelinePos
+        _timelinePos
       );
 
       return attemptsInRange;
@@ -494,15 +547,11 @@ export async function initWordCloudPage() {
     const computeItemsForViewLogged = (attemptsInRange) => {
       const items = computeItemsForView(attemptsInRange);
 
-      const S = ctx.get();
-
       // ✅ LOG C — right after items computed
-      console.log("[wc] items:", items?.length, "mode=", S.mode, "sort=", S.sort);
+      console.log("[wc] items:", items?.length, "mode=", _mode, "sort=", _sort);
 
       return items;
     };
-
-    const S = ctx.get();
 
     await drawWordcloud({
       forceFetch,
@@ -512,17 +561,17 @@ export async function initWordCloudPage() {
       setBusy,
       waitTwoFrames,
 
-      metaEl: meta,
-      canvas,
+      metaEl: dom.meta,
+      canvas: dom.canvas,
 
-      mode: S.mode,
-      range: S.range,
-      timelineWin: S.timelineWin,
-      timelinePos: S.timelinePos,
-      query: S.query,
-      sort: S.sort,
-      mix: S.mix,
-      clusterMode: S.clusterMode,
+      mode: _mode,
+      range: _range,
+      timelineWin: _timelineWin,
+      timelinePos: _timelinePos,
+      query: _query,
+      sort: _sort,
+      mix: _mix,
+      clusterMode: _clusterMode,
 
       attemptsAll: _attemptsAll,
       ensureWordCloudLibs,
@@ -542,9 +591,8 @@ export async function initWordCloudPage() {
       mixLabel,
       fmtDaysAgo,
 
-      persist: () => {}, // ctx owns persistence now
-      syncUrl: () => {}, // ctx owns URL sync now
-
+      persist,
+      syncUrl,
       setActiveButtons,
       setModeStory,
 
@@ -553,18 +601,16 @@ export async function initWordCloudPage() {
       },
 
       onSelect: (hit) => {
-        const S2 = ctx.get();
-
         // ✅ CORRECT ORDER: (allAttempts, range, timelineWin, timelinePos)
         const attemptsRange = filterAttemptsByRange(
           _attemptsAll,
-          S2.range,
-          S2.timelineWin,
-          S2.timelinePos
+          _range,
+          _timelineWin,
+          _timelinePos
         );
 
         const metaObj = hit?.meta || {};
-        const isPh = S2.mode === "phonemes" || metaObj.ipa != null;
+        const isPh = _mode === "phonemes" || metaObj.ipa != null;
 
         const kind = isPh ? "phoneme" : "word";
         const id = isPh
@@ -593,16 +639,183 @@ export async function initWordCloudPage() {
     });
   }
 
-  // ✅ events.js refactor: pass ctx directly
-  const redraw = (forceFetch = false) => {
-    applyTheme();
-    setActiveButtons();
-    setModeStory();
-    applyTimelineUI();
-    return draw(!!forceFetch);
-  };
+  // ---------- bind events ----------
+  bindWordcloudEvents(root, {
+    goBack: () => window.location.assign("./progress.html"),
 
-  bindWordcloudEvents(root, { ctx, redraw });
+    toggleTheme: () => {
+      _theme = _theme === "night" ? "light" : "night";
+      applyTheme();
+      persist();
+      syncUrl();
+    },
+
+    redraw: (forceFetch = false) => draw(!!forceFetch),
+
+    setMode: (mode) => {
+      _mode = mode === "phonemes" ? "phonemes" : "words";
+      persist();
+      syncUrl();
+      draw(false);
+    },
+
+    setSort: (sort) => {
+      _sort = ["priority", "freq", "diff", "recent", "persist"].includes(sort)
+        ? sort
+        : _sort;
+      persist();
+      syncUrl();
+      draw(false);
+    },
+
+    setRange: (range) => {
+      _range = ["all", "30d", "7d", "today", "timeline"].includes(range)
+        ? range
+        : _range;
+
+      // safety: stop replay if user leaves timeline
+      if (_range !== "timeline") stopReplay();
+
+      persist();
+      syncUrl();
+      draw(false);
+    },
+
+    setQuery: (q) => {
+      _query = String(q || "");
+      persist();
+      syncUrl();
+      draw(false);
+    },
+
+    clearQuery: () => {
+      _query = "";
+      persist();
+      syncUrl();
+      draw(false);
+    },
+
+    toggleCluster: () => {
+      _clusterMode = !_clusterMode;
+      persist();
+      syncUrl();
+      draw(false);
+    },
+
+    snapshot: () => {
+      try {
+        if (!dom.canvas) return;
+        const a = document.createElement("a");
+        a.download = `lux-cloud-${_mode}-${Date.now()}.png`;
+        a.href = dom.canvas.toDataURL("image/png");
+        a.click();
+      } catch (_) {}
+    },
+
+    setMix: (mix) => {
+      _mix = mix === "view" ? "view" : "smart";
+      persist();
+      syncUrl();
+      draw(false);
+    },
+
+    generateTop3: () => {
+      if (!_lastModel) return;
+
+      const top = getTop3();
+      if (!top.length) return;
+
+      const base = buildNextActivityPlanFromModel(_lastModel, {
+        source: "cloud-top3",
+        maxWords: 6,
+      });
+      if (!base) return;
+
+      if (_mode === "words") {
+        const chosen = top
+          .map((x) => ({
+            word: String(x.word || "").trim(),
+            avg: Number(x.avg || 0) || null,
+            count: Number(x.count || 0) || null,
+            days: Number(x.days || 0) || null,
+            priority: Number(x.priority || 0) || null,
+          }))
+          .filter((x) => x.word);
+
+        const rest = (base.targets?.words || []).filter(
+          (w) => !chosen.some((c) => lower(c.word) === lower(w?.word))
+        );
+
+        base.targets.words = [...chosen, ...rest].slice(0, 6);
+      } else {
+        const best = top[0];
+        base.targets.phoneme = {
+          ipa: String(best.ipa || "").trim(),
+          avg: Number(best.avg || 0) || null,
+          count: Number(best.count || 0) || null,
+          days: Number(best.days || 0) || null,
+          priority: Number(best.priority || 0) || null,
+        };
+      }
+
+      saveNextActivityPlan(base);
+      window.location.assign("./convo.html#chat");
+    },
+
+    setTimelineWin: (val) => {
+      _timelineWin = Math.max(7, Math.min(60, Number(val) || 14));
+      persist();
+      syncUrl();
+      applyTimelineUI();
+      draw(false);
+    },
+
+    setTimelinePos: (val) => {
+      _timelinePos = Math.max(0, Math.min(90, Number(val) || 0));
+      persist();
+      syncUrl();
+      applyTimelineUI();
+      draw(false);
+    },
+
+    toggleReplay: () => {
+      if (_range !== "timeline") {
+        _range = "timeline";
+        setActiveButtons();
+        applyTimelineUI();
+      }
+      if (_isReplay) stopReplay();
+      else startReplay();
+    },
+
+    coachQuick: () => {
+      if (!_lastModel) return;
+
+      const top = getTop3();
+      if (!top.length) return;
+
+      const base = buildNextActivityPlanFromModel(_lastModel, {
+        source: "cloud-top3",
+        maxWords: 6,
+      });
+      if (!base) return;
+
+      saveNextActivityPlan(base);
+      window.location.assign("./convo.html#chat");
+    },
+
+    coachPinTop: () => {
+      const top = getTop3();
+      const ids = top.map((x) => idFromItem(_mode, x)).filter(Boolean);
+      if (!ids.length) return;
+
+      addManySaved(PIN_KEY, _mode, ids);
+      renderSavedStrip();
+      draw(false);
+    },
+
+    openSheetForId,
+  });
 
   // initial
   applyTheme();
