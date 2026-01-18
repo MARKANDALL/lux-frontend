@@ -1,6 +1,4 @@
 // features/progress/wordcloud/index.js
-import { fetchHistory } from "/src/api/index.js";
-import { ensureUID } from "/api/identity.js";
 import { ensureWordCloudLibs } from "./libs.js";
 
 import {
@@ -63,8 +61,10 @@ import { computeItemsForView } from "./view-logic.js";
 // ✅ COMMIT 14: UI sync layer extracted
 import { createWordcloudUIManager } from "./ui-manager.js";
 
+// ✅ COMMIT 15: data loader extracted
+import { createWordcloudDataLoader } from "./data-loader.js";
+
 const ROOT_ID = "wordcloud-root";
-const AUTO_REFRESH_MS = 10 * 60 * 1000;
 const TOP_N = 20;
 
 export async function initWordCloudPage() {
@@ -109,6 +109,9 @@ export async function initWordCloudPage() {
     fmtDaysAgo,
   });
 
+  // ✅ COMMIT 15 — data loader owns backend communication + refresh scheduling
+  const data = createWordcloudDataLoader({ attemptsAll });
+
   // ✅ COMMIT 12B — strips UI controller
   const strips = createWordcloudStrips({
     ctx,
@@ -122,24 +125,6 @@ export async function initWordCloudPage() {
     PIN_KEY,
     FAV_KEY,
   });
-
-  // ✅ MINIMAL FIX (ONLY HERE)
-  // Mutate the existing attemptsAll array so render.js always sees the same reference.
-  async function ensureData(force = false) {
-    if (attemptsAll.length && !force) return;
-
-    const uid = ensureUID();
-    const next = await fetchHistory(uid);
-
-    attemptsAll.length = 0;
-    attemptsAll.push(...(next || []));
-
-    console.log(
-      "[wc] history attempts:",
-      attemptsAll?.length,
-      attemptsAll?.[0]
-    );
-  }
 
   // ✅ COMMIT 12C — action sheet controller owns sheet logic
   let sheetCtrl = null;
@@ -230,7 +215,9 @@ export async function initWordCloudPage() {
 
       attemptsAll,
       ensureWordCloudLibs,
-      ensureData,
+
+      // ✅ COMMIT 15 — data loader supplies ensureData
+      ensureData: data.ensureData,
 
       // ✅ pass wrappers (this is how we guarantee logs happen in index.js)
       filterAttemptsByRange: filterAttemptsByRangeLogged,
@@ -419,7 +406,9 @@ export async function initWordCloudPage() {
   timeline.syncButton?.(); // optional (controller can update replay button text on load)
   await draw(false);
 
-  setInterval(() => {
-    if (document.getElementById(ROOT_ID)) draw(false);
-  }, AUTO_REFRESH_MS);
+  // ✅ COMMIT 15 — auto refresh scheduling is now owned by data loader
+  data.startAutoRefresh({
+    rootId: ROOT_ID,
+    onRefresh: () => draw(false),
+  });
 }
