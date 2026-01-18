@@ -512,3 +512,7 @@
 .lux-wc--night .lux-wc-tlineVal{
   color: rgba(255,255,255,0.88);
 }
+/* ✅ CRITICAL: hidden attribute must always win */
+.lux-wc-overlay[hidden]{
+  display: none !important;
+}

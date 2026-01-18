@@ -601,7 +601,8 @@ export async function initWordCloudPage() {
 
   function setBusy(on, title = "Loading…", subText = "") {
     if (!overlay) return;
-    overlay.hidden = !on;
+overlay.hidden = !on;
+overlay.style.display = on ? "flex" : "none";  // ✅ override any CSS conflict
     overlay.setAttribute("aria-busy", on ? "true" : "false");
 
     if (overlayTitle) overlayTitle.textContent = title;
