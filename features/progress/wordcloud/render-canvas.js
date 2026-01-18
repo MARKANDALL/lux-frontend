@@ -30,9 +30,16 @@ function hexToRgba(hex = "#000000", a = 0.2) {
  *  - onSelect(hit)
  *  - clusterMode: boolean
  *  - pinnedSet: Set<string lower>
+ *  - onRenderEnd({ reason })
  */
 export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
   if (!canvas) return;
+
+  const fireEnd = (reason = "ok") => {
+    if (typeof opts?.onRenderEnd === "function") {
+      try { opts.onRenderEnd({ reason }); } catch (_) {}
+    }
+  };
 
   const wrap = canvas.parentElement;
   const w = Math.max(320, wrap?.clientWidth || 800);
@@ -49,7 +56,10 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
   ctx.clearRect(0, 0, w, h);
-  if (!items.length) return;
+  if (!items.length) {
+    fireEnd("empty");
+    return;
+  }
 
   const pinnedSet = opts?.pinnedSet instanceof Set ? opts.pinnedSet : new Set();
 
@@ -88,6 +98,7 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
     ctx.font = "800 18px system-ui, -apple-system, Segoe UI, Roboto, Arial";
     ctx.fillStyle = "#334155";
     ctx.fillText("Word cloud library missing.", 20, 40);
+    fireEnd("libs-missing");
     return;
   }
 
@@ -302,6 +313,7 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
     hoverIdx = -1;
     ripple = null;
     paint();
+    fireEnd("ok");
   }
 
   cloudFactory()

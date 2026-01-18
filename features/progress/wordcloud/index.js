@@ -538,8 +538,19 @@ export async function initWordCloudPage() {
           </div>
         </div>
 
-        <div class="lux-wc-canvasWrap">
+        <div class="lux-wc-canvasWrap" id="luxWcCanvasWrap">
           <canvas id="luxWcCanvas" class="lux-wc-canvas"></canvas>
+
+          <!-- Loading overlay (shows during layout + redraw) -->
+          <div class="lux-wc-overlay" id="luxWcOverlay" aria-live="polite" aria-busy="true" hidden>
+            <div class="lux-wc-overlayCard">
+              <div class="lux-wc-spinner" aria-hidden="true"></div>
+              <div class="lux-wc-overlayText">
+                <div class="lux-wc-overlayTitle" id="luxWcOverlayTitle">Loading…</div>
+                <div class="lux-wc-overlaySub" id="luxWcOverlaySub">Building your cloud</div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="lux-wc-legend">
@@ -557,6 +568,30 @@ export async function initWordCloudPage() {
   const canvas = root.querySelector("#luxWcCanvas");
   const meta = root.querySelector("#luxWcMeta");
   const sub = root.querySelector("#luxWcSub");
+
+  // Loading overlay (center canvas)
+  const overlay = root.querySelector("#luxWcOverlay");
+  const overlayTitle = root.querySelector("#luxWcOverlayTitle");
+  const overlaySub = root.querySelector("#luxWcOverlaySub");
+
+  // Render sequencing guard (prevents old async layouts hiding new overlay)
+  let _renderSeq = 0;
+
+  function setBusy(on, title = "Loading…", subText = "") {
+    if (!overlay) return;
+    overlay.hidden = !on;
+    overlay.setAttribute("aria-busy", on ? "true" : "false");
+
+    if (overlayTitle) overlayTitle.textContent = title;
+    if (overlaySub) overlaySub.textContent = subText || "";
+  }
+
+  // Ensures the overlay becomes visible BEFORE heavy work starts
+  function waitTwoFrames() {
+    return new Promise((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(resolve));
+    });
+  }
 
   const btnTheme = root.querySelector("#luxWcThemeToggle");
   const btnRefresh = root.querySelector("#luxWcRefresh");
@@ -896,86 +931,116 @@ export async function initWordCloudPage() {
 
   // ---------- draw ----------
   async function draw(forceFetch = false) {
-    meta.textContent = "Loading…";
+    const seq = ++_renderSeq;
 
-    const ok = await ensureWordCloudLibs();
-    if (!ok) {
-      meta.textContent =
-        "Word Cloud libraries not found. Add /public/vendor/d3.v7.min.js + /public/vendor/d3.layout.cloud.js";
-      return;
-    }
+    // Show overlay immediately so click feedback is instant
+    setBusy(true, "Loading cloud…", "Preparing layout");
+    await waitTwoFrames();
 
-    await ensureData(forceFetch);
+    try {
+      meta.textContent = "Loading…";
 
-    const attemptsInRange = filterAttemptsByRange(_attemptsAll, _range, _timelineWin, _timelinePos);
-    const items = computeItemsForView(attemptsInRange);
+      setBusy(true, "Loading cloud engine…", "D3 layout + canvas renderer");
+      const ok = await ensureWordCloudLibs();
+      if (seq !== _renderSeq) return;
 
-    _lastItems = items;
+      if (!ok) {
+        setBusy(false);
+        meta.textContent =
+          "Word Cloud libraries not found. Add /public/vendor/d3.v7.min.js + /public/vendor/d3.layout.cloud.js";
+        return;
+      }
 
-    renderSavedStrip();
-    renderTargetsStrip(attemptsInRange);
+      setBusy(true, "Loading your practice history…", "Fetching attempt data");
+      await ensureData(forceFetch);
+      if (seq !== _renderSeq) return;
 
-    if (!items.length) {
-      meta.textContent =
-        _mode === "phonemes"
-          ? "Not enough phoneme data yet — do a little more practice first."
-          : "Not enough word data yet — do a little more practice first.";
-      renderWordCloudCanvas(canvas, []);
-      return;
-    }
+      const attemptsInRange = filterAttemptsByRange(_attemptsAll, _range, _timelineWin, _timelinePos);
+      const items = computeItemsForView(attemptsInRange);
 
-    const q = lower(_query);
-    const focusTest = q ? (idLower) => String(idLower || "").includes(q) : null;
+      _lastItems = items;
 
-    renderWordCloudCanvas(canvas, items, {
-      focusTest,
-      clusterMode: _clusterMode,
-      pinnedSet: pinnedSetNow(),
-      onSelect: (hit) => {
-        const attemptsRange = filterAttemptsByRange(_attemptsAll, _range, _timelineWin, _timelinePos);
+      renderSavedStrip();
+      renderTargetsStrip(attemptsInRange);
 
-        const metaObj = hit?.meta || {};
-        const isPh = _mode === "phonemes" || metaObj.ipa != null;
+      if (!items.length) {
+        meta.textContent =
+          _mode === "phonemes"
+            ? "Not enough phoneme data yet — do a little more practice first."
+            : "Not enough word data yet — do a little more practice first.";
 
-        const kind = isPh ? "phoneme" : "word";
-        const id = isPh
-          ? String(metaObj.ipa || hit.text || "").trim()
-          : String(metaObj.word || hit.text || "").trim();
-
-        const title = kind === "phoneme" ? `/${id}/` : id;
-
-        const recents =
-          kind === "word"
-            ? findRecentAttemptsForWord(attemptsRange, id, 6)
-            : findRecentAttemptsForPhoneme(attemptsRange, id, 6);
-
-        sheet.open({
-          kind,
-          id,
-          title,
-          avg: Number(metaObj.avg ?? hit.avg ?? 0) || 0,
-          count: Number(metaObj.count ?? hit.count ?? 0) || 0,
-          days: metaObj.days ?? null,
-          priority: metaObj.priority ?? null,
-          examples: Array.isArray(metaObj.examples) ? metaObj.examples : [],
-          recents,
+        // Empty canvas + stop overlay
+        renderWordCloudCanvas(canvas, [], {
+          onRenderEnd: () => {
+            if (seq === _renderSeq) setBusy(false);
+          },
         });
-      },
-    });
+        return;
+      }
 
-    const label = _mode === "phonemes" ? "Phonemes" : "Words";
-    const tl =
-      _range === "timeline"
-        ? ` · Window: ${_timelineWin}d ending ${fmtDaysAgo(_timelinePos)}`
-        : "";
-    meta.textContent =
-      `Updated ${new Date().toLocaleString()} · ${label} · ${rangeLabel(_range)}${tl} · Sort: ${sortLabel(_sort)} · Mix: ${mixLabel(_mix)}` +
-      (q ? ` · Search: “${_query.trim()}”` : "");
+      // Keep overlay ON until D3 layout finishes and paint happens
+      setBusy(true, "Building cloud…", "Placing targets on canvas");
 
-    persist();
-    syncUrl();
-    setActiveButtons();
-    setModeStory();
+      const q = lower(_query);
+      const focusTest = q ? (idLower) => String(idLower || "").includes(q) : null;
+
+      renderWordCloudCanvas(canvas, items, {
+        focusTest,
+        clusterMode: _clusterMode,
+        pinnedSet: pinnedSetNow(),
+        onRenderEnd: () => {
+          if (seq === _renderSeq) setBusy(false);
+        },
+        onSelect: (hit) => {
+          const attemptsRange = filterAttemptsByRange(_attemptsAll, _range, _timelineWin, _timelinePos);
+
+          const metaObj = hit?.meta || {};
+          const isPh = _mode === "phonemes" || metaObj.ipa != null;
+
+          const kind = isPh ? "phoneme" : "word";
+          const id = isPh
+            ? String(metaObj.ipa || hit.text || "").trim()
+            : String(metaObj.word || hit.text || "").trim();
+
+          const title = kind === "phoneme" ? `/${id}/` : id;
+
+          const recents =
+            kind === "word"
+              ? findRecentAttemptsForWord(attemptsRange, id, 6)
+              : findRecentAttemptsForPhoneme(attemptsRange, id, 6);
+
+          sheet.open({
+            kind,
+            id,
+            title,
+            avg: Number(metaObj.avg ?? hit.avg ?? 0) || 0,
+            count: Number(metaObj.count ?? hit.count ?? 0) || 0,
+            days: metaObj.days ?? null,
+            priority: metaObj.priority ?? null,
+            examples: Array.isArray(metaObj.examples) ? metaObj.examples : [],
+            recents,
+          });
+        },
+      });
+
+      const label = _mode === "phonemes" ? "Phonemes" : "Words";
+      const tl =
+        _range === "timeline"
+          ? ` · Window: ${_timelineWin}d ending ${fmtDaysAgo(_timelinePos)}`
+          : "";
+      meta.textContent =
+        `Updated ${new Date().toLocaleString()} · ${label} · ${rangeLabel(_range)}${tl} · Sort: ${sortLabel(_sort)} · Mix: ${mixLabel(_mix)}` +
+        (q ? ` · Search: “${_query.trim()}”` : "");
+
+      persist();
+      syncUrl();
+      setActiveButtons();
+      setModeStory();
+    } catch (err) {
+      console.error("[Cloud Visuals] draw failed:", err);
+      if (seq === _renderSeq) setBusy(false);
+      meta.textContent = "Cloud load failed — check console for details.";
+    }
   }
 
   // ---------- events ----------
