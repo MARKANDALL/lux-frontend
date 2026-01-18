@@ -8,6 +8,18 @@ import { renderWordCloudCanvas } from "./render-canvas.js";
 import { createCloudActionSheet } from "./action-sheet.js";
 
 import {
+  readState,
+  writeState,
+  savedListForMode,
+  addManySaved,
+  THEME_KEY,
+  FAV_KEY,
+  PIN_KEY,
+} from "./state-store.js";
+
+import { readUrlState, writeUrlState } from "./url-state.js";
+
+import {
   buildNextActivityPlanFromModel,
   saveNextActivityPlan,
 } from "../../next-activity/next-activity.js";
@@ -25,13 +37,6 @@ const ROOT_ID = "wordcloud-root";
 const AUTO_REFRESH_MS = 10 * 60 * 1000;
 const TOP_N = 20;
 
-// Persist
-const STATE_KEY = "lux.cloud.state.v3";
-const THEME_KEY = "lux.cloud.theme.v1";
-
-const FAV_KEY = "lux.cloud.favs.v1";
-const PIN_KEY = "lux.cloud.pins.v1";
-
 function clamp(n, a, b) {
   return Math.max(a, Math.min(b, n));
 }
@@ -40,64 +45,6 @@ function lower(s) {
 }
 function log1p(n) {
   return Math.log(1 + Math.max(0, Number(n || 0)));
-}
-
-function readState() {
-  try {
-    const raw = localStorage.getItem(STATE_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch (_) {
-    return {};
-  }
-}
-function writeState(next) {
-  try {
-    localStorage.setItem(STATE_KEY, JSON.stringify(next || {}));
-  } catch (_) {}
-}
-
-function readSaved(key) {
-  try {
-    const raw = localStorage.getItem(key);
-    const obj = raw ? JSON.parse(raw) : {};
-    return {
-      words: Array.isArray(obj.words) ? obj.words : [],
-      phonemes: Array.isArray(obj.phonemes) ? obj.phonemes : [],
-    };
-  } catch (_) {
-    return { words: [], phonemes: [] };
-  }
-}
-function writeSaved(key, next) {
-  try {
-    localStorage.setItem(key, JSON.stringify(next));
-  } catch (_) {}
-}
-
-function savedListForMode(key, mode) {
-  const s = readSaved(key);
-  return mode === "phonemes" ? s.phonemes : s.words;
-}
-
-function addManySaved(key, mode, ids) {
-  const s = readSaved(key);
-  const list = mode === "phonemes" ? s.phonemes : s.words;
-
-  const add = [];
-  const seen = new Set(list.map(lower));
-  for (const id of ids) {
-    const v = String(id || "").trim();
-    if (!v) continue;
-    const k = lower(v);
-    if (seen.has(k)) continue;
-    seen.add(k);
-    add.push(v);
-  }
-
-  const merged = [...add, ...list].slice(0, 30);
-  if (mode === "phonemes") s.phonemes = merged;
-  else s.words = merged;
-  writeSaved(key, s);
 }
 
 function rangeLabel(r) {
@@ -199,53 +146,6 @@ function persistentScore(x) {
   const avg = Number(x?.avg || 0);
   const bad = clamp((100 - avg) / 100, 0, 1);
   return Math.pow(days + 1, 1.2) * Math.pow(count + 1, 0.65) * (0.35 + bad);
-}
-
-// ---------- URL STATE (Phase E) ----------
-function readUrlState() {
-  const p = new URLSearchParams(window.location.search);
-  const out = {};
-  if (p.has("mode")) out.mode = p.get("mode");
-  if (p.has("sort")) out.sort = p.get("sort");
-  if (p.has("range")) out.range = p.get("range");
-  if (p.has("q")) out.q = p.get("q") || "";
-  if (p.has("theme")) out.theme = p.get("theme");
-  if (p.has("cluster")) out.cluster = p.get("cluster");
-  if (p.has("mix")) out.mix = p.get("mix");
-  if (p.has("win")) out.win = p.get("win");
-  if (p.has("pos")) out.pos = p.get("pos");
-  return out;
-}
-
-function writeUrlState({
-  mode,
-  sort,
-  range,
-  q,
-  theme,
-  clusterMode,
-  mix,
-  win,
-  pos,
-}) {
-  const p = new URLSearchParams();
-
-  p.set("mode", mode);
-  p.set("sort", sort);
-  p.set("range", range);
-  if (q) p.set("q", q);
-
-  p.set("theme", theme);
-  p.set("cluster", clusterMode ? "1" : "0");
-  p.set("mix", mix);
-
-  if (range === "timeline") {
-    p.set("win", String(win || 14));
-    p.set("pos", String(pos || 0));
-  }
-
-  const next = `${window.location.pathname}?${p.toString()}`;
-  window.history.replaceState(null, "", next);
 }
 
 // ---------- Action Sheet helpers ----------
