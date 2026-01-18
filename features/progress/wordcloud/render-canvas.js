@@ -35,7 +35,11 @@ function hexToRgba(hex = "#000000", a = 0.2) {
 export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
   if (!canvas) return;
 
+  // ✅ Controller callback (overlay off signal)
+  let _endFired = false;
   const fireEnd = (reason = "ok") => {
+    if (_endFired) return;
+    _endFired = true;
     if (typeof opts?.onRenderEnd === "function") {
       try { opts.onRenderEnd({ reason }); } catch (_) {}
     }
@@ -313,18 +317,26 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
     hoverIdx = -1;
     ripple = null;
     paint();
-    fireEnd("ok");
+    fireEnd("ok"); // ✅ IMPORTANT
   }
 
-  cloudFactory()
-    .size([w, h])
-    .words(words)
-    .padding(2)
-    .rotate(() => 0)
-    .font("system-ui")
-    .fontSize((d) => (d._pinned ? d.size * PIN_BOOST : d.size))
-    .on("end", layoutAndDraw)
-    .start();
+  // ✅ Never allow infinite “Loading…”
+  setTimeout(() => fireEnd("timeout"), 2500);
+
+  try {
+    cloudFactory()
+      .size([w, h])
+      .words(words)
+      .padding(2)
+      .rotate(() => 0)
+      .font("system-ui")
+      .fontSize((d) => (d._pinned ? d.size * PIN_BOOST : d.size))
+      .on("end", layoutAndDraw)
+      .start();
+  } catch (err) {
+    console.error("[wc] cloud start failed:", err);
+    fireEnd("error");
+  }
 
   canvas.onmousemove = (e) => {
     const r = canvas.getBoundingClientRect();
