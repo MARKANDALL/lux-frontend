@@ -280,6 +280,31 @@ export async function initWordCloudPage() {
   let _attemptsAll = [];
   let _lastModel = null;
 
+  // Phase D state + storage
+  const FAV_KEY = "lux.cloud.favs.v1";
+  const PIN_KEY = "lux.cloud.pins.v1";
+
+  let _clusterMode = !!st.clusterMode; // persistable Phase D
+  let _lastItems = []; // current view items
+
+  function readSaved(key) {
+    try {
+      const raw = localStorage.getItem(key);
+      const obj = raw ? JSON.parse(raw) : {};
+      return {
+        words: Array.isArray(obj.words) ? obj.words : [],
+        phonemes: Array.isArray(obj.phonemes) ? obj.phonemes : [],
+      };
+    } catch (_) {
+      return { words: [], phonemes: [] };
+    }
+  }
+
+  function savedListForMode(key) {
+    const s = readSaved(key);
+    return _mode === "phonemes" ? s.phonemes : s.words;
+  }
+
   root.innerHTML = `
     <section class="lux-wc-shell" id="luxWcShell">
       <div class="lux-wc-head">
@@ -323,6 +348,23 @@ export async function initWordCloudPage() {
             <button class="lux-wc-chipBtn" data-range="7d">7d</button>
             <button class="lux-wc-chipBtn" data-range="today">Today</button>
           </div>
+
+          <div class="lux-wc-powerRow">
+            <button class="lux-pbtn lux-wc-genTop" id="luxWcGenTop">
+              ✨ Generate from Top 3
+            </button>
+
+            <button class="lux-pbtn lux-pbtn--ghost lux-wc-powerBtn" id="luxWcCluster">
+              🧩 Cluster
+            </button>
+
+            <button class="lux-pbtn lux-pbtn--ghost lux-wc-powerBtn" id="luxWcSnapshot">
+              📷 Snapshot
+            </button>
+          </div>
+
+          <div class="lux-wc-targetStrip" id="luxWcTargets"></div>
+          <div class="lux-wc-savedStrip" id="luxWcSaved"></div>
         </div>
 
         <div class="lux-wc-canvasWrap">
@@ -355,6 +397,16 @@ export async function initWordCloudPage() {
   const search = root.querySelector("#luxWcSearch");
   const clear = root.querySelector("#luxWcClear");
 
+  // Phase D DOM refs
+  const btnGenTop = root.querySelector("#luxWcGenTop");
+  const btnCluster = root.querySelector("#luxWcCluster");
+  const btnSnap = root.querySelector("#luxWcSnapshot");
+  const targetsStrip = root.querySelector("#luxWcTargets");
+  const savedStrip = root.querySelector("#luxWcSaved");
+
+  // One shared array object so chip openers always see the latest range list
+  const _chipAttempts = [];
+
   function applyTheme() {
     const isNight = _theme === "night";
     shell.classList.toggle("lux-wc--night", isNight);
@@ -371,6 +423,7 @@ export async function initWordCloudPage() {
       sort: _sort,
       range: _range,
       query: _query,
+      clusterMode: _clusterMode,
     });
   }
 
@@ -388,6 +441,123 @@ export async function initWordCloudPage() {
     rangeBtns.forEach((b) => b.classList.toggle("is-on", b.dataset.range === _range));
   }
 
+  // Phase D helpers
+  function top3FromItems(items) {
+    const out = [];
+    const seen = new Set();
+
+    for (const x of items) {
+      const id = lower(idFromItem(_mode, x));
+      if (!id || seen.has(id)) continue;
+      seen.add(id);
+      out.push(x);
+      if (out.length >= 3) break;
+    }
+    return out;
+  }
+
+  function renderTargetsStrip(items) {
+    if (!targetsStrip) return;
+
+    const top = top3FromItems(items);
+
+    if (!top.length) {
+      targetsStrip.innerHTML = "";
+      return;
+    }
+
+    targetsStrip.innerHTML = `
+      <div class="lux-wc-stripLabel">Top targets</div>
+      <div class="lux-wc-stripRow">
+        ${top
+          .map((x) => {
+            const id = idFromItem(_mode, x);
+            const avg = Math.round(Number(x.avg || 0));
+            return `<button class="lux-wc-chipTarget" data-open="${id}">
+              <span class="lux-wc-chipTxt">${_mode === "phonemes" ? `/${id}/` : id}</span>
+              <span class="lux-wc-chipPct">${avg}%</span>
+            </button>`;
+          })
+          .join("")}
+      </div>
+    `;
+  }
+
+  function renderSavedStrip(items) {
+    if (!savedStrip) return;
+
+    const pins = savedListForMode(PIN_KEY).slice(0, 10);
+    const favs = savedListForMode(FAV_KEY).slice(0, 10);
+
+    const mkRow = (title, arr, icon) => {
+      if (!arr.length) return "";
+      return `
+        <div class="lux-wc-savedRow">
+          <div class="lux-wc-stripLabel">${icon} ${title}</div>
+          <div class="lux-wc-stripRow">
+            ${arr
+              .map(
+                (id) => `
+              <button class="lux-wc-chipSaved" data-open="${id}">
+                ${_mode === "phonemes" ? `/${id}/` : id}
+              </button>
+            `
+              )
+              .join("")}
+          </div>
+        </div>
+      `;
+    };
+
+    savedStrip.innerHTML = mkRow("Pinned", pins, "📌") + mkRow("Favorites", favs, "⭐");
+
+    // if none, keep it clean
+    if (!pins.length && !favs.length) savedStrip.innerHTML = "";
+  }
+
+  function wireChipOpeners(attemptsInRange) {
+    // one delegated listener is enough
+    root.addEventListener(
+      "click",
+      (e) => {
+        const btn = e.target?.closest?.("[data-open]");
+        if (!btn) return;
+
+        const id = String(btn.getAttribute("data-open") || "").trim();
+        if (!id) return;
+
+        // find meta from current items (best)
+        const hitItem = (_lastItems || []).find(
+          (x) => lower(idFromItem(_mode, x)) === lower(id)
+        );
+
+        const kind = _mode === "phonemes" ? "phoneme" : "word";
+        const title = kind === "phoneme" ? `/${id}/` : id;
+
+        const avg = hitItem ? Number(hitItem.avg || 0) : 0;
+        const count = hitItem ? Number(hitItem.count || 0) : 0;
+
+        const recents =
+          kind === "word"
+            ? findRecentAttemptsForWord(attemptsInRange, id, 6)
+            : findRecentAttemptsForPhoneme(attemptsInRange, id, 6);
+
+        sheet.open({
+          kind,
+          id,
+          title,
+          avg,
+          count,
+          days: hitItem?.days ?? null,
+          priority: hitItem?.priority ?? null,
+          examples: Array.isArray(hitItem?.examples) ? hitItem.examples : [],
+          recents,
+        });
+      },
+      { passive: true }
+    );
+  }
+
   btnBack?.addEventListener("click", () => {
     window.location.assign("./progress.html");
   });
@@ -397,7 +567,7 @@ export async function initWordCloudPage() {
     applyTheme();
   });
 
-  // ✅ Phase A Action Sheet
+  // ✅ Phase A Action Sheet (+ Phase D store change hook)
   const sheet = createCloudActionSheet({
     onGenerate: (state) => {
       const plan = buildCloudPlan(_lastModel, state);
@@ -416,7 +586,13 @@ export async function initWordCloudPage() {
         session: null,
       });
     },
+    onStoreChange: () => {
+      renderSavedStrip(_lastItems);
+    },
   });
+
+  // ✅ Call ONCE after sheet create (array content updates on each draw)
+  wireChipOpeners(_chipAttempts);
 
   async function ensureData(force = false) {
     if (_attemptsAll.length && !force) return;
@@ -483,7 +659,17 @@ export async function initWordCloudPage() {
     await ensureData(forceFetch);
 
     const attemptsInRange = filterAttemptsByRange(_attemptsAll, _range);
+
+    // keep chip-open recents accurate for current range
+    _chipAttempts.length = 0;
+    _chipAttempts.push(...attemptsInRange);
+
     const items = computeItemsForView(attemptsInRange);
+
+    // Phase D: store current view + render strips
+    _lastItems = items;
+    renderTargetsStrip(items);
+    renderSavedStrip(items);
 
     if (!items.length) {
       meta.textContent =
@@ -499,6 +685,7 @@ export async function initWordCloudPage() {
 
     renderWordCloudCanvas(canvas, items, {
       focusTest,
+      clusterMode: _clusterMode,
       onSelect: (hit) => {
         const metaObj = hit?.meta || {};
         const isPh = _mode === "phonemes" || metaObj.ipa != null;
@@ -581,11 +768,76 @@ export async function initWordCloudPage() {
     search.focus();
   });
 
+  // Phase D buttons
+  btnCluster?.addEventListener("click", () => {
+    _clusterMode = !_clusterMode;
+    btnCluster.classList.toggle("is-on", _clusterMode);
+    persist();
+    draw(false);
+  });
+
+  btnSnap?.addEventListener("click", () => {
+    try {
+      const a = document.createElement("a");
+      a.download = `lux-cloud-${_mode}-${Date.now()}.png`;
+      a.href = canvas.toDataURL("image/png");
+      a.click();
+    } catch (_) {}
+  });
+
+  btnGenTop?.addEventListener("click", () => {
+    if (!_lastModel) return;
+
+    const top = top3FromItems(_lastItems);
+    if (!top.length) return;
+
+    const base = buildNextActivityPlanFromModel(_lastModel, {
+      source: "cloud-top3",
+      maxWords: 6,
+    });
+
+    if (!base) return;
+
+    if (_mode === "words") {
+      const chosen = top
+        .map((x) => ({
+          word: String(x.word || "").trim(),
+          avg: Number(x.avg || 0) || null,
+          count: Number(x.count || 0) || null,
+          days: Number(x.days || 0) || null,
+          priority: Number(x.priority || 0) || null,
+        }))
+        .filter((x) => x.word);
+
+      const rest = (base.targets?.words || []).filter(
+        (w) => !chosen.some((c) => lower(c.word) === lower(w?.word))
+      );
+
+      base.targets.words = [...chosen, ...rest].slice(0, 6);
+    } else {
+      const best = top[0];
+      base.targets.phoneme = {
+        ipa: String(best.ipa || "").trim(),
+        avg: Number(best.avg || 0) || null,
+        count: Number(best.count || 0) || null,
+        days: Number(best.days || 0) || null,
+        priority: Number(best.priority || 0) || null,
+      };
+    }
+
+    saveNextActivityPlan(base);
+    window.location.assign("./convo.html#chat");
+  });
+
   // ---- Initial ----
   applyTheme();
   setModeStory();
   setActiveButtons();
   persist();
+
+  // ensure cluster button reflects persisted state
+  btnCluster?.classList.toggle("is-on", _clusterMode);
+
   await draw(false);
 
   setInterval(() => {

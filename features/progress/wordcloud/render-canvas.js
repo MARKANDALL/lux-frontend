@@ -24,6 +24,7 @@ function hexToRgba(hex = "#000000", a = 0.2) {
  * opts:
  *  - focusTest(idLower) => boolean  (search highlighting)
  *  - onSelect(hit)      => click handler override
+ *  - clusterMode        => boolean  (optional clustering drift by score bands)
  */
 export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
   if (!canvas) return;
@@ -165,7 +166,36 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
       }
 
       ctx.save();
-      ctx.translate(cx + d.x + pullX, cy + d.y + pullY);
+
+      // Cluster drift (Phase D) — OFF by default
+      let driftX = 0;
+      let driftY = 0;
+
+      if (opts?.clusterMode) {
+        const avg = Number(d.avg || 0);
+        const dx = w * 0.17; // cluster spread
+        const dy = h * 0.06;
+
+        if (avg >= 80) {
+          // good (blue)
+          driftX = -dx;
+          driftY = -dy;
+        } else if (avg >= 60) {
+          // warn (orange)
+          driftX = 0;
+          driftY = dy * 1.2;
+        } else {
+          // needs work (red)
+          driftX = dx;
+          driftY = -dy;
+        }
+
+        // soften it so it stays cloud-like, not rigid
+        driftX *= 0.65;
+        driftY *= 0.65;
+      }
+
+      ctx.translate(cx + d.x + pullX + driftX, cy + d.y + pullY + driftY);
       ctx.rotate(0);
 
       const size = isHover ? d.size * 1.08 : d.size;
@@ -206,12 +236,12 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
         avg: d.avg,
         count: d.count,
         meta: d.meta,
-        x: cx + d.x + pullX - tw / 2,
-        y: cy + d.y + pullY - th / 2,
+        x: cx + d.x + pullX + driftX - tw / 2,
+        y: cy + d.y + pullY + driftY - th / 2,
         w: tw,
         h: th,
-        cx: cx + d.x + pullX,
-        cy: cy + d.y + pullY,
+        cx: cx + d.x + pullX + driftX,
+        cy: cy + d.y + pullY + driftY,
         col,
       });
 

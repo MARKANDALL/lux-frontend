@@ -224,3 +224,82 @@
     radial-gradient(1px 1px at 85% 58%, rgba(255,255,255,0.35), transparent 55%);
   mix-blend-mode: screen;
 }
+/* =========================
+   Phase D: Power Row + Strips
+========================= */
+
+.lux-wc-powerRow{
+  margin-top: 10px;
+  display:flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items:center;
+}
+
+.lux-wc-genTop{
+  font-weight: 950;
+}
+
+.lux-wc-powerBtn.is-on{
+  box-shadow: 0 0 0 2px rgba(37,99,235,0.22);
+}
+
+.lux-wc-targetStrip,
+.lux-wc-savedStrip{
+  margin-top: 10px;
+}
+
+.lux-wc-stripLabel{
+  font-weight: 950;
+  color: #0f172a;
+  margin: 2px 0 8px;
+}
+
+.lux-wc-stripRow{
+  display:flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.lux-wc-chipTarget,
+.lux-wc-chipSaved{
+  border: 1px solid rgba(0,0,0,0.08);
+  background: rgba(255,255,255,0.82);
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-weight: 950;
+  cursor: pointer;
+  transition: transform 160ms ease, filter 160ms ease;
+}
+
+.lux-wc-chipTarget:hover,
+.lux-wc-chipSaved:hover{
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+.lux-wc-chipTarget{
+  display:inline-flex;
+  align-items:center;
+  gap: 8px;
+}
+
+.lux-wc-chipPct{
+  font-size: 12px;
+  font-weight: 950;
+  color: rgba(51,65,85,0.85);
+}
+
+/* Night versions */
+.lux-wc--night .lux-wc-stripLabel{
+  color: rgba(255,255,255,0.90);
+}
+.lux-wc--night .lux-wc-chipTarget,
+.lux-wc--night .lux-wc-chipSaved{
+  background: rgba(20,30,58,0.62);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.92);
+}
+.lux-wc--night .lux-wc-chipPct{
+  color: rgba(255,255,255,0.72);
+}

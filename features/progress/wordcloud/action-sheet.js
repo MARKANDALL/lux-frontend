@@ -55,6 +55,7 @@ function safePct(v) {
 export function createCloudActionSheet({
   onGenerate = null,
   onOpenAttempt = null,
+  onStoreChange = null,
 } = {}) {
   let overlay = null;
   let sheet = null;
@@ -154,11 +155,13 @@ export function createCloudActionSheet({
       if (act === "fav") {
         const isNowFav = toggleItem(state.kind, state.id, FAV_KEY);
         btn.classList.toggle("is-on", isNowFav);
+        onStoreChange?.();
       }
 
       if (act === "pin") {
         const isNowPinned = toggleItem(state.kind, state.id, PIN_KEY);
         btn.classList.toggle("is-on", isNowPinned);
+        onStoreChange?.();
       }
     });
 
