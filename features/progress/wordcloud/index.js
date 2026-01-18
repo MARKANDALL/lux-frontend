@@ -18,6 +18,7 @@ import {
 } from "./state-store.js";
 
 import { readUrlState, writeUrlState } from "./url-state.js";
+import { rangeLabel, sortLabel, mixLabel } from "./labels.js";
 
 import {
   buildNextActivityPlanFromModel,
@@ -45,24 +46,6 @@ function lower(s) {
 }
 function log1p(n) {
   return Math.log(1 + Math.max(0, Number(n || 0)));
-}
-
-function rangeLabel(r) {
-  if (r === "today") return "Today";
-  if (r === "7d") return "7 days";
-  if (r === "30d") return "30 days";
-  if (r === "timeline") return "Timeline";
-  return "All time";
-}
-function sortLabel(s) {
-  if (s === "freq") return "Frequent";
-  if (s === "diff") return "Difficult";
-  if (s === "recent") return "Recent";
-  if (s === "persist") return "Persistent";
-  return "Priority";
-}
-function mixLabel(m) {
-  return m === "smart" ? "Smart Mix" : "View-based";
 }
 
 function idFromItem(mode, x) {
