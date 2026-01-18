@@ -60,6 +60,7 @@
   background: #fff;
   border-left: var(--lux-tts-border);
   border-bottom: var(--lux-tts-border);
+  border-top-left-radius: var(--lux-tts-radius);
   border-bottom-left-radius: var(--lux-tts-radius);
   box-shadow: var(--lux-tts-shadow);
 
@@ -91,13 +92,19 @@ html:not(.lux-tts-open) .lux-tts-panel{
 .lux-tts-panel #tts-controls {
   display: block;
 
-  /* KEY: reserve space for the tab so the UI box isn't "under it" */
-  padding: calc(var(--lux-tts-tab-h) + 18px) 16px 16px;
+  /* slightly tighter bezel (matches SPB feeling) */
+  padding: calc(var(--lux-tts-tab-h) + 14px) 14px 10px;
 
   max-height: calc(var(--lux-tts-panel-max-h) - 8px);
   overflow: auto;
 }
 
+/* Inner card gets its own shadow (stacked effect like Self Playback) */
+.lux-tts-panel #tts-controls .tts-box{
+  border-radius: 14px;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.14);
+  border: 1px solid rgba(0,0,0,0.05);
+}
 
 .lux-tts-panel .tts-box { gap: 10px; }
 .lux-tts-panel,
@@ -155,9 +162,8 @@ html:not(.lux-tts-open) .lux-tts-panel{
 
 /* CLOSED => push content HARDER toward the visible end */
 html:not(.lux-tts-open) .lux-tts-tab-inner{
-  transform: translateX(calc(-46% + 52px));
+  transform: translateX(calc(-56% + 46px));
 }
-
 
 .lux-tts-tab-icon {
   display: inline-block;

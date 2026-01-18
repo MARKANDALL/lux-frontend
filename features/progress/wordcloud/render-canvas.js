@@ -5,10 +5,16 @@ function clamp(n, a, b) {
   return Math.max(a, Math.min(b, n));
 }
 
+function idOfWord(d) {
+  const meta = d?.meta || {};
+  return String(meta.word ?? meta.ipa ?? d?.text ?? "").trim().toLowerCase();
+}
+
 /**
  * renderWordCloudCanvas(canvas, items, opts?)
  * opts:
- *   - onSelect(hit) : called when user clicks a word/phoneme in the cloud
+ *  - focusTest(idLower) => boolean  (search highlighting)
+ *  - onSelect(hit)      => click handler override
  */
 export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
   if (!canvas) return;
@@ -39,12 +45,10 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
 
   const sizeForCount = (c) => {
     const t = (Number(c || 0) - minC) / Math.max(1, maxC - minC);
-    // sqrt-ish scaling: small words still visible
     const s = 16 + 44 * Math.sqrt(clamp(t, 0, 1));
     return clamp(s, 16, 62);
   };
 
-  // Preserve meta so clicks can open sheet with full data
   const words = items.map((x) => ({
     text: String(x.word ?? x.ipa ?? x.text ?? "").trim(),
     count: Number(x.count || 0),
@@ -57,7 +61,6 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
   const d3 = window.d3;
   const cloudFactory = d3?.layout?.cloud || window.cloud;
   if (!cloudFactory) {
-    // fallback: draw a simple list (still usable)
     ctx.font = "800 18px system-ui, -apple-system, Segoe UI, Roboto, Arial";
     ctx.fillStyle = "#334155";
     ctx.fillText("Word cloud library missing.", 20, 40);
@@ -69,14 +72,29 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
 
   function draw(layoutWords) {
     boxes.length = 0;
-
     ctx.clearRect(0, 0, w, h);
 
     const cx = w / 2;
     const cy = h / 2;
 
+    // Determine whether focus is active (search)
+    const focusFn = typeof opts?.focusTest === "function" ? opts.focusTest : null;
+    let focusActive = false;
+    if (focusFn) {
+      for (const d of layoutWords) {
+        const id = idOfWord(d);
+        if (id && focusFn(id)) {
+          focusActive = true;
+          break;
+        }
+      }
+    }
+
     for (const d of layoutWords) {
       const col = getColorConfig(d.avg).color;
+
+      const id = idOfWord(d);
+      const isMatch = focusActive && focusFn ? !!focusFn(id) : true;
 
       ctx.save();
       ctx.translate(cx + d.x, cy + d.y);
@@ -86,12 +104,25 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
 
+      // Search focus: dim non-matches gently
+      ctx.globalAlpha = focusActive ? (isMatch ? 1 : 0.16) : 1;
+
       // Soft shadow for readability
       ctx.shadowColor = "rgba(0,0,0,0.12)";
       ctx.shadowBlur = 10;
       ctx.fillStyle = col;
-
       ctx.fillText(d.text, 0, 0);
+
+      // If match, add a subtle crisp “pop”
+      if (focusActive && isMatch) {
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1;
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = "rgba(255,255,255,0.55)";
+        ctx.strokeText(d.text, 0, 0);
+        ctx.fillStyle = col;
+        ctx.fillText(d.text, 0, 0);
+      }
 
       // bbox (rough, but works well with rotate=0)
       ctx.shadowBlur = 0;
@@ -113,7 +144,6 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
     }
   }
 
-  // Run layout
   cloudFactory()
     .size([w, h])
     .words(words)
@@ -124,7 +154,6 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
     .on("end", draw)
     .start();
 
-  // Lightweight hover tooltip (no extra DOM)
   canvas.onmousemove = (e) => {
     const r = canvas.getBoundingClientRect();
     const mx = e.clientX - r.left;
@@ -140,7 +169,6 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
       : "";
   };
 
-  // Click → Action Sheet (Phase A)
   canvas.onclick = (e) => {
     const r = canvas.getBoundingClientRect();
     const mx = e.clientX - r.left;
@@ -152,9 +180,13 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
 
     if (!hit) return;
 
-    // ✅ IMPORTANT: call back into the page controller (no alert)
+    // ✅ Phase B: allow page to override click handling
     if (typeof opts?.onSelect === "function") {
       opts.onSelect(hit);
+      return;
     }
+
+    // fallback: keep old behavior if not overridden
+    alert(`${hit.text}\nAvg: ${Math.round(hit.avg)}%\nSeen: ${hit.count}×`);
   };
 }

@@ -4,33 +4,156 @@ import { ensureUID } from "/api/identity.js";
 import { computeRollups } from "../rollups.js";
 import { renderWordCloudCanvas } from "./render-canvas.js";
 import { ensureWordCloudLibs } from "./libs.js";
-
-import { createCloudActionSheet } from "./action-sheet.js";
-
-import {
-  buildNextActivityPlanFromModel,
-  saveNextActivityPlan,
-} from "../../next-activity/next-activity.js";
-
-import { openDetailsModal } from "../attempt-detail-modal.js";
-import { pickTS, pickAzure, pickSummary, pickPassageKey } from "../attempt-pickers.js";
-import { titleFromPassageKey } from "../render/format.js";
+import { pickTS, pickAzure } from "../attempt-pickers.js";
 
 const ROOT_ID = "wordcloud-root";
-
-// Reasonable refresh interval (only while on this page)
 const AUTO_REFRESH_MS = 10 * 60 * 1000; // 10 minutes
 const TOP_N = 20;
 
-const THEME_KEY = "lux.cloud.theme.v1";
+// Phase B state persistence
+const STATE_KEY = "lux.cloud.state.v1";
+
+function readState() {
+  try {
+    const raw = localStorage.getItem(STATE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (_) {
+    return {};
+  }
+}
+
+function writeState(next) {
+  try {
+    localStorage.setItem(STATE_KEY, JSON.stringify(next || {}));
+  } catch (_) {}
+}
+
+function clamp(n, a, b) {
+  return Math.max(a, Math.min(b, n));
+}
+
+function rangeLabel(r) {
+  if (r === "today") return "Today";
+  if (r === "7d") return "7 days";
+  if (r === "30d") return "30 days";
+  return "All time";
+}
+
+function sortLabel(s) {
+  if (s === "freq") return "Frequent";
+  if (s === "diff") return "Difficult";
+  if (s === "recent") return "Recent";
+  if (s === "persist") return "Persistent";
+  return "Priority";
+}
+
+function idFromItem(mode, x) {
+  if (mode === "phonemes") return String(x?.ipa ?? x?.text ?? "").trim();
+  return String(x?.word ?? x?.text ?? "").trim();
+}
+
+function lower(s) {
+  return String(s || "").trim().toLowerCase();
+}
+
+function filterAttemptsByRange(attempts, rangeKey) {
+  const list = Array.isArray(attempts) ? attempts : [];
+  if (rangeKey === "all") return list;
+
+  const now = Date.now();
+
+  if (rangeKey === "today") {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    const start = +d;
+    return list.filter((a) => {
+      const ts = +new Date(pickTS(a) || 0);
+      return ts >= start;
+    });
+  }
+
+  const days = rangeKey === "7d" ? 7 : 30;
+  const start = now - days * 24 * 60 * 60 * 1000;
+
+  return list.filter((a) => {
+    const ts = +new Date(pickTS(a) || 0);
+    return ts >= start;
+  });
+}
+
+/**
+ * Compute "last seen" timestamps for ONLY the top items in the cloud.
+ * This makes "Recent" sorting real, without any backend changes.
+ */
+function computeLastSeenMap(mode, attempts, idsWanted) {
+  const want = new Set((idsWanted || []).map((x) => lower(x)));
+  const seen = new Map();
+
+  if (!want.size) return seen;
+
+  const list = Array.isArray(attempts) ? attempts.slice() : [];
+  list.sort((a, b) => +new Date(pickTS(b) || 0) - +new Date(pickTS(a) || 0));
+
+  for (const a of list) {
+    if (seen.size >= want.size) break;
+
+    const ts = +new Date(pickTS(a) || 0);
+    if (!ts) continue;
+
+    const az = pickAzure(a);
+    const W = az?.NBest?.[0]?.Words || [];
+
+    if (!Array.isArray(W) || !W.length) continue;
+
+    if (mode === "words") {
+      for (const w of W) {
+        const word = lower(w?.Word);
+        if (!word) continue;
+        if (!want.has(word)) continue;
+        if (!seen.has(word)) seen.set(word, ts);
+      }
+    } else {
+      for (const w of W) {
+        const P = Array.isArray(w?.Phonemes) ? w.Phonemes : [];
+        if (!P.length) continue;
+
+        for (const p of P) {
+          const ipa = lower(p?.Phoneme);
+          if (!ipa) continue;
+          if (!want.has(ipa)) continue;
+          if (!seen.has(ipa)) seen.set(ipa, ts);
+        }
+      }
+    }
+  }
+
+  return seen;
+}
+
+function persistentScore(x) {
+  const days = Number(x?.days || 0);
+  const count = Number(x?.count || 0);
+  const avg = Number(x?.avg || 0);
+  const bad = clamp((100 - avg) / 100, 0, 1);
+  return Math.pow(days + 1, 1.2) * Math.pow(count + 1, 0.65) * (0.35 + bad);
+}
 
 export async function initWordCloudPage() {
   const root = document.getElementById(ROOT_ID);
   if (!root) return;
 
-  // ✅ Header + toggle pills (Words / Phonemes)
+  const state = readState();
+
+  // Restored state (Phase B)
+  let _mode = state.mode === "phonemes" ? "phonemes" : "words";
+  let _sort = ["priority", "freq", "diff", "recent", "persist"].includes(state.sort)
+    ? state.sort
+    : "priority";
+  let _range = ["all", "30d", "7d", "today"].includes(state.range) ? state.range : "all";
+  let _query = String(state.query || "");
+
   root.innerHTML = `
-    <section class="lux-wc-shell" id="luxWcShell">
+    <section class="lux-wc-shell">
       <div class="lux-wc-head">
         <div>
           <div class="lux-wc-title">☁️ Cloud Visuals</div>
@@ -41,17 +164,38 @@ export async function initWordCloudPage() {
 
         <div class="lux-wc-actions">
           <div class="lux-wc-toggle" role="tablist" aria-label="Cloud mode">
-            <button class="lux-wc-pill is-active" data-mode="words">Words</button>
+            <button class="lux-wc-pill" data-mode="words">Words</button>
             <button class="lux-wc-pill" data-mode="phonemes">Phonemes</button>
           </div>
 
-          <button class="lux-pbtn lux-pbtn--ghost" id="luxWcThemeToggle" title="Toggle theme">🌙</button>
           <button class="lux-pbtn" id="luxWcRefresh">Refresh</button>
           <button class="lux-pbtn lux-pbtn--ghost" id="luxWcBack">← Back</button>
         </div>
       </div>
 
       <div class="lux-wc-body">
+        <div class="lux-wc-controls">
+          <div class="lux-wc-search">
+            <input id="luxWcSearch" type="search" placeholder="Search cloud…" autocomplete="off" />
+            <button class="lux-wc-clear" id="luxWcClear" title="Clear">✕</button>
+          </div>
+
+          <div class="lux-wc-chipBar" id="luxWcSortBar" aria-label="Sort">
+            <button class="lux-wc-chipBtn" data-sort="priority">Priority</button>
+            <button class="lux-wc-chipBtn" data-sort="freq">Frequent</button>
+            <button class="lux-wc-chipBtn" data-sort="diff">Difficult</button>
+            <button class="lux-wc-chipBtn" data-sort="recent">Recent</button>
+            <button class="lux-wc-chipBtn" data-sort="persist">Persistent</button>
+          </div>
+
+          <div class="lux-wc-chipBar" id="luxWcRangeBar" aria-label="Time range">
+            <button class="lux-wc-chipBtn" data-range="all">All time</button>
+            <button class="lux-wc-chipBtn" data-range="30d">30d</button>
+            <button class="lux-wc-chipBtn" data-range="7d">7d</button>
+            <button class="lux-wc-chipBtn" data-range="today">Today</button>
+          </div>
+        </div>
+
         <div class="lux-wc-canvasWrap">
           <canvas id="luxWcCanvas" class="lux-wc-canvas"></canvas>
         </div>
@@ -67,65 +211,30 @@ export async function initWordCloudPage() {
     </section>
   `;
 
-  const shell = root.querySelector("#luxWcShell");
   const canvas = root.querySelector("#luxWcCanvas");
   const meta = root.querySelector("#luxWcMeta");
-
-  const btnTheme = root.querySelector("#luxWcThemeToggle");
-  const btnRefresh = root.querySelector("#luxWcRefresh");
-  const btnBack = root.querySelector("#luxWcBack");
   const sub = root.querySelector("#luxWcSub");
 
-  // ✅ Toggle state
-  let _mode = "words"; // "words" | "phonemes"
+  const btnRefresh = root.querySelector("#luxWcRefresh");
+  const btnBack = root.querySelector("#luxWcBack");
 
-  // Cached data so click-actions are instant
-  let _attempts = [];
-  let _model = null;
-  let _items = [];
+  const pills = Array.from(root.querySelectorAll(".lux-wc-pill"));
+  const sortBtns = Array.from(root.querySelectorAll("[data-sort]"));
+  const rangeBtns = Array.from(root.querySelectorAll("[data-range]"));
+  const search = root.querySelector("#luxWcSearch");
+  const clear = root.querySelector("#luxWcClear");
 
-  // ✅ Action Sheet (Phase A)
-  const sheet = createCloudActionSheet({
-    onGenerate: (state) => {
-      // state.kind: "word" | "phoneme"
-      const plan = buildCloudPlan(_model, state);
-      if (!plan) return;
-      saveNextActivityPlan(plan);
-      window.location.assign("./convo.html#chat");
-    },
-    onOpenAttempt: (attempt) => {
-      if (!attempt) return;
-      openDetailsModal(attempt, attemptOverallScore(attempt), attemptDateStr(attempt), {
-        sid: "",
-        list: [attempt],
-        session: null,
-      });
-    },
-  });
+  // Cached attempts for instant sorting/filtering
+  let _attemptsAll = [];
 
-  // Theme
-  let _theme = (localStorage.getItem(THEME_KEY) || "light").toLowerCase();
-  if (_theme !== "night") _theme = "light";
-
-  function applyTheme() {
-    const isNight = _theme === "night";
-    shell.classList.toggle("lux-wc--night", isNight);
-    btnTheme.textContent = isNight ? "☀️" : "🌙";
-    btnTheme.title = isNight ? "Switch to light theme" : "Switch to night theme";
-    try {
-      localStorage.setItem(THEME_KEY, _theme);
-    } catch (_) {}
+  function persist() {
+    writeState({
+      mode: _mode,
+      sort: _sort,
+      range: _range,
+      query: _query,
+    });
   }
-  applyTheme();
-
-  btnTheme?.addEventListener("click", () => {
-    _theme = _theme === "night" ? "light" : "night";
-    applyTheme();
-  });
-
-  btnBack?.addEventListener("click", () => {
-    window.location.assign("./progress.html");
-  });
 
   function setModeStory() {
     if (!sub) return;
@@ -135,10 +244,71 @@ export async function initWordCloudPage() {
         : "Words you use often + struggle with most (size = frequency, color = Lux difficulty)";
   }
 
-  async function loadAndDraw() {
+  function setActiveButtons() {
+    pills.forEach((b) => b.classList.toggle("is-active", b.dataset.mode === _mode));
+    sortBtns.forEach((b) => b.classList.toggle("is-on", b.dataset.sort === _sort));
+    rangeBtns.forEach((b) => b.classList.toggle("is-on", b.dataset.range === _range));
+  }
+
+  btnBack?.addEventListener("click", () => {
+    window.location.assign("./progress.html");
+  });
+
+  async function ensureData(force = false) {
+    if (_attemptsAll.length && !force) return;
+    const uid = ensureUID();
+    _attemptsAll = await fetchHistory(uid);
+  }
+
+  function computeItemsForView(attemptsInRange) {
+    const model = computeRollups(attemptsInRange);
+
+    const raw =
+      _mode === "phonemes"
+        ? (model?.trouble?.phonemesAll || [])
+        : (model?.trouble?.wordsAll || []);
+
+    // Pull a slightly bigger pool so sorting + searching feels better
+    let items = raw.slice(0, 60);
+
+    // add lastSeenTS for "Recent" sort (top pool only)
+    const ids = items.map((x) => idFromItem(_mode, x));
+    const lastSeen = computeLastSeenMap(_mode === "phonemes" ? "phonemes" : "words", attemptsInRange, ids);
+
+    items = items.map((x) => {
+      const id = lower(idFromItem(_mode, x));
+      return { ...x, lastSeenTS: lastSeen.get(id) || 0 };
+    });
+
+    // sort modes
+    if (_sort === "freq") {
+      items.sort((a, b) => (Number(b.count || 0) - Number(a.count || 0)));
+    } else if (_sort === "diff") {
+      items.sort((a, b) => (Number(a.avg || 0) - Number(b.avg || 0))); // lower avg = harder first
+    } else if (_sort === "recent") {
+      items.sort((a, b) => (Number(b.lastSeenTS || 0) - Number(a.lastSeenTS || 0)));
+    } else if (_sort === "persist") {
+      items.sort((a, b) => persistentScore(b) - persistentScore(a));
+    } else {
+      // priority
+      items.sort((a, b) => (Number(b.priority || 0) - Number(a.priority || 0)));
+    }
+
+    // search (reorder matches first; dim non-matches in renderer)
+    const q = lower(_query);
+    if (q) {
+      const match = (x) => lower(idFromItem(_mode, x)).includes(q);
+      const hits = items.filter(match);
+      const rest = items.filter((x) => !match(x));
+      items = [...hits, ...rest];
+    }
+
+    return items.slice(0, TOP_N);
+  }
+
+  async function draw(forceFetch = false) {
     meta.textContent = "Loading…";
 
-    // ✅ Lazy-load D3 + cloud layout ONLY on this page
     const ok = await ensureWordCloudLibs();
     if (!ok) {
       meta.textContent =
@@ -146,240 +316,90 @@ export async function initWordCloudPage() {
       return;
     }
 
-    const uid = ensureUID();
-    _attempts = await fetchHistory(uid);
+    await ensureData(forceFetch);
 
-    // ✅ Use existing rollups model (same data + same scoring)
-    _model = computeRollups(_attempts);
+    const attemptsInRange = filterAttemptsByRange(_attemptsAll, _range);
+    const items = computeItemsForView(attemptsInRange);
 
-    // ✅ Pick items based on current mode
-    _items =
-      _mode === "phonemes"
-        ? (_model?.trouble?.phonemesAll || []).slice(0, TOP_N)
-        : (_model?.trouble?.wordsAll || []).slice(0, TOP_N);
-
-    if (!_items.length) {
+    if (!items.length) {
       meta.textContent =
         _mode === "phonemes"
           ? "Not enough phoneme data yet — do a little more practice first."
           : "Not enough word data yet — do a little more practice first.";
-      renderWordCloudCanvas(canvas, []); // clears
+      renderWordCloudCanvas(canvas, []);
       return;
     }
 
-    renderWordCloudCanvas(canvas, _items, {
-      onSelect: (hit) => {
-        const metaObj = hit?.meta || {};
-        const isPh = _mode === "phonemes" || metaObj.ipa != null;
+    const q = lower(_query);
+    const focusTest =
+      q.length >= 1
+        ? (idLower) => String(idLower || "").includes(q)
+        : null;
 
-        const kind = isPh ? "phoneme" : "word";
-        const id = isPh ? String(metaObj.ipa || hit.text || "").trim() : String(metaObj.word || hit.text || "").trim();
-
-        const title = kind === "phoneme" ? `/${id}/` : id;
-
-        const recents =
-          kind === "word"
-            ? findRecentAttemptsForWord(_attempts, id, 6)
-            : findRecentAttemptsForPhoneme(_attempts, id, 6);
-
-        sheet.open({
-          kind,
-          id,
-          title,
-          avg: Number(metaObj.avg ?? hit.avg ?? 0) || 0,
-          count: Number(metaObj.count ?? hit.count ?? 0) || 0,
-          days: metaObj.days ?? null,
-          priority: metaObj.priority ?? null,
-          examples: Array.isArray(metaObj.examples) ? metaObj.examples : [],
-          recents,
-        });
-      },
+    renderWordCloudCanvas(canvas, items, {
+      focusTest,
     });
 
     const label = _mode === "phonemes" ? "Phonemes" : "Words";
-    meta.textContent = `Updated ${new Date().toLocaleString()} · ${label} · Showing top ${_items.length}`;
+    meta.textContent =
+      `Updated ${new Date().toLocaleString()} · ${label} · ${rangeLabel(_range)} · Sort: ${sortLabel(_sort)}` +
+      (q ? ` · Search: “${_query.trim()}”` : "");
   }
 
-  btnRefresh?.addEventListener("click", loadAndDraw);
+  // ---- Events ----
 
-  // ✅ Wire pills
-  const pills = Array.from(root.querySelectorAll(".lux-wc-pill"));
-
-  function setMode(next) {
-    _mode = next;
-    pills.forEach((b) => b.classList.toggle("is-active", b.dataset.mode === next));
-    setModeStory();
-    loadAndDraw();
-  }
+  btnRefresh?.addEventListener("click", () => draw(true));
 
   pills.forEach((b) => {
-    b.addEventListener("click", () => setMode(b.dataset.mode));
+    b.addEventListener("click", () => {
+      _mode = b.dataset.mode;
+      setModeStory();
+      setActiveButtons();
+      persist();
+      draw(false);
+    });
   });
 
-  // Helpers for opening Attempt Details
-  function attemptOverallScore(a) {
-    const sum = pickSummary(a) || {};
-    if (sum.pron != null) return Number(sum.pron) || 0;
-
-    const az = pickAzure(a);
-    const v = az?.NBest?.[0]?.PronScore;
-    return Number(v) || 0;
-  }
-
-  function attemptDateStr(a) {
-    const ts = pickTS(a);
-    const d = new Date(ts || Date.now());
-    return d.toLocaleDateString(undefined, {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
+  sortBtns.forEach((b) => {
+    b.addEventListener("click", () => {
+      _sort = b.dataset.sort;
+      setActiveButtons();
+      persist();
+      draw(false);
     });
-  }
+  });
 
-  function attemptWhen(a) {
-    const ts = pickTS(a);
-    if (!ts) return "";
-    const d = new Date(ts);
-    return d.toLocaleString();
-  }
-
-  function attemptTitle(a) {
-    const pk = pickPassageKey(a);
-    return titleFromPassageKey(pk);
-  }
-
-  // Recent matchers
-  function findRecentAttemptsForWord(attempts, word, limit = 6) {
-    const needle = String(word || "").trim().toLowerCase();
-    if (!needle) return [];
-
-    const out = [];
-    const list = Array.isArray(attempts) ? attempts.slice() : [];
-
-    // newest first
-    list.sort((a, b) => +new Date(pickTS(b) || 0) - +new Date(pickTS(a) || 0));
-
-    for (const a of list) {
-      if (out.length >= limit) break;
-
-      const az = pickAzure(a);
-      const W = az?.NBest?.[0]?.Words || [];
-      let found = false;
-
-      if (Array.isArray(W) && W.length) {
-        found = W.some((w) => String(w?.Word || "").trim().toLowerCase() === needle);
-      } else {
-        const sum = pickSummary(a) || {};
-        const words = Array.isArray(sum?.words) ? sum.words : [];
-        found = words.some((w) => String(w || "").trim().toLowerCase() === needle);
-      }
-
-      if (!found) continue;
-
-      out.push({
-        attempt: a,
-        title: attemptTitle(a),
-        when: attemptWhen(a),
-        score: attemptOverallScore(a),
-      });
-    }
-
-    return out;
-  }
-
-  function findRecentAttemptsForPhoneme(attempts, ipa, limit = 6) {
-    // Phase A: keep phoneme recents lightweight.
-    // We'll still return some attempts if we can detect it, otherwise empty.
-    const needle = String(ipa || "").trim();
-    if (!needle) return [];
-
-    const out = [];
-    const list = Array.isArray(attempts) ? attempts.slice() : [];
-
-    list.sort((a, b) => +new Date(pickTS(b) || 0) - +new Date(pickTS(a) || 0));
-
-    for (const a of list) {
-      if (out.length >= limit) break;
-
-      const az = pickAzure(a);
-      const W = az?.NBest?.[0]?.Words || [];
-      let found = false;
-
-      if (Array.isArray(W) && W.length) {
-        // check phonemes inside words
-        for (const w of W) {
-          const P = Array.isArray(w?.Phonemes) ? w.Phonemes : [];
-          if (!P.length) continue;
-          if (P.some((p) => String(p?.Phoneme || "").trim() === needle)) {
-            found = true;
-            break;
-          }
-        }
-      }
-
-      if (!found) continue;
-
-      out.push({
-        attempt: a,
-        title: attemptTitle(a),
-        when: attemptWhen(a),
-        score: attemptOverallScore(a),
-      });
-    }
-
-    return out;
-  }
-
-  // Build the actual Next Activity Plan (override target)
-  function buildCloudPlan(model, state) {
-    if (!model) return null;
-
-    const base = buildNextActivityPlanFromModel(model, {
-      source: "cloud",
-      maxWords: 6,
+  rangeBtns.forEach((b) => {
+    b.addEventListener("click", () => {
+      _range = b.dataset.range;
+      setActiveButtons();
+      persist();
+      draw(false);
     });
+  });
 
-    if (!base) return null;
+  search.value = _query;
+  search.addEventListener("input", () => {
+    _query = search.value || "";
+    persist();
+    draw(false);
+  });
 
-    // If clicked WORD: ensure it is first in targets.words
-    if (state.kind === "word") {
-      const target = {
-        word: String(state.id || "").trim(),
-        avg: Number(state.avg) || null,
-        count: Number(state.count) || null,
-        days: Number(state.days) || null,
-        priority: Number(state.priority) || null,
-      };
+  clear.addEventListener("click", () => {
+    _query = "";
+    search.value = "";
+    persist();
+    draw(false);
+    search.focus();
+  });
 
-      const rest = (base.targets?.words || []).filter(
-        (w) => String(w?.word || "").toLowerCase() !== target.word.toLowerCase()
-      );
-
-      base.targets.words = [target, ...rest].slice(0, 6);
-    }
-
-    // If clicked PHONEME: override phoneme
-    if (state.kind === "phoneme") {
-      base.targets.phoneme = {
-        ipa: String(state.id || "").trim(),
-        avg: Number(state.avg) || null,
-        count: Number(state.count) || null,
-        days: Number(state.days) || null,
-        priority: Number(state.priority) || null,
-      };
-    }
-
-    return base;
-  }
-
-  // First render
+  // ---- Initial paint ----
   setModeStory();
-  await loadAndDraw();
+  setActiveButtons();
+  await draw(false);
 
   // Auto refresh while on this page
   setInterval(() => {
-    // only refresh if still on wordcloud page
-    if (document.getElementById(ROOT_ID)) loadAndDraw();
+    if (document.getElementById(ROOT_ID)) draw(false);
   }, AUTO_REFRESH_MS);
 }
