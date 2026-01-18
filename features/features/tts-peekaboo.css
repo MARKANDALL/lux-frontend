@@ -92,8 +92,8 @@ html:not(.lux-tts-open) .lux-tts-panel{
 .lux-tts-panel #tts-controls {
   display: block;
 
-  /* tighter bezel + still glued under the tab */
-  padding: calc(var(--lux-tts-tab-h) + 12px) 8px 8px;
+  /* ✅ match SPB: tab height + 10px, and symmetric bezel */
+  padding: calc(var(--lux-tts-tab-h) + 10px) 6px 6px;
 
   max-height: calc(var(--lux-tts-panel-max-h) - 8px);
   overflow: auto;
@@ -118,46 +118,44 @@ html:not(.lux-tts-open) .lux-tts-panel{
    ========================================================================== */
 .lux-tts-tab{
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 6px;
+  right: 6px;
   left: auto;
-  width: auto;
-  height: 34px;
+
+  /* ✅ BAR like self-playback — but mirrored (extends LEFT into page) */
+  width: calc(100% + var(--lux-tts-tab-protrude));
+  height: var(--lux-tts-tab-h);
   z-index: 2;
 
   display: inline-flex;
   align-items: center;
   justify-content: center;
 
-  padding: 0 16px;
+  padding: 0 14px;
   border: 0;
   border-radius: 999px;
   background: var(--lux-tts-tab-bg);
   color: var(--lux-tts-tab-ink);
 
-  font: 600 14px/1 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  /* match SPB feel */
+  font: 600 0.92rem/1 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   cursor: pointer;
 
-  box-shadow: 0 6px 18px rgba(16, 130, 255, 0.28);
+  box-shadow: 0 8px 22px rgba(16, 130, 255, 0.30);
   transition: transform 0.18s ease, filter 0.18s ease;
+
   transform: translateZ(0);
   will-change: transform;
 
-  overflow: hidden; /* keep your inner slide clean */
+  overflow: hidden;
 }
 
-/* CLOSED: panel is pushed off-screen, so pull the tab back into view */
-html:not(.lux-tts-open) .lux-tts-tab{
-  right: calc(8px + (var(--lux-tts-panel-w) - var(--lux-tts-shell-reveal)));
-}
-
-/* Mirror TTS tab layout (right-side drawer): arrow sits on OUTSIDE edge */
 .lux-tts-tab-inner{
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-
+  gap: 10px;
   justify-content: center;
+
   width: 100%;
   white-space: nowrap;
 
@@ -165,25 +163,22 @@ html:not(.lux-tts-open) .lux-tts-tab{
   will-change: transform;
   box-sizing: border-box;
 
-  /* give the arrow breathing room at the OUTER cap */
-  padding: 0 18px 0 12px;
+  /* like SPB */
+  padding: 0 22px;
 }
 
-/* Force the label left, arrow right (outer end) */
-.lux-tts-tab-label{ order: 1; }
-.lux-tts-tab-icon{
-  order: 2;
-  flex: 0 0 auto;
-}
+/* ✅ MIRROR ordering: arrow goes on OUTSIDE cap for right-side drawer */
+.lux-tts-tab-icon { order: 1; }
+.lux-tts-tab-label{ order: 2; }
 
-/* OPEN => center */
+/* OPEN => centered */
 html.lux-tts-open .lux-tts-tab-inner{
   transform: translateX(0);
 }
 
-/* CLOSED => push content toward the rounded end */
+/* CLOSED => shift content toward the visible side (LEFT for right drawer) */
 html:not(.lux-tts-open) .lux-tts-tab-inner{
-  transform: translateX(34px);
+  transform: translateX(calc(-44% + 22px));
 }
 
 
