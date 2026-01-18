@@ -49,9 +49,13 @@ export function bindWordcloudEvents(root, api) {
   // -----------------------------
   btnBack?.addEventListener("click", () => api.goBack?.(), { passive: true });
 
-  btnTheme?.addEventListener("click", () => api.toggleTheme?.(), { passive: true });
+  btnTheme?.addEventListener("click", () => api.toggleTheme?.(), {
+    passive: true,
+  });
 
-  btnRefresh?.addEventListener("click", () => api.redraw?.(true), { passive: true });
+  btnRefresh?.addEventListener("click", () => api.redraw?.(true), {
+    passive: true,
+  });
 
   // -----------------------------
   // Mode (words / phonemes)
@@ -126,18 +130,26 @@ export function bindWordcloudEvents(root, api) {
   // -----------------------------
   // Power row buttons
   // -----------------------------
-  btnCluster?.addEventListener("click", () => api.toggleCluster?.(), { passive: true });
+  btnCluster?.addEventListener("click", () => api.toggleCluster?.(), {
+    passive: true,
+  });
 
   btnSnap?.addEventListener("click", () => api.snapshot?.(), { passive: true });
 
-  btnGenTop?.addEventListener("click", () => api.generateTop3?.(), { passive: true });
+  btnGenTop?.addEventListener("click", () => api.generateTop3?.(), {
+    passive: true,
+  });
 
   // -----------------------------
   // Mix toggle
   // -----------------------------
-  mixView?.addEventListener("click", () => api.setMix?.("view"), { passive: true });
+  mixView?.addEventListener("click", () => api.setMix?.("view"), {
+    passive: true,
+  });
 
-  mixSmart?.addEventListener("click", () => api.setMix?.("smart"), { passive: true });
+  mixSmart?.addEventListener("click", () => api.setMix?.("smart"), {
+    passive: true,
+  });
 
   // -----------------------------
   // Timeline sliders
@@ -158,15 +170,31 @@ export function bindWordcloudEvents(root, api) {
     { passive: true }
   );
 
-  // Replay toggle
-  btnReplay?.addEventListener("click", () => api.toggleReplay?.(), { passive: true });
+  // ✅ Replay toggle (UPDATED)
+  // When someone clicks “Replay”: timeline.toggle();
+  btnReplay?.addEventListener(
+    "click",
+    () => {
+      // preferred new shape
+      api.timeline?.toggle?.();
+
+      // (optional compatibility fallback if index.js still provides toggleReplay)
+      // safe to keep; remove later once timeline.toggle is everywhere
+      if (!api.timeline?.toggle) api.toggleReplay?.();
+    },
+    { passive: true }
+  );
 
   // -----------------------------
   // Coach lane
   // -----------------------------
-  coachQuick?.addEventListener("click", () => api.coachQuick?.(), { passive: true });
+  coachQuick?.addEventListener("click", () => api.coachQuick?.(), {
+    passive: true,
+  });
 
-  coachPinTop?.addEventListener("click", () => api.coachPinTop?.(), { passive: true });
+  coachPinTop?.addEventListener("click", () => api.coachPinTop?.(), {
+    passive: true,
+  });
 
   // -----------------------------
   // Delegated: open sheet from chips
