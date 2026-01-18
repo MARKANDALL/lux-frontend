@@ -108,7 +108,7 @@ html:not(.lux-tts-open) .lux-tts-panel{
   right: 8px;
   left: calc(var(--lux-tts-tab-protrude) * -1);
   width: auto;
-  height: var(--lux-tts-tab-h);
+  height: 34px;
   z-index: 2;
 
   display: inline-flex;
@@ -121,8 +121,7 @@ html:not(.lux-tts-open) .lux-tts-panel{
   background: var(--lux-tts-tab-bg);
   color: var(--lux-tts-tab-ink);
 
-  font-weight: 700;
-  font-family: inherit;
+  font: 600 14px/1 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   cursor: pointer;
 
   box-shadow: 0 6px 18px rgba(16, 130, 255, 0.28);
@@ -133,11 +132,14 @@ html:not(.lux-tts-open) .lux-tts-panel{
   overflow: hidden; /* keep your inner slide clean */
 }
 
-.lux-tts-tab-inner {
+/* Mirror TTS tab layout (right-side drawer): arrow sits on OUTSIDE edge */
+.lux-tts-tab-inner{
   display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: 8px;
+  flex-direction: row-reverse; /* <-- icon appears on the right (outside) */
+
+  justify-content: center;
 
   width: 100%;
   white-space: nowrap;
@@ -156,7 +158,7 @@ html.lux-tts-open .lux-tts-tab-inner {
 
 /* CLOSED => shift content toward the visible side (left side of the peeking tab) */
 html:not(.lux-tts-open) .lux-tts-tab-inner {
-  transform: translateX(calc(-44% + 22px));
+  transform: translateX(calc(-32% + 16px));
 }
 
 .lux-tts-tab-icon {
