@@ -1,7 +1,6 @@
 // features/progress/wordcloud/index.js
 import { fetchHistory } from "/src/api/index.js";
 import { ensureUID } from "/api/identity.js";
-import { computeRollups } from "../rollups.js";
 import { ensureWordCloudLibs } from "./libs.js";
 
 import {
@@ -17,8 +16,6 @@ import {
   lower,
   idFromItem,
   filterAttemptsByRange,
-  computeLastSeenMap,
-  persistentScore,
   smartTop3,
 } from "./compute.js";
 
@@ -59,6 +56,9 @@ import {
   buildCloudTop3Plan,
   buildCloudCoachQuickPlan,
 } from "./plan.js";
+
+// ✅ COMMIT 13: view data engine extracted
+import { computeItemsForView } from "./view-logic.js";
 
 const ROOT_ID = "wordcloud-root";
 const AUTO_REFRESH_MS = 10 * 60 * 1000;
@@ -180,58 +180,6 @@ export async function initWordCloudPage() {
     );
   }
 
-  function computeItemsForView(attemptsInRange) {
-    const model = computeRollups(attemptsInRange);
-    ctx.setLastModel(model);
-
-    const raw =
-      S.mode === "phonemes"
-        ? model?.trouble?.phonemesAll || []
-        : model?.trouble?.wordsAll || [];
-
-    // pool for smartMix + better candidate recall
-    let pool = raw.slice(0, 60);
-
-    const ids = pool.map((x) => idFromItem(S.mode, x));
-    const lastSeen = computeLastSeenMap(
-      S.mode === "phonemes" ? "phonemes" : "words",
-      attemptsInRange,
-      ids
-    );
-
-    pool = pool.map((x) => {
-      const id = lower(idFromItem(S.mode, x));
-      return { ...x, lastSeenTS: lastSeen.get(id) || 0 };
-    });
-
-    // view sort rules shape cloud
-    let items = pool.slice();
-
-    if (S.sort === "freq")
-      items.sort((a, b) => Number(b.count || 0) - Number(a.count || 0));
-    else if (S.sort === "diff")
-      items.sort((a, b) => Number(a.avg || 0) - Number(b.avg || 0));
-    else if (S.sort === "recent")
-      items.sort(
-        (a, b) => Number(b.lastSeenTS || 0) - Number(a.lastSeenTS || 0)
-      );
-    else if (S.sort === "persist")
-      items.sort((a, b) => persistentScore(b) - persistentScore(a));
-    else items.sort((a, b) => Number(b.priority || 0) - Number(a.priority || 0));
-
-    // search ordering
-    const q = lower(S.query);
-    if (q) {
-      const match = (x) => lower(idFromItem(S.mode, x)).includes(q);
-      const hits = items.filter(match);
-      const rest = items.filter((x) => !match(x));
-      items = [...hits, ...rest];
-    }
-
-    ctx.setLastPool(pool);
-    return items.slice(0, TOP_N);
-  }
-
   // ✅ COMMIT 12C — action sheet controller owns sheet logic
   let sheetCtrl = null;
 
@@ -258,7 +206,12 @@ export async function initWordCloudPage() {
     };
 
     const computeItemsForViewLogged = (attemptsInRange) => {
-      const items = computeItemsForView(attemptsInRange);
+      const items = computeItemsForView({
+        attemptsInRange,
+        state: S,
+        ctx,
+        topN: TOP_N,
+      });
 
       // ✅ LOG C — right after items computed
       console.log("[wc] items:", items?.length, "mode=", S.mode, "sort=", S.sort);
