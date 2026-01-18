@@ -34,10 +34,7 @@ import { wordcloudTemplateHtml } from "./template.js";
 import { drawWordcloud } from "./render.js";
 import { bindWordcloudEvents } from "./events.js";
 
-import {
-  buildNextActivityPlanFromModel,
-  saveNextActivityPlan,
-} from "../../next-activity/next-activity.js";
+import { saveNextActivityPlan } from "../../next-activity/next-activity.js";
 
 import { openDetailsModal } from "../attempt-detail-modal.js";
 
@@ -56,45 +53,16 @@ import { createWordcloudStrips } from "./strips.js";
 // ✅ COMMIT 12C: sheet feature extracted
 import { createWordcloudSheetController } from "./sheet-controller.js";
 
+// ✅ COMMIT 12D: Next Activity Plan build extracted
+import {
+  buildCloudPlan,
+  buildCloudTop3Plan,
+  buildCloudCoachQuickPlan,
+} from "./plan.js";
+
 const ROOT_ID = "wordcloud-root";
 const AUTO_REFRESH_MS = 10 * 60 * 1000;
 const TOP_N = 20;
-
-function buildCloudPlan(model, state) {
-  const base = buildNextActivityPlanFromModel(model, {
-    source: "cloud",
-    maxWords: 6,
-  });
-  if (!base) return null;
-
-  if (state.kind === "word") {
-    const target = {
-      word: String(state.id || "").trim(),
-      avg: Number(state.avg) || null,
-      count: Number(state.count) || null,
-      days: Number(state.days) || null,
-      priority: Number(state.priority) || null,
-    };
-
-    const rest = (base.targets?.words || []).filter(
-      (w) => lower(w?.word) !== lower(target.word)
-    );
-
-    base.targets.words = [target, ...rest].slice(0, 6);
-  }
-
-  if (state.kind === "phoneme") {
-    base.targets.phoneme = {
-      ipa: String(state.id || "").trim(),
-      avg: Number(state.avg) || null,
-      count: Number(state.count) || null,
-      days: Number(state.days) || null,
-      priority: Number(state.priority) || null,
-    };
-  }
-
-  return base;
-}
 
 export async function initWordCloudPage() {
   const root = document.getElementById(ROOT_ID);
@@ -307,7 +275,9 @@ export async function initWordCloudPage() {
         strips,
         requestDraw: () => draw(false),
 
+        // ✅ COMMIT 12D — plan build extracted
         buildCloudPlan: (state) => buildCloudPlan(ctx.refs.lastModel, state),
+
         saveNextActivityPlan,
         goToConvo: () => window.location.assign("./convo.html#chat"),
 
@@ -482,40 +452,10 @@ export async function initWordCloudPage() {
       const top = strips.getTop3();
       if (!top.length) return;
 
-      const base = buildNextActivityPlanFromModel(ctx.refs.lastModel, {
-        source: "cloud-top3",
-        maxWords: 6,
-      });
-      if (!base) return;
+      const plan = buildCloudTop3Plan(ctx.refs.lastModel, S.mode, top);
+      if (!plan) return;
 
-      if (S.mode === "words") {
-        const chosen = top
-          .map((x) => ({
-            word: String(x.word || "").trim(),
-            avg: Number(x.avg || 0) || null,
-            count: Number(x.count || 0) || null,
-            days: Number(x.days || 0) || null,
-            priority: Number(x.priority || 0) || null,
-          }))
-          .filter((x) => x.word);
-
-        const rest = (base.targets?.words || []).filter(
-          (w) => !chosen.some((c) => lower(c.word) === lower(w?.word))
-        );
-
-        base.targets.words = [...chosen, ...rest].slice(0, 6);
-      } else {
-        const best = top[0];
-        base.targets.phoneme = {
-          ipa: String(best.ipa || "").trim(),
-          avg: Number(best.avg || 0) || null,
-          count: Number(best.count || 0) || null,
-          days: Number(best.days || 0) || null,
-          priority: Number(best.priority || 0) || null,
-        };
-      }
-
-      saveNextActivityPlan(base);
+      saveNextActivityPlan(plan);
       window.location.assign("./convo.html#chat");
     },
 
@@ -536,13 +476,10 @@ export async function initWordCloudPage() {
       const top = strips.getTop3();
       if (!top.length) return;
 
-      const base = buildNextActivityPlanFromModel(ctx.refs.lastModel, {
-        source: "cloud-top3",
-        maxWords: 6,
-      });
-      if (!base) return;
+      const plan = buildCloudCoachQuickPlan(ctx.refs.lastModel);
+      if (!plan) return;
 
-      saveNextActivityPlan(base);
+      saveNextActivityPlan(plan);
       window.location.assign("./convo.html#chat");
     },
 
