@@ -7,16 +7,12 @@ import { ensureWordCloudLibs } from "./libs.js";
 import { createCloudActionSheet } from "./action-sheet.js";
 
 import {
-  readState,
-  writeState,
   savedListForMode,
   addManySaved,
-  THEME_KEY,
   FAV_KEY,
   PIN_KEY,
 } from "./state-store.js";
 
-import { readUrlState, writeUrlState } from "./url-state.js";
 import { rangeLabel, sortLabel, mixLabel } from "./labels.js";
 
 import {
@@ -49,6 +45,12 @@ import { openDetailsModal } from "../attempt-detail-modal.js";
 
 // ✅ COMMIT 10: extract DOM querying into dom.js
 import { getWordcloudDom } from "./dom.js";
+
+// ✅ COMMIT 11: replay/timeline controller extracted
+import { createTimelineController } from "./timeline.js";
+
+// ✅ COMMIT 12A: real shared context object
+import { createWordcloudContext } from "./context.js";
 
 const ROOT_ID = "wordcloud-root";
 const AUTO_REFRESH_MS = 10 * 60 * 1000;
@@ -94,58 +96,17 @@ export async function initWordCloudPage() {
   const root = document.getElementById(ROOT_ID);
   if (!root) return;
 
-  const st = readState();
-  const urlSt = readUrlState();
+  // ✅ COMMIT 12A — shared context owns all state + persistence + URL + theme
+  const ctx = createWordcloudContext();
 
-  let _mode = st.mode === "phonemes" ? "phonemes" : "words";
-  let _sort = ["priority", "freq", "diff", "recent", "persist"].includes(st.sort)
-    ? st.sort
-    : "priority";
-  let _range = ["all", "30d", "7d", "today", "timeline"].includes(st.range)
-    ? st.range
-    : "all";
-  let _query = String(st.query || "");
+  // Snapshot of state for easy reads (updated via onChange)
+  let S = ctx.get();
+  ctx.onChange((next) => {
+    S = next;
+  });
 
-  let _mix = st.mix === "view" ? "view" : "smart"; // Phase E default = smart
-  let _clusterMode = !!st.clusterMode;
-
-  // Phase F: Timeline scrub + replay
-  let _timelineWin = Number(st.timelineWin || 14); // days in window
-  let _timelinePos = Number(st.timelinePos || 0); // days ago the window ENDs (0 = now)
-  let _isReplay = false;
-  let _replayTimer = null;
-
-  _timelineWin = Math.max(7, Math.min(60, _timelineWin || 14));
-  _timelinePos = Math.max(0, Math.min(90, _timelinePos || 0));
-
-  // URL overrides (Phase E)
-  if (urlSt.mode === "phonemes" || urlSt.mode === "words") _mode = urlSt.mode;
-  if (["priority", "freq", "diff", "recent", "persist"].includes(urlSt.sort))
-    _sort = urlSt.sort;
-  if (["all", "30d", "7d", "today", "timeline"].includes(urlSt.range))
-    _range = urlSt.range;
-  if (typeof urlSt.q === "string") _query = urlSt.q;
-  if (urlSt.cluster === "1" || urlSt.cluster === "0")
-    _clusterMode = urlSt.cluster === "1";
-  if (urlSt.mix === "smart" || urlSt.mix === "view") _mix = urlSt.mix;
-
-  if (urlSt.win != null)
-    _timelineWin = Math.max(7, Math.min(60, Number(urlSt.win) || 14));
-  if (urlSt.pos != null)
-    _timelinePos = Math.max(0, Math.min(90, Number(urlSt.pos) || 0));
-
-  let _theme = (localStorage.getItem(THEME_KEY) || "light").toLowerCase();
-  if (_theme !== "night") _theme = "light";
-  if (urlSt.theme === "night" || urlSt.theme === "light") _theme = urlSt.theme;
-
-  // IMPORTANT:
-  // Keep this as a stable array reference so render.js always sees updates.
-  // ✅ Minimal fix: mutate instead of reassigning inside ensureData()
-  let _attemptsAll = [];
-
-  let _lastModel = null;
-  let _lastItems = [];
-  let _lastPool = [];
+  // Stable refs are owned by ctx (NOT by index.js)
+  const attemptsAll = ctx.refs.attemptsAll;
 
   // ✅ mount template, then grab all DOM in one call
   root.innerHTML = wordcloudTemplateHtml();
@@ -172,122 +133,45 @@ export async function initWordCloudPage() {
     });
   }
 
-  function applyTheme() {
-    const isNight = _theme === "night";
-    if (dom.shell) dom.shell.classList.toggle("lux-wc--night", isNight);
-
-    if (dom.btnTheme) dom.btnTheme.textContent = isNight ? "☀️" : "🌙";
-    if (dom.btnTheme)
-      dom.btnTheme.title = isNight
-        ? "Switch to light theme"
-        : "Switch to night theme";
-
-    try {
-      localStorage.setItem(THEME_KEY, _theme);
-    } catch (_) {}
-  }
-
-  function persist() {
-    writeState({
-      mode: _mode,
-      sort: _sort,
-      range: _range,
-      query: _query,
-      clusterMode: _clusterMode,
-      mix: _mix,
-      timelineWin: _timelineWin,
-      timelinePos: _timelinePos,
-    });
-  }
-
-  function syncUrl() {
-    writeUrlState({
-      mode: _mode,
-      sort: _sort,
-      range: _range,
-      q: _query?.trim() || "",
-      theme: _theme,
-      clusterMode: _clusterMode,
-      mix: _mix,
-      win: _timelineWin,
-      pos: _timelinePos,
-    });
-  }
-
   function fmtDaysAgo(pos) {
     if (pos === 0) return "Now";
     return `${pos}d ago`;
   }
 
   function applyTimelineUI() {
-    const show = _range === "timeline";
+    const show = S.range === "timeline";
     if (dom.timelineRow) dom.timelineRow.style.display = show ? "flex" : "none";
 
-    if (dom.winSlider) dom.winSlider.value = String(_timelineWin);
-    if (dom.posSlider) dom.posSlider.value = String(_timelinePos);
+    if (dom.winSlider) dom.winSlider.value = String(S.timelineWin);
+    if (dom.posSlider) dom.posSlider.value = String(S.timelinePos);
 
-    if (dom.winVal) dom.winVal.textContent = `${_timelineWin}d`;
-    if (dom.posVal) dom.posVal.textContent = fmtDaysAgo(_timelinePos);
-  }
-
-  function stopReplay() {
-    _isReplay = false;
-    if (_replayTimer) {
-      clearInterval(_replayTimer);
-      _replayTimer = null;
-    }
-    if (dom.btnReplay) dom.btnReplay.textContent = "▶ Replay";
-  }
-
-  function startReplay() {
-    stopReplay();
-    _isReplay = true;
-    if (dom.btnReplay) dom.btnReplay.textContent = "⏸ Pause";
-
-    // start from oldest-to-newest within slider max
-    let p = 90;
-    _timelinePos = p;
-
-    _replayTimer = setInterval(() => {
-      if (!_isReplay) return;
-
-      p -= 1;
-      if (p < 0) {
-        stopReplay();
-        return;
-      }
-
-      _timelinePos = p;
-      persist();
-      syncUrl();
-      applyTimelineUI();
-      draw(false);
-    }, 420);
+    if (dom.winVal) dom.winVal.textContent = `${S.timelineWin}d`;
+    if (dom.posVal) dom.posVal.textContent = fmtDaysAgo(S.timelinePos);
   }
 
   function setModeStory() {
     if (!dom.sub) return;
     dom.sub.textContent =
-      _mode === "phonemes"
+      S.mode === "phonemes"
         ? "Sounds that show up often + cause trouble (size = frequency, color = Lux difficulty)"
         : "Words you use often + struggle with most (size = frequency, color = Lux difficulty)";
   }
 
   function setActiveButtons() {
     (dom.pills || []).forEach((b) =>
-      b.classList.toggle("is-active", b.dataset.mode === _mode)
+      b.classList.toggle("is-active", b.dataset.mode === S.mode)
     );
     (dom.sortBtns || []).forEach((b) =>
-      b.classList.toggle("is-on", b.dataset.sort === _sort)
+      b.classList.toggle("is-on", b.dataset.sort === S.sort)
     );
     (dom.rangeBtns || []).forEach((b) =>
-      b.classList.toggle("is-on", b.dataset.range === _range)
+      b.classList.toggle("is-on", b.dataset.range === S.range)
     );
 
-    if (dom.btnCluster) dom.btnCluster.classList.toggle("is-on", _clusterMode);
+    if (dom.btnCluster) dom.btnCluster.classList.toggle("is-on", S.clusterMode);
 
-    if (dom.mixView) dom.mixView.classList.toggle("is-on", _mix === "view");
-    if (dom.mixSmart) dom.mixSmart.classList.toggle("is-on", _mix === "smart");
+    if (dom.mixView) dom.mixView.classList.toggle("is-on", S.mix === "view");
+    if (dom.mixSmart) dom.mixSmart.classList.toggle("is-on", S.mix === "smart");
 
     applyTimelineUI();
   }
@@ -297,7 +181,7 @@ export async function initWordCloudPage() {
     const seen = new Set();
 
     for (const x of items || []) {
-      const id = lower(idFromItem(_mode, x));
+      const id = lower(idFromItem(S.mode, x));
       if (!id || seen.has(id)) continue;
       seen.add(id);
       out.push(x);
@@ -308,8 +192,8 @@ export async function initWordCloudPage() {
   }
 
   function getTop3() {
-    if (_mix === "smart") return smartTop3(_mode, _lastPool);
-    return top3FromView(_lastItems);
+    if (S.mix === "smart") return smartTop3(S.mode, ctx.refs.lastPool);
+    return top3FromView(ctx.refs.lastItems);
   }
 
   function updateCoachHint() {
@@ -321,9 +205,9 @@ export async function initWordCloudPage() {
       return;
     }
 
-    const names = top.map((x) => idFromItem(_mode, x)).slice(0, 3);
+    const names = top.map((x) => idFromItem(S.mode, x)).slice(0, 3);
     dom.coachHint.textContent =
-      _mode === "phonemes"
+      S.mode === "phonemes"
         ? `Targets: /${names.join("/, /")}/`
         : `Targets: ${names.join(", ")}`;
   }
@@ -339,15 +223,15 @@ export async function initWordCloudPage() {
     }
 
     dom.targetsStrip.innerHTML = `
-      <div class="lux-wc-stripLabel">Top targets (${mixLabel(_mix)})</div>
+      <div class="lux-wc-stripLabel">Top targets (${mixLabel(S.mix)})</div>
       <div class="lux-wc-stripRow">
         ${top
           .map((x) => {
-            const id = idFromItem(_mode, x);
+            const id = idFromItem(S.mode, x);
             const avg = Math.round(Number(x.avg || 0));
             return `<button class="lux-wc-chipTarget" data-open="${id}">
               <span class="lux-wc-chipTxt">${
-                _mode === "phonemes" ? `/${id}/` : id
+                S.mode === "phonemes" ? `/${id}/` : id
               }</span>
               <span class="lux-wc-chipPct">${avg}%</span>
             </button>`;
@@ -362,8 +246,8 @@ export async function initWordCloudPage() {
   function renderSavedStrip() {
     if (!dom.savedStrip) return;
 
-    const pins = savedListForMode(PIN_KEY, _mode).slice(0, 10);
-    const favs = savedListForMode(FAV_KEY, _mode).slice(0, 10);
+    const pins = savedListForMode(PIN_KEY, S.mode).slice(0, 10);
+    const favs = savedListForMode(FAV_KEY, S.mode).slice(0, 10);
 
     const mkRow = (title, arr, icon) => {
       if (!arr.length) return "";
@@ -375,7 +259,7 @@ export async function initWordCloudPage() {
               .map(
                 (id) => `
                   <button class="lux-wc-chipSaved" data-open="${id}">
-                    ${_mode === "phonemes" ? `/${id}/` : id}
+                    ${S.mode === "phonemes" ? `/${id}/` : id}
                   </button>
                 `
               )
@@ -390,79 +274,84 @@ export async function initWordCloudPage() {
   }
 
   function pinnedSetNow() {
-    const pins = savedListForMode(PIN_KEY, _mode);
+    const pins = savedListForMode(PIN_KEY, S.mode);
     return new Set(pins.map(lower));
   }
 
   // ✅ MINIMAL FIX (ONLY HERE)
-  // Mutate the existing _attemptsAll array so render.js always sees the same reference.
+  // Mutate the existing attemptsAll array so render.js always sees the same reference.
   async function ensureData(force = false) {
-    if (_attemptsAll.length && !force) return;
+    if (attemptsAll.length && !force) return;
 
     const uid = ensureUID();
     const next = await fetchHistory(uid);
 
-    _attemptsAll.length = 0;
-    _attemptsAll.push(...(next || []));
+    attemptsAll.length = 0;
+    attemptsAll.push(...(next || []));
 
-    console.log("[wc] history attempts:", _attemptsAll?.length, _attemptsAll?.[0]);
+    console.log(
+      "[wc] history attempts:",
+      attemptsAll?.length,
+      attemptsAll?.[0]
+    );
   }
 
   function computeItemsForView(attemptsInRange) {
-    _lastModel = computeRollups(attemptsInRange);
+    const model = computeRollups(attemptsInRange);
+    ctx.setLastModel(model);
 
     const raw =
-      _mode === "phonemes"
-        ? _lastModel?.trouble?.phonemesAll || []
-        : _lastModel?.trouble?.wordsAll || [];
+      S.mode === "phonemes"
+        ? model?.trouble?.phonemesAll || []
+        : model?.trouble?.wordsAll || [];
 
     // pool for smartMix + better candidate recall
     let pool = raw.slice(0, 60);
 
-    const ids = pool.map((x) => idFromItem(_mode, x));
+    const ids = pool.map((x) => idFromItem(S.mode, x));
     const lastSeen = computeLastSeenMap(
-      _mode === "phonemes" ? "phonemes" : "words",
+      S.mode === "phonemes" ? "phonemes" : "words",
       attemptsInRange,
       ids
     );
 
     pool = pool.map((x) => {
-      const id = lower(idFromItem(_mode, x));
+      const id = lower(idFromItem(S.mode, x));
       return { ...x, lastSeenTS: lastSeen.get(id) || 0 };
     });
 
     // view sort rules shape cloud
     let items = pool.slice();
 
-    if (_sort === "freq")
+    if (S.sort === "freq")
       items.sort((a, b) => Number(b.count || 0) - Number(a.count || 0));
-    else if (_sort === "diff")
+    else if (S.sort === "diff")
       items.sort((a, b) => Number(a.avg || 0) - Number(b.avg || 0));
-    else if (_sort === "recent")
+    else if (S.sort === "recent")
       items.sort(
         (a, b) => Number(b.lastSeenTS || 0) - Number(a.lastSeenTS || 0)
       );
-    else if (_sort === "persist")
+    else if (S.sort === "persist")
       items.sort((a, b) => persistentScore(b) - persistentScore(a));
     else items.sort((a, b) => Number(b.priority || 0) - Number(a.priority || 0));
 
     // search ordering
-    const q = lower(_query);
+    const q = lower(S.query);
     if (q) {
-      const match = (x) => lower(idFromItem(_mode, x)).includes(q);
+      const match = (x) => lower(idFromItem(S.mode, x)).includes(q);
       const hits = items.filter(match);
       const rest = items.filter((x) => !match(x));
       items = [...hits, ...rest];
     }
 
-    _lastPool = pool;
+    ctx.setLastPool(pool);
     return items.slice(0, TOP_N);
   }
 
   // ---------- Action Sheet ----------
   const sheet = createCloudActionSheet({
     onGenerate: (state) => {
-      const plan = buildCloudPlan(_lastModel, state);
+      const plan = buildCloudPlan(ctx.refs.lastModel, state);
       if (!plan) return;
       saveNextActivityPlan(plan);
       window.location.assign("./convo.html#chat");
@@ -488,17 +377,17 @@ export async function initWordCloudPage() {
   function openSheetForId(id) {
     // ✅ CORRECT ORDER: (allAttempts, range, timelineWin, timelinePos)
     const attemptsInRange = filterAttemptsByRange(
-      _attemptsAll,
-      _range,
-      _timelineWin,
-      _timelinePos
+      attemptsAll,
+      S.range,
+      S.timelineWin,
+      S.timelinePos
     );
 
-    const hitItem = (_lastPool || []).find(
-      (x) => lower(idFromItem(_mode, x)) === lower(id)
+    const hitItem = (ctx.refs.lastPool || []).find(
+      (x) => lower(idFromItem(S.mode, x)) === lower(id)
     );
 
-    const kind = _mode === "phonemes" ? "phoneme" : "word";
+    const kind = S.mode === "phonemes" ? "phoneme" : "word";
     const title = kind === "phoneme" ? `/${id}/` : id;
 
     const avg = hitItem ? Number(hitItem.avg || 0) : 0;
@@ -534,11 +423,11 @@ export async function initWordCloudPage() {
         "[wc] attempts in range:",
         attemptsInRange?.length,
         "range=",
-        _range,
+        S.range,
         "win=",
-        _timelineWin,
+        S.timelineWin,
         "pos=",
-        _timelinePos
+        S.timelinePos
       );
 
       return attemptsInRange;
@@ -548,7 +437,7 @@ export async function initWordCloudPage() {
       const items = computeItemsForView(attemptsInRange);
 
       // ✅ LOG C — right after items computed
-      console.log("[wc] items:", items?.length, "mode=", _mode, "sort=", _sort);
+      console.log("[wc] items:", items?.length, "mode=", S.mode, "sort=", S.sort);
 
       return items;
     };
@@ -564,16 +453,16 @@ export async function initWordCloudPage() {
       metaEl: dom.meta,
       canvas: dom.canvas,
 
-      mode: _mode,
-      range: _range,
-      timelineWin: _timelineWin,
-      timelinePos: _timelinePos,
-      query: _query,
-      sort: _sort,
-      mix: _mix,
-      clusterMode: _clusterMode,
+      mode: S.mode,
+      range: S.range,
+      timelineWin: S.timelineWin,
+      timelinePos: S.timelinePos,
+      query: S.query,
+      sort: S.sort,
+      mix: S.mix,
+      clusterMode: S.clusterMode,
 
-      attemptsAll: _attemptsAll,
+      attemptsAll,
       ensureWordCloudLibs,
       ensureData,
 
@@ -591,26 +480,28 @@ export async function initWordCloudPage() {
       mixLabel,
       fmtDaysAgo,
 
-      persist,
-      syncUrl,
+      // ✅ context owns persistence+url now (keep keys identical)
+      persist: () => ctx.persist(),
+      syncUrl: () => ctx.syncUrl(),
+
       setActiveButtons,
       setModeStory,
 
       setLastItems: (items) => {
-        _lastItems = items || [];
+        ctx.setLastItems(items || []);
       },
 
       onSelect: (hit) => {
         // ✅ CORRECT ORDER: (allAttempts, range, timelineWin, timelinePos)
         const attemptsRange = filterAttemptsByRange(
-          _attemptsAll,
-          _range,
-          _timelineWin,
-          _timelinePos
+          attemptsAll,
+          S.range,
+          S.timelineWin,
+          S.timelinePos
         );
 
         const metaObj = hit?.meta || {};
-        const isPh = _mode === "phonemes" || metaObj.ipa != null;
+        const isPh = S.mode === "phonemes" || metaObj.ipa != null;
 
         const kind = isPh ? "phoneme" : "word";
         const id = isPh
@@ -639,66 +530,86 @@ export async function initWordCloudPage() {
     });
   }
 
+  // ✅ COMMIT 11: timeline controller owns replay timer + button state
+  // (index.js only holds win/pos + range, and delegates replay concerns)
+  const timeline = createTimelineController({
+    dom,
+
+    getRange: () => S.range,
+    setRange: (nextRange) => {
+      ctx.set({ range: nextRange });
+      setActiveButtons();
+      applyTimelineUI();
+    },
+
+    getWin: () => S.timelineWin,
+    setWin: (val) => {
+      ctx.set({ timelineWin: val });
+      applyTimelineUI();
+      draw(false);
+    },
+
+    getPos: () => S.timelinePos,
+    setPos: (val) => {
+      ctx.set({ timelinePos: val });
+      applyTimelineUI();
+      draw(false);
+    },
+
+    // UI helpers
+    fmtDaysAgo,
+    applyTimelineUI,
+
+    // redraw hook (controller calls when replay ticks)
+    requestDraw: () => draw(false),
+  });
+
   // ---------- bind events ----------
   bindWordcloudEvents(root, {
     goBack: () => window.location.assign("./progress.html"),
 
     toggleTheme: () => {
-      _theme = _theme === "night" ? "light" : "night";
-      applyTheme();
-      persist();
-      syncUrl();
+      ctx.toggleTheme(dom);
     },
 
     redraw: (forceFetch = false) => draw(!!forceFetch),
 
     setMode: (mode) => {
-      _mode = mode === "phonemes" ? "phonemes" : "words";
-      persist();
-      syncUrl();
+      ctx.set({ mode });
+      setModeStory();
       draw(false);
     },
 
     setSort: (sort) => {
-      _sort = ["priority", "freq", "diff", "recent", "persist"].includes(sort)
-        ? sort
-        : _sort;
-      persist();
-      syncUrl();
+      ctx.set({ sort });
       draw(false);
     },
 
     setRange: (range) => {
-      _range = ["all", "30d", "7d", "today", "timeline"].includes(range)
+      const next = ["all", "30d", "7d", "today", "timeline"].includes(range)
         ? range
-        : _range;
+        : S.range;
 
-      // safety: stop replay if user leaves timeline
-      if (_range !== "timeline") stopReplay();
+      // ✅ COMMIT 11: stop replay when leaving timeline
+      if (next !== "timeline") timeline.stop?.();
 
-      persist();
-      syncUrl();
+      ctx.set({ range: next });
+      setActiveButtons();
       draw(false);
     },
 
     setQuery: (q) => {
-      _query = String(q || "");
-      persist();
-      syncUrl();
+      ctx.set({ query: String(q || "") });
       draw(false);
     },
 
     clearQuery: () => {
-      _query = "";
-      persist();
-      syncUrl();
+      ctx.set({ query: "" });
       draw(false);
     },
 
     toggleCluster: () => {
-      _clusterMode = !_clusterMode;
-      persist();
-      syncUrl();
+      ctx.set({ clusterMode: !S.clusterMode });
       draw(false);
     },
 
@@ -706,32 +617,30 @@ export async function initWordCloudPage() {
       try {
         if (!dom.canvas) return;
         const a = document.createElement("a");
-        a.download = `lux-cloud-${_mode}-${Date.now()}.png`;
+        a.download = `lux-cloud-${S.mode}-${Date.now()}.png`;
         a.href = dom.canvas.toDataURL("image/png");
         a.click();
       } catch (_) {}
     },
 
     setMix: (mix) => {
-      _mix = mix === "view" ? "view" : "smart";
-      persist();
-      syncUrl();
+      ctx.set({ mix });
       draw(false);
     },
 
     generateTop3: () => {
-      if (!_lastModel) return;
+      if (!ctx.refs.lastModel) return;
 
       const top = getTop3();
       if (!top.length) return;
 
-      const base = buildNextActivityPlanFromModel(_lastModel, {
+      const base = buildNextActivityPlanFromModel(ctx.refs.lastModel, {
         source: "cloud-top3",
         maxWords: 6,
       });
       if (!base) return;
 
-      if (_mode === "words") {
+      if (S.mode === "words") {
         const chosen = top
           .map((x) => ({
             word: String(x.word || "").trim(),
@@ -762,39 +671,24 @@ export async function initWordCloudPage() {
       window.location.assign("./convo.html#chat");
     },
 
-    setTimelineWin: (val) => {
-      _timelineWin = Math.max(7, Math.min(60, Number(val) || 14));
-      persist();
-      syncUrl();
-      applyTimelineUI();
-      draw(false);
-    },
+    // ✅ timeline scrub inputs still flow through index.js,
+    // but we delegate to controller so it can keep replay consistent
+    setTimelineWin: (val) => timeline.setWin?.(val),
+    setTimelinePos: (val) => timeline.setPos?.(val),
 
-    setTimelinePos: (val) => {
-      _timelinePos = Math.max(0, Math.min(90, Number(val) || 0));
-      persist();
-      syncUrl();
-      applyTimelineUI();
-      draw(false);
-    },
+    // ✅ Replay button path (events.js can call api.timeline.toggle())
+    timeline,
 
-    toggleReplay: () => {
-      if (_range !== "timeline") {
-        _range = "timeline";
-        setActiveButtons();
-        applyTimelineUI();
-      }
-      if (_isReplay) stopReplay();
-      else startReplay();
-    },
+    // ✅ Backward compatibility if anything still calls api.toggleReplay()
+    toggleReplay: () => timeline.toggle?.(),
 
     coachQuick: () => {
-      if (!_lastModel) return;
+      if (!ctx.refs.lastModel) return;
 
       const top = getTop3();
       if (!top.length) return;
 
-      const base = buildNextActivityPlanFromModel(_lastModel, {
+      const base = buildNextActivityPlanFromModel(ctx.refs.lastModel, {
         source: "cloud-top3",
         maxWords: 6,
       });
@@ -806,10 +700,10 @@ export async function initWordCloudPage() {
 
     coachPinTop: () => {
       const top = getTop3();
-      const ids = top.map((x) => idFromItem(_mode, x)).filter(Boolean);
+      const ids = top.map((x) => idFromItem(S.mode, x)).filter(Boolean);
       if (!ids.length) return;
 
-      addManySaved(PIN_KEY, _mode, ids);
+      addManySaved(PIN_KEY, S.mode, ids);
       renderSavedStrip();
       draw(false);
     },
@@ -818,10 +712,11 @@ export async function initWordCloudPage() {
   });
 
   // initial
-  applyTheme();
+  ctx.applyTheme(dom);
   setActiveButtons();
   setModeStory();
   applyTimelineUI();
+  timeline.syncButton?.(); // optional (controller can update replay button text on load)
   await draw(false);
 
   setInterval(() => {
