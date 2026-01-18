@@ -189,3 +189,38 @@
   color: #0f172a;
   box-shadow: 0 10px 22px rgba(0,0,0,0.10);
 }
+/* =========================
+   Phase C: Micro Delight
+========================= */
+
+.lux-wc-canvasWrap{
+  transition: transform 220ms ease, filter 220ms ease, box-shadow 220ms ease;
+}
+
+.lux-wc-canvasWrap:hover{
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+  box-shadow: 0 22px 60px rgba(0,0,0,0.16);
+}
+
+/* Night: add a little “constellation” texture */
+.lux-wc--night .lux-wc-canvasWrap{
+  position: relative;
+  overflow: hidden;
+}
+
+.lux-wc--night .lux-wc-canvasWrap::before{
+  content:"";
+  position:absolute;
+  inset: 0;
+  pointer-events:none;
+  opacity: 0.55;
+  background:
+    radial-gradient(1px 1px at 10% 18%, rgba(255,255,255,0.55), transparent 55%),
+    radial-gradient(1px 1px at 22% 64%, rgba(255,255,255,0.38), transparent 55%),
+    radial-gradient(1px 1px at 36% 32%, rgba(255,255,255,0.48), transparent 55%),
+    radial-gradient(1px 1px at 52% 74%, rgba(255,255,255,0.30), transparent 55%),
+    radial-gradient(1px 1px at 70% 22%, rgba(255,255,255,0.40), transparent 55%),
+    radial-gradient(1px 1px at 85% 58%, rgba(255,255,255,0.35), transparent 55%);
+  mix-blend-mode: screen;
+}

@@ -92,12 +92,14 @@ html:not(.lux-tts-open) .lux-tts-panel{
 .lux-tts-panel #tts-controls {
   display: block;
 
-  /* slightly tighter bezel (matches SPB feeling) */
-  padding: calc(var(--lux-tts-tab-h) + 14px) 14px 10px;
+  /* tighter bezel + still glued under the tab */
+  padding: calc(var(--lux-tts-tab-h) + 12px) 12px 8px;
 
   max-height: calc(var(--lux-tts-panel-max-h) - 8px);
   overflow: auto;
 }
+
+
 
 /* Inner card gets its own shadow (stacked effect like Self Playback) */
 .lux-tts-panel #tts-controls .tts-box{
@@ -157,13 +159,14 @@ html:not(.lux-tts-open) .lux-tts-panel{
   transition: transform var(--lux-tab-dur) var(--lux-ease-pop);
   will-change: transform;
 
-  padding: 0 10px; /* tighter so the nudge is obvious */
+padding: 0 16px 0 8px;
 }
 
 /* CLOSED => push content HARDER toward the visible end */
 html:not(.lux-tts-open) .lux-tts-tab-inner{
-  transform: translateX(calc(-56% + 46px));
+  transform: translateX(calc(-50% + 34px));
 }
+
 
 .lux-tts-tab-icon {
   display: inline-block;
@@ -255,7 +258,7 @@ html:not(.lux-tts-booted) .lux-tts-panel{
 /* After first open, keep the full-size drawer always */
 html.lux-tts-booted .lux-tts-panel{
   height: auto;
-  min-height: 520px; /* tune: 500–620 depending on your preferred full size */
+  min-height: 0;
 }
 
 /* Responsive */
