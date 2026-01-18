@@ -5,7 +5,12 @@ function clamp(n, a, b) {
   return Math.max(a, Math.min(b, n));
 }
 
-export function renderWordCloudCanvas(canvas, items = []) {
+/**
+ * renderWordCloudCanvas(canvas, items, opts?)
+ * opts:
+ *   - onSelect(hit) : called when user clicks a word/phoneme in the cloud
+ */
+export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
   if (!canvas) return;
 
   const wrap = canvas.parentElement;
@@ -39,11 +44,13 @@ export function renderWordCloudCanvas(canvas, items = []) {
     return clamp(s, 16, 62);
   };
 
+  // Preserve meta so clicks can open sheet with full data
   const words = items.map((x) => ({
-text: String(x.word ?? x.ipa ?? x.text ?? "").trim(),
+    text: String(x.word ?? x.ipa ?? x.text ?? "").trim(),
     count: Number(x.count || 0),
     avg: Number.isFinite(Number(x.avg)) ? Number(x.avg) : 0,
     size: sizeForCount(x.count),
+    meta: x,
   }));
 
   // d3-cloud attaches either to d3.layout.cloud or window.cloud depending on build
@@ -95,6 +102,7 @@ text: String(x.word ?? x.ipa ?? x.text ?? "").trim(),
         text: d.text,
         avg: d.avg,
         count: d.count,
+        meta: d.meta,
         x: cx + d.x - tw / 2,
         y: cy + d.y - th / 2,
         w: tw,
@@ -132,7 +140,7 @@ text: String(x.word ?? x.ipa ?? x.text ?? "").trim(),
       : "";
   };
 
-  // Click → (Phase 1) just alert. (Phase 2/3 we’ll route into practice)
+  // Click → Action Sheet (Phase A)
   canvas.onclick = (e) => {
     const r = canvas.getBoundingClientRect();
     const mx = e.clientX - r.left;
@@ -144,6 +152,9 @@ text: String(x.word ?? x.ipa ?? x.text ?? "").trim(),
 
     if (!hit) return;
 
-    alert(`${hit.text}\nAvg: ${Math.round(hit.avg)}%\nSeen: ${hit.count}×`);
+    // ✅ IMPORTANT: call back into the page controller (no alert)
+    if (typeof opts?.onSelect === "function") {
+      opts.onSelect(hit);
+    }
   };
 }

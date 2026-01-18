@@ -89,7 +89,7 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
   ✨ Generate my next practice
 </button>
 <button class="lux-pbtn lux-pbtn--ghost" id="luxOpenWordCloud">
-  ☁️ Word Cloud
+  ☁️ Cloud Visuals
 </button>
             <button class="lux-pbtn" id="luxDownloadReport">Download report</button>
             <button class="lux-pbtn lux-pbtn--ghost" id="luxDownloadTrouble">Download troubleshooting report</button>

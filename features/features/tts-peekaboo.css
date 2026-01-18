@@ -36,7 +36,7 @@
   --lux-tts-shell-reveal: 88px;    /* makes the visible stub feel intentional */
 
   --lux-tts-top-gap: 64px;        /* leaves space for Save Progress */
-  --lux-tts-tab-h: 38px;
+  --lux-tts-tab-h: 34px;
   --lux-tts-tab-protrude: 150px;  /* how far the tab sticks into the page */
 }
 
@@ -90,10 +90,14 @@ html:not(.lux-tts-open) .lux-tts-panel{
 
 .lux-tts-panel #tts-controls {
   display: block;
-  padding: 14px 16px 16px;
+
+  /* KEY: reserve space for the tab so the UI box isn't "under it" */
+  padding: calc(var(--lux-tts-tab-h) + 18px) 16px 16px;
+
   max-height: calc(var(--lux-tts-panel-max-h) - 8px);
   overflow: auto;
 }
+
 
 .lux-tts-panel .tts-box { gap: 10px; }
 .lux-tts-panel,
@@ -137,29 +141,23 @@ html:not(.lux-tts-open) .lux-tts-panel{
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  flex-direction: row-reverse; /* <-- icon appears on the right (outside) */
+  flex-direction: row-reverse;
 
   justify-content: center;
-
   width: 100%;
   white-space: nowrap;
 
   transition: transform var(--lux-tab-dur) var(--lux-ease-pop);
   will-change: transform;
-  box-sizing: border-box;
 
-  padding: 0 18px;
+  padding: 0 10px; /* tighter so the nudge is obvious */
 }
 
-/* OPEN => centered */
-html.lux-tts-open .lux-tts-tab-inner {
-  transform: translateX(0);
+/* CLOSED => push content HARDER toward the visible end */
+html:not(.lux-tts-open) .lux-tts-tab-inner{
+  transform: translateX(calc(-46% + 52px));
 }
 
-/* CLOSED => shift content toward the visible side (left side of the peeking tab) */
-html:not(.lux-tts-open) .lux-tts-tab-inner {
-  transform: translateX(calc(-32% + 28px));
-}
 
 .lux-tts-tab-icon {
   display: inline-block;
