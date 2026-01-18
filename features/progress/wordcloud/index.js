@@ -4,8 +4,6 @@ import { ensureUID } from "/api/identity.js";
 import { computeRollups } from "../rollups.js";
 import { ensureWordCloudLibs } from "./libs.js";
 
-import { createCloudActionSheet } from "./action-sheet.js";
-
 import {
   savedListForMode,
   addManySaved,
@@ -51,6 +49,12 @@ import { createTimelineController } from "./timeline.js";
 
 // ✅ COMMIT 12A: real shared context object
 import { createWordcloudContext } from "./context.js";
+
+// ✅ COMMIT 12B: strips + coach lane extracted
+import { createWordcloudStrips } from "./strips.js";
+
+// ✅ COMMIT 12C: sheet feature extracted
+import { createWordcloudSheetController } from "./sheet-controller.js";
 
 const ROOT_ID = "wordcloud-root";
 const AUTO_REFRESH_MS = 10 * 60 * 1000;
@@ -111,6 +115,20 @@ export async function initWordCloudPage() {
   // ✅ mount template, then grab all DOM in one call
   root.innerHTML = wordcloudTemplateHtml();
   const dom = getWordcloudDom(root);
+
+  // ✅ COMMIT 12B — strips UI controller
+  const strips = createWordcloudStrips({
+    ctx,
+    dom,
+    getState: () => S,
+    mixLabel,
+    smartTop3,
+    idFromItem,
+    lower,
+    savedListForMode,
+    PIN_KEY,
+    FAV_KEY,
+  });
 
   // Render sequencing guard (prevents old async layouts hiding new overlay)
   const _renderSeq = { value: 0 };
@@ -174,108 +192,6 @@ export async function initWordCloudPage() {
     if (dom.mixSmart) dom.mixSmart.classList.toggle("is-on", S.mix === "smart");
 
     applyTimelineUI();
-  }
-
-  function top3FromView(items) {
-    const out = [];
-    const seen = new Set();
-
-    for (const x of items || []) {
-      const id = lower(idFromItem(S.mode, x));
-      if (!id || seen.has(id)) continue;
-      seen.add(id);
-      out.push(x);
-      if (out.length >= 3) break;
-    }
-
-    return out;
-  }
-
-  function getTop3() {
-    if (S.mix === "smart") return smartTop3(S.mode, ctx.refs.lastPool);
-    return top3FromView(ctx.refs.lastItems);
-  }
-
-  function updateCoachHint() {
-    if (!dom.coachHint) return;
-
-    const top = getTop3();
-    if (!top.length) {
-      dom.coachHint.textContent = "";
-      return;
-    }
-
-    const names = top.map((x) => idFromItem(S.mode, x)).slice(0, 3);
-    dom.coachHint.textContent =
-      S.mode === "phonemes"
-        ? `Targets: /${names.join("/, /")}/`
-        : `Targets: ${names.join(", ")}`;
-  }
-
-  function renderTargetsStrip() {
-    if (!dom.targetsStrip) return;
-
-    const top = getTop3();
-    if (!top.length) {
-      dom.targetsStrip.innerHTML = "";
-      updateCoachHint();
-      return;
-    }
-
-    dom.targetsStrip.innerHTML = `
-      <div class="lux-wc-stripLabel">Top targets (${mixLabel(S.mix)})</div>
-      <div class="lux-wc-stripRow">
-        ${top
-          .map((x) => {
-            const id = idFromItem(S.mode, x);
-            const avg = Math.round(Number(x.avg || 0));
-            return `<button class="lux-wc-chipTarget" data-open="${id}">
-              <span class="lux-wc-chipTxt">${
-                S.mode === "phonemes" ? `/${id}/` : id
-              }</span>
-              <span class="lux-wc-chipPct">${avg}%</span>
-            </button>`;
-          })
-          .join("")}
-      </div>
-    `;
-
-    updateCoachHint();
-  }
-
-  function renderSavedStrip() {
-    if (!dom.savedStrip) return;
-
-    const pins = savedListForMode(PIN_KEY, S.mode).slice(0, 10);
-    const favs = savedListForMode(FAV_KEY, S.mode).slice(0, 10);
-
-    const mkRow = (title, arr, icon) => {
-      if (!arr.length) return "";
-      return `
-        <div class="lux-wc-savedRow">
-          <div class="lux-wc-stripLabel">${icon} ${title}</div>
-          <div class="lux-wc-stripRow">
-            ${arr
-              .map(
-                (id) => `
-                  <button class="lux-wc-chipSaved" data-open="${id}">
-                    ${S.mode === "phonemes" ? `/${id}/` : id}
-                  </button>
-                `
-              )
-              .join("")}
-          </div>
-        </div>
-      `;
-    };
-
-    const html = mkRow("Pinned", pins, "📌") + mkRow("Favorites", favs, "⭐");
-    dom.savedStrip.innerHTML = html || "";
-  }
-
-  function pinnedSetNow() {
-    const pins = savedListForMode(PIN_KEY, S.mode);
-    return new Set(pins.map(lower));
   }
 
   // ✅ MINIMAL FIX (ONLY HERE)
@@ -348,68 +264,8 @@ export async function initWordCloudPage() {
     return items.slice(0, TOP_N);
   }
 
-  // ---------- Action Sheet ----------
-  const sheet = createCloudActionSheet({
-    onGenerate: (state) => {
-      const plan = buildCloudPlan(ctx.refs.lastModel, state);
-      if (!plan) return;
-      saveNextActivityPlan(plan);
-      window.location.assign("./convo.html#chat");
-    },
-
-    onOpenAttempt: (attempt) => {
-      if (!attempt) return;
-      const score = attemptOverallScore(attempt);
-      const dateStr = attemptWhen(attempt) || "—";
-      openDetailsModal(attempt, score, dateStr, {
-        sid: "",
-        list: [attempt],
-        session: null,
-      });
-    },
-
-    onStoreChange: () => {
-      renderSavedStrip();
-      draw(false);
-    },
-  });
-
-  function openSheetForId(id) {
-    // ✅ CORRECT ORDER: (allAttempts, range, timelineWin, timelinePos)
-    const attemptsInRange = filterAttemptsByRange(
-      attemptsAll,
-      S.range,
-      S.timelineWin,
-      S.timelinePos
-    );
-
-    const hitItem = (ctx.refs.lastPool || []).find(
-      (x) => lower(idFromItem(S.mode, x)) === lower(id)
-    );
-
-    const kind = S.mode === "phonemes" ? "phoneme" : "word";
-    const title = kind === "phoneme" ? `/${id}/` : id;
-
-    const avg = hitItem ? Number(hitItem.avg || 0) : 0;
-    const count = hitItem ? Number(hitItem.count || 0) : 0;
-
-    const recents =
-      kind === "word"
-        ? findRecentAttemptsForWord(attemptsInRange, id, 6)
-        : findRecentAttemptsForPhoneme(attemptsInRange, id, 6);
-
-    sheet.open({
-      kind,
-      id,
-      title,
-      avg,
-      count,
-      days: hitItem?.days ?? null,
-      priority: hitItem?.priority ?? null,
-      examples: Array.isArray(hitItem?.examples) ? hitItem.examples : [],
-      recents,
-    });
-  }
+  // ✅ COMMIT 12C — action sheet controller owns sheet logic
+  let sheetCtrl = null;
 
   // ---------- draw ----------
   async function draw(forceFetch = false) {
@@ -442,6 +298,32 @@ export async function initWordCloudPage() {
       return items;
     };
 
+    // Init sheet controller once we have draw() closure available
+    if (!sheetCtrl) {
+      sheetCtrl = createWordcloudSheetController({
+        ctx,
+        attemptsAll,
+        getState: () => S,
+        strips,
+        requestDraw: () => draw(false),
+
+        buildCloudPlan: (state) => buildCloudPlan(ctx.refs.lastModel, state),
+        saveNextActivityPlan,
+        goToConvo: () => window.location.assign("./convo.html#chat"),
+
+        openDetailsModal,
+        attemptOverallScore,
+        attemptWhen,
+
+        findRecentAttemptsForWord,
+        findRecentAttemptsForPhoneme,
+
+        filterAttemptsByRange,
+        idFromItem,
+        lower,
+      });
+    }
+
     await drawWordcloud({
       forceFetch,
 
@@ -470,9 +352,9 @@ export async function initWordCloudPage() {
       filterAttemptsByRange: filterAttemptsByRangeLogged,
       computeItemsForView: computeItemsForViewLogged,
 
-      renderSavedStrip,
-      renderTargetsStrip,
-      pinnedSet: pinnedSetNow(),
+      renderSavedStrip: strips.renderSavedStrip,
+      renderTargetsStrip: strips.renderTargetsStrip,
+      pinnedSet: strips.pinnedSetNow(),
 
       lower,
       rangeLabel,
@@ -491,42 +373,8 @@ export async function initWordCloudPage() {
         ctx.setLastItems(items || []);
       },
 
-      onSelect: (hit) => {
-        // ✅ CORRECT ORDER: (allAttempts, range, timelineWin, timelinePos)
-        const attemptsRange = filterAttemptsByRange(
-          attemptsAll,
-          S.range,
-          S.timelineWin,
-          S.timelinePos
-        );
-
-        const metaObj = hit?.meta || {};
-        const isPh = S.mode === "phonemes" || metaObj.ipa != null;
-
-        const kind = isPh ? "phoneme" : "word";
-        const id = isPh
-          ? String(metaObj.ipa || hit.text || "").trim()
-          : String(metaObj.word || hit.text || "").trim();
-
-        const title = kind === "phoneme" ? `/${id}/` : id;
-
-        const recents =
-          kind === "word"
-            ? findRecentAttemptsForWord(attemptsRange, id, 6)
-            : findRecentAttemptsForPhoneme(attemptsRange, id, 6);
-
-        sheet.open({
-          kind,
-          id,
-          title,
-          avg: Number(metaObj.avg ?? hit.avg ?? 0) || 0,
-          count: Number(metaObj.count ?? hit.count ?? 0) || 0,
-          days: metaObj.days ?? null,
-          priority: metaObj.priority ?? null,
-          examples: Array.isArray(metaObj.examples) ? metaObj.examples : [],
-          recents,
-        });
-      },
+      // ✅ COMMIT 12C — sheet controller owns hit-open behavior
+      onSelect: (hit) => sheetCtrl?.openFromHit?.(hit),
     });
   }
 
@@ -631,7 +479,7 @@ export async function initWordCloudPage() {
     generateTop3: () => {
       if (!ctx.refs.lastModel) return;
 
-      const top = getTop3();
+      const top = strips.getTop3();
       if (!top.length) return;
 
       const base = buildNextActivityPlanFromModel(ctx.refs.lastModel, {
@@ -685,7 +533,7 @@ export async function initWordCloudPage() {
     coachQuick: () => {
       if (!ctx.refs.lastModel) return;
 
-      const top = getTop3();
+      const top = strips.getTop3();
       if (!top.length) return;
 
       const base = buildNextActivityPlanFromModel(ctx.refs.lastModel, {
@@ -699,16 +547,17 @@ export async function initWordCloudPage() {
     },
 
     coachPinTop: () => {
-      const top = getTop3();
+      const top = strips.getTop3();
       const ids = top.map((x) => idFromItem(S.mode, x)).filter(Boolean);
       if (!ids.length) return;
 
       addManySaved(PIN_KEY, S.mode, ids);
-      renderSavedStrip();
+      strips.renderSavedStrip();
       draw(false);
     },
 
-    openSheetForId,
+    // ✅ COMMIT 12C — open-by-id flows into controller
+    openSheetForId: (id) => sheetCtrl?.openSheetForId?.(id),
   });
 
   // initial
