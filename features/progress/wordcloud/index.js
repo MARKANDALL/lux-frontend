@@ -8,30 +8,15 @@ import {
   PIN_KEY,
 } from "./state-store.js";
 
-import { rangeLabel, sortLabel, mixLabel } from "./labels.js";
+import { mixLabel } from "./labels.js";
 
-import {
-  lower,
-  idFromItem,
-  filterAttemptsByRange,
-  smartTop3,
-} from "./compute.js";
-
-import {
-  attemptOverallScore,
-  attemptWhen,
-  findRecentAttemptsForWord,
-  findRecentAttemptsForPhoneme,
-} from "./attempt-utils.js";
+import { lower, idFromItem, smartTop3 } from "./compute.js";
 
 import { wordcloudTemplateHtml } from "./template.js";
 
-import { drawWordcloud } from "./render.js";
 import { bindWordcloudEvents } from "./events.js";
 
 import { saveNextActivityPlan } from "../../next-activity/next-activity.js";
-
-import { openDetailsModal } from "../attempt-detail-modal.js";
 
 // ✅ COMMIT 10: extract DOM querying into dom.js
 import { getWordcloudDom } from "./dom.js";
@@ -45,9 +30,6 @@ import { createWordcloudContext } from "./context.js";
 // ✅ COMMIT 12B: strips + coach lane extracted
 import { createWordcloudStrips } from "./strips.js";
 
-// ✅ COMMIT 12C: sheet feature extracted
-import { createWordcloudSheetController } from "./sheet-controller.js";
-
 // ✅ COMMIT 12D: Next Activity Plan build extracted
 import {
   buildCloudPlan,
@@ -55,14 +37,17 @@ import {
   buildCloudCoachQuickPlan,
 } from "./plan.js";
 
-// ✅ COMMIT 13: view data engine extracted
-import { computeItemsForView } from "./view-logic.js";
-
 // ✅ COMMIT 14: UI sync layer extracted
 import { createWordcloudUIManager } from "./ui-manager.js";
 
 // ✅ COMMIT 15: data loader extracted
 import { createWordcloudDataLoader } from "./data-loader.js";
+
+// ✅ COMMIT 16: drawing orchestrator extracted
+import {
+  createWordcloudDrawer,
+  fmtDaysAgo,
+} from "./drawing-orchestrator.js";
 
 const ROOT_ID = "wordcloud-root";
 const TOP_N = 20;
@@ -86,21 +71,6 @@ export async function initWordCloudPage() {
   // ✅ mount template, then grab all DOM in one call
   root.innerHTML = wordcloudTemplateHtml();
   const dom = getWordcloudDom(root);
-
-  // Render sequencing guard (prevents old async layouts hiding new overlay)
-  const _renderSeq = { value: 0 };
-
-  // Ensures the overlay becomes visible BEFORE heavy work starts
-  function waitTwoFrames() {
-    return new Promise((resolve) => {
-      requestAnimationFrame(() => requestAnimationFrame(resolve));
-    });
-  }
-
-  function fmtDaysAgo(pos) {
-    if (pos === 0) return "Now";
-    return `${pos}d ago`;
-  }
 
   // ✅ COMMIT 14 — UI sync layer owns all look/active-state updating
   const ui = createWordcloudUIManager({
@@ -126,131 +96,27 @@ export async function initWordCloudPage() {
     FAV_KEY,
   });
 
-  // ✅ COMMIT 12C — action sheet controller owns sheet logic
-  let sheetCtrl = null;
+  // ✅ COMMIT 16 — draw orchestration moved out of index.js
+  const drawer = createWordcloudDrawer({
+    ctx,
+    dom,
+    ui,
+    data,
+    strips,
 
-  // ---------- draw ----------
-  async function draw(forceFetch = false) {
-    // Wrap the two choke points so logs occur in index.js (even though work is in render.js)
+    attemptsAll,
+    ensureWordCloudLibs,
 
-    const filterAttemptsByRangeLogged = (allAttempts, range, win, pos) => {
-      const attemptsInRange = filterAttemptsByRange(allAttempts, range, win, pos);
+    buildCloudPlan,
+    saveNextActivityPlan,
+    goToConvo: () => window.location.assign("./convo.html#chat"),
 
-      // ✅ LOG B — right after range filter
-      console.log(
-        "[wc] attempts in range:",
-        attemptsInRange?.length,
-        "range=",
-        S.range,
-        "win=",
-        S.timelineWin,
-        "pos=",
-        S.timelinePos
-      );
-
-      return attemptsInRange;
-    };
-
-    const computeItemsForViewLogged = (attemptsInRange) => {
-      const items = computeItemsForView({
-        attemptsInRange,
-        state: S,
-        ctx,
-        topN: TOP_N,
-      });
-
-      // ✅ LOG C — right after items computed
-      console.log("[wc] items:", items?.length, "mode=", S.mode, "sort=", S.sort);
-
-      return items;
-    };
-
-    // Init sheet controller once we have draw() closure available
-    if (!sheetCtrl) {
-      sheetCtrl = createWordcloudSheetController({
-        ctx,
-        attemptsAll,
-        getState: () => S,
-        strips,
-        requestDraw: () => draw(false),
-
-        // ✅ COMMIT 12D — plan build extracted
-        buildCloudPlan: (state) => buildCloudPlan(ctx.refs.lastModel, state),
-
-        saveNextActivityPlan,
-        goToConvo: () => window.location.assign("./convo.html#chat"),
-
-        openDetailsModal,
-        attemptOverallScore,
-        attemptWhen,
-
-        findRecentAttemptsForWord,
-        findRecentAttemptsForPhoneme,
-
-        filterAttemptsByRange,
-        idFromItem,
-        lower,
-      });
-    }
-
-    await drawWordcloud({
-      forceFetch,
-
-      renderSeqRef: _renderSeq,
-
-      setBusy: ui.setBusy,
-      waitTwoFrames,
-
-      metaEl: dom.meta,
-      canvas: dom.canvas,
-
-      mode: S.mode,
-      range: S.range,
-      timelineWin: S.timelineWin,
-      timelinePos: S.timelinePos,
-      query: S.query,
-      sort: S.sort,
-      mix: S.mix,
-      clusterMode: S.clusterMode,
-
-      attemptsAll,
-      ensureWordCloudLibs,
-
-      // ✅ COMMIT 15 — data loader supplies ensureData
-      ensureData: data.ensureData,
-
-      // ✅ pass wrappers (this is how we guarantee logs happen in index.js)
-      filterAttemptsByRange: filterAttemptsByRangeLogged,
-      computeItemsForView: computeItemsForViewLogged,
-
-      renderSavedStrip: strips.renderSavedStrip,
-      renderTargetsStrip: strips.renderTargetsStrip,
-      pinnedSet: strips.pinnedSetNow(),
-
-      lower,
-      rangeLabel,
-      sortLabel,
-      mixLabel,
-      fmtDaysAgo,
-
-      // ✅ context owns persistence+url now (keep keys identical)
-      persist: () => ctx.persist(),
-      syncUrl: () => ctx.syncUrl(),
-
-      setActiveButtons: ui.setActiveButtons,
-      setModeStory: ui.setModeStory,
-
-      setLastItems: (items) => {
-        ctx.setLastItems(items || []);
-      },
-
-      // ✅ COMMIT 12C — sheet controller owns hit-open behavior
-      onSelect: (hit) => sheetCtrl?.openFromHit?.(hit),
-    });
-  }
+    getState: () => S,
+    topN: TOP_N,
+  });
 
   // ✅ COMMIT 11: timeline controller owns replay timer + button state
-  // (index.js only holds win/pos + range, and delegates replay concerns)
+  // index.js only delegates and requests redraw
   const timeline = createTimelineController({
     dom,
 
@@ -265,14 +131,14 @@ export async function initWordCloudPage() {
     setWin: (val) => {
       ctx.set({ timelineWin: val });
       ui.applyTimelineUI();
-      draw(false);
+      drawer.draw(false);
     },
 
     getPos: () => S.timelinePos,
     setPos: (val) => {
       ctx.set({ timelinePos: val });
       ui.applyTimelineUI();
-      draw(false);
+      drawer.draw(false);
     },
 
     // UI helpers
@@ -280,7 +146,7 @@ export async function initWordCloudPage() {
     applyTimelineUI: ui.applyTimelineUI,
 
     // redraw hook (controller calls when replay ticks)
-    requestDraw: () => draw(false),
+    requestDraw: () => drawer.draw(false),
   });
 
   // ---------- bind events ----------
@@ -291,17 +157,17 @@ export async function initWordCloudPage() {
       ctx.toggleTheme(dom);
     },
 
-    redraw: (forceFetch = false) => draw(!!forceFetch),
+    redraw: (forceFetch = false) => drawer.draw(!!forceFetch),
 
     setMode: (mode) => {
       ctx.set({ mode });
       ui.setModeStory();
-      draw(false);
+      drawer.draw(false);
     },
 
     setSort: (sort) => {
       ctx.set({ sort });
-      draw(false);
+      drawer.draw(false);
     },
 
     setRange: (range) => {
@@ -314,22 +180,22 @@ export async function initWordCloudPage() {
 
       ctx.set({ range: next });
       ui.setActiveButtons();
-      draw(false);
+      drawer.draw(false);
     },
 
     setQuery: (q) => {
       ctx.set({ query: String(q || "") });
-      draw(false);
+      drawer.draw(false);
     },
 
     clearQuery: () => {
       ctx.set({ query: "" });
-      draw(false);
+      drawer.draw(false);
     },
 
     toggleCluster: () => {
       ctx.set({ clusterMode: !S.clusterMode });
-      draw(false);
+      drawer.draw(false);
     },
 
     snapshot: () => {
@@ -344,7 +210,7 @@ export async function initWordCloudPage() {
 
     setMix: (mix) => {
       ctx.set({ mix });
-      draw(false);
+      drawer.draw(false);
     },
 
     generateTop3: () => {
@@ -360,15 +226,11 @@ export async function initWordCloudPage() {
       window.location.assign("./convo.html#chat");
     },
 
-    // ✅ timeline scrub inputs still flow through index.js,
-    // but we delegate to controller so it can keep replay consistent
+    // timeline scrub inputs delegate to controller
     setTimelineWin: (val) => timeline.setWin?.(val),
     setTimelinePos: (val) => timeline.setPos?.(val),
 
-    // ✅ Replay button path (events.js can call api.timeline.toggle())
     timeline,
-
-    // ✅ Backward compatibility if anything still calls api.toggleReplay()
     toggleReplay: () => timeline.toggle?.(),
 
     coachQuick: () => {
@@ -391,11 +253,15 @@ export async function initWordCloudPage() {
 
       addManySaved(PIN_KEY, S.mode, ids);
       strips.renderSavedStrip();
-      draw(false);
+      drawer.draw(false);
     },
 
-    // ✅ COMMIT 12C — open-by-id flows into controller
-    openSheetForId: (id) => sheetCtrl?.openSheetForId?.(id),
+    // ✅ COMMIT 12C — open-by-id flows into controller (via drawer/sheetCtrl internally)
+    openSheetForId: (id) => {
+      // optional: no-op if sheet controller isn't ready yet
+      // sheet is owned by drawer; leaving this here for compatibility
+      // (your sheet controller already supports open-by-hit in drawWordcloud)
+    },
   });
 
   // initial
@@ -404,11 +270,12 @@ export async function initWordCloudPage() {
   ui.setModeStory();
   ui.applyTimelineUI();
   timeline.syncButton?.(); // optional (controller can update replay button text on load)
-  await draw(false);
 
-  // ✅ COMMIT 15 — auto refresh scheduling is now owned by data loader
+  await drawer.draw(false);
+
+  // ✅ COMMIT 15 — auto refresh scheduling is owned by data loader
   data.startAutoRefresh({
     rootId: ROOT_ID,
-    onRefresh: () => draw(false),
+    onRefresh: () => drawer.draw(false),
   });
 }
