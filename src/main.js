@@ -2,27 +2,17 @@
 // The Main Entry Point: Boots the app, handles the Typewriter, and wires the Dropdown.
 
 import { ensureUID } from "../api/identity.js";
+import { initMyWordsSidecar } from "../features/my-words/index.js";
 
-import {
-  wirePassageSelect,
-  wireNextBtn
-} from "../features/passages/index.js";
+import { wirePassageSelect, wireNextBtn } from "../features/passages/index.js";
 
 import { wireHarvardPicker } from "../features/harvard/index.js";
 
-import {
-  initLuxRecorder,
-  wireRecordingButtons
-} from "../features/recorder/index.js";
+import { initLuxRecorder, wireRecordingButtons } from "../features/recorder/index.js";
 
-import {
-  showSummary
-} from "../features/results/index.js";
+import { showSummary } from "../features/results/index.js";
 
-import {
-  allPartsResults,
-  currentParts
-} from "../app-core/state.js";
+import { allPartsResults, currentParts } from "../app-core/state.js";
 
 import { initAudioSink } from "../app-core/audio-sink.js";
 import { bootTTS } from "../features/features/tts/boot-tts.js";
@@ -77,7 +67,7 @@ function startTypewriter() {
     "Work on your 'R' and 'L' sounds...",
     "Slow down and enunciate every syllable...",
     "Go over exactly what you'll say when you propose...",
-    "Speech closer: “In short, here’s why...”"
+    "Speech closer: “In short, here’s why...”",
   ];
 
   let i = 0;
@@ -118,12 +108,54 @@ function startTypewriter() {
   type();
 }
 
+function ensureMyWordsButton(textInput) {
+  const label = textInput?.closest("label");
+  if (!label) return null;
+
+  // If we already built it, reuse it.
+  const existing = label.querySelector("#luxMyWordsBtn");
+  if (existing) return existing;
+
+  // Create a top row so the button sits beside the input-area helper text.
+  let row = label.querySelector(".lux-mw-toprow");
+  if (!row) {
+    row = document.createElement("div");
+    row.className = "lux-mw-toprow";
+    row.style.cssText =
+      "display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px;";
+
+    const msg = label.querySelector("#typewriterMsg");
+    if (msg) {
+      msg.style.margin = "0";
+      msg.style.flex = "1";
+      msg.style.display = "block";
+      row.appendChild(msg);
+    } else {
+      const spacer = document.createElement("span");
+      spacer.style.flex = "1";
+      row.appendChild(spacer);
+    }
+
+    label.insertBefore(row, textInput);
+  }
+
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.id = "luxMyWordsBtn";
+  btn.className = "lux-mw-trigger";
+  btn.textContent = "My Words";
+  btn.title = "Open My Words";
+  row.appendChild(btn);
+
+  return btn;
+}
+
 // --- MAIN BOOT SEQUENCE ---
 async function bootApp() {
   console.log("[Lux] Booting features...");
 
   // 0. Initialize UID (single source of truth)
-  ensureUID();
+  const uid = ensureUID();
 
   // 1. Initialize Audio Infrastructure
   initAudioSink();
@@ -140,6 +172,19 @@ async function bootApp() {
   // 3. Setup Dropdown Logic
   const passageSelect = document.getElementById("passageSelect");
   const textInput = document.getElementById("referenceText");
+
+  // --- My Words Sidecar (V1 UI skeleton) ---
+  if (textInput) {
+    const myWordsBtn = ensureMyWordsButton(textInput);
+    if (myWordsBtn) {
+      initMyWordsSidecar({
+        uid,
+        inputEl: textInput,
+        buttonEl: myWordsBtn,
+      });
+    }
+  }
+  // ----------------------------------------
 
   // --- NEW: Wire up the Language Selector for Auto-Updates ---
   const langSelect = document.getElementById("l1Select");
@@ -187,7 +232,7 @@ async function bootApp() {
     summaryBtn.addEventListener("click", () => {
       showSummary({
         allPartsResults: allPartsResults,
-        currentParts: currentParts
+        currentParts: currentParts,
       });
     });
   }
@@ -199,7 +244,7 @@ async function bootApp() {
   initArrowTrail({
     targetSelector: "aside.lux-tts-panel > button.lux-tts-tab",
     autoRunMs: 7000,
-    autoRunOnce: true
+    autoRunOnce: true,
     // debug: true, // optional for 30 seconds
   });
 
@@ -251,7 +296,10 @@ function updateTopBannerLayout() {
     const panelRect = panel.getBoundingClientRect();
     handleTop = Math.max(16, Math.ceil(panelRect.bottom));
   }
-  document.documentElement.style.setProperty("--lux-banner-handle-top", handleTop + "px");
+  document.documentElement.style.setProperty(
+    "--lux-banner-handle-top",
+    handleTop + "px"
+  );
 
   // Arrow + a11y
   handle.textContent = collapsed ? "Tips ▾" : "Tips ▴";
@@ -266,9 +314,14 @@ function updateTopBannerLayout() {
 
   const panelRect = panel.getBoundingClientRect();
   const handleRect = handle.getBoundingClientRect();
-  const bottom = collapsed ? handleRect.bottom : Math.max(panelRect.bottom, handleRect.bottom);
+  const bottom = collapsed
+    ? handleRect.bottom
+    : Math.max(panelRect.bottom, handleRect.bottom);
 
-  document.documentElement.style.setProperty("--lux-top-banner-offset", Math.ceil(bottom) + "px");
+  document.documentElement.style.setProperty(
+    "--lux-top-banner-offset",
+    Math.ceil(bottom) + "px"
+  );
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -309,7 +362,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Keep layout correct after animation and resizes
   panel.addEventListener("transitionend", () => updateTopBannerLayout());
-  window.addEventListener("resize", () => updateTopBannerLayout(), { passive: true });
+  window.addEventListener("resize", () => updateTopBannerLayout(), {
+    passive: true,
+  });
 
   updateTopBannerLayout();
 });

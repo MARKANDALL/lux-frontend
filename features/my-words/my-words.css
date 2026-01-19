@@ -1,0 +1,241 @@
+/* features/my-words/my-words.css */
+
+.lux-mw-trigger{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:8px 12px;
+  border-radius:999px;
+  border:1px solid rgba(0,0,0,.10);
+  background: rgba(255,255,255,.82);
+  box-shadow: 0 6px 18px rgba(0,0,0,.08);
+  cursor:pointer;
+  font-weight:600;
+  font-size:13px;
+  line-height:1;
+  white-space:nowrap;
+  user-select:none;
+}
+
+.lux-mw-trigger:hover{
+  background: rgba(255,255,255,.96);
+}
+
+.lux-mw-trigger.is-open{
+  border-color: rgba(0,0,0,.18);
+}
+
+.lux-mw-panel{
+  position: fixed;
+  right: 18px;
+  top: 92px;
+  width: min(480px, 40vw);
+  max-width: 92vw;
+  height: 75vh;
+  max-height: calc(100vh - 120px);
+
+  border-radius: 18px;
+  border: 1px solid rgba(0,0,0,.10);
+  background: rgba(255,255,255,.86);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  box-shadow: 0 18px 40px rgba(0,0,0,.16);
+  overflow: hidden;
+  z-index: 9999;
+
+  opacity: 0;
+  transform: translateX(22px);
+  pointer-events: none;
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.lux-mw-panel.is-open{
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+.lux-mw-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:12px 12px 10px 12px;
+  border-bottom:1px solid rgba(0,0,0,.08);
+}
+
+.lux-mw-title{
+  font-weight:800;
+  font-size:14px;
+  letter-spacing:.2px;
+}
+
+.lux-mw-headRight{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.lux-mw-search{
+  width: 170px;
+  max-width: 34vw;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,.10);
+  padding: 7px 10px;
+  font-size: 12px;
+  outline: none;
+  background: rgba(255,255,255,.85);
+}
+
+.lux-mw-iconBtn{
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,.10);
+  background: rgba(255,255,255,.85);
+  cursor:pointer;
+}
+
+.lux-mw-body{
+  display:flex;
+  flex-direction:column;
+  height: calc(100% - 55px);
+}
+
+.lux-mw-add{
+  padding: 12px;
+  border-bottom: 1px solid rgba(0,0,0,.08);
+}
+
+.lux-mw-addLabel{
+  font-weight:700;
+  font-size:12px;
+  margin-bottom:8px;
+  opacity:.9;
+}
+
+.lux-mw-addBox{
+  width:100%;
+  resize:none;
+  border-radius: 14px;
+  border:1px solid rgba(0,0,0,.10);
+  background: rgba(255,255,255,.92);
+  padding: 10px 12px;
+  outline:none;
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.lux-mw-addRow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-top:10px;
+}
+
+.lux-mw-addBtn{
+  padding: 8px 12px;
+  border-radius: 999px;
+  border:1px solid rgba(0,0,0,.10);
+  background: rgba(255,255,255,.92);
+  cursor:pointer;
+  font-weight:700;
+  font-size: 12px;
+}
+
+.lux-mw-hint{
+  font-size: 11px;
+  opacity: .72;
+}
+
+.lux-mw-list{
+  padding: 10px 12px 12px 12px;
+  overflow:auto;
+  height:100%;
+}
+
+.lux-mw-empty{
+  padding: 16px 12px;
+  border-radius: 14px;
+  border: 1px dashed rgba(0,0,0,.18);
+  background: rgba(255,255,255,.62);
+}
+
+.lux-mw-empty strong{
+  display:block;
+  margin-bottom:6px;
+}
+
+.lux-mw-row{
+  display:flex;
+  gap:10px;
+  padding: 10px 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,.08);
+  background: rgba(255,255,255,.78);
+  margin-bottom: 10px;
+}
+
+.lux-mw-dot{
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  margin-top: 4px;
+  background: rgba(100,100,100,.35);
+  flex: 0 0 auto;
+}
+
+.lux-mw-main{
+  flex:1 1 auto;
+  min-width:0;
+}
+
+.lux-mw-text{
+  font-weight:800;
+  font-size: 13px;
+  line-height:1.15;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.lux-mw-meta{
+  font-size: 11px;
+  opacity: .72;
+  margin-top: 4px;
+}
+
+.lux-mw-actions{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  flex:0 0 auto;
+}
+
+.lux-mw-miniBtn{
+  padding: 7px 10px;
+  border-radius: 12px;
+  border:1px solid rgba(0,0,0,.10);
+  background: rgba(255,255,255,.92);
+  cursor:pointer;
+  font-weight:700;
+  font-size: 11px;
+  line-height:1;
+}
+
+.lux-mw-miniBtn:hover{
+  background: rgba(255,255,255,.98);
+}
+
+.lux-mw-miniBtn.primary{
+  border-color: rgba(0,0,0,.14);
+}
+
+.lux-mw-flash{
+  outline: 2px solid rgba(0,0,0,.18);
+  box-shadow: 0 0 0 5px rgba(0,0,0,.06);
+  transition: box-shadow 200ms ease;
+}
