@@ -37,9 +37,21 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
 
   // ✅ Controller callback (overlay off signal)
   let _endFired = false;
+
+  // If layout is slow, keep the overlay ON (no blank-screen confusion).
+  // We'll just log once after ~2.5s instead of ending the render early.
+  let slowTimer = 0;
+  const clearSlowTimer = () => {
+    if (slowTimer) {
+      clearTimeout(slowTimer);
+      slowTimer = 0;
+    }
+  };
+
   const fireEnd = (reason = "ok") => {
     if (_endFired) return;
     _endFired = true;
+    clearSlowTimer();
     if (typeof opts?.onRenderEnd === "function") {
       try {
         opts.onRenderEnd({ reason });
@@ -333,12 +345,13 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
     fireEnd("ok"); // ✅ IMPORTANT
   }
 
-  // ✅ Make timeout scale for bigger item counts
-  const timeoutMs = items.length >= 40 ? 5000 : 2500;
-  setTimeout(() => fireEnd("timeout"), timeoutMs);
-
   // ✅ Adaptive padding helps 40–60 items pack
   const pad = items.length >= 40 ? 1 : 2;
+
+  // If layout is slow, log once (but DO NOT hide overlay early).
+  slowTimer = setTimeout(() => {
+    console.log("[wc] layout still running…");
+  }, 2500);
 
   try {
     cloudFactory()
