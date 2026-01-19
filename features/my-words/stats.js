@@ -1,6 +1,7 @@
 // features/my-words/stats.js
 
 import { normalizeText } from "./normalize.js";
+import { getColorConfig } from "../progress/progress-utils.js";
 
 function getAttemptText(a) {
   return (
@@ -17,22 +18,33 @@ function getAttemptText(a) {
 
 function getAttemptTimeISO(a) {
   return (
+    a?.ts ||
     a?.created_at ||
     a?.createdAt ||
     a?.timestamp ||
-    a?.ts ||
     a?.time ||
     a?.date ||
     null
   );
 }
 
+function toPct(v) {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return null;
+  // Handle both 0–1 and 0–100
+  if (n >= 0 && n <= 1) return Math.round(n * 100);
+  if (n >= 0 && n <= 100) return Math.round(n);
+  return null;
+}
+
 function getOverallScore(a) {
+  // ✅ Most likely in Lux attempt objects
   const v =
-    a?.overall_score ??
-    a?.overallScore ??
+    a?.summary?.pron ??
+    a?.summary?.pronunciation ??
+    a?.summary?.pronScore ??
+    a?.summary?.pron_score ??
     a?.scores?.overall ??
-    a?.scores?.pronunciation ??
     a?.pronunciation_score ??
     a?.pronunciationScore ??
     a?.assessment?.pronunciationScore ??
@@ -40,24 +52,32 @@ function getOverallScore(a) {
     a?.score ??
     null;
 
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
+  return toPct(v);
 }
 
 function statusFromScore(lastScore, attemptCount) {
-  if (!attemptCount) return { label: "new", color: "rgba(100,100,100,.35)" };
-  if (lastScore == null) return { label: "unknown", color: "rgba(100,100,100,.35)" };
-  if (lastScore < 60) return { label: "needs-work", color: "rgba(220, 60, 60, .70)" };
-  if (lastScore < 80) return { label: "getting-there", color: "rgba(230, 160, 40, .75)" };
-  return { label: "solid", color: "rgba(40, 170, 90, .75)" };
+  if (!attemptCount) {
+    return { label: "new", cls: "mw-new", color: "#94a3b8", bg: "#e2e8f0" };
+  }
+  if (lastScore == null) {
+    return { label: "unknown", cls: "mw-unknown", color: "#94a3b8", bg: "#e2e8f0" };
+  }
+
+  const cfg = getColorConfig(lastScore);
+  const cls = lastScore >= 80 ? "mw-good" : lastScore >= 60 ? "mw-warn" : "mw-bad";
+  const label = lastScore >= 80 ? "solid" : lastScore >= 60 ? "getting-there" : "needs-work";
+
+  return { label, cls, color: cfg.color, bg: cfg.bg };
 }
 
 function computeTrend(lastScore, prevScores) {
   if (lastScore == null) return "—";
   const vals = (prevScores || []).filter((x) => Number.isFinite(x));
   if (!vals.length) return "—";
+
   const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
   const d = lastScore - avg;
+
   if (d >= 5) return "↗";
   if (d <= -5) return "↘";
   return "→";
@@ -65,7 +85,7 @@ function computeTrend(lastScore, prevScores) {
 
 /**
  * Returns NEW entries array with computed fields:
- *  mw_attempts, mw_lastScore, mw_lastAt, mw_status, mw_color, mw_trend
+ *  mw_attempts, mw_lastScore, mw_lastAt, mw_status, mw_color, mw_bg, mw_cls, mw_trend
  */
 export function applyMyWordsStats(entries, attempts) {
   const list = Array.isArray(entries) ? entries : [];
@@ -100,6 +120,7 @@ export function applyMyWordsStats(entries, attempts) {
 
     const attemptCount = b.length;
     const last = b[0] || null;
+
     const lastScore = last ? getOverallScore(last) : null;
     const lastAt = last ? getAttemptTimeISO(last) : null;
 
@@ -115,6 +136,8 @@ export function applyMyWordsStats(entries, attempts) {
       mw_lastAt: lastAt,
       mw_status: status.label,
       mw_color: status.color,
+      mw_bg: status.bg,
+      mw_cls: status.cls,
       mw_trend: trend,
     };
   });

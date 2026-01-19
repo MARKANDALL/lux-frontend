@@ -1,10 +1,11 @@
 // features/my-words/index.js
 
 import { fetchHistory } from "/src/api/index.js";
-import { applyMyWordsStats } from "./stats.js";
 
 import { createMyWordsStore } from "./store.js";
 import { mountMyWordsPanel } from "./panel.js";
+import { createMyWordsLibraryModal } from "./library-modal.js";
+import { mountMyWordsCornerLauncher } from "./launcher.js";
 
 import {
   getAuthedUID,
@@ -15,19 +16,13 @@ import {
   deleteEntry
 } from "./service.js";
 
-function flashInput(inputEl) {
-  if (!inputEl) return;
-  inputEl.classList.add("lux-mw-flash");
-  window.setTimeout(() => inputEl.classList.remove("lux-mw-flash"), 420);
-}
-
 /**
  * Layout: bottom-left “lane”
  * - Top hugs bottom of Self Playback drawer (".lux-sp-panel")
  * - Right edge hugs LEFT edge of the practice input (#referenceText)
  */
 function layoutPanel(panelEl, inputEl) {
-  if (!panelEl || !inputEl) return;
+  if (!panelEl) return;
 
   const GAP = 12;
   const LEFT = 18;
@@ -45,31 +40,52 @@ function layoutPanel(panelEl, inputEl) {
     top = Math.ceil(r.bottom + GAP);
   }
 
-  // Clamp so panel still has minimum usable height
   const maxTop = Math.max(92, window.innerHeight - 260);
   top = Math.min(top, maxTop);
-
   panelEl.style.top = top + "px";
 
-  // Width ends near the left edge of input
-  const inputRect = inputEl.getBoundingClientRect();
-  const targetRight = Math.ceil(inputRect.left - GAP);
+  // Width ends near the left edge of input (if present)
+  let width = 420;
+  if (inputEl) {
+    const inputRect = inputEl.getBoundingClientRect();
+    const targetRight = Math.ceil(inputRect.left - GAP);
+    width = targetRight - LEFT;
+  }
 
-  let width = targetRight - LEFT;
-  width = Math.max(280, Math.min(width, 560));
+  width = Math.max(300, Math.min(width, 560));
   width = Math.min(width, Math.floor(window.innerWidth - LEFT - GAP));
 
   panelEl.style.width = width + "px";
-
-  // Height fills remaining viewport down to bottom margin
   panelEl.style.height = `calc(100vh - ${top}px - ${BOTTOM}px)`;
   panelEl.style.maxHeight = `calc(100vh - ${top}px - ${BOTTOM}px)`;
 }
 
-export function initMyWordsSidecar({ uid, inputEl, buttonEl }) {
-  if (!uid || !inputEl || !buttonEl) return null;
+export function initMyWordsGlobal({ uid, inputEl } = {}) {
+  // ✅ Hide on AI landing page (convo.html)
+  if (location.pathname.endsWith("convo.html")) return null;
+
+  if (!uid) return null;
 
   let authedUID = null;
+
+  // --- attempts cache for stats ---
+  let attemptsLoaded = false;
+  let attemptsCache = [];
+
+  async function ensureAttempts() {
+    if (attemptsLoaded) return attemptsCache;
+    attemptsLoaded = true;
+
+    try {
+      const all = await fetchHistory(uid);
+      attemptsCache = Array.isArray(all) ? all : [];
+    } catch (e) {
+      console.warn("[my-words] fetchHistory failed:", e);
+      attemptsCache = [];
+    }
+
+    return attemptsCache;
+  }
 
   const store = createMyWordsStore({
     uid,
@@ -101,68 +117,75 @@ export function initMyWordsSidecar({ uid, inputEl, buttonEl }) {
     }
   });
 
-  const panel = mountMyWordsPanel({
+  // --- sidecar panel ---
+  const sidecar = mountMyWordsPanel({
     store,
-    onSendToInput: (text) => {
-      inputEl.value = text;
-      inputEl.focus();
-      inputEl.dispatchEvent(new Event("input", { bubbles: true }));
-      flashInput(inputEl);
+    getAttempts: () => attemptsCache,
+    onSendToInput: inputEl
+      ? (text) => {
+          inputEl.value = text;
+          inputEl.focus();
+          inputEl.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+      : null,
+    mode: "compact",
+    maxPreview: 5,
+    onOpenLibrary: () => modal.open(),
+  });
+
+  // --- library modal ---
+  const modal = createMyWordsLibraryModal({
+    store,
+    getAttempts: () => attemptsCache,
+    onSendToInput: inputEl
+      ? (text) => {
+          inputEl.value = text;
+          inputEl.focus();
+          inputEl.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+      : null,
+  });
+
+  // --- launcher button (triangle) ---
+  const launcher = mountMyWordsCornerLauncher({
+    onClick: async () => {
+      const isOpen = store.getState().open;
+      store.setOpen(!isOpen);
+
+      if (!isOpen) {
+        // opening: load stats + layout + focus composer
+        await ensureAttempts();
+        requestAnimationFrame(() => {
+          layoutPanel(sidecar.el, inputEl);
+          sidecar.focusComposer?.();
+          sidecar.render?.();
+        });
+      }
     }
   });
 
-  let _attemptsCache = null;
-  let _attemptsLoadedAt = 0;
+  // Keep it aligned on resize (when open)
+  window.addEventListener(
+    "resize",
+    () => {
+      if (store.getState().open) layoutPanel(sidecar.el, inputEl);
+    },
+    { passive: true }
+  );
 
-  async function loadAttempts() {
-    // tiny cache so we don’t spam history
-    const age = Date.now() - _attemptsLoadedAt;
-    if (_attemptsCache && age < 15000) return _attemptsCache;
-
-    let res = null;
-
-    try { res = await fetchHistory(); } catch {}
-    if (!res) {
-      try { res = await fetchHistory(authedUID || uid); } catch {}
-    }
-
-    const attempts = Array.isArray(res) ? res : (res?.attempts || []);
-    _attemptsCache = attempts;
-    _attemptsLoadedAt = Date.now();
-    return attempts;
-  }
-
-  async function refreshStats() {
-    const attempts = await loadAttempts();
-    const current = store.getState().entries || [];
-    const updated = applyMyWordsStats(current, attempts);
-    store.replaceEntries(updated);
-  }
-
-  // Button toggles panel
-  buttonEl.addEventListener("click", () => store.toggleOpen());
-
-  // Sync button state + layout on open
-  store.subscribe((s) => {
-    buttonEl.classList.toggle("is-open", !!s.open);
+  // When opened through store state
+  store.subscribe(async (s) => {
+    launcher.classList.toggle("is-open", !!s.open);
+    sidecar.el.classList.toggle("is-open", !!s.open);
 
     if (s.open) {
-      requestAnimationFrame(() => layoutPanel(panel.el, inputEl));
-      refreshStats();
+      await ensureAttempts();
+      requestAnimationFrame(() => {
+        layoutPanel(sidecar.el, inputEl);
+        sidecar.render?.();
+      });
     }
   });
-
-  // Esc closes panel
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && store.getState().open) {
-      store.setOpen(false);
-    }
-  });
-
-  // Keep it aligned on resize
-  window.addEventListener("resize", () => {
-    if (store.getState().open) layoutPanel(panel.el, inputEl);
-  }, { passive: true });
 
   // --- Remote hydration when logged in ---
   (async () => {
@@ -170,16 +193,15 @@ export function initMyWordsSidecar({ uid, inputEl, buttonEl }) {
     if (!authedUID) return;
 
     const remote = await fetchMyWords(authedUID);
-
     if (remote?.length) {
       store.replaceEntries(remote);
-      await refreshStats();
       return;
     }
 
     // If remote empty but local has data, upload local once
-    const localTexts = store.getState().entries
-      .filter((e) => !e.archived)
+    const localTexts = store
+      .getState()
+      .entries.filter((e) => !e.archived)
       .map((e) => e.text);
 
     if (localTexts.length) {
@@ -187,9 +209,15 @@ export function initMyWordsSidecar({ uid, inputEl, buttonEl }) {
       const after = await fetchMyWords(authedUID);
       if (after?.length) store.replaceEntries(after);
     }
-
-    await refreshStats();
   })();
 
-  return { store, panel };
+  // Global hook for Progress page button
+  window.LuxMyWords = {
+    openLibrary: () => modal.open(),
+    toggle: () => store.toggleOpen(),
+    open: () => store.setOpen(true),
+    close: () => store.setOpen(false),
+  };
+
+  return { store, sidecar, modal, launcher };
 }

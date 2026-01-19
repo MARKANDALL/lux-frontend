@@ -243,3 +243,119 @@ height: 60vh;
   box-shadow: 0 0 0 5px rgba(0,0,0,.06);
   transition: box-shadow 200ms ease;
 }
+/* --- Global corner launcher (triangle) --- */
+.lux-mw-corner {
+  position: fixed;
+  left: 14px;
+  bottom: 14px;
+  width: 62px;
+  height: 62px;
+  z-index: 9999;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+}
+
+.lux-mw-corner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  background: #2563eb;
+  box-shadow: 0 10px 24px rgba(2, 6, 23, 0.18);
+  clip-path: polygon(0 0, 0 100%, 100% 100%);
+}
+
+.lux-mw-corner:hover::before {
+  filter: brightness(1.05);
+}
+
+.lux-mw-corner.is-open::before {
+  background: #1d4ed8;
+}
+
+.lux-mw-corner-ink {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  font-size: 20px;
+  color: white;
+  user-select: none;
+}
+
+/* --- Sidecar open/close --- */
+.lux-mw-panel {
+  display: none;
+  position: fixed;
+  z-index: 9998;
+}
+
+.lux-mw-panel.is-open {
+  display: block;
+}
+
+/* --- Modal overlay library --- */
+.lux-mw-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.48);
+}
+
+.lux-mw-modal.is-open {
+  display: flex;
+}
+
+.lux-mw-modal-card {
+  width: min(920px, 92vw);
+  height: 86vh;
+  border-radius: 18px;
+  background: white;
+  box-shadow: 0 20px 60px rgba(2, 6, 23, 0.25);
+  overflow: hidden;
+  padding: 10px;
+}
+
+/* Make panel fill modal card cleanly */
+.lux-mw-panel.is-modal {
+  position: relative !important;
+  inset: auto !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-height: none !important;
+  box-shadow: none !important;
+  border-radius: 16px !important;
+}
+
+/* --- Status dots (match Lux colors) --- */
+.lux-mw-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 99px;
+  display: inline-block;
+  flex: 0 0 auto;
+  margin-top: 6px;
+}
+
+.lux-mw-dot.mw-good { background: #2563eb; }
+.lux-mw-dot.mw-warn { background: #d97706; }
+.lux-mw-dot.mw-bad { background: #dc2626; }
+.lux-mw-dot.mw-new,
+.lux-mw-dot.mw-unknown { background: #94a3b8; }
+
+/* View all button */
+.lux-mw-viewAllBtn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(148,163,184,.45);
+  background: #f8fafc;
+  font-weight: 700;
+  cursor: pointer;
+}
+.lux-mw-viewAllBtn:hover { filter: brightness(1.01); }

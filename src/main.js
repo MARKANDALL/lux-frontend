@@ -2,7 +2,7 @@
 // The Main Entry Point: Boots the app, handles the Typewriter, and wires the Dropdown.
 
 import { ensureUID } from "../api/identity.js";
-import { initMyWordsSidecar } from "../features/my-words/index.js";
+import { initMyWordsGlobal } from "../features/my-words/index.js";
 
 import { wirePassageSelect, wireNextBtn } from "../features/passages/index.js";
 
@@ -108,54 +108,9 @@ function startTypewriter() {
   type();
 }
 
-function ensureMyWordsButton(textInput) {
-  const label = textInput?.closest("label");
-  if (!label) return null;
-
-  // If we already built it, reuse it.
-  const existing = label.querySelector("#luxMyWordsBtn");
-  if (existing) return existing;
-
-  // Create a top row so the button sits beside the input-area helper text.
-  let row = label.querySelector(".lux-mw-toprow");
-  if (!row) {
-    row = document.createElement("div");
-    row.className = "lux-mw-toprow";
-    row.style.cssText =
-      "display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px;";
-
-    const msg = label.querySelector("#typewriterMsg");
-    if (msg) {
-      msg.style.margin = "0";
-      msg.style.flex = "1";
-      msg.style.display = "block";
-      row.appendChild(msg);
-    } else {
-      const spacer = document.createElement("span");
-      spacer.style.flex = "1";
-      row.appendChild(spacer);
-    }
-
-    label.insertBefore(row, textInput);
-  }
-
-  const btn = document.createElement("button");
-  btn.type = "button";
-  btn.id = "luxMyWordsBtn";
-  btn.className = "lux-mw-trigger";
-  btn.textContent = "My Words";
-  btn.title = "Open My Words";
-  row.appendChild(btn);
-
-  return btn;
-}
-
 // --- MAIN BOOT SEQUENCE ---
 async function bootApp() {
   console.log("[Lux] Booting features...");
-
-  // 0. Initialize UID (single source of truth)
-  const uid = ensureUID();
 
   // 1. Initialize Audio Infrastructure
   initAudioSink();
@@ -172,19 +127,6 @@ async function bootApp() {
   // 3. Setup Dropdown Logic
   const passageSelect = document.getElementById("passageSelect");
   const textInput = document.getElementById("referenceText");
-
-  // --- My Words Sidecar (V1 UI skeleton) ---
-  if (textInput) {
-    const myWordsBtn = ensureMyWordsButton(textInput);
-    if (myWordsBtn) {
-      initMyWordsSidecar({
-        uid,
-        inputEl: textInput,
-        buttonEl: myWordsBtn,
-      });
-    }
-  }
-  // ----------------------------------------
 
   // --- NEW: Wire up the Language Selector for Auto-Updates ---
   const langSelect = document.getElementById("l1Select");
@@ -263,6 +205,11 @@ async function bootApp() {
 
   // 7. Boot Dashboard
   await initDashboard();
+
+  // My Words (Global)
+  const uid = ensureUID();
+  const inputEl = document.getElementById("referenceText");
+  initMyWordsGlobal({ uid, inputEl });
 
   // 8. Boot Authentication
   initAuthUI();
