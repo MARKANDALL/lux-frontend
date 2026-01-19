@@ -6,11 +6,7 @@ const LS_KEY_PREFIX = "lux_my_words_v1:";
 const LS_OPEN_PREFIX = "lux_my_words_open_v1:";
 
 function safeParse(json, fallback) {
-  try {
-    return JSON.parse(json);
-  } catch {
-    return fallback;
-  }
+  try { return JSON.parse(json); } catch { return fallback; }
 }
 
 function nowISO() {
@@ -22,7 +18,7 @@ function makeId() {
   return "mw_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
 }
 
-export function createMyWordsStore({ uid }) {
+export function createMyWordsStore({ uid, onMutation } = {}) {
   const key = LS_KEY_PREFIX + String(uid || "anon");
   const openKey = LS_OPEN_PREFIX + String(uid || "anon");
 
@@ -66,6 +62,10 @@ export function createMyWordsStore({ uid }) {
     } catch (_) {}
   }
 
+  function mut(payload) {
+    try { onMutation?.(payload); } catch (_) {}
+  }
+
   function getState() {
     return state;
   }
@@ -94,15 +94,22 @@ export function createMyWordsStore({ uid }) {
         const ap = a.pinned ? 1 : 0;
         const bp = b.pinned ? 1 : 0;
         if (ap !== bp) return bp - ap;
+
         const at = new Date(a.updated_at || a.created_at || 0).getTime();
         const bt = new Date(b.updated_at || b.created_at || 0).getTime();
         return bt - at;
       });
   }
 
+  function replaceEntries(entries) {
+    state.entries = Array.isArray(entries) ? entries : [];
+    persist();
+    emit();
+  }
+
   function addMany(rawOrLines) {
     const lines = Array.isArray(rawOrLines) ? rawOrLines : splitLines(rawOrLines);
-    if (!lines.length) return { added: 0, merged: 0 };
+    if (!lines.length) return { added: 0, merged: 0, lines: [] };
 
     const byNorm = new Map();
     state.entries.forEach((e) => byNorm.set(normalizeText(e.normalized_text || e.text), e));
@@ -116,7 +123,6 @@ export function createMyWordsStore({ uid }) {
 
       const existing = byNorm.get(norm);
       if (existing) {
-        // If it exists, refresh it (and unarchive if needed)
         existing.text = text;
         existing.normalized_text = norm;
         existing.archived = false;
@@ -141,7 +147,10 @@ export function createMyWordsStore({ uid }) {
 
     if (added || merged) persist();
     emit();
-    return { added, merged };
+
+    mut({ type: "addMany", lines, added, merged });
+
+    return { added, merged, lines };
   }
 
   function togglePin(id) {
@@ -151,6 +160,7 @@ export function createMyWordsStore({ uid }) {
     e.updated_at = nowISO();
     persist();
     emit();
+    mut({ type: "togglePin", id, pinned: e.pinned });
   }
 
   function archive(id) {
@@ -160,12 +170,14 @@ export function createMyWordsStore({ uid }) {
     e.updated_at = nowISO();
     persist();
     emit();
+    mut({ type: "archive", id });
   }
 
   function hardDelete(id) {
     state.entries = state.entries.filter((x) => x.id !== id);
     persist();
     emit();
+    mut({ type: "hardDelete", id });
   }
 
   function subscribe(fn) {
@@ -180,13 +192,13 @@ export function createMyWordsStore({ uid }) {
     getState,
     subscribe,
 
-    // panel open/close
     setOpen,
     toggleOpen,
 
-    // list actions
     setQuery,
     visibleEntries,
+
+    replaceEntries,
     addMany,
     togglePin,
     archive,
