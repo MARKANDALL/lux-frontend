@@ -338,7 +338,7 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
 
   function layoutAndDraw(layoutWords) {
     placed = layoutWords;
-    fadeStart = performance.now();
+ fadeStart = performance.now() - FADE_MS; // ✅ show immediately (no invisible first frame)
     hoverIdx = -1;
     ripple = null;
     paint();
