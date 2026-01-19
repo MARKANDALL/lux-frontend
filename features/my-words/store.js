@@ -95,8 +95,8 @@ export function createMyWordsStore({ uid, onMutation } = {}) {
         const bp = b.pinned ? 1 : 0;
         if (ap !== bp) return bp - ap;
 
-        const at = new Date(a.updated_at || a.created_at || 0).getTime();
-        const bt = new Date(b.updated_at || b.created_at || 0).getTime();
+        const at = new Date(a.mw_lastAt || a.updated_at || a.created_at || 0).getTime();
+        const bt = new Date(b.mw_lastAt || b.updated_at || b.created_at || 0).getTime();
         return bt - at;
       });
   }

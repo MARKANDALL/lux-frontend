@@ -28,8 +28,12 @@
 
 .lux-mw-panel{
   position: fixed;
-  right: 18px;
-  top: 92px;
+left: 18px;
+right: auto;
+bottom: 18px;
+top: auto;
+height: 60vh;
+
   width: min(480px, 40vw);
   max-width: 92vw;
   height: 75vh;

@@ -118,14 +118,28 @@ export function mountMyWordsPanel({ store, onSendToInput }) {
       const row = document.createElement("div");
       row.className = "lux-mw-row";
 
-      const meta = `Saved ${fmtAgo(e.updated_at || e.created_at)}`;
+      const dotColor = e.mw_color || "rgba(100,100,100,.35)";
+
+      const attempts = e.mw_attempts || 0;
+      const lastScore = Number.isFinite(e.mw_lastScore) ? Math.round(e.mw_lastScore) : null;
+
+      const metaParts = [];
+      metaParts.push(`Practiced ${attempts}×`);
+
+      if (lastScore != null) metaParts.push(`Last ${lastScore}${e.mw_trend ? " " + e.mw_trend : ""}`);
+      if (e.mw_lastAt) metaParts.push(fmtAgo(e.mw_lastAt));
+      else metaParts.push(`Saved ${fmtAgo(e.updated_at || e.created_at)}`);
+
+      if (e.pinned) metaParts.push("pinned");
+
+      const meta = metaParts.join(" · ");
 
       row.innerHTML = `
-        <div class="lux-mw-dot" aria-hidden="true"></div>
+        <div class="lux-mw-dot" aria-hidden="true" style="background:${dotColor};"></div>
 
         <div class="lux-mw-main">
           <div class="lux-mw-text" title="${escapeHTML(e.text)}">${escapeHTML(e.text)}</div>
-          <div class="lux-mw-meta">${meta}${e.pinned ? " · pinned" : ""}</div>
+          <div class="lux-mw-meta">${meta}</div>
         </div>
 
         <div class="lux-mw-actions">

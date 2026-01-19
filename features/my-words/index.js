@@ -1,5 +1,8 @@
 // features/my-words/index.js
 
+import { fetchHistory } from "/src/api/index.js";
+import { applyMyWordsStats } from "./stats.js";
+
 import { createMyWordsStore } from "./store.js";
 import { mountMyWordsPanel } from "./panel.js";
 
@@ -108,6 +111,34 @@ export function initMyWordsSidecar({ uid, inputEl, buttonEl }) {
     }
   });
 
+  let _attemptsCache = null;
+  let _attemptsLoadedAt = 0;
+
+  async function loadAttempts() {
+    // tiny cache so we don’t spam history
+    const age = Date.now() - _attemptsLoadedAt;
+    if (_attemptsCache && age < 15000) return _attemptsCache;
+
+    let res = null;
+
+    try { res = await fetchHistory(); } catch {}
+    if (!res) {
+      try { res = await fetchHistory(authedUID || uid); } catch {}
+    }
+
+    const attempts = Array.isArray(res) ? res : (res?.attempts || []);
+    _attemptsCache = attempts;
+    _attemptsLoadedAt = Date.now();
+    return attempts;
+  }
+
+  async function refreshStats() {
+    const attempts = await loadAttempts();
+    const current = store.getState().entries || [];
+    const updated = applyMyWordsStats(current, attempts);
+    store.replaceEntries(updated);
+  }
+
   // Button toggles panel
   buttonEl.addEventListener("click", () => store.toggleOpen());
 
@@ -117,6 +148,7 @@ export function initMyWordsSidecar({ uid, inputEl, buttonEl }) {
 
     if (s.open) {
       requestAnimationFrame(() => layoutPanel(panel.el, inputEl));
+      refreshStats();
     }
   });
 
@@ -141,6 +173,7 @@ export function initMyWordsSidecar({ uid, inputEl, buttonEl }) {
 
     if (remote?.length) {
       store.replaceEntries(remote);
+      await refreshStats();
       return;
     }
 
@@ -154,6 +187,8 @@ export function initMyWordsSidecar({ uid, inputEl, buttonEl }) {
       const after = await fetchMyWords(authedUID);
       if (after?.length) store.replaceEntries(after);
     }
+
+    await refreshStats();
   })();
 
   return { store, panel };
