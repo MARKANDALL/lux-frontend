@@ -159,6 +159,13 @@ export async function drawWordcloud({
     // Keep overlay ON until D3 layout finishes and paint happens
     setBusy(true, "Building cloud…", "Placing targets on canvas");
 
+    // ✅ Reassurance message if layout takes a while
+    let slowNote = setTimeout(() => {
+      if (seq === renderSeqRef.value) {
+        setBusy(true, "Building cloud…", "Still working… (large history)");
+      }
+    }, 1200);
+
     const q = lower(query);
     const focusTest = q ? (idLower) => String(idLower || "").includes(q) : null;
 
@@ -174,6 +181,7 @@ export async function drawWordcloud({
       onRenderEnd: ({ reason } = {}) => {
         console.log("[wc] render end:", reason);
         console.timeEnd("[wc] render layout");
+        clearTimeout(slowNote);
         if (seq === renderSeqRef.value) setBusy(false);
       },
 

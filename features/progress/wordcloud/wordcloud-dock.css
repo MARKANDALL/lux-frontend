@@ -137,8 +137,27 @@
 }
 
 /* Mobile fallback: stack everything */
-@media (max-width: 920px) {
+/* Mobile fallback ONLY when truly small */
+@media (max-width: 560px) {
   .wcDock { grid-template-columns: 1fr; }
   .wcDrawerTab { display: none; }
   .wcDrawerPanel { transform: none !important; }
+}
+
+/* ---------------------------
+   HARD OVERRIDES: make stage square
+   (beats any older wordcloud CSS)
+--------------------------- */
+#luxWcCanvasWrap.wcStageSquare {
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 1 / 1 !important;
+  min-height: 520px;
+}
+
+/* canvas must fill the square */
+#luxWcCanvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
 }

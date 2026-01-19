@@ -40,6 +40,9 @@ import { createWordcloudDrawer, fmtDaysAgo } from "./drawing-orchestrator.js";
 // ✅ COMMIT 17: event handler factory extracted
 import { createWordcloudEventHandlers } from "./event-handlers.js";
 
+import "./wordcloud-dock.css";
+import { wireWordcloudSideDrawers } from "./side-drawers.js";
+
 const ROOT_ID = "wordcloud-root";
 const TOP_N = 40; // was 20
 
@@ -104,6 +107,11 @@ export async function initWordCloudPage() {
 
     getState: () => S,
     topN: TOP_N,
+  });
+
+  // ✅ Side drawers (open/close + persist state + trigger canvas redraw)
+  wireWordcloudSideDrawers(root, {
+    onLayoutChange: () => drawer.draw(false),
   });
 
   // timeline controller delegates + requests redraw
