@@ -16,7 +16,7 @@ import {
   persistentScore,
 } from "./compute.js";
 
-const POOL_MAX = 60;
+const POOL_MAX = 140; // was 60 (lets topN expand without starving the pool)
 
 /**
  * Compute items for the current view:

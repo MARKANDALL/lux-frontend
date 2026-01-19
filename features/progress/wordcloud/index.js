@@ -41,7 +41,7 @@ import { createWordcloudDrawer, fmtDaysAgo } from "./drawing-orchestrator.js";
 import { createWordcloudEventHandlers } from "./event-handlers.js";
 
 const ROOT_ID = "wordcloud-root";
-const TOP_N = 20;
+const TOP_N = 40; // was 20
 
 export async function initWordCloudPage() {
   const root = document.getElementById(ROOT_ID);

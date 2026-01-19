@@ -41,7 +41,9 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
     if (_endFired) return;
     _endFired = true;
     if (typeof opts?.onRenderEnd === "function") {
-      try { opts.onRenderEnd({ reason }); } catch (_) {}
+      try {
+        opts.onRenderEnd({ reason });
+      } catch (_) {}
     }
   };
 
@@ -71,14 +73,20 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
   const maxC = Math.max(1, ...counts);
   const minC = Math.min(...counts);
 
+  // ✅ Stronger contrast curve for font sizing
+  const MIN_FONT = 12; // was effectively 16
+  const MAX_FONT = 88; // was 62
+  const SPREAD_EXP = 1.6; // >1 makes SMALL smaller + BIG bigger
+
   const sizeForCount = (c) => {
     const t = (Number(c || 0) - minC) / Math.max(1, maxC - minC);
-    const s = 16 + 44 * Math.sqrt(clamp(t, 0, 1));
-    return clamp(s, 16, 62);
+    const eased = Math.pow(clamp(t, 0, 1), SPREAD_EXP);
+    const s = MIN_FONT + (MAX_FONT - MIN_FONT) * eased;
+    return clamp(s, MIN_FONT, MAX_FONT);
   };
 
-  const PIN_BOOST = 1.16;     // pinned appear bigger
-  const PIN_CENTER = 0.86;    // pinned float toward center (cloud-like)
+  const PIN_BOOST = 1.16; // pinned appear bigger
+  const PIN_CENTER = 0.86; // pinned float toward center (cloud-like)
 
   const words = items.map((x) => {
     const text = String(x.word ?? x.ipa ?? x.text ?? "").trim();
@@ -131,7 +139,8 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
     const cy = h / 2;
 
     // search focus
-    const focusFn = typeof opts?.focusTest === "function" ? opts.focusTest : null;
+    const focusFn =
+      typeof opts?.focusTest === "function" ? opts.focusTest : null;
     let focusActive = false;
     if (focusFn) {
       for (const d of placed) {
@@ -196,11 +205,14 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
         const dy = h * 0.06;
 
         if (avg >= 80) {
-          driftX = -dx; driftY = -dy;
+          driftX = -dx;
+          driftY = -dy;
         } else if (avg >= 60) {
-          driftX = 0; driftY = dy * 1.2;
+          driftX = 0;
+          driftY = dy * 1.2;
         } else {
-          driftX = dx; driftY = -dy;
+          driftX = dx;
+          driftY = -dy;
         }
 
         driftX *= 0.65;
@@ -212,12 +224,13 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
 
       ctx.save();
       ctx.translate(
-        cx + (d.x * pinMul) + pullX + driftX,
-        cy + (d.y * pinMul) + pullY + driftY
+        cx + d.x * pinMul + pullX + driftX,
+        cy + d.y * pinMul + pullY + driftY
       );
 
       const baseSize = d.size;
-      const size = (isPinned ? baseSize * PIN_BOOST : baseSize) * (isHover ? 1.08 : 1);
+      const size =
+        (isPinned ? baseSize * PIN_BOOST : baseSize) * (isHover ? 1.08 : 1);
 
       ctx.font = `900 ${size}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
       ctx.textAlign = "center";
@@ -260,12 +273,12 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
         avg: d.avg,
         count: d.count,
         meta: d.meta,
-        x: cx + (d.x * pinMul) + pullX + driftX - tw / 2,
-        y: cy + (d.y * pinMul) + pullY + driftY - th / 2,
+        x: cx + d.x * pinMul + pullX + driftX - tw / 2,
+        y: cy + d.y * pinMul + pullY + driftY - th / 2,
         w: tw,
         h: th,
-        cx: cx + (d.x * pinMul) + pullX + driftX,
-        cy: cy + (d.y * pinMul) + pullY + driftY,
+        cx: cx + d.x * pinMul + pullX + driftX,
+        cy: cy + d.y * pinMul + pullY + driftY,
         col,
       });
 
@@ -320,14 +333,18 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
     fireEnd("ok"); // ✅ IMPORTANT
   }
 
-  // ✅ Never allow infinite “Loading…”
-  setTimeout(() => fireEnd("timeout"), 2500);
+  // ✅ Make timeout scale for bigger item counts
+  const timeoutMs = items.length >= 40 ? 5000 : 2500;
+  setTimeout(() => fireEnd("timeout"), timeoutMs);
+
+  // ✅ Adaptive padding helps 40–60 items pack
+  const pad = items.length >= 40 ? 1 : 2;
 
   try {
     cloudFactory()
       .size([w, h])
       .words(words)
-      .padding(2)
+      .padding(pad)
       .rotate(() => 0)
       .font("system-ui")
       .fontSize((d) => (d._pinned ? d.size * PIN_BOOST : d.size))
