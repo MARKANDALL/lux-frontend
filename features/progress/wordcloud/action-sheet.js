@@ -62,6 +62,23 @@ export function createCloudActionSheet({
 
   let state = null; // { kind, id, title, avg, count, days, priority, examples, recents[] }
 
+  function positionSheetMidRight() {
+    if (!overlay) return;
+
+    const shell = document.getElementById("luxWcShell");
+    const r = shell?.getBoundingClientRect?.();
+
+    // fallback: center in viewport
+    const y = r ? r.top + r.height / 2 : window.innerHeight / 2;
+    const clampedY = Math.max(18, Math.min(window.innerHeight - 18, y));
+
+    overlay.style.position = "fixed";
+    overlay.style.top = `${Math.round(clampedY)}px`;
+    overlay.style.right = "18px";
+    overlay.style.left = "auto";
+    overlay.style.transform = "translateY(-50%)";
+  }
+
   function ensureMounted() {
     if (overlay) return;
 
@@ -136,8 +153,16 @@ export function createCloudActionSheet({
 
     // esc closes
     window.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && overlay?.getAttribute("aria-hidden") === "false") close();
+      if (e.key === "Escape" && overlay?.getAttribute("aria-hidden") === "false")
+        close();
     });
+
+    const reflow = () => {
+      if (overlay?.classList.contains("is-open")) positionSheetMidRight();
+    };
+
+    window.addEventListener("resize", reflow);
+    window.addEventListener("scroll", reflow, { passive: true });
 
     overlay.addEventListener("click", (e) => {
       const btn = e.target?.closest?.("[data-act]");
@@ -180,6 +205,16 @@ export function createCloudActionSheet({
     state = nextState || null;
     if (!state) return;
 
+    // ✅ Position the sheet next to the Word Cloud, centered vertically
+    positionSheetMidRight();
+
+    // ✅ Match night mode if active on the shell
+    const shell = document.getElementById("luxWcShell");
+    overlay.classList.toggle(
+      "lux-wc--night",
+      !!shell?.classList.contains("lux-wc--night")
+    );
+
     const col = getColorConfig(state.avg || 0);
     const titleEl = overlay.querySelector("#luxWcSheetTitle");
     const metaEl = overlay.querySelector("#luxWcSheetMeta");
@@ -196,7 +231,9 @@ export function createCloudActionSheet({
     `;
 
     overlay.querySelector("#luxWcStatAvg").textContent = safePct(state.avg);
-    overlay.querySelector("#luxWcStatSeen").textContent = `${Number(state.count || 0)}×`;
+    overlay.querySelector("#luxWcStatSeen").textContent = `${Number(
+      state.count || 0
+    )}×`;
     overlay.querySelector("#luxWcStatLevel").textContent = labelFor(state.avg);
 
     // Fav/pin button state

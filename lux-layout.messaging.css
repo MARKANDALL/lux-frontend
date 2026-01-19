@@ -7,7 +7,8 @@
   border-radius: 0.7em;
   opacity: 0;
   transform: translateY(-40px);
-  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.47, 1.64, 0.41, 0.8);
+  transition: opacity 0.7s ease,
+    transform 0.7s cubic-bezier(0.47, 1.64, 0.41, 0.8);
   pointer-events: none; /* don't block clicks while hidden */
 }
 #userMsg.show {
@@ -63,7 +64,9 @@
   margin-bottom: 1.3em;
 }
 
-button {
+/* ✅ Scope button styling ONLY to the messaging button group
+   (prevents Word Cloud + the whole app from inheriting white button text) */
+.btn-group button {
   font-size: 1.25rem;
   padding: 1rem 2.2rem;
   border: none;
@@ -73,7 +76,7 @@ button {
   cursor: pointer;
   transition: background 0.15s;
 }
-button:disabled {
+.btn-group button:disabled {
   background: #ccc;
   cursor: not-allowed;
 }
