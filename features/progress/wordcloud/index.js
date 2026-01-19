@@ -2,13 +2,10 @@
 import { ensureWordCloudLibs } from "./libs.js";
 
 import { savedListForMode, FAV_KEY, PIN_KEY } from "./state-store.js";
-
 import { mixLabel } from "./labels.js";
-
 import { lower, idFromItem, smartTop3 } from "./compute.js";
 
 import { wordcloudTemplateHtml } from "./template.js";
-
 import { bindWordcloudEvents } from "./events.js";
 
 import { saveNextActivityPlan } from "../../next-activity/next-activity.js";
@@ -41,6 +38,8 @@ import { createWordcloudDrawer, fmtDaysAgo } from "./drawing-orchestrator.js";
 import { createWordcloudEventHandlers } from "./event-handlers.js";
 
 import "./wordcloud-dock.css";
+
+// ✅ FIX C: drawer arrows must work even if something else crashes later
 import { wireWordcloudSideDrawers } from "./side-drawers.js";
 
 const ROOT_ID = "wordcloud-root";
@@ -62,9 +61,22 @@ export async function initWordCloudPage() {
   // Stable refs are owned by ctx (NOT by index.js)
   const attemptsAll = ctx.refs.attemptsAll;
 
-  // mount template, then grab all DOM in one call
+  // Mount template FIRST, then grab DOM once
   root.innerHTML = wordcloudTemplateHtml();
   const dom = getWordcloudDom(root);
+
+  // ✅ FIX C: wire side drawers immediately (so arrows never "die")
+  // even if later setup crashes (drawer not created yet, etc.)
+  wireWordcloudSideDrawers(root, {
+    onLayoutChange: () => {
+      try {
+        // drawer doesn't exist yet at wire time — keep safe + resilient
+        drawer?.draw?.(false);
+      } catch (e) {
+        console.warn("[wc] redraw fail", e);
+      }
+    },
+  });
 
   // UI sync layer
   const ui = createWordcloudUIManager({
@@ -91,6 +103,8 @@ export async function initWordCloudPage() {
   });
 
   // draw orchestration
+  // NOTE: drawer is declared with `const` BUT referenced by the earlier onLayoutChange callback via closure.
+  // That callback won't execute until user clicks the arrows, by which time drawer will exist (unless init crashes).
   const drawer = createWordcloudDrawer({
     ctx,
     dom,
@@ -107,11 +121,6 @@ export async function initWordCloudPage() {
 
     getState: () => S,
     topN: TOP_N,
-  });
-
-  // ✅ Side drawers (open/close + persist state + trigger canvas redraw)
-  wireWordcloudSideDrawers(root, {
-    onLayoutChange: () => drawer.draw(false),
   });
 
   // timeline controller delegates + requests redraw
@@ -160,7 +169,7 @@ export async function initWordCloudPage() {
     })
   );
 
-  // initial
+  // initial UI state
   ctx.applyTheme(dom);
   ui.setActiveButtons();
   ui.setModeStory();

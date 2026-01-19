@@ -54,27 +54,42 @@ export function wordcloudTemplateHtml() {
 
                 <!-- Sort -->
                 <div class="lux-wc-chipBar" aria-label="Sort">
-                  <button class="lux-wc-chipBtn" data-sort="priority"
+                  <button
+                    id="luxWcSortPriority"
+                    class="lux-wc-chipBtn"
+                    data-sort="priority"
                     data-tip="Best overall targets (difficulty + frequency + persistence)."
                     title="Best overall targets (difficulty + frequency + persistence)."
                   >Priority</button>
 
-                  <button class="lux-wc-chipBtn" data-sort="freq"
+                  <button
+                    id="luxWcSortFrequent"
+                    class="lux-wc-chipBtn"
+                    data-sort="freq"
                     data-tip="Most used targets (highest frequency)."
                     title="Most used targets (highest frequency)."
                   >Frequent</button>
 
-                  <button class="lux-wc-chipBtn" data-sort="diff"
+                  <button
+                    id="luxWcSortDifficult"
+                    class="lux-wc-chipBtn"
+                    data-sort="diff"
                     data-tip="Hardest targets (lowest score)."
                     title="Hardest targets (lowest score)."
                   >Difficult</button>
 
-                  <button class="lux-wc-chipBtn" data-sort="recent"
+                  <button
+                    id="luxWcSortRecent"
+                    class="lux-wc-chipBtn"
+                    data-sort="recent"
                     data-tip="Targets you struggled with most recently."
                     title="Targets you struggled with most recently."
                   >Recent</button>
 
-                  <button class="lux-wc-chipBtn" data-sort="persist"
+                  <button
+                    id="luxWcSortPersistent"
+                    class="lux-wc-chipBtn"
+                    data-sort="persist"
                     data-tip="Targets you keep missing over time."
                     title="Targets you keep missing over time."
                   >Persistent</button>
@@ -82,27 +97,42 @@ export function wordcloudTemplateHtml() {
 
                 <!-- Range -->
                 <div class="lux-wc-chipBar" aria-label="Time range">
-                  <button class="lux-wc-chipBtn" data-range="all"
+                  <button
+                    id="luxWcRangeAll"
+                    class="lux-wc-chipBtn"
+                    data-range="all"
                     data-tip="Use your full history."
                     title="Use your full history."
                   >All time</button>
 
-                  <button class="lux-wc-chipBtn" data-range="30d"
+                  <button
+                    id="luxWcRange30d"
+                    class="lux-wc-chipBtn"
+                    data-range="30d"
                     data-tip="Only include the last 30 days."
                     title="Only include the last 30 days."
                   >30d</button>
 
-                  <button class="lux-wc-chipBtn" data-range="7d"
+                  <button
+                    id="luxWcRange7d"
+                    class="lux-wc-chipBtn"
+                    data-range="7d"
                     data-tip="Only include the last 7 days."
                     title="Only include the last 7 days."
                   >7d</button>
 
-                  <button class="lux-wc-chipBtn" data-range="today"
+                  <button
+                    id="luxWcRangeToday"
+                    class="lux-wc-chipBtn"
+                    data-range="today"
                     data-tip="Only include today’s attempts."
                     title="Only include today’s attempts."
                   >Today</button>
 
-                  <button class="lux-wc-chipBtn" data-range="timeline"
+                  <button
+                    id="luxWcRangeTimeline"
+                    class="lux-wc-chipBtn"
+                    data-range="timeline"
                     data-tip="Replay your targets through time."
                     title="Replay your targets through time."
                   >Timeline</button>
@@ -197,12 +227,18 @@ export function wordcloudTemplateHtml() {
 
                 <!-- Mode -->
                 <div class="lux-wc-toggle" role="tablist" aria-label="Cloud mode">
-                  <button class="lux-wc-pill" data-mode="words"
+                  <button
+                    id="luxWcModeWords"
+                    class="lux-wc-pill"
+                    data-mode="words"
                     data-tip="Show word targets (size = frequency, color = difficulty)."
                     title="Show word targets (size = frequency, color = difficulty)."
                   >Words</button>
 
-                  <button class="lux-wc-pill" data-mode="phonemes"
+                  <button
+                    id="luxWcModePhonemes"
+                    class="lux-wc-pill"
+                    data-mode="phonemes"
                     data-tip="Show sound targets (phonemes) instead of words."
                     title="Show sound targets (phonemes) instead of words."
                   >Phonemes</button>

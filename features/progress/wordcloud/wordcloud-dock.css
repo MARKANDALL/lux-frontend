@@ -38,13 +38,16 @@
    Dock layout: drawers + stage
 --------------------------- */
 .wcDock {
-  --wc-left-col: 260px;
-  --wc-right-col: 260px;
-  --wc-tab-w: 34px;
+  --wc-side-col: 44px;     /* only the small tab gutter */
+  --wc-drawer-w: 260px;    /* full drawer width */
+  --wc-gap: 18px;
+
+  position: relative;
+  overflow: visible;
 
   display: grid;
-  grid-template-columns: var(--wc-left-col) minmax(0, 1fr) var(--wc-right-col);
-  gap: 14px;
+  grid-template-columns: var(--wc-side-col) minmax(0, 1fr) var(--wc-side-col);
+  gap: var(--wc-gap);
   align-items: start;
 }
 
@@ -56,36 +59,33 @@
   overflow: hidden;
 }
 
-/* Make the cloud a real square (override lux-wordcloud.css height rule) */
-.wcStageSquare#luxWcCanvasWrap {
-  height: auto !important;
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  min-height: 520px;
-}
-
-@media (min-height: 780px) {
-  .wcStageSquare#luxWcCanvasWrap {
-    min-height: 60vh;
-    max-height: 74vh;
-  }
-}
-
-.wcCanvas { width: 100%; height: 100%; display: block; }
-
 .wcStageFooter {
   padding-top: 10px;
 }
 
-/* Drawers */
-.wcDrawer { position: relative; z-index: 2; }
+/* ---------------------------
+   Drawers (tab gutter + outside panels)
+--------------------------- */
 
+/* Drawer shell is only tab-width (doesn't steal center space) */
+.wcDrawer {
+  width: var(--wc-side-col);
+  position: relative;
+  z-index: 4;
+}
+
+/* Panel is absolutely positioned and lives OUTSIDE the center */
 .wcDrawerPanel {
-  height: 100%;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: var(--wc-drawer-w);
+
   border-radius: 16px;
   overflow: hidden;
   background: rgba(20, 28, 42, 0.55);
   box-shadow: 0 14px 28px rgba(0,0,0,0.18);
+
   transition: transform 220ms ease;
   will-change: transform;
 }
@@ -103,45 +103,53 @@
   gap: 10px;
 }
 
+/* OPEN state = panel is outside, not stealing center */
+.wcDrawer--left .wcDrawerPanel { right: 0; }
+.wcDrawer--right .wcDrawerPanel { left: 0; }
+
+/* CLOSED state = slide fully offscreen outward */
+.wcDrawer--left.is-closed .wcDrawerPanel { transform: translateX(-100%); }
+.wcDrawer--right.is-closed .wcDrawerPanel { transform: translateX(100%); }
+
+/* Tabs sit at the stage edge */
 .wcDrawerTab {
   position: absolute;
   top: 16px;
-  width: var(--wc-tab-w);
+  width: 34px;
   height: 46px;
+
   display: grid;
   place-items: center;
+
   border-radius: 12px;
   background: rgba(255,255,255,0.10);
   color: rgba(255,255,255,0.9);
   border: 1px solid rgba(255,255,255,0.12);
   cursor: pointer;
-  z-index: 4;
+
+  z-index: 6;
 }
 
-/* Left drawer slide */
-.wcDrawer--left .wcDrawerTab {
-  right: calc(var(--wc-tab-w) * -0.45);
-}
+.wcDrawer--left .wcDrawerTab { right: -12px; }
+.wcDrawer--right .wcDrawerTab { left: -12px; }
 
-.wcDrawer--left.is-closed .wcDrawerPanel {
-  transform: translateX(calc(100% - var(--wc-tab-w)));
-}
-
-/* Right drawer slide */
-.wcDrawer--right .wcDrawerTab {
-  left: calc(var(--wc-tab-w) * -0.45);
-}
-
-.wcDrawer--right.is-closed .wcDrawerPanel {
-  transform: translateX(calc(-100% + var(--wc-tab-w)));
-}
-
-/* Mobile fallback: stack everything */
-/* Mobile fallback ONLY when truly small */
+/* ---------------------------
+   Mobile fallback: stack everything
+--------------------------- */
 @media (max-width: 560px) {
   .wcDock { grid-template-columns: 1fr; }
+
+  .wcDrawer {
+    width: 100%;
+  }
+
   .wcDrawerTab { display: none; }
-  .wcDrawerPanel { transform: none !important; }
+
+  .wcDrawerPanel {
+    position: relative;
+    width: 100%;
+    transform: none !important;
+  }
 }
 
 /* ---------------------------
