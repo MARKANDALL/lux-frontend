@@ -99,6 +99,80 @@ function ensureStyles() {
       border-right: 4px solid transparent;
       border-top: 4px solid rgba(0,0,0,0.85);
     }
+
+    /* ✅ Self Playback: hard containment + zero horizontal scroll */
+    #selfpb-lite{
+      width: min(390px, calc(100vw - 24px));
+      box-sizing: border-box;
+      overflow: hidden;      /* ✅ kills weird bleed */
+      overflow-x: hidden;    /* ✅ never scroll sideways */
+    }
+
+    #selfpb-lite *{ box-sizing:border-box; }
+
+    #selfpb-lite .spb-body{
+      background:#fff;
+      border-radius:16px;
+      padding:12px;
+      overflow:hidden;       /* ✅ inner box cannot overlap */
+    }
+
+    #selfpb-lite .spb-wave{
+      height:92px;
+      border-radius:12px;
+      background: rgba(15,23,42,0.04);
+      border:1px solid rgba(15,23,42,0.10);
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    /* rows */
+    #selfpb-lite .spb-row{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+      width:100%;
+    }
+
+    #selfpb-lite .spb-row + .spb-row{ margin-top:8px; }
+
+    #selfpb-lite .spb-scrub{
+      width:100%;
+      min-width:0;
+    }
+
+    #selfpb-lite .spb-btn{
+      border:0;
+      border-radius:10px;
+      padding:8px 12px;
+      font-weight:800;
+      cursor:pointer;
+      background:#2f6fe4;
+      color:#fff;
+      box-shadow:0 6px 16px rgba(0,0,0,0.12);
+      white-space:nowrap;
+    }
+
+    #selfpb-lite .spb-btn.secondary{
+      background: rgba(15,23,42,0.08);
+      color: rgba(15,23,42,0.85);
+      box-shadow:none;
+    }
+
+    #selfpb-lite .spb-btn.icon{
+      width:44px;
+      display:grid;
+      place-items:center;
+      padding:8px 0;
+    }
+
+    /* bottom row: -2s ⬇ +2s */
+    #selfpb-lite .spb-bottom{
+      justify-content:space-between;
+    }
   `;
 
   document.head.appendChild(s);
@@ -121,43 +195,49 @@ function buildUI() {
       <span class="pill tiny" id="spb-time">0:00 / 0:00</span>
     </div>
 
-    <div id="spb-waveform-container" style="margin-bottom: 6px; padding: 4px 0;">
-      <div id="spb-wave-learner" style="height: 50px; width: 100%;"></div>
-      <div id="spb-wave-ref" style="height: 50px; width: 100%; border-top: 1px solid #eee;"></div>
-    </div>
+    <div class="spb-body">
 
-    <!-- ✅ Row 1: scrubber gets its own full-width row -->
-    <div class="row" style="margin-bottom:6px">
-      <input id="spb-scrub" class="scrubFull" type="range" min="0" max="1000" step="1" value="0" title="Seek">
-    </div>
-
-    <!-- ✅ Row 2: -2s  DOWNLOAD  +2s -->
-    <div class="row" style="margin-bottom:6px; justify-content:space-between;">
-      <button class="btn" id="spb-back">−2s</button>
-      <button class="btn icon" id="spb-dl" type="button" disabled title="Record something first">⬇</button>
-      <button class="btn" id="spb-fwd">+2s</button>
-    </div>
-
-    <!-- ✅ Row 3: Play + Set Loop -->
-    <div class="row" style="margin-bottom:6px; position:relative;">
-      <button class="btn" id="spb-main" style="flex:1; min-width:0;">▶ Play</button>
-
-      <div class="ab" style="flex:1; min-width:0; display:flex; justify-content:flex-end; position:relative;">
-        <div id="spb-loop-tip" class="spb-bubble">Tap <b>A</b> then <b>B</b> to loop.</div>
-        <button class="btn" id="spb-loop-action" style="flex:1; min-width:0;">⟳ Set Loop A</button>
+      <!-- ✅ Wave box (top) -->
+      <div class="spb-wave" id="spb-wavebox">
+        <div id="spb-waveform-container" style="width:100%; height:100%; display:flex; flex-direction:column;">
+          <div id="spb-wave-learner" style="height: 50%; width: 100%;"></div>
+          <div id="spb-wave-ref" style="height: 50%; width: 100%; border-top: 1px solid #eee;"></div>
+        </div>
       </div>
-    </div>
 
-    <!-- ✅ Row 4: Speed gets its own row -->
-    <div class="row" style="margin-bottom:6px">
-      <span class="tiny" style="min-width:44px">Speed</span>
-      <input id="spb-rate" type="range" min="0.5" max="1.5" step="0.05" value="1" style="flex:1; min-width:0;">
-      <span class="tiny" id="spb-rate-val">1.00×</span>
-    </div>
+      <!-- ✅ Scrubber row -->
+      <div class="spb-row">
+        <input id="spb-scrub" class="spb-scrub" type="range" min="0" max="1000" step="1" value="0" title="Seek">
+      </div>
 
-    <!-- ✅ Row 5: Loop label -->
-    <div class="row">
-      <span class="tiny" id="spb-ab-label" style="color:#666;">Loop: Off</span>
+      <!-- ✅ Speed row -->
+      <div class="spb-row">
+        <div style="min-width:54px; font-weight:800; opacity:.75;">Speed</div>
+        <input id="spb-rate" type="range" min="0.5" max="1.5" step="0.05" value="1" style="flex:1; min-width:0;">
+        <div id="spb-rate-val" style="min-width:54px; text-align:right; font-weight:900;">1.00×</div>
+      </div>
+
+      <!-- ✅ Loop status text -->
+      <div class="spb-row">
+        <div id="spb-ab-label" style="font-weight:800; opacity:.75;">Loop: Off</div>
+      </div>
+
+      <!-- ✅ Play + Set Loop row -->
+      <div class="spb-row">
+        <button class="spb-btn" id="spb-main" style="flex:1; min-width:0;">▶ Play</button>
+        <div class="ab" style="flex:1; min-width:0; display:flex; justify-content:flex-end; position:relative;">
+          <div id="spb-loop-tip" class="spb-bubble">Tap <b>A</b> then <b>B</b> to loop.</div>
+          <button class="spb-btn" id="spb-loop-action" style="flex:1; min-width:0;">⟳ Set Loop A</button>
+        </div>
+      </div>
+
+      <!-- ✅ Bottommost row: -2s  ⬇  +2s -->
+      <div class="spb-row spb-bottom">
+        <button class="spb-btn" id="spb-back">−2s</button>
+        <button class="spb-btn secondary icon" id="spb-dl" type="button" disabled title="Record something first">⬇</button>
+        <button class="spb-btn" id="spb-fwd">+2s</button>
+      </div>
+
     </div>
   `;
 

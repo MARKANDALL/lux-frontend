@@ -1,9 +1,6 @@
 // src/main.js
 // The Main Entry Point: Boots the app, handles the Typewriter, and wires the Dropdown.
 
-import { ensureUID } from "../api/identity.js";
-import { initMyWordsGlobal } from "../features/my-words/index.js";
-
 import { wirePassageSelect, wireNextBtn } from "../features/passages/index.js";
 
 import { wireHarvardPicker } from "../features/harvard/index.js";
@@ -34,6 +31,9 @@ import { initAuthUI } from "../ui/auth-dom.js";
 
 // Arrow trail (NEW)
 import { initArrowTrail } from "../ui/ui-arrow-trail.js";
+
+// ✅ My Words Lazy-Load Launcher (NEW)
+import { bootMyWordsLauncher } from "../features/my-words/launcher.js";
 
 // --- VISUALS: Typewriter Effect ---
 let typewriterTimeout;
@@ -206,16 +206,14 @@ async function bootApp() {
   // 7. Boot Dashboard
   await initDashboard();
 
-  // My Words (Global)
-  const uid = ensureUID();
-  const inputEl = document.getElementById("referenceText");
-  initMyWordsGlobal({ uid, inputEl });
-
   // 8. Boot Authentication
   initAuthUI();
 
   // 9. Boot New Onboarding Deck (CSS is loaded via index.html <link>)
   maybeShowOnboarding();
+
+  // ✅ 10. Boot My Words launcher (LAZY)
+  bootMyWordsLauncher();
 
   console.log("[Lux] App fully initialized.");
 }
