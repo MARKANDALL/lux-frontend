@@ -25,6 +25,11 @@
   margin: 0 !important;
 }
 
+/* When inserted after Stop inside the Record/Stop .btn-group */
+.btn-group .lux-audioModeWrap.is-rightOfStop{
+  margin-left: 14px; /* ✅ not crammed against Stop */
+}
+
 
 /* ===============================
    Wrapper + label
@@ -122,6 +127,26 @@ html[data-lux-audio-mode="pro"] .lux-audioKnob{
   transform: translateX(100%);
 }
 
+/* Optional (extra clarity): slightly different knob tint per mode (still subtle, but clearer) */
+html[data-lux-audio-mode="pro"] .lux-audioKnob{
+  box-shadow:
+    0 10px 22px rgba(0,0,0,0.16),
+    inset 0 1px 0 rgba(255,255,255,0.44),
+    inset 0 -10px 22px rgba(0,0,0,0.10),
+    0 0 0 1px rgba(0,120,215,0.12); /* tiny blue ring */
+}
+
+/* Subtle confirmation animation on toggle */
+.lux-audioToggle.is-bump .lux-audioKnob{
+  animation: luxKnobBump 320ms ease;
+}
+
+@keyframes luxKnobBump{
+  0%   { filter: brightness(1); }
+  45%  { filter: brightness(1.22); }
+  100% { filter: brightness(1); }
+}
+
 /* sheen streak on hover */
 .lux-audioKnob::after{
   content:"";
@@ -190,6 +215,14 @@ html[data-lux-audio-mode="normal"] .lux-audioOpt[data-mode="NORMAL"],
 html[data-lux-audio-mode="pro"] .lux-audioOpt[data-mode="PRO"]{
   color: rgba(15,23,42,0.98);
   opacity: 1;
+}
+
+/* Stronger active indicator (stays, clearer) */
+html[data-lux-audio-mode="normal"] .lux-audioOpt[data-mode="NORMAL"],
+html[data-lux-audio-mode="pro"] .lux-audioOpt[data-mode="PRO"]{
+  text-shadow:
+    0 1px 0 rgba(255,255,255,0.35),
+    0 8px 18px rgba(0,0,0,0.10);
 }
 
 

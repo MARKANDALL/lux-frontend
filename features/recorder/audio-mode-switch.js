@@ -1,10 +1,23 @@
 // features/recorder/audio-mode-switch.js
 
-import { AUDIO_MODES, getAudioMode, setAudioMode, initAudioModeDataset } from "./audio-mode-core.js";
+import {
+  AUDIO_MODES,
+  getAudioMode,
+  setAudioMode,
+  initAudioModeDataset,
+} from "./audio-mode-core.js";
 
 const SELECTOR = {
   wrap: ".lux-audioModeWrap",
 };
+
+function kickBump(toggleEl) {
+  // restart the CSS animation cleanly
+  toggleEl.classList.remove("is-bump");
+  void toggleEl.offsetWidth; // reflow
+  toggleEl.classList.add("is-bump");
+  window.setTimeout(() => toggleEl.classList.remove("is-bump"), 320);
+}
 
 function ensurePracticeActionsRow() {
   const btnGroup = document.querySelector(".btn-group");
@@ -87,6 +100,7 @@ function buildUI(scope = "practice") {
     const next = b.dataset.mode;
     setAudioMode?.(next);
     initAudioModeDataset?.(next);
+    kickBump(toggle); // ✅ subtle “switch happened” feedback
   });
 
   return wrap;
@@ -104,12 +118,18 @@ export function mountAudioModeSwitch(scope = "practice") {
 
   if (!anchor) return null;
 
-  // ✅ Practice: place to the right of Record/Stop
-  if (scope === "practice" && anchor.classList?.contains("lux-rec-actions")) {
-    anchor.appendChild(ui);
-  } else {
-    anchor.prepend(ui);
+  // ✅ Practice: force the switch to live AFTER the Stop button
+  if (scope === "practice") {
+    const stopBtn = document.querySelector("#stop");
+    if (stopBtn && stopBtn.parentElement) {
+      // Insert immediately after Stop inside the same flex row
+      stopBtn.insertAdjacentElement("afterend", ui);
+      ui.classList.add("is-rightOfStop");
+      return ui;
+    }
   }
 
+  // fallback behavior (convo/header/etc.)
+  anchor.prepend(ui);
   return ui;
 }
