@@ -1,16 +1,45 @@
 // features/recorder/audio-mode-switch.js
 
-import { AUDIO_MODES, getAudioMode, setAudioMode, initAudioModeDataset } from "./audio-mode.js";
+import { AUDIO_MODES, getAudioMode, setAudioMode, initAudioModeDataset } from "./audio-mode-core.js";
 
-const TIP_NORMAL =
-  "NORMAL: Browser-enhanced mic (Echo Cancellation + Noise Suppression + Auto Gain). Best for everyday rooms & clean scoring.";
-const TIP_PRO =
-  "PRO: Raw mic capture (No Echo Cancel / No Noise Suppression / No Auto Gain). Best for quiet rooms & deeper stress/prosody fidelity.";
+const SELECTOR = {
+  wrap: ".lux-audioModeWrap",
+};
 
-function buildSwitch(scope) {
+function ensurePracticeActionsRow() {
+  const btnGroup = document.querySelector(".btn-group");
+  if (!btnGroup) return null;
+
+  // Already wrapped?
+  const existing = btnGroup.closest(".lux-rec-actions");
+  if (existing) return existing;
+
+  // Wrap btn-group in a row container so we can place the toggle to the right
+  const row = document.createElement("div");
+  row.className = "lux-rec-actions";
+
+  const parent = btnGroup.parentElement;
+  if (!parent) return null;
+
+  parent.insertBefore(row, btnGroup);
+  row.appendChild(btnGroup);
+
+  return row;
+}
+
+function findPracticeAnchor() {
+  // ✅ Dock to the right of Record/Stop (same row)
+  return ensurePracticeActionsRow();
+}
+
+function findConvoAnchor() {
+  // If you mount it in AI Convo header actions, keep existing behavior
+  return document.querySelector(".lux-convo-actions") || null;
+}
+
+function buildUI(scope = "practice") {
   const wrap = document.createElement("div");
   wrap.className = "lux-audioModeWrap";
-  wrap.dataset.scope = scope;
 
   const label = document.createElement("div");
   label.className = "lux-audioModeLabel";
@@ -18,79 +47,69 @@ function buildSwitch(scope) {
 
   const toggle = document.createElement("div");
   toggle.className = "lux-audioToggle";
-  toggle.setAttribute("role", "group");
-  toggle.setAttribute("aria-label", "Audio Recording Mode");
+
+  const btnNormal = document.createElement("button");
+  btnNormal.className = "lux-audioOpt";
+  btnNormal.type = "button";
+  btnNormal.dataset.mode = "NORMAL";
+  btnNormal.textContent = "Normal";
+  btnNormal.setAttribute("data-tip", "Balanced quality + smaller size");
+
+  const btnPro = document.createElement("button");
+  btnPro.className = "lux-audioOpt";
+  btnPro.type = "button";
+  btnPro.dataset.mode = "PRO";
+  btnPro.textContent = "Pro";
+  btnPro.setAttribute("data-tip", "Higher quality + slightly larger size");
 
   const knob = document.createElement("span");
   knob.className = "lux-audioKnob";
 
-  const btnNormal = document.createElement("button");
-  btnNormal.type = "button";
-  btnNormal.className = "lux-audioOpt";
-  btnNormal.dataset.mode = AUDIO_MODES.NORMAL;
-  btnNormal.dataset.tip = TIP_NORMAL;
-  btnNormal.textContent = "Normal";
-
-  const btnPro = document.createElement("button");
-  btnPro.type = "button";
-  btnPro.className = "lux-audioOpt";
-  btnPro.dataset.mode = AUDIO_MODES.PRO;
-  btnPro.dataset.tip = TIP_PRO;
-  btnPro.textContent = "Pro";
-
-  toggle.appendChild(knob);
   toggle.appendChild(btnNormal);
   toggle.appendChild(btnPro);
+  toggle.appendChild(knob);
 
   wrap.appendChild(label);
   wrap.appendChild(toggle);
 
-  function apply(mode) {
-    const m = setAudioMode(mode);
-    // (CSS is driven by html[data-lux-audio-mode], so nothing else is required)
-    return m;
-  }
+  // scope styling hooks
+  if (scope === "practice") wrap.classList.add("is-docked");
+  if (scope === "convo") wrap.classList.add("is-compact");
 
-  btnNormal.addEventListener("click", () => apply(AUDIO_MODES.NORMAL));
-  btnPro.addEventListener("click", () => apply(AUDIO_MODES.PRO));
+  // initial dataset mode sync
+  const mode = getAudioMode?.() || AUDIO_MODES?.NORMAL || "NORMAL";
+  initAudioModeDataset?.(mode);
 
-  // Sync if something else changes mode
-  window.addEventListener("lux:audioModeChanged", (e) => {
-    const m = e?.detail?.mode || getAudioMode();
-    document.documentElement.setAttribute("data-lux-audio-mode", String(m).toLowerCase());
+  toggle.addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-mode]");
+    if (!b) return;
+
+    const next = b.dataset.mode;
+    setAudioMode?.(next);
+    initAudioModeDataset?.(next);
   });
 
   return wrap;
 }
 
-function findPracticeAnchor() {
-  // Insert above Record/Stop row
-  return document.querySelector(".btn-group")?.parentElement || null;
-}
+export function mountAudioModeSwitch(scope = "practice") {
+  // Kill duplicate mounts
+  document.querySelectorAll(SELECTOR.wrap).forEach((n) => n.remove());
 
-function findConvoAnchor() {
-  // Insert in convo header actions if possible
-  return document.querySelector(".lux-convo-actions") || null;
-}
+  const ui = buildUI(scope);
 
-export function mountAudioModeSwitch({ scope = "practice", mount = null, compact = false } = {}) {
-  initAudioModeDataset();
+  let anchor = null;
+  if (scope === "convo") anchor = findConvoAnchor();
+  else anchor = findPracticeAnchor();
 
-  const existing = document.querySelector(`.lux-audioModeWrap[data-scope="${scope}"]`);
-  if (existing) return existing;
+  if (!anchor) return null;
 
-  const ui = buildSwitch(scope);
+  // ✅ Practice: place to the right of Record/Stop
+  if (scope === "practice" && anchor.classList?.contains("lux-rec-actions")) {
+    anchor.appendChild(ui);
+  } else {
+    anchor.prepend(ui);
+  }
 
-  if (compact) ui.classList.add("is-compact");
-
-  const anchor =
-    mount ||
-    (scope === "convo" ? findConvoAnchor() : findPracticeAnchor()) ||
-    document.body;
-
-  // If it’s a header/actions row, we want it left-aligned compact
-  if (anchor.classList?.contains("lux-convo-actions")) ui.classList.add("is-compact");
-
-  anchor.prepend(ui);
   return ui;
 }
