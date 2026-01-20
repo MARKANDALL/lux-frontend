@@ -1,5 +1,7 @@
 // features/recorder/media.js
 import { logError } from "../../app-core/lux-utils.js";
+import AudioInspector from "./audio-inspector.js";
+import { getAudioConstraints } from "./audio-mode.js";
 
 let mediaRecorder = null;
 let recordedChunks = [];
@@ -57,7 +59,10 @@ function startLevelMeter(stream, onMeter, bars = 10) {
       levels.push(clamp(v, 0.08, 1));
     }
 
-    try { onMeter(levels); } catch (_) {}
+    try {
+      onMeter(levels);
+    } catch (_) {}
+
     rafId = requestAnimationFrame(tick);
   };
 
@@ -66,20 +71,38 @@ function startLevelMeter(stream, onMeter, bars = 10) {
   return () => {
     alive = false;
     if (rafId) cancelAnimationFrame(rafId);
-    try { ctx.close(); } catch (_) {}
+    try {
+      ctx.close();
+    } catch (_) {}
   };
 }
 
 export async function startMic(onStopCallback, { onMeter } = {}) {
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia(getAudioConstraints());
+    } catch (err) {
+      console.warn("[audio] constraints rejected, falling back to {audio:true}", err);
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    }
+
+    // ✅ Inspector: note stream immediately (practice context)
+    await AudioInspector.noteStream(stream, "practice");
+
     mediaRecorder = new MediaRecorder(stream);
+
+    // ✅ Inspector: note recorder right after creation
+    AudioInspector.noteRecorder(mediaRecorder);
+
     recordedChunks = [];
 
     // Optional: live mic level meter (for record-button equalizer bars)
     if (typeof onMeter === "function") {
-      if (stopMeterFn) { stopMeterFn(); stopMeterFn = null; }
+      if (stopMeterFn) {
+        stopMeterFn();
+        stopMeterFn = null;
+      }
       stopMeterFn = startLevelMeter(stream, onMeter, 10);
     }
 
@@ -88,15 +111,23 @@ export async function startMic(onStopCallback, { onMeter } = {}) {
     };
 
     mediaRecorder.onstop = () => {
-      if (stopMeterFn) { stopMeterFn(); stopMeterFn = null; }
-      stream.getTracks().forEach(t => t.stop());
+      if (stopMeterFn) {
+        stopMeterFn();
+        stopMeterFn = null;
+      }
+
+      stream.getTracks().forEach((t) => t.stop());
+
       const blob = new Blob(recordedChunks, { type: "audio/webm" });
+
+      // ✅ Inspector: note final blob right after creation
+      AudioInspector.noteBlob(blob);
+
       if (onStopCallback) onStopCallback(blob);
     };
 
     mediaRecorder.start();
     return true;
-
   } catch (err) {
     logError("Mic access failed", err);
     return false;
@@ -105,7 +136,10 @@ export async function startMic(onStopCallback, { onMeter } = {}) {
 
 export function stopMic() {
   if (mediaRecorder && mediaRecorder.state === "recording") {
-    if (stopMeterFn) { stopMeterFn(); stopMeterFn = null; }
+    if (stopMeterFn) {
+      stopMeterFn();
+      stopMeterFn = null;
+    }
     mediaRecorder.stop();
   }
 }

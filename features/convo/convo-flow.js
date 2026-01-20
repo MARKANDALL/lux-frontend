@@ -1,5 +1,7 @@
 // features/convo/convo-flow.js
 import { buildConvoTargetOverlay } from "../next-activity/next-activity.js";
+import { getAudioConstraints } from "../recorder/audio-mode.js";
+import AudioInspector from "../recorder/audio-inspector.js";
 
 export function wireConvoFlow({
   SCENARIOS,
@@ -76,8 +78,24 @@ export function wireConvoFlow({
   // --- Recording helpers ---
   async function startRecording() {
     state.chunks = [];
-    state.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia(getAudioConstraints());
+    } catch (err) {
+      console.warn("[audio] convo constraints rejected, fallback {audio:true}", err);
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    }
+
+    state.stream = stream;
+
+    // ✅ Inspector: note stream immediately (convo context)
+    await AudioInspector.noteStream(state.stream, "convo");
+
     state.recorder = new MediaRecorder(state.stream);
+
+    // ✅ Inspector: note recorder right after creation
+    AudioInspector.noteRecorder(state.recorder);
 
     state.recorder.ondataavailable = (e) => {
       if (e.data && e.data.size > 0) state.chunks.push(e.data);
@@ -98,6 +116,10 @@ export function wireConvoFlow({
         state.stream = null;
 
         const blob = new Blob(state.chunks, { type: rec.mimeType || "audio/webm" });
+
+        // ✅ Inspector: note final blob right after creation
+        AudioInspector.noteBlob(blob);
+
         state.chunks = [];
         state.recorder = null;
         resolve(blob);

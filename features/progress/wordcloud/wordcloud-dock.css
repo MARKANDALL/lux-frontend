@@ -1,5 +1,11 @@
 /* features/progress/wordcloud/wordcloud-dock.css */
 
+/* ✅ Allow side drawers to extend beyond the wordcloud shell */
+.lux-wc-shell,
+.lux-wc-body {
+  overflow: visible !important;
+}
+
 /* ---------------------------
    Tiny 1-line tooltip
 --------------------------- */
@@ -122,12 +128,22 @@
   place-items: center;
 
   border-radius: 12px;
-  background: rgba(255,255,255,0.10);
-  color: rgba(255,255,255,0.9);
-  border: 1px solid rgba(255,255,255,0.12);
-  cursor: pointer;
+  background: rgba(15, 23, 42, 0.88); /* ✅ dark pill */
+  color: rgba(255, 255, 255, 0.96);   /* ✅ bright arrow */
+  border: 1px solid rgba(255,255,255,0.18);
+  box-shadow: 0 12px 26px rgba(0,0,0,0.22);
 
+  cursor: pointer;
   z-index: 6;
+}
+
+.wcDrawerTab:hover {
+  background: rgba(15, 23, 42, 0.96);
+}
+
+.wcDrawerTab:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.55);
+  outline-offset: 3px;
 }
 
 .wcDrawer--left .wcDrawerTab { right: -12px; }
