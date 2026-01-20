@@ -110,12 +110,14 @@ export function mountMyWordsPanel({
 
   function entryHTML(e) {
     const dotCls = `lux-mw-dot ${esc(e.mw_cls || "mw-new")}`;
+    const titleText = `${e.pinned ? "📌 " : ""}${e.text || ""}`;
+
     return `
       <div class="lux-mw-entry" data-id="${esc(e.id)}">
         <div class="lux-mw-entryLeft">
           <span class="${dotCls}"></span>
           <div class="lux-mw-entryText">
-            <div class="lux-mw-entryWord">${esc(e.text)}</div>
+            <div class="lux-mw-entryWord">${esc(titleText)}</div>
             <div class="lux-mw-entryMeta">${esc(buildMeta(e))}</div>
           </div>
         </div>
@@ -186,6 +188,14 @@ export function mountMyWordsPanel({
     const raw = elTa.value || "";
     const res = store.addMany(raw);
     if (res.added || res.merged) elTa.value = "";
+  });
+
+  // ✅ ENTER = Add (Shift+Enter = newline)
+  elTa.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      elAdd.click();
+    }
   });
 
   root.addEventListener("click", async (e) => {

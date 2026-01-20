@@ -28,11 +28,10 @@
 
 .lux-mw-panel{
   position: fixed;
-left: 18px;
-right: auto;
-bottom: 18px;
-top: auto;
-height: 60vh;
+  left: 18px;
+  right: auto;
+  bottom: 18px;
+  top: auto;
 
   width: min(480px, 40vw);
   max-width: 92vw;
@@ -102,10 +101,12 @@ height: 60vh;
   cursor:pointer;
 }
 
+/* ✅ flex scroll fix: required for overflow children to behave */
 .lux-mw-body{
   display:flex;
   flex-direction:column;
   height: calc(100% - 55px);
+  min-height: 0;   /* ✅ critical for overflow children */
 }
 
 .lux-mw-add{
@@ -155,10 +156,12 @@ height: 60vh;
   opacity: .72;
 }
 
+/* ✅ allow scrolling to reach last items */
 .lux-mw-list{
   padding: 10px 12px 12px 12px;
   overflow:auto;
-  height:100%;
+  flex: 1;
+  min-height: 0;   /* ✅ allows scrolling to bottom */
 }
 
 .lux-mw-empty{
@@ -216,9 +219,9 @@ height: 60vh;
 .lux-mw-actions{
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0;                 /* ✅ eliminates the micro-gap jitter */
+  gap: 0;
   border-radius: 14px;
-  overflow: hidden;       /* ✅ keeps edges clean */
+  overflow: hidden;
   border: 1px solid rgba(0,0,0,.08);
   background: rgba(255,255,255,.65);
   flex: 0 0 auto;
@@ -228,20 +231,21 @@ height: 60vh;
   appearance: none;
   border: 0;
   margin: 0;
-  padding: 9px 10px;
-  font-weight: 700;
+  padding: 10px 10px;
+  font-weight: 800;
   font-size: 12px;
   cursor: pointer;
-  background: rgba(255,255,255,.78);
-  transition: transform .08s ease, filter .12s ease;
+  background: rgba(255,255,255,.82);
 }
 
+/* ✅ kill global hover transforms that cause flicker */
 .lux-mw-act:hover{
+  transform: none !important;
   filter: brightness(0.98);
 }
 
 .lux-mw-act:active{
-  transform: scale(0.99);
+  transform: scale(0.99) !important;
 }
 
 .lux-mw-act:nth-child(odd){
@@ -257,6 +261,7 @@ height: 60vh;
   box-shadow: 0 0 0 5px rgba(0,0,0,.06);
   transition: box-shadow 200ms ease;
 }
+
 /* --- Global corner launcher (triangle) --- */
 .lux-mw-corner {
   position: fixed;
@@ -271,18 +276,21 @@ height: 60vh;
   padding: 0;
 }
 
+/* ✅ triangle-shaped shadow */
 .lux-mw-corner::before {
   content: "";
   position: absolute;
   inset: 0;
-  border-radius: 18px;
-  background: #2563eb;
-  box-shadow: 0 10px 24px rgba(2, 6, 23, 0.18);
+  background: var(--lux-blue-primary, #0078d7);
+
   clip-path: polygon(0 0, 0 100%, 100% 100%);
+  border-radius: 0;
+
+  filter: drop-shadow(0 10px 22px rgba(2, 6, 23, 0.22));
 }
 
 .lux-mw-corner:hover::before {
-  filter: brightness(1.05);
+  filter: drop-shadow(0 10px 22px rgba(2, 6, 23, 0.22)) brightness(1.05);
 }
 
 .lux-mw-corner.is-open::before {
