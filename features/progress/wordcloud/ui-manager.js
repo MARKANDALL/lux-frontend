@@ -23,20 +23,43 @@ export function createWordcloudUIManager({ dom, getState, fmtDaysAgo }) {
       ? fmtDaysAgo
       : (pos) => (pos === 0 ? "Now" : `${pos}d ago`);
 
+  // ✅ Busy overlay timing control (prevents invisible blink)
+  let _busyOnAt = 0;
+  let _hideTimer = null;
+  const MIN_BUSY_MS = 250;
+
   function setBusy(on, title = "Loading…", subText = "") {
     if (!dom.overlay) return;
 
-    dom.overlay.hidden = !on;
-    dom.overlay.style.display = on ? "flex" : "none"; // ✅ override any CSS conflict
-    dom.overlay.setAttribute("aria-busy", on ? "true" : "false");
+    if (on) {
+      clearTimeout(_hideTimer);
+      _busyOnAt = performance.now();
 
-    if (dom.overlayTitle) dom.overlayTitle.textContent = title;
-    if (dom.overlaySub) dom.overlaySub.textContent = subText || "";
+      dom.overlay.hidden = false;
+      dom.overlay.style.display = "flex"; // ✅ override any CSS conflict
+      dom.overlay.setAttribute("aria-busy", "true");
+
+      if (dom.overlayTitle) dom.overlayTitle.textContent = title;
+      if (dom.overlaySub) dom.overlaySub.textContent = subText || "";
+      return;
+    }
+
+    // ✅ ensure overlay stays visible at least MIN_BUSY_MS (prevents invisible “blink”)
+    const elapsed = performance.now() - _busyOnAt;
+    const delay = Math.max(0, MIN_BUSY_MS - elapsed);
+
+    clearTimeout(_hideTimer);
+    _hideTimer = setTimeout(() => {
+      dom.overlay.hidden = true;
+      dom.overlay.style.display = "none";
+      dom.overlay.setAttribute("aria-busy", "false");
+    }, delay);
   }
 
   function applyTimelineUI() {
     const S = getState();
     const show = S.range === "timeline";
+
     if (dom.timelineRow) dom.timelineRow.style.display = show ? "flex" : "none";
 
     if (dom.winSlider) dom.winSlider.value = String(S.timelineWin);

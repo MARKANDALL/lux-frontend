@@ -60,9 +60,15 @@
 }
 
 /* Center stage */
-.wcStage { position: relative; z-index: 3; }
+/* ✅ Stage must sit ABOVE drawers so closed panels can hide behind it */
+.wcStage{
+  position: relative;
+  z-index: 5;
+}
 
-.wcStageCard {
+.wcStageCard{
+  position: relative;
+  z-index: 5;
   border-radius: 18px;
   overflow: hidden;
 }
@@ -109,7 +115,9 @@
   transition: transform 220ms ease;
   will-change: transform;
 
-  /* default = above stage when OPEN */
+  /* ✅ OPEN panels behave normally */
+  transform: translateX(0);
+  pointer-events: auto;
   z-index: 4;
 }
 
@@ -130,18 +138,36 @@
   min-height: 0;
 }
 
+/* ✅ Kill sideways scrolling + clipping */
+.wcDrawerPanel,
+.wcDrawerBody{
+  overflow-x: hidden;
+}
+
+/* ✅ allow children to shrink instead of overflow */
+.wcDrawerBody > *{
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* prevents “weird sideways push” */
+.wcDrawerPanel *{
+  box-sizing: border-box;
+}
+
 /* OPEN state = panel is outside, not stealing center */
 .wcDrawer--left .wcDrawerPanel { right: 0; }
 .wcDrawer--right .wcDrawerPanel { left: 0; }
 
-/* ✅ CLOSED state = slide behind the stage (toward center) */
-.wcDrawer--left.is-closed .wcDrawerPanel  { 
+/* ✅ CLOSED state = slide behind the stage (toward center)
+   include gap so it fully disappears (no little sliver showing) */
+.wcDrawer--left.is-closed .wcDrawerPanel{
   transform: translateX(calc(100% + var(--wc-gap)));
   z-index: 2;
   pointer-events: none;
 }
 
-.wcDrawer--right.is-closed .wcDrawerPanel { 
+.wcDrawer--right.is-closed .wcDrawerPanel{
   transform: translateX(calc(-100% - var(--wc-gap)));
   z-index: 2;
   pointer-events: none;
@@ -168,6 +194,9 @@
 
   cursor: pointer;
   z-index: 6;
+
+  /* ✅ Arrow flips depending on open/closed state */
+  transition: transform 180ms ease, filter 180ms ease;
 }
 
 .wcDrawerTab:hover {
@@ -177,6 +206,12 @@
 .wcDrawerTab:focus-visible {
   outline: 3px solid rgba(37, 99, 235, 0.50);
   outline-offset: 3px;
+}
+
+/* aria-expanded=true means OPEN → clicking will CLOSE (move inward),
+   so the arrow should point inward */
+.wcDrawerTab[aria-expanded="true"]{
+  transform: rotate(180deg);
 }
 
 .wcDrawer--left .wcDrawerTab { right: -12px; }
