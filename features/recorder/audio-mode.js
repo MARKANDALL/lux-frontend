@@ -3,6 +3,11 @@
 
 const MODE_KEY = "luxAudioMode";
 
+export const AUDIO_MODES = {
+  NORMAL: "normal",
+  PRO: "pro",
+};
+
 export function getAudioMode() {
   const v = (localStorage.getItem(MODE_KEY) || "").toLowerCase();
   return v === "pro" ? "pro" : "normal";
@@ -81,4 +86,9 @@ export function getAudioConstraints() {
 
   // If none supported, fallback to just `true`
   return { audio: Object.keys(audio).length ? audio : true };
+}
+
+// Back-compat alias (some modules import buildAudioConstraints)
+export function buildAudioConstraints() {
+  return getAudioConstraints();
 }

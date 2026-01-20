@@ -64,6 +64,8 @@ export async function initWordCloudPage() {
   // Mount template FIRST, then grab DOM once
   root.innerHTML = wordcloudTemplateHtml();
   const dom = getWordcloudDom(root);
+  console.log("[wc] dom missing:", dom.missing());
+
 
   // ✅ FIX C: wire side drawers immediately (so arrows never "die")
   // even if later setup crashes (drawer not created yet, etc.)

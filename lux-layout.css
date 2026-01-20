@@ -8,3 +8,5 @@
 @import "./lux-layout.ai-feedback.css";
 @import "./lux-layout.scrollbar.css";
 @import "./lux-layout.top-banner.css";
+/* ✅ My Words overlay */
+@import "./features/my-words/my-words.css";

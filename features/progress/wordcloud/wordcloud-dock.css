@@ -1,11 +1,5 @@
 /* features/progress/wordcloud/wordcloud-dock.css */
 
-/* ✅ Allow side drawers to extend beyond the wordcloud shell */
-.lux-wc-shell,
-.lux-wc-body {
-  overflow: visible !important;
-}
-
 /* ---------------------------
    Tiny 1-line tooltip
 --------------------------- */
@@ -40,12 +34,18 @@
   transform: translateX(-50%) translateY(0);
 }
 
+/* ✅ FIX: allow drawers to slide OUTSIDE the shell (shell clips by default) */
+.lux-wc-shell,
+.lux-wc-body {
+  overflow: visible !important;
+}
+
 /* ---------------------------
    Dock layout: drawers + stage
 --------------------------- */
 .wcDock {
-  --wc-side-col: 44px;     /* only the small tab gutter */
-  --wc-drawer-w: 260px;    /* full drawer width */
+  --wc-side-col: 44px;
+  --wc-drawer-w: 260px;
   --wc-gap: 18px;
 
   position: relative;
@@ -54,7 +54,9 @@
   display: grid;
   grid-template-columns: var(--wc-side-col) minmax(0, 1fr) var(--wc-side-col);
   gap: var(--wc-gap);
-  align-items: start;
+
+  /* ✅ FIX: drawers stretch to match the stage height */
+  align-items: stretch;
 }
 
 /* Center stage */
@@ -78,6 +80,12 @@
   width: var(--wc-side-col);
   position: relative;
   z-index: 4;
+}
+
+/* ✅ FIX: drawers must stretch vertically so absolute panels can fill height */
+.wcDrawer {
+  align-self: stretch;
+  height: 100%;
 }
 
 /* Panel is absolutely positioned and lives OUTSIDE the center */
@@ -118,6 +126,7 @@
 .wcDrawer--right.is-closed .wcDrawerPanel { transform: translateX(100%); }
 
 /* Tabs sit at the stage edge */
+/* ✅ FIX: readable tab on light UI */
 .wcDrawerTab {
   position: absolute;
   top: 16px;
@@ -128,21 +137,23 @@
   place-items: center;
 
   border-radius: 12px;
-  background: rgba(15, 23, 42, 0.88); /* ✅ dark pill */
-  color: rgba(255, 255, 255, 0.96);   /* ✅ bright arrow */
-  border: 1px solid rgba(255,255,255,0.18);
-  box-shadow: 0 12px 26px rgba(0,0,0,0.22);
+
+  /* ✅ FIX: readable tab on light UI */
+  background: rgba(15, 23, 42, 0.92);
+  color: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.22);
 
   cursor: pointer;
   z-index: 6;
 }
 
 .wcDrawerTab:hover {
-  background: rgba(15, 23, 42, 0.96);
+  background: rgba(15, 23, 42, 0.98);
 }
 
 .wcDrawerTab:focus-visible {
-  outline: 3px solid rgba(37, 99, 235, 0.55);
+  outline: 3px solid rgba(37, 99, 235, 0.50);
   outline-offset: 3px;
 }
 
@@ -157,6 +168,7 @@
 
   .wcDrawer {
     width: 100%;
+    height: auto;
   }
 
   .wcDrawerTab { display: none; }

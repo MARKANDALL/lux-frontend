@@ -83,3 +83,13 @@ export function wireButtons({ onRecord, onStop }) {
   
   return true;
 }
+// ✅ Back-compat: some code calls DOM.ensureRefs()
+export function ensureRefs() {
+  // Touch getters so refs resolve (no-op but safe)
+  void ui.textarea;
+  void ui.recordBtn;
+  void ui.stopBtn;
+  void ui.status;
+  void ui.error;
+  return ui;
+}

@@ -32,7 +32,7 @@
   border-radius: 999px;
   border: 1px solid rgba(15, 23, 42, 0.18);
   background: rgba(15, 23, 42, 0.08);
-  overflow: hidden;
+  overflow: visible;
 }
 
 /* sliding knob */
@@ -103,4 +103,15 @@ html[data-lux-audio-mode="pro"] .lux-audioOpt[data-mode="PRO"] {
 
 .lux-audioOpt[data-tip]:hover::after {
   opacity: 1;
+}
+
+/* ✅ Keep the audio switch + tooltip above header UI (Tips pill) */
+.lux-audioModeWrap {
+  position: relative;
+  z-index: 99999;
+}
+
+/* ✅ Tooltip itself: force it to the top layer */
+.lux-audioOpt[data-tip]::after {
+  z-index: 100000;
 }

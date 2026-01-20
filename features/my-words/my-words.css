@@ -212,30 +212,44 @@ height: 60vh;
   margin-top: 4px;
 }
 
+/* --- My Words action buttons: compact + rounded, no jitter --- */
 .lux-mw-actions{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-  flex:0 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;                 /* ✅ eliminates the micro-gap jitter */
+  border-radius: 14px;
+  overflow: hidden;       /* ✅ keeps edges clean */
+  border: 1px solid rgba(0,0,0,.08);
+  background: rgba(255,255,255,.65);
+  flex: 0 0 auto;
 }
 
-.lux-mw-miniBtn{
-  padding: 7px 10px;
-  border-radius: 12px;
-  border:1px solid rgba(0,0,0,.10);
-  background: rgba(255,255,255,.92);
-  cursor:pointer;
-  font-weight:700;
-  font-size: 11px;
-  line-height:1;
+.lux-mw-act{
+  appearance: none;
+  border: 0;
+  margin: 0;
+  padding: 9px 10px;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  background: rgba(255,255,255,.78);
+  transition: transform .08s ease, filter .12s ease;
 }
 
-.lux-mw-miniBtn:hover{
-  background: rgba(255,255,255,.98);
+.lux-mw-act:hover{
+  filter: brightness(0.98);
 }
 
-.lux-mw-miniBtn.primary{
-  border-color: rgba(0,0,0,.14);
+.lux-mw-act:active{
+  transform: scale(0.99);
+}
+
+.lux-mw-act:nth-child(odd){
+  border-right: 1px solid rgba(0,0,0,.08);
+}
+
+.lux-mw-act:nth-child(-n+2){
+  border-bottom: 1px solid rgba(0,0,0,.08);
 }
 
 .lux-mw-flash{
