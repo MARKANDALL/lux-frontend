@@ -1,6 +1,7 @@
 // features/my-words/index.js
 
 import { fetchHistory } from "/src/api/index.js";
+import { ensureUID } from "../../api/identity.js";
 
 import { createMyWordsStore } from "./store.js";
 import { mountMyWordsPanel } from "./panel.js";
@@ -13,7 +14,7 @@ import {
   upsertManyMyWords,
   setPinned,
   archiveEntry,
-  deleteEntry
+  deleteEntry,
 } from "./service.js";
 
 /**
@@ -114,7 +115,7 @@ export function initMyWordsGlobal({ uid, inputEl } = {}) {
       } catch (e) {
         console.warn("[my-words] supabase sync failed:", e);
       }
-    }
+    },
   });
 
   // --- sidecar panel ---
@@ -161,7 +162,7 @@ export function initMyWordsGlobal({ uid, inputEl } = {}) {
           sidecar.render?.();
         });
       }
-    }
+    },
   });
 
   // Keep it aligned on resize (when open)
@@ -220,4 +221,14 @@ export function initMyWordsGlobal({ uid, inputEl } = {}) {
   };
 
   return { store, sidecar, modal, launcher };
+}
+
+/**
+ * ✅ FIX 2 — always produce a UID (correct import)
+ * This is what launcher.js lazy-imports and uses.
+ */
+export function initMyWordsEverywhere() {
+  const uid = ensureUID(); // ✅ always returns a stable local UID
+  const inputEl = document.getElementById("referenceText") || null;
+  return initMyWordsGlobal({ uid, inputEl });
 }

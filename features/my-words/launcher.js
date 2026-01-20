@@ -48,18 +48,24 @@ export function mountMyWordsCornerLauncher({ onClick } = {}) {
  */
 export function bootMyWordsLauncher() {
   let booted = false;
+  let api = null; // ✅ holds { store, sidecar, modal, launcher }
 
   mountMyWordsCornerLauncher({
     onClick: async () => {
-      // Lazy-load the heavy panel code only the first time
       if (!booted) {
         booted = true;
         const mod = await import("./index.js");
-        mod.initMyWordsEverywhere?.();
+        api = await mod.initMyWordsEverywhere?.();
       }
 
-      // Toggle open/close after boot
-window.LuxMyWords?.toggle?.();
+      // ✅ toggle via returned store FIRST (most reliable)
+      if (api?.store?.toggleOpen) {
+        api.store.toggleOpen();
+        return;
+      }
+
+      // ✅ fallback if global exists
+      window.LuxMyWords?.toggle?.();
     },
   });
 }
