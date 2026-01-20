@@ -19,6 +19,9 @@ import { markPartCompleted } from "../passages/index.js";
 import { bringInputToTop } from "../../helpers/index.js"; 
 import { promptUserForAI } from "../../ui/ui-ai-ai-logic.js"; 
 
+import { mountAudioModeSwitch } from "./audio-mode-switch.js";
+import { getAudioMode } from "./audio-mode.js";
+
 let isInitialized = false;
 let recordingStartTime = 0; // NEW: Track duration
 const STOP_DELAY_MS = 800; 
@@ -70,6 +73,25 @@ function stopRecordingFlow() {
 
 async function handleRecordingComplete(audioBlob) {
   try {
+    // ✅ Store latest recording globally so Self Playback can download it
+    try {
+      const mode = getAudioMode();
+      window.LuxLastRecordingBlob = audioBlob;
+      window.LuxLastRecordingMeta = {
+        mode,
+        type: audioBlob?.type || "",
+        size: audioBlob?.size || 0,
+        ts: Date.now(),
+        scope: "practice",
+      };
+
+      window.dispatchEvent(
+        new CustomEvent("lux:lastRecording", {
+          detail: { blob: audioBlob, meta: window.LuxLastRecordingMeta },
+        })
+      );
+    } catch {}
+
     // Guardrail 1 Check: Audio Size
     if (audioBlob.size < 1000) { // < 1kb is definitely silence/error
        DOM.setStatus("Recording too short/empty.");
@@ -180,6 +202,12 @@ if (window.refreshDashboard) {
 
 export function initLuxRecorder() {
   if (isInitialized) return;
+
+  DOM.ensureRefs();
+
+  // ✅ Audio Mode Switch (Normal / Pro)
+  mountAudioModeSwitch({ scope: "practice" });
+
   const found = DOM.wireButtons({
     onRecord: startRecordingFlow,
     onStop: stopRecordingFlow

@@ -27,6 +27,8 @@ import { mountAICoachAlwaysOn } from "../../ui/ui-ai-ai-logic.js";
 import { highlightHtml, stripMarks } from "./convo-highlight.js";
 import { createConvoCoach } from "./convo-coach.js";
 
+import { mountAudioModeSwitch } from "../recorder/audio-mode-switch.js";
+
 export function bootConvo() {
   const root = document.getElementById("convoApp");
   if (!root) return;
@@ -96,6 +98,9 @@ export function bootConvo() {
     mode: state.mode,
     sessionId: state.sessionId,
   });
+
+  // ✅ Audio Mode Switch (Normal / Pro) on AI Conversations
+  mountAudioModeSwitch({ scope: "convo" });
 
   const {
     atmo,

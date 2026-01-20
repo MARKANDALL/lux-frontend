@@ -1,6 +1,7 @@
 // features/convo/convo-flow.js
 import { buildConvoTargetOverlay } from "../next-activity/next-activity.js";
-import { getAudioConstraints } from "../recorder/audio-mode.js";
+import { buildAudioConstraints } from "../recorder/audio-mode.js";
+import { getAudioMode } from "../recorder/audio-mode.js";
 import AudioInspector from "../recorder/audio-inspector.js";
 
 export function wireConvoFlow({
@@ -79,20 +80,23 @@ export function wireConvoFlow({
   async function startRecording() {
     state.chunks = [];
 
-    let stream;
-    try {
-      stream = await navigator.mediaDevices.getUserMedia(getAudioConstraints());
-    } catch (err) {
-      console.warn("[audio] convo constraints rejected, fallback {audio:true}", err);
-      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    }
-
-    state.stream = stream;
+    state.stream = await navigator.mediaDevices.getUserMedia(buildAudioConstraints());
 
     // ✅ Inspector: note stream immediately (convo context)
     await AudioInspector.noteStream(state.stream, "convo");
 
-    state.recorder = new MediaRecorder(state.stream);
+    const prefer = ["audio/webm;codecs=opus", "audio/webm"];
+    let opts = {};
+    try {
+      for (const t of prefer) {
+        if (window.MediaRecorder?.isTypeSupported?.(t)) {
+          opts.mimeType = t;
+          break;
+        }
+      }
+    } catch {}
+
+    state.recorder = new MediaRecorder(state.stream, opts);
 
     // ✅ Inspector: note recorder right after creation
     AudioInspector.noteRecorder(state.recorder);
@@ -138,6 +142,25 @@ export function wireConvoFlow({
 
     // Hand the finished learner audio to the Self Playback drawer (if present)
     if (audioBlob) {
+      // ✅ Store latest recording globally so Self Playback can download it
+      try {
+        const mode = getAudioMode();
+        window.LuxLastRecordingBlob = audioBlob;
+        window.LuxLastRecordingMeta = {
+          mode,
+          type: audioBlob?.type || "",
+          size: audioBlob?.size || 0,
+          ts: Date.now(),
+          scope: "convo",
+        };
+
+        window.dispatchEvent(
+          new CustomEvent("lux:lastRecording", {
+            detail: { blob: audioBlob, meta: window.LuxLastRecordingMeta },
+          })
+        );
+      } catch {}
+
       if (window.__attachLearnerBlob) window.__attachLearnerBlob(audioBlob);
     }
 

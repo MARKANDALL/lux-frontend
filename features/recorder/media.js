@@ -1,7 +1,7 @@
 // features/recorder/media.js
 import { logError } from "../../app-core/lux-utils.js";
 import AudioInspector from "./audio-inspector.js";
-import { getAudioConstraints } from "./audio-mode.js";
+import { buildAudioConstraints } from "./audio-mode.js";
 
 let mediaRecorder = null;
 let recordedChunks = [];
@@ -79,18 +79,22 @@ function startLevelMeter(stream, onMeter, bars = 10) {
 
 export async function startMic(onStopCallback, { onMeter } = {}) {
   try {
-    let stream;
-    try {
-      stream = await navigator.mediaDevices.getUserMedia(getAudioConstraints());
-    } catch (err) {
-      console.warn("[audio] constraints rejected, falling back to {audio:true}", err);
-      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    }
+    const stream = await navigator.mediaDevices.getUserMedia(buildAudioConstraints());
 
     // ✅ Inspector: note stream immediately (practice context)
     await AudioInspector.noteStream(stream, "practice");
 
-    mediaRecorder = new MediaRecorder(stream);
+    const prefer = ["audio/webm;codecs=opus", "audio/webm"];
+    let opts = {};
+    try {
+      for (const t of prefer) {
+        if (window.MediaRecorder?.isTypeSupported?.(t)) {
+          opts.mimeType = t;
+          break;
+        }
+      }
+    } catch {}
+    mediaRecorder = new MediaRecorder(stream, opts);
 
     // ✅ Inspector: note recorder right after creation
     AudioInspector.noteRecorder(mediaRecorder);

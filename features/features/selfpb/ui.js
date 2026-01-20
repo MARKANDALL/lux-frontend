@@ -72,6 +72,11 @@ function buildUI() {
 
     <div class="row" style="margin-bottom:8px">
       <button class="btn" id="spb-main">▶ Play</button>
+
+      <button class="btn selfpb-btn" id="spb-dl" type="button" disabled title="Record something first">
+        ⬇ Download
+      </button>
+
       <div class="pill" title="Playback speed" style="flex:1; display:flex; align-items:center; justify-content:center; padding: 6px 4px;">
         <span class="tiny" style="margin-right:4px">Speed</span>
         <input id="spb-rate" type="range" min="0.5" max="1.5" step="0.05" value="1" style="width:90px; margin:0 6px">
@@ -92,6 +97,7 @@ function buildUI() {
     host,
     toast: host.querySelector("#spb-toast"),
     mainBtn: host.querySelector("#spb-main"),
+    dlBtn: host.querySelector("#spb-dl"),
     backBtn: host.querySelector("#spb-back"),
     fwdBtn: host.querySelector("#spb-fwd"),
     scrub: host.querySelector("#spb-scrub"),
@@ -118,6 +124,71 @@ export function mountSelfPlaybackLite() {
     learnerContainer: ui.waveLearner,
     refContainer: ui.waveRef,
     masterAudio: audio 
+  });
+
+  // ✅ Download Latest Recording button wiring
+  const dlBtn = ui.dlBtn;
+  let _lastBlob = null;
+  let _lastMeta = null;
+
+  function extFromBlob(blob) {
+    const t = blob?.type || "";
+    if (t.includes("wav")) return "wav";
+    if (t.includes("webm")) return "webm";
+    if (t.includes("ogg")) return "ogg";
+    return "audio";
+  }
+
+  function downloadBlob(blob, meta) {
+    if (!blob) return;
+
+    const mode = (meta?.mode || "normal").toLowerCase();
+    const ts = new Date(meta?.ts || Date.now())
+      .toISOString()
+      .replaceAll(":", "-")
+      .replaceAll(".", "-");
+
+    const ext = extFromBlob(blob);
+    const name = `lux-recording_${mode}_${ts}.${ext}`;
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+  }
+
+  function setLatest(blob, meta) {
+    _lastBlob = blob || null;
+    _lastMeta = meta || null;
+
+    if (dlBtn) {
+      dlBtn.disabled = !_lastBlob;
+      dlBtn.title = _lastBlob
+        ? "Download your latest recording"
+        : "Record something first";
+    }
+  }
+
+  if (dlBtn) {
+    dlBtn.addEventListener("click", () => {
+      if (!_lastBlob) return;
+      downloadBlob(_lastBlob, _lastMeta);
+    });
+  }
+
+  // Pull from global if it exists already
+  if (window.LuxLastRecordingBlob) {
+    setLatest(window.LuxLastRecordingBlob, window.LuxLastRecordingMeta || null);
+  }
+
+  // Listen for new recordings
+  window.addEventListener("lux:lastRecording", (e) => {
+    setLatest(e?.detail?.blob, e?.detail?.meta || null);
   });
 
   // --- Logic helpers ---
