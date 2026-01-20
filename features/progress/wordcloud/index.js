@@ -43,7 +43,7 @@ import "./wordcloud-dock.css";
 import { wireWordcloudSideDrawers } from "./side-drawers.js";
 
 const ROOT_ID = "wordcloud-root";
-const TOP_N = 40; // was 20
+const TOP_N = 50; // ✅ was 40
 
 export async function initWordCloudPage() {
   const root = document.getElementById(ROOT_ID);
@@ -66,18 +66,11 @@ export async function initWordCloudPage() {
   const dom = getWordcloudDom(root);
   console.log("[wc] dom missing:", dom.missing());
 
-
-  // ✅ FIX C: wire side drawers immediately (so arrows never "die")
-  // even if later setup crashes (drawer not created yet, etc.)
+  // ✅ FIX 1: drawer toggle should NOT reset the cloud (no redraw)
+  // wire early so arrows never "die" even if later setup crashes
   wireWordcloudSideDrawers(root, {
-    onLayoutChange: () => {
-      try {
-        // drawer doesn't exist yet at wire time — keep safe + resilient
-        drawer?.draw?.(false);
-      } catch (e) {
-        console.warn("[wc] redraw fail", e);
-      }
-    },
+    // ✅ resizing drawers should NOT recompute the cloud
+    onLayoutChange: () => drawer.reflow?.() ?? drawer.draw(false),
   });
 
   // UI sync layer

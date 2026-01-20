@@ -16,10 +16,10 @@
  *
  * Exports:
  * - fmtDaysAgo(pos)
- * - createWordcloudDrawer({ ... }) -> { draw }
+ * - createWordcloudDrawer({ ... }) -> { draw, reflow }
  */
 
-import { drawWordcloud } from "./render.js";
+import { drawWordcloud, renderWordcloudView } from "./render.js";
 import { filterAttemptsByRange, idFromItem, lower } from "./compute.js";
 import { computeItemsForView } from "./view-logic.js";
 
@@ -215,8 +215,34 @@ export function createWordcloudDrawer({
     });
   }
 
+  // ✅ FIX 2: True "reflow only" method (no recompute / no reshuffle)
+  function reflow() {
+    const items = ctx?.refs?.lastItems || [];
+    if (!dom?.canvas || !items.length) return;
+
+    const S = getState();
+    const q = (S.query || "").trim().toLowerCase();
+
+    const focusTest = q
+      ? (idLower) => String(idLower || "").toLowerCase().includes(q)
+      : null;
+
+    // ✅ Repaint using cached layout (no reshuffle)
+    renderWordcloudView({
+      canvas: dom.canvas,
+      items,
+      focusTest,
+      clusterMode: !!S.clusterMode,
+      pinnedSet: strips.pinnedSetNow?.() || new Set(),
+      onSelect: (hit) => sheetCtrl?.openFromHit?.(hit),
+      onRenderEnd: () => {},
+      reuseLayoutOnly: true,
+    });
+  }
+
   return {
     draw,
+    reflow,
     renderSeqRef: _renderSeq, // exposed for debugging if needed
   };
 }

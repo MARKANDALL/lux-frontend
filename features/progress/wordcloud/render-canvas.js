@@ -31,6 +31,7 @@ function hexToRgba(hex = "#000000", a = 0.2) {
  *  - clusterMode: boolean
  *  - pinnedSet: Set<string lower>
  *  - onRenderEnd({ reason })
+ *  - reuseLayoutOnly: boolean (✅ reflow-only repaint using cached layout)
  */
 export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
   if (!canvas) return;
@@ -86,9 +87,9 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
   const minC = Math.min(...counts);
 
   // ✅ Stronger contrast curve for font sizing
-  const MIN_FONT = 12; // was effectively 16
-  const MAX_FONT = 88; // was 62
-  const SPREAD_EXP = 1.6; // >1 makes SMALL smaller + BIG bigger
+  const MIN_FONT = 16; // ✅ bigger tiny words
+  const MAX_FONT = 118; // ✅ bigger big words
+  const SPREAD_EXP = 1.35;
 
   const sizeForCount = (c) => {
     const t = (Number(c || 0) - minC) / Math.max(1, maxC - minC);
@@ -115,6 +116,9 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
       _pinned: pinnedSet.has(id),
     };
   });
+
+  // ✅ stable layout signature (prevents shuffle-reset on drawer reflow)
+  const layoutSig = items.map((it) => it.id).join("\u001f");
 
   const d3 = window.d3;
   const cloudFactory = d3?.layout?.cloud || window.cloud;
@@ -338,7 +342,16 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
 
   function layoutAndDraw(layoutWords) {
     placed = layoutWords;
- fadeStart = performance.now() - FADE_MS; // ✅ show immediately (no invisible first frame)
+
+    // ✅ cache last layout so drawer reflow doesn't reshuffle
+    canvas.__lux_wc_layout = {
+      sig: layoutSig,
+      w,
+      h,
+      placed: layoutWords.map((d) => ({ ...d })),
+    };
+
+    fadeStart = performance.now() - FADE_MS; // ✅ show immediately (no invisible first frame)
     hoverIdx = -1;
     ripple = null;
     paint();
@@ -347,6 +360,24 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
 
   // ✅ Adaptive padding helps 40–60 items pack
   const pad = items.length >= 40 ? 1 : 2;
+
+  // ✅ Drawer slide reflow: reuse existing placed words (no recompute)
+  if (opts.reuseLayoutOnly) {
+    const prev = canvas.__lux_wc_layout;
+    if (prev && prev.placed && prev.sig === layoutSig) {
+      const s = Math.min(w / prev.w, h / prev.h) || 1;
+
+      const scaled = prev.placed.map((d) => ({
+        ...d,
+        x: d.x * s,
+        y: d.y * s,
+        size: d.size * s,
+      }));
+
+      layoutAndDraw(scaled);
+      return;
+    }
+  }
 
   // If layout is slow, log once (but DO NOT hide overlay early).
   slowTimer = setTimeout(() => {

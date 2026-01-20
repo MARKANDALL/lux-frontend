@@ -13,6 +13,7 @@ export function renderWordcloudView({
   pinnedSet,
   onSelect,
   onRenderEnd,
+  reuseLayoutOnly = false,
 }) {
   // IMPORTANT: preserve your onRenderEnd hook
   renderWordCloudCanvas(canvas, items, {
@@ -21,6 +22,7 @@ export function renderWordcloudView({
     pinnedSet,
     onSelect,
     onRenderEnd,
+    reuseLayoutOnly,
   });
 }
 

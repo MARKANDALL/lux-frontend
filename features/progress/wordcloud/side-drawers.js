@@ -1,11 +1,11 @@
 // features/progress/wordcloud/side-drawers.js
+// ✅ Drawer wiring (safe localStorage + no redraw reset)
 
 const KEY = "lux_wc_drawers_v1";
 
 function safeParse(json, fallback) {
   try {
     const v = JSON.parse(json);
-    // ✅ handle "null", "", numbers, strings, etc.
     if (!v || typeof v !== "object") return fallback;
     return v;
   } catch {
@@ -13,73 +13,75 @@ function safeParse(json, fallback) {
   }
 }
 
+function updateTabIcon(el, side, open) {
+  const tab = el.querySelector("[data-wc-drawer-toggle]");
+  if (!tab) return;
+
+  // Arrow shows the direction it will MOVE when clicked
+  // left open → will move right (collapse) → ▶
+  // left closed → will move left (expand) → ◀
+  if (side === "left") tab.textContent = open ? "▶" : "◀";
+  else tab.textContent = open ? "◀" : "▶";
+}
+
 export function wireWordcloudSideDrawers(root, { onLayoutChange } = {}) {
-  const dock = root.querySelector("[data-wc-dock]");
   const left = root.querySelector('[data-wc-drawer="left"]');
   const right = root.querySelector('[data-wc-drawer="right"]');
 
-  if (!dock || !left || !right) {
-    console.warn("[wc] drawers: missing dock/left/right nodes");
+  if (!left || !right) {
+    console.warn("[wc] missing drawers", { left: !!left, right: !!right });
     return;
   }
 
   const fallbackState = { leftOpen: true, rightOpen: true };
   const saved = safeParse(localStorage.getItem(KEY), fallbackState);
 
-  // ✅ auto-heal corrupted state (e.g. localStorage value is "null")
-  if (!saved || typeof saved !== "object") {
-    localStorage.removeItem(KEY);
-  }
-
-  function applyCols() {
-    const leftOpen = !left.classList.contains("is-closed");
-    const rightOpen = !right.classList.contains("is-closed");
-
-    dock.style.setProperty("--wc-left-col", leftOpen ? "260px" : "40px");
-    dock.style.setProperty("--wc-right-col", rightOpen ? "260px" : "40px");
-  }
+  let state = {
+    leftOpen: !!saved.leftOpen,
+    rightOpen: !!saved.rightOpen,
+  };
 
   function persist() {
-    const state = {
-      leftOpen: !left.classList.contains("is-closed"),
-      rightOpen: !right.classList.contains("is-closed"),
-    };
     localStorage.setItem(KEY, JSON.stringify(state));
   }
 
-  function setOpen(side, open) {
+  function setOpen(side, open, { silent = false } = {}) {
     const el = side === "left" ? left : right;
+
     el.classList.toggle("is-closed", !open);
 
-    const tab = el.querySelector(".wcDrawerTab");
-    if (tab) tab.setAttribute("aria-expanded", String(open));
+    const tab = el.querySelector("[data-wc-drawer-toggle]");
+    if (tab) tab.setAttribute("aria-expanded", open ? "true" : "false");
 
-    applyCols();
+    updateTabIcon(el, side, open);
+
+    if (side === "left") state.leftOpen = open;
+    else state.rightOpen = open;
+
     persist();
 
-    if (onLayoutChange) {
-      requestAnimationFrame(() => onLayoutChange());
+    if (!silent) {
+      // allow CSS to settle then reflow canvas only
+      requestAnimationFrame(() => onLayoutChange?.());
     }
   }
 
-  // init
-  setOpen("left", saved.leftOpen !== false);
-  setOpen("right", saved.rightOpen !== false);
+  // ✅ Init WITHOUT firing two layout changes
+  setOpen("left", state.leftOpen, { silent: true });
+  setOpen("right", state.rightOpen, { silent: true });
 
-  // tab click wiring
+  // ✅ one reflow after both are set
+  requestAnimationFrame(() => onLayoutChange?.());
+
+  // Toggle clicks
   root.querySelectorAll("[data-wc-drawer-toggle]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const side = btn.getAttribute("data-wc-drawer-toggle");
+      if (!side) return;
+
       const el = side === "left" ? left : right;
       const openNow = !el.classList.contains("is-closed");
       setOpen(side, !openNow);
     });
-  });
-
-  // redraw after transitions end (smooth canvas resizing)
-  root.addEventListener("transitionend", (e) => {
-    if (e.target?.classList?.contains("wcDrawerPanel")) {
-      onLayoutChange?.();
-    }
   });
 }

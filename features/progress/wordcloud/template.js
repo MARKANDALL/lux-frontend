@@ -256,12 +256,6 @@ export function wordcloudTemplateHtml() {
                     title="Reload history and redraw the cloud."
                   >Refresh</button>
 
-                  <button class="lux-pbtn lux-pbtn--ghost" id="luxWcBack"
-                    data-tip="Return to My Progress."
-                    title="Return to My Progress."
-                  >← Back</button>
-                </div>
-
                 <!-- Power row -->
                 <div class="lux-wc-powerRow">
                   <button class="lux-pbtn lux-wc-genTop" id="luxWcGenTop"

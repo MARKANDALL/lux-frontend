@@ -17,8 +17,12 @@ function ensureStyles() {
       position:fixed;
       top:12px;left:12px;
       z-index:9999;
-      border-radius:14px;
-      padding:10px 12px;
+
+      /* ✅ Outer container creates visible "frame" around the white panel */
+      padding: 10px 14px 14px 10px; /* a tiny extra on RIGHT + bottom */
+      background: rgba(255,255,255,0.55);
+      border-radius: 18px;
+
       font:600 14px system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
       box-shadow:0 6px 18px rgba(0,0,0,.25);
 
@@ -115,6 +119,17 @@ function ensureStyles() {
       border-radius:16px;
       padding:12px;
       overflow:hidden;       /* ✅ inner box cannot overlap */
+
+      /* ✅ Inner white panel never exceeds container width */
+      width: 100%;
+      max-width: 100%;
+    }
+
+    /* ✅ Prevent waveform/canvas from forcing overflow */
+    #selfpb-lite canvas,
+    #selfpb-lite .spb-wave,
+    #selfpb-lite #spb-wavebox{
+      max-width: 100% !important;
     }
 
     #selfpb-lite .spb-wave{
@@ -167,6 +182,52 @@ function ensureStyles() {
       display:grid;
       place-items:center;
       padding:8px 0;
+    }
+
+    /* ✅ Download icon should be Lux-blue (match TTS download vibe) */
+    #selfpb-lite #spb-dl{
+      background: rgba(47,111,228,0.14);
+      color: #2f6fe4;
+      font-weight: 900;
+    }
+
+    /* ✅ Scrubber: thicker + more "timeline" looking than speed */
+    #selfpb-lite #spb-scrub{
+      height: 18px;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    #selfpb-lite #spb-scrub::-webkit-slider-runnable-track{
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.14);
+    }
+
+    #selfpb-lite #spb-scrub::-webkit-slider-thumb{
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #2f6fe4;
+      border: 2px solid #fff;
+      margin-top: -4px;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.18);
+    }
+
+    /* ✅ Speed slider: slimmer + quieter */
+    #selfpb-lite #spb-rate::-webkit-slider-runnable-track{
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.10);
+    }
+    #selfpb-lite #spb-rate::-webkit-slider-thumb{
+      -webkit-appearance:none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: rgba(15,23,42,0.60);
+      margin-top: -4px;
     }
 
     /* bottom row: -2s ⬇ +2s */
