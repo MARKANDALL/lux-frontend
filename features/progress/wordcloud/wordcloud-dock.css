@@ -80,10 +80,8 @@
   width: var(--wc-side-col);
   position: relative;
   z-index: 4;
-}
 
-/* ✅ FIX: drawers must stretch vertically so absolute panels can fill height */
-.wcDrawer {
+  /* ✅ FIX: drawers must stretch vertically so absolute panels can fill height */
   align-self: stretch;
   height: 100%;
 }
@@ -96,12 +94,23 @@
   width: var(--wc-drawer-w);
 
   border-radius: 16px;
-  overflow: hidden;
+
+  /* ✅ important: don't clip inner content + tooltips */
+  overflow: visible;
+
   background: rgba(20, 28, 42, 0.55);
   box-shadow: 0 14px 28px rgba(0,0,0,0.18);
 
+  /* ✅ allow header + scrollable body */
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+
   transition: transform 220ms ease;
   will-change: transform;
+
+  /* default = above stage when OPEN */
+  z-index: 4;
 }
 
 .wcDrawerHeader {
@@ -115,15 +124,28 @@
   padding: 10px 12px 14px;
   display: grid;
   gap: 10px;
+
+  /* ✅ content never spills out */
+  overflow: auto;
+  min-height: 0;
 }
 
 /* OPEN state = panel is outside, not stealing center */
 .wcDrawer--left .wcDrawerPanel { right: 0; }
 .wcDrawer--right .wcDrawerPanel { left: 0; }
 
-/* CLOSED state = slide fully offscreen outward */
-.wcDrawer--left.is-closed .wcDrawerPanel { transform: translateX(-100%); }
-.wcDrawer--right.is-closed .wcDrawerPanel { transform: translateX(100%); }
+/* ✅ CLOSED state = slide behind the stage (toward center) */
+.wcDrawer--left.is-closed .wcDrawerPanel  { 
+  transform: translateX(calc(100% + var(--wc-gap)));
+  z-index: 2;
+  pointer-events: none;
+}
+
+.wcDrawer--right.is-closed .wcDrawerPanel { 
+  transform: translateX(calc(-100% - var(--wc-gap)));
+  z-index: 2;
+  pointer-events: none;
+}
 
 /* Tabs sit at the stage edge */
 /* ✅ FIX: readable tab on light UI */
@@ -160,6 +182,35 @@
 .wcDrawer--left .wcDrawerTab { right: -12px; }
 .wcDrawer--right .wcDrawerTab { left: -12px; }
 
+/* =========================
+   Drawer Timeline: label/value ABOVE slider
+========================= */
+.wcDrawerBody .lux-wc-timelineGroup{
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    "label val"
+    "range range";
+  gap: 6px 10px;
+  align-items: center;
+}
+
+.wcDrawerBody .lux-wc-tlineMini{
+  grid-area: label;
+  min-width: 0;
+}
+
+.wcDrawerBody .lux-wc-tlineVal{
+  grid-area: val;
+  min-width: 0;
+  text-align: right;
+}
+
+.wcDrawerBody .lux-wc-timelineGroup input[type="range"]{
+  grid-area: range;
+  width: 100% !important;
+}
+
 /* ---------------------------
    Mobile fallback: stack everything
 --------------------------- */
@@ -177,6 +228,8 @@
     position: relative;
     width: 100%;
     transform: none !important;
+    pointer-events: auto;
+    z-index: 4;
   }
 }
 
