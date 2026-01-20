@@ -111,6 +111,21 @@ export function mountMyWordsPanel({
   function entryHTML(e) {
     const dotCls = `lux-mw-dot ${esc(e.mw_cls || "mw-new")}`;
     const titleText = `${e.pinned ? "📌 " : ""}${e.text || ""}`;
+    const isArchived = !!e.archived;
+
+    const actions = isArchived
+      ? `
+          <button class="lux-mw-act" data-act="copy">Copy</button>
+          <button class="lux-mw-act" data-act="wr">WR</button>
+          <button class="lux-mw-act" data-act="restore">Restore</button>
+        `
+      : `
+          ${onSendToInput ? `<button class="lux-mw-act" data-act="send">Send</button>` : ""}
+          <button class="lux-mw-act" data-act="copy">Copy</button>
+          <button class="lux-mw-act" data-act="wr">WR</button>
+          <button class="lux-mw-act" data-act="pin">${e.pinned ? "Unpin" : "Pin"}</button>
+          <button class="lux-mw-act danger" data-act="archive">Archive</button>
+        `;
 
     return `
       <div class="lux-mw-entry" data-id="${esc(e.id)}">
@@ -123,11 +138,7 @@ export function mountMyWordsPanel({
         </div>
 
         <div class="lux-mw-actions">
-          ${onSendToInput ? `<button class="lux-mw-act" data-act="send">Send</button>` : ""}
-          <button class="lux-mw-act" data-act="copy">Copy</button>
-          <button class="lux-mw-act" data-act="wr">WR</button>
-          <button class="lux-mw-act" data-act="pin">${e.pinned ? "Unpin" : "Pin"}</button>
-          <button class="lux-mw-act danger" data-act="archive">Archive</button>
+          ${actions}
         </div>
       </div>
     `;
@@ -233,6 +244,11 @@ export function mountMyWordsPanel({
 
     if (act === "archive") {
       store.archive(id);
+      return;
+    }
+
+    if (act === "restore") {
+      store.restore(id);
       return;
     }
   });

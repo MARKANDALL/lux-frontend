@@ -6,7 +6,11 @@ const LS_KEY_PREFIX = "lux_my_words_v1:";
 const LS_OPEN_PREFIX = "lux_my_words_open_v1:";
 
 function safeParse(json, fallback) {
-  try { return JSON.parse(json); } catch { return fallback; }
+  try {
+    return JSON.parse(json);
+  } catch {
+    return fallback;
+  }
 }
 
 function nowISO() {
@@ -28,12 +32,14 @@ export function createMyWordsStore({ uid, onMutation } = {}) {
     uid,
     open: false,
     query: "",
-    entries: []
+    entries: [],
   };
 
   function emit() {
     subs.forEach((fn) => {
-      try { fn(state); } catch (_) {}
+      try {
+        fn(state);
+      } catch (_) {}
     });
   }
 
@@ -63,7 +69,9 @@ export function createMyWordsStore({ uid, onMutation } = {}) {
   }
 
   function mut(payload) {
-    try { onMutation?.(payload); } catch (_) {}
+    try {
+      onMutation?.(payload);
+    } catch (_) {}
   }
 
   function getState() {
@@ -112,7 +120,9 @@ export function createMyWordsStore({ uid, onMutation } = {}) {
     if (!lines.length) return { added: 0, merged: 0, lines: [] };
 
     const byNorm = new Map();
-    state.entries.forEach((e) => byNorm.set(normalizeText(e.normalized_text || e.text), e));
+    state.entries.forEach((e) =>
+      byNorm.set(normalizeText(e.normalized_text || e.text), e)
+    );
 
     let added = 0;
     let merged = 0;
@@ -137,7 +147,7 @@ export function createMyWordsStore({ uid, onMutation } = {}) {
           pinned: false,
           archived: false,
           created_at: nowISO(),
-          updated_at: nowISO()
+          updated_at: nowISO(),
         };
         state.entries.push(entry);
         byNorm.set(norm, entry);
@@ -173,6 +183,16 @@ export function createMyWordsStore({ uid, onMutation } = {}) {
     mut({ type: "archive", id });
   }
 
+  function restore(id) {
+    const e = state.entries.find((x) => x.id === id);
+    if (!e) return;
+    e.archived = false;
+    e.updated_at = nowISO();
+    persist();
+    emit();
+    mut({ type: "restore", id });
+  }
+
   function hardDelete(id) {
     state.entries = state.entries.filter((x) => x.id !== id);
     persist();
@@ -194,7 +214,6 @@ export function createMyWordsStore({ uid, onMutation } = {}) {
 
     setOpen,
     toggleOpen,
-
     setQuery,
     visibleEntries,
 
@@ -202,6 +221,7 @@ export function createMyWordsStore({ uid, onMutation } = {}) {
     addMany,
     togglePin,
     archive,
-    hardDelete
+    restore, // ✅ add this
+    hardDelete,
   };
 }

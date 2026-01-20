@@ -13,7 +13,7 @@ import {
   fetchMyWords,
   upsertManyMyWords,
   setPinned,
-  archiveEntry,
+  setArchived,
   deleteEntry,
 } from "./service.js";
 
@@ -106,7 +106,11 @@ export function initMyWordsGlobal({ uid, inputEl } = {}) {
         }
 
         if (evt.type === "archive") {
-          await archiveEntry(authedUID, evt.id);
+          await setArchived(authedUID, evt.id, true);
+        }
+
+        if (evt.type === "restore") {
+          await setArchived(authedUID, evt.id, false);
         }
 
         if (evt.type === "hardDelete") {

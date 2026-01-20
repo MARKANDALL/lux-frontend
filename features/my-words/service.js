@@ -88,6 +88,18 @@ export async function archiveEntry(uid, id) {
   if (error) console.warn("[my-words] archiveEntry error:", error);
 }
 
+export async function setArchived(uid, id, archived) {
+  if (!uid || !id) return;
+
+  const { error } = await supabase
+    .from("my_words_entries")
+    .update({ archived: !!archived, updated_at: new Date().toISOString() })
+    .eq("uid", uid)
+    .eq("id", id);
+
+  if (error) console.warn("[my-words] setArchived error:", error);
+}
+
 export async function deleteEntry(uid, id) {
   if (!uid || !id) return;
 

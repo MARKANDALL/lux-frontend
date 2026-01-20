@@ -81,6 +81,30 @@
   gap:8px;
 }
 
+/* ✅ PHASE 5 — Active / Archived tabs (modal) */
+.lux-mw-tabs{
+  display:flex;
+  gap:6px;
+  padding: 6px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.6);
+  border: 1px solid rgba(0,0,0,.08);
+}
+
+.lux-mw-tab{
+  border:0;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 12px;
+  cursor: pointer;
+  background: transparent;
+}
+
+.lux-mw-tab.is-active{
+  background: rgba(0,0,0,.08);
+}
+
 .lux-mw-search{
   width: 170px;
   max-width: 34vw;
