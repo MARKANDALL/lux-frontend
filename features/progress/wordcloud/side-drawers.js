@@ -3,7 +3,14 @@
 const KEY = "lux_wc_drawers_v1";
 
 function safeParse(json, fallback) {
-  try { return JSON.parse(json); } catch { return fallback; }
+  try {
+    const v = JSON.parse(json);
+    // ✅ handle "null", "", numbers, strings, etc.
+    if (!v || typeof v !== "object") return fallback;
+    return v;
+  } catch {
+    return fallback;
+  }
 }
 
 export function wireWordcloudSideDrawers(root, { onLayoutChange } = {}) {
@@ -16,7 +23,13 @@ export function wireWordcloudSideDrawers(root, { onLayoutChange } = {}) {
     return;
   }
 
-  const saved = safeParse(localStorage.getItem(KEY), { leftOpen: true, rightOpen: true });
+  const fallbackState = { leftOpen: true, rightOpen: true };
+  const saved = safeParse(localStorage.getItem(KEY), fallbackState);
+
+  // ✅ auto-heal corrupted state (e.g. localStorage value is "null")
+  if (!saved || typeof saved !== "object") {
+    localStorage.removeItem(KEY);
+  }
 
   function applyCols() {
     const leftOpen = !left.classList.contains("is-closed");
@@ -50,8 +63,8 @@ export function wireWordcloudSideDrawers(root, { onLayoutChange } = {}) {
   }
 
   // init
-  setOpen("left", !!saved.leftOpen);
-  setOpen("right", !!saved.rightOpen);
+  setOpen("left", saved.leftOpen !== false);
+  setOpen("right", saved.rightOpen !== false);
 
   // tab click wiring
   root.querySelectorAll("[data-wc-drawer-toggle]").forEach((btn) => {
