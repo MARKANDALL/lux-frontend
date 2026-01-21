@@ -231,6 +231,7 @@ export function wordcloudTemplateHtml() {
                     id="luxWcModeWords"
                     class="lux-wc-pill"
                     data-mode="words"
+                    data-tip-pos="down"
                     data-tip="Show word targets (size = frequency, color = difficulty)."
                     title="Show word targets (size = frequency, color = difficulty)."
                   >Words</button>
@@ -239,6 +240,7 @@ export function wordcloudTemplateHtml() {
                     id="luxWcModePhonemes"
                     class="lux-wc-pill"
                     data-mode="phonemes"
+                    data-tip-pos="down"
                     data-tip="Show sound targets (phonemes) instead of words."
                     title="Show sound targets (phonemes) instead of words."
                   >Phonemes</button>

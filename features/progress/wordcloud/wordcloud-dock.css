@@ -319,3 +319,14 @@
 .wcDrawerPanel [data-tip]:focus-visible::after{
   transform: translateY(0) !important;
 }
+/* =========================
+   ✅ Tooltip: force DOWN for top mode pills
+========================= */
+.wcDrawerPanel [data-tip-pos="down"]::after{
+  bottom: auto !important;
+  top: calc(100% + 10px) !important;
+
+  /* our drawer tooltip override removes translateX already,
+     so we only animate Y */
+  transform: translateY(-4px) !important;
+}

@@ -14,31 +14,41 @@ function ensureStyles() {
   s.textContent = `
     /* Light Theme + Layout Styles */
 
-    /* ✅ OUTER frame always wraps the inner panel */
+    /* ✅ OUTER bezel: always hugs inner width perfectly */
     #selfpb-lite{
       position: fixed;
       top: 12px;
       left: 12px;
       z-index: 9999;
 
-      /* ✅ key: let the OUTER size itself to the inner */
-      width: fit-content;
+      /* 🔒 lock inner width into a variable so outer can wrap it */
+      --spbW: min(390px, calc(100vw - 48px));
+
+      width: calc(var(--spbW) + 24px);  /* ✅ inner + bezel */
       max-width: calc(100vw - 24px);
-      display: inline-block;
 
-      padding: 10px 14px 14px 10px; /* extra right + bottom bezel */
+      padding: 10px 14px 14px 10px;     /* bezel (extra right/bottom) */
       border-radius: 18px;
-      background: rgba(255,255,255,0.55);
 
-      font:600 14px system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-      box-shadow:0 6px 18px rgba(0,0,0,.25);
+      /* ✅ make bezel visible */
+      background: rgba(15,23,42,0.06);
+      border: 1px solid rgba(15,23,42,0.10);
+      box-shadow: 0 10px 26px rgba(0,0,0,0.22);
 
       box-sizing: border-box;
-      overflow: hidden;
-      overflow-x: hidden;
+      overflow: visible; /* ✅ don’t clip the bezel */
     }
 
-    #selfpb-lite * { box-sizing: border-box; }
+    #selfpb-lite *{ box-sizing:border-box; }
+
+    /* ✅ INNER panel always matches spbW */
+    #selfpb-lite .spb-body{
+      width: var(--spbW);
+      background: #fff;
+      border-radius: 16px;
+      padding: 12px;
+      overflow: hidden;
+    }
 
     #selfpb-lite .row{
       display:flex;
@@ -76,7 +86,7 @@ function ensureStyles() {
     #selfpb-lite .pill{border-radius:999px;padding:6px 10px}
     #selfpb-lite .meta{opacity:.85}
 
-    :is(#selfpb-lite, #spb-modalCard) input[type="range"]{accent-color:#2d6cdf}
+    :is(#selfpb-lite, #spb-float) input[type="range"]{accent-color:#2d6cdf}
 
     #selfpb-lite .ab{display:flex;gap:6px;position:relative;}
     #selfpb-lite .tiny{font-weight:700;opacity:.8}
@@ -113,31 +123,19 @@ function ensureStyles() {
       border-top: 4px solid rgba(0,0,0,0.85);
     }
 
-    /* ✅ INNER panel defines the real usable width */
-    :is(#selfpb-lite, #spb-modalCard) .spb-body{
-      width: min(390px, calc(100vw - 48px)); /* ✅ inner width (in floating mode) */
-      max-width: 100%;
-      background: #fff;
-      border-radius: 16px;
-      padding: 12px;
-
-      box-sizing: border-box;
-      overflow: hidden;
-    }
-
-    /* ✅ In expanded mode, body fills modal card */
-    #spb-modalCard .spb-body{
+    /* ✅ In expanded mode, body fills floating card */
+    #spb-float .spb-body{
       width: 100% !important;
     }
 
     /* ✅ Prevent waveform/canvas from forcing overflow */
-    :is(#selfpb-lite, #spb-modalCard) canvas,
-    :is(#selfpb-lite, #spb-modalCard) .spb-wave,
-    :is(#selfpb-lite, #spb-modalCard) #spb-wavebox{
+    :is(#selfpb-lite, #spb-float) canvas,
+    :is(#selfpb-lite, #spb-float) .spb-wave,
+    :is(#selfpb-lite, #spb-float) #spb-wavebox{
       max-width: 100% !important;
     }
 
-    :is(#selfpb-lite, #spb-modalCard) .spb-wave{
+    :is(#selfpb-lite, #spb-float) .spb-wave{
       height:92px;
       border-radius:12px;
       background: rgba(15,23,42,0.04);
@@ -149,7 +147,7 @@ function ensureStyles() {
     }
 
     /* rows */
-    :is(#selfpb-lite, #spb-modalCard) .spb-row{
+    :is(#selfpb-lite, #spb-float) .spb-row{
       display:flex;
       align-items:center;
       gap:10px;
@@ -157,14 +155,14 @@ function ensureStyles() {
       width:100%;
     }
 
-    :is(#selfpb-lite, #spb-modalCard) .spb-row + .spb-row{ margin-top:8px; }
+    :is(#selfpb-lite, #spb-float) .spb-row + .spb-row{ margin-top:8px; }
 
-    :is(#selfpb-lite, #spb-modalCard) .spb-scrub{
+    :is(#selfpb-lite, #spb-float) .spb-scrub{
       width:100%;
       min-width:0;
     }
 
-    :is(#selfpb-lite, #spb-modalCard) .spb-btn{
+    :is(#selfpb-lite, #spb-float) .spb-btn{
       border:0;
       border-radius:10px;
       padding:8px 12px;
@@ -176,40 +174,49 @@ function ensureStyles() {
       white-space:nowrap;
     }
 
-    :is(#selfpb-lite, #spb-modalCard) .spb-btn.secondary{
+    :is(#selfpb-lite, #spb-float) .spb-btn.secondary{
       background: rgba(15,23,42,0.08);
       color: rgba(15,23,42,0.85);
       box-shadow:none;
     }
 
-    :is(#selfpb-lite, #spb-modalCard) .spb-btn.icon{
+    :is(#selfpb-lite, #spb-float) .spb-btn.icon{
       width:44px;
       display:grid;
       place-items:center;
       padding:8px 0;
     }
 
-    /* ✅ Download arrow: Lux blue */
-    :is(#selfpb-lite, #spb-modalCard) #spb-dl{
-      color: #2f6fe4;
-      font-weight: 900;
-      background: rgba(47,111,228,0.14);
+    /* ✅ Download arrow matches TTS (blue link-style) */
+    #selfpb-lite #spb-dl{
+      background: transparent !important;
+      box-shadow: none !important;
+      border: 0 !important;
+
+      color: #0078d7 !important;   /* ✅ same as .tts-link */
+      font-size: 1.8rem;
+      line-height: 1;
+      padding: 6px 10px;
+    }
+
+    #selfpb-lite #spb-dl:hover{
+      filter: brightness(0.9);
     }
 
     /* ✅ Scrubber: looks like a real timeline */
-    :is(#selfpb-lite, #spb-modalCard) #spb-scrub{
+    :is(#selfpb-lite, #spb-float) #spb-scrub{
       -webkit-appearance: none;
       appearance: none;
       height: 18px;
     }
 
-    :is(#selfpb-lite, #spb-modalCard) #spb-scrub::-webkit-slider-runnable-track{
+    :is(#selfpb-lite, #spb-float) #spb-scrub::-webkit-slider-runnable-track{
       height: 10px;
       border-radius: 999px;
       background: rgba(15,23,42,0.14);
     }
 
-    :is(#selfpb-lite, #spb-modalCard) #spb-scrub::-webkit-slider-thumb{
+    :is(#selfpb-lite, #spb-float) #spb-scrub::-webkit-slider-thumb{
       -webkit-appearance: none;
       width: 18px;
       height: 18px;
@@ -221,12 +228,12 @@ function ensureStyles() {
     }
 
     /* ✅ Speed stays slimmer + quieter */
-    :is(#selfpb-lite, #spb-modalCard) #spb-rate::-webkit-slider-runnable-track{
+    :is(#selfpb-lite, #spb-float) #spb-rate::-webkit-slider-runnable-track{
       height: 6px;
       border-radius: 999px;
       background: rgba(15,23,42,0.10);
     }
-    :is(#selfpb-lite, #spb-modalCard) #spb-rate::-webkit-slider-thumb{
+    :is(#selfpb-lite, #spb-float) #spb-rate::-webkit-slider-thumb{
       -webkit-appearance:none;
       width: 14px;
       height: 14px;
@@ -236,7 +243,7 @@ function ensureStyles() {
     }
 
     /* bottom row: -2s ⬇ +2s */
-    :is(#selfpb-lite, #spb-modalCard) .spb-bottom{
+    :is(#selfpb-lite, #spb-float) .spb-bottom{
       justify-content:space-between;
     }
 
@@ -257,34 +264,53 @@ function ensureStyles() {
       filter: brightness(1.12);
     }
 
-    /* ✅ Expanded Self Playback modal */
-    #spb-modalShade{
+    /* ✅ Floating expanded window (non-modal) */
+    #spb-float{
       position: fixed;
-      inset: 0;
       z-index: 200000;
-      background: rgba(0,0,0,0.35);
       display: none;
-      align-items: center;
-      justify-content: center;
-    }
 
-    #spb-modalShade.is-open{ display: flex; }
+      width: min(920px, calc(100vw - 40px));
+      max-height: min(720px, calc(100vh - 40px));
 
-    #spb-modalCard{
-      width: min(900px, calc(100vw - 40px));
-      max-height: min(680px, calc(100vh - 40px));
+      left: 50%;
+      top: 90px;
+      transform: translateX(-50%);
+
       border-radius: 22px;
-      background: rgba(255,255,255,0.92);
-      box-shadow: 0 18px 50px rgba(0,0,0,0.30);
-      padding: 14px;
-      box-sizing: border-box;
+      background: rgba(255,255,255,0.96);
+      border: 1px solid rgba(15,23,42,0.12);
+      box-shadow: 0 18px 52px rgba(0,0,0,0.30);
+      overflow: hidden;
     }
 
-    #spb-modalCard *{ box-sizing: border-box; }
+    #spb-float.is-open{ display:block; }
 
-    /* ✅ Bigger wave area in expanded mode */
-    #spb-modalCard #spb-wavebox{
-      height: 220px;
+    #spb-floatHead{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding: 10px 12px;
+      font-weight: 900;
+      cursor: grab;            /* ✅ draggable */
+      user-select: none;
+      background: rgba(15,23,42,0.04);
+    }
+
+    #spb-floatHead:active{ cursor: grabbing; }
+
+    #spb-floatMount{
+      padding: 12px;
+    }
+
+    /* ✅ bigger waveform in expanded mode */
+    #spb-float #spb-wavebox{
+      height: 240px;
+    }
+
+    /* ✅ expanded mode: speed slider not absurdly wide */
+    #spb-float #spb-rate{
+      max-width: 320px;
     }
   `;
 
@@ -332,10 +358,11 @@ function buildUI() {
         <div style="min-width:54px; font-weight:800; opacity:.75;">Speed</div>
         <input id="spb-rate" type="range" min="0.5" max="1.5" step="0.05" value="1" style="flex:1; min-width:0;">
         <div id="spb-rate-val" style="min-width:54px; text-align:right; font-weight:900;">1.00×</div>
+        <div id="spb-loop-slot" style="min-width:110px; text-align:right; font-weight:900; opacity:.75;"></div>
       </div>
 
       <!-- ✅ Loop status text -->
-      <div class="spb-row">
+      <div class="spb-row" id="spb-loop-row">
         <div id="spb-ab-label" style="font-weight:800; opacity:.75;">Loop: Off</div>
       </div>
 
@@ -360,53 +387,87 @@ function buildUI() {
 
   document.body.appendChild(host);
 
-  // ✅ Expanded modal shell (create once)
-  let shade = document.getElementById("spb-modalShade");
-  if (!shade) {
-    shade = document.createElement("div");
-    shade.id = "spb-modalShade";
-    shade.innerHTML = `
-      <div id="spb-modalCard">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-          <div style="font-weight:900;opacity:.85;">Self Playback (Expanded)</div>
-          <button id="spb-modalClose" class="spb-btn secondary icon" title="Close">✕</button>
-        </div>
-        <div id="spb-modalMount"></div>
+  // ✅ Expanded floating window (create once)
+  let float = document.getElementById("spb-float");
+  if (!float) {
+    float = document.createElement("div");
+    float.id = "spb-float";
+    float.innerHTML = `
+      <div id="spb-floatHead">
+        <div>Self Playback (Expanded)</div>
+        <button id="spb-floatClose" class="spb-btn secondary icon" title="Close">✕</button>
       </div>
+      <div id="spb-floatMount"></div>
     `;
-    document.body.appendChild(shade);
+    document.body.appendChild(float);
   }
 
-  const modalMount = shade.querySelector("#spb-modalMount");
-  const closeBtn = shade.querySelector("#spb-modalClose");
-  const expandBtn = host.querySelector("#spb-expand");
+  const floatHead = float.querySelector("#spb-floatHead");
+  const floatClose = float.querySelector("#spb-floatClose");
+  const floatMount = float.querySelector("#spb-floatMount");
 
+  const expandBtn = host.querySelector("#spb-expand");
   const body = host.querySelector(".spb-body");
   const bodyHome = body.parentElement;
   let bodyNext = body.nextSibling;
 
-  function openModal() {
+  const loopLabel = host.querySelector("#spb-ab-label");
+  const loopRow = host.querySelector("#spb-loop-row");
+  const loopSlot = host.querySelector("#spb-loop-slot");
+
+  function openExpanded() {
     bodyNext = body.nextSibling; // ✅ re-capture in case DOM changes
-    shade.classList.add("is-open");
-    modalMount.appendChild(body);
+    float.classList.add("is-open");
+    floatMount.appendChild(body);
+
+    // move Loop label into speed row slot (expanded only)
+    if (loopSlot && loopLabel) loopSlot.appendChild(loopLabel);
+    if (loopRow) loopRow.style.display = "none";
   }
 
-  function closeModal() {
-    shade.classList.remove("is-open");
+  function closeExpanded() {
+    float.classList.remove("is-open");
     bodyHome.insertBefore(body, bodyNext || null);
+
+    // put Loop label back into its normal row
+    if (loopRow && loopLabel) loopRow.appendChild(loopLabel);
+    if (loopRow) loopRow.style.display = "";
   }
 
-  expandBtn?.addEventListener("click", openModal);
-  closeBtn?.addEventListener("click", closeModal);
+  expandBtn?.addEventListener("click", openExpanded);
+  floatClose?.addEventListener("click", closeExpanded);
 
-  // click outside closes
-  shade.addEventListener("click", (e) => {
-    if (e.target === shade) closeModal();
+  // ✅ Drag floating expanded window
+  let dragOn = false;
+  let dragOffX = 0;
+  let dragOffY = 0;
+
+  floatHead.addEventListener("pointerdown", (e) => {
+    // prevent dragging when clicking the close button
+    if (e.target && e.target.id === "spb-floatClose") return;
+
+    dragOn = true;
+    const r = float.getBoundingClientRect();
+
+    // convert from centered transform layout -> absolute px positioning
+    float.style.transform = "none";
+    float.style.left = r.left + "px";
+    float.style.top = r.top + "px";
+
+    dragOffX = e.clientX - r.left;
+    dragOffY = e.clientY - r.top;
+
+    floatHead.setPointerCapture(e.pointerId);
   });
 
-  // ESC closes
-  window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && shade.classList.contains("is-open")) closeModal();
+  floatHead.addEventListener("pointermove", (e) => {
+    if (!dragOn) return;
+    float.style.left = e.clientX - dragOffX + "px";
+    float.style.top = e.clientY - dragOffY + "px";
+  });
+
+  floatHead.addEventListener("pointerup", () => {
+    dragOn = false;
   });
 
   return {
@@ -670,6 +731,13 @@ export function mountSelfPlaybackLite() {
     );
     syncTime();
     syncScrub();
+  });
+
+  // ✅ If user grabs scrubber while playing -> PAUSE (pro behavior)
+  ui.scrub.addEventListener("pointerdown", () => {
+    if (!audio.paused) {
+      audio.pause();
+    }
   });
 
   ui.scrub.addEventListener("input", () => {

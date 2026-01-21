@@ -133,6 +133,48 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
   // ✅ GLOBAL sizing boost (you want BIG + readable)
   const SIZE_MULT = 1.35;
 
+  // ✅ Fit-to-canvas helper (fill the square more)
+  function fitToCanvas(layoutWords) {
+    if (!layoutWords?.length) return layoutWords;
+
+    let minX = Infinity,
+      maxX = -Infinity,
+      minY = Infinity,
+      maxY = -Infinity;
+
+    for (const d of layoutWords) {
+      const base = (d._pinned ? d.size * PIN_BOOST : d.size) * SIZE_MULT;
+      ctx.font = `${Math.max(8, Math.round(base))}px system-ui`;
+
+      const m = ctx.measureText(d.text);
+      const left = m.actualBoundingBoxLeft ?? m.width / 2;
+      const right = m.actualBoundingBoxRight ?? m.width / 2;
+      const ascent = m.actualBoundingBoxAscent ?? base * 0.55;
+      const descent = m.actualBoundingBoxDescent ?? base * 0.45;
+
+      minX = Math.min(minX, d.x - left);
+      maxX = Math.max(maxX, d.x + right);
+      minY = Math.min(minY, d.y - ascent);
+      maxY = Math.max(maxY, d.y + descent);
+    }
+
+    const bw = maxX - minX;
+    const bh = maxY - minY;
+    if (!Number.isFinite(bw) || !Number.isFinite(bh) || bw < 20 || bh < 20)
+      return layoutWords;
+
+    const s = Math.min((w * 0.92) / bw, (h * 0.92) / bh);
+    const cx0 = (minX + maxX) / 2;
+    const cy0 = (minY + maxY) / 2;
+
+    return layoutWords.map((d) => ({
+      ...d,
+      x: (d.x - cx0) * s,
+      y: (d.y - cy0) * s,
+      size: d.size * s,
+    }));
+  }
+
   // Phase C state
   let placed = null;
   let boxes = [];
@@ -156,6 +198,8 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
 
     const cx = w / 2;
     const cy = h / 2;
+
+    const isDark = window.matchMedia?.("(prefers-color-scheme: dark)")?.matches;
 
     // search focus
     const focusFn = typeof opts?.focusTest === "function" ? opts.focusTest : null;
@@ -241,10 +285,11 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
       const pinMul = isPinned ? PIN_CENTER : 1;
 
       ctx.save();
-      ctx.translate(
-        cx + d.x * pinMul + pullX + driftX,
-        cy + d.y * pinMul + pullY + driftY
-      );
+
+      const centerX = cx + d.x * pinMul + pullX + driftX;
+      const centerY = cy + d.y * pinMul + pullY + driftY;
+
+      ctx.translate(centerX, centerY);
 
       const baseSize = d.size;
       const size =
@@ -264,8 +309,12 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
         ctx.fill();
       }
 
-      ctx.shadowColor = isHover ? glow : hexToRgba(col, 0.14);
-      ctx.shadowBlur = isHover ? 18 : 10;
+      // ✅ stronger, more visible halo on hover
+      ctx.shadowColor = isHover
+        ? hexToRgba(col, isDark ? 0.42 : 0.34)
+        : hexToRgba(col, isDark ? 0.18 : 0.14);
+
+      ctx.shadowBlur = isHover ? (isDark ? 28 : 22) : 10;
 
       ctx.globalAlpha = alpha;
       ctx.fillStyle = col;
@@ -275,29 +324,45 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
         ctx.shadowBlur = 0;
         ctx.globalAlpha = Math.max(alpha, 0.55);
         ctx.lineWidth = 3;
-        ctx.strokeStyle = "rgba(255,255,255,0.55)";
+
+        ctx.strokeStyle = isDark
+          ? "rgba(255,255,255,0.65)"
+          : "rgba(15,23,42,0.70)";
+
         ctx.strokeText(d.text, 0, 0);
         ctx.globalAlpha = alpha;
         ctx.fillStyle = col;
         ctx.fillText(d.text, 0, 0);
       }
 
-      // bbox
+      // bbox (tight) ✅ drastically reduces the “invisible halo” blocking clicks
       ctx.shadowBlur = 0;
-      const tw = ctx.measureText(d.text).width;
-      const th = size * 1.05;
+
+      const m = ctx.measureText(d.text);
+      const left = m.actualBoundingBoxLeft ?? m.width / 2;
+      const right = m.actualBoundingBoxRight ?? m.width / 2;
+      const ascent = m.actualBoundingBoxAscent ?? size * 0.55;
+      const descent = m.actualBoundingBoxDescent ?? size * 0.45;
+
+      const bw = left + right;
+      const bh = ascent + descent;
+
+      // tiny padding so it’s still easy to click (but not huge)
+      const padPx = Math.max(1, Math.round(size * 0.045));
 
       boxes.push({
         text: d.text,
         avg: d.avg,
         count: d.count,
         meta: d.meta,
-        x: cx + d.x * pinMul + pullX + driftX - tw / 2,
-        y: cy + d.y * pinMul + pullY + driftY - th / 2,
-        w: tw,
-        h: th,
-        cx: cx + d.x * pinMul + pullX + driftX,
-        cy: cy + d.y * pinMul + pullY + driftY,
+
+        x: centerX - left - padPx,
+        y: centerY - ascent - padPx,
+        w: bw + padPx * 2,
+        h: bh + padPx * 2,
+
+        cx: centerX,
+        cy: centerY,
         col,
       });
 
@@ -329,9 +394,12 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
   }
 
   function hitTest(mx, my) {
-    return boxes.findIndex(
-      (b) => mx >= b.x && mx <= b.x + b.w && my >= b.y && my <= b.y + b.h
-    );
+    // ✅ scan from topmost (last drawn) to bottom
+    for (let i = boxes.length - 1; i >= 0; i--) {
+      const b = boxes[i];
+      if (mx >= b.x && mx <= b.x + b.w && my >= b.y && my <= b.y + b.h) return i;
+    }
+    return -1;
   }
 
   function startRipple(idx) {
@@ -344,7 +412,7 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
   }
 
   function layoutAndDraw(layoutWords) {
-    placed = layoutWords;
+    placed = fitToCanvas(layoutWords);
 
     // ✅ cache last layout so drawer reflow doesn't reshuffle
     canvas.__lux_wc_layout = {
