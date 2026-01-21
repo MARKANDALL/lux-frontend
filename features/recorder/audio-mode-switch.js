@@ -19,6 +19,35 @@ function kickBump(toggleEl) {
   window.setTimeout(() => toggleEl.classList.remove("is-bump"), 320);
 }
 
+/* ✅ Tooltip helper */
+function attachAudioTooltip(btn, title, rows, envLine) {
+  const tip = document.createElement("div");
+  tip.className = "lux-audioTip";
+
+  const t = document.createElement("div");
+  t.className = "lux-audioTipTitle";
+  t.textContent = title;
+
+  const list = document.createElement("ul");
+  list.className = "lux-audioTipList";
+
+  rows.forEach((r) => {
+    const li = document.createElement("li");
+    li.textContent = r;
+    list.appendChild(li);
+  });
+
+  const env = document.createElement("div");
+  env.className = "lux-audioTipEnv";
+  env.textContent = envLine;
+
+  tip.appendChild(t);
+  tip.appendChild(list);
+  tip.appendChild(env);
+
+  btn.appendChild(tip);
+}
+
 /* ✅ Fix #3 helper: float dock so Record/Stop stay centered */
 let _dockResizeHandler = null;
 
@@ -98,14 +127,27 @@ function buildUI(scope = "practice") {
   btnNormal.type = "button";
   btnNormal.dataset.mode = "NORMAL";
   btnNormal.textContent = "Normal";
-  btnNormal.setAttribute("data-tip", "Balanced quality + smaller size");
 
   const btnPro = document.createElement("button");
   btnPro.className = "lux-audioOpt";
   btnPro.type = "button";
   btnPro.dataset.mode = "PRO";
   btnPro.textContent = "Pro";
-  btnPro.setAttribute("data-tip", "Higher quality + slightly larger size");
+
+  // ✅ Replace data-tip tooltips with richer tooltip DOM
+  attachAudioTooltip(
+    btnNormal,
+    "Balanced quality + smaller size",
+    ["Echo cancellation: ON", "Noise suppression: ON", "Auto gain control: ON"],
+    "Best in: everyday rooms (handles light background noise)."
+  );
+
+  attachAudioTooltip(
+    btnPro,
+    "Higher quality + slightly larger size",
+    ["Echo cancellation: OFF", "Noise suppression: OFF", "Auto gain control: OFF"],
+    "Best in: quiet rooms (cleanest, most natural audio)."
+  );
 
   const knob = document.createElement("span");
   knob.className = "lux-audioKnob";
