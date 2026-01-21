@@ -5,7 +5,6 @@ import { ensureUID } from "../../api/identity.js";
 
 import { createMyWordsStore } from "./store.js";
 import { mountMyWordsPanel } from "./panel.js";
-import { createMyWordsLibraryModal } from "./library-modal.js";
 import { mountMyWordsCornerLauncher } from "./launcher.js";
 
 import {
@@ -105,7 +104,7 @@ export function initMyWordsGlobal({ uid, inputEl } = {}) {
           await setPinned(authedUID, evt.id, evt.pinned);
         }
 
-        // ✅ PHASE 3: Archive / Restore both go through setArchived()
+        // ✅ Archive / Restore via setArchived()
         if (evt.type === "archive") {
           await setArchived(authedUID, evt.id, true);
         }
@@ -124,7 +123,7 @@ export function initMyWordsGlobal({ uid, inputEl } = {}) {
   });
 
   // --- sidecar panel ---
-  const sidecar = mountMyWordsPanel({
+  const panel = mountMyWordsPanel({
     store,
     getAttempts: () => attemptsCache,
     onSendToInput: inputEl
@@ -136,21 +135,83 @@ export function initMyWordsGlobal({ uid, inputEl } = {}) {
       : null,
     mode: "compact",
     maxPreview: 5,
-    onOpenLibrary: () => modal.open(),
+    onOpenLibrary: () => openLibrary(), // ✅ wire to reliable modal
   });
 
-  // --- library modal ---
-  const modal = createMyWordsLibraryModal({
-    store,
-    getAttempts: () => attemptsCache,
-    onSendToInput: inputEl
-      ? (text) => {
-          inputEl.value = text;
-          inputEl.focus();
-          inputEl.dispatchEvent(new Event("input", { bubbles: true }));
-        }
-      : null,
-  });
+  // ✅ Alias for older code that expects "sidecar"
+  const sidecar = panel;
+
+  // ============================================================
+  // ✅ FIX 1 — Make Library Modal open reliably (View Library)
+  // ============================================================
+
+  // --- Library Modal (View Library) ---
+  let _mwModal = null;
+  let _mwHome = null;
+
+  function ensureLibraryModal() {
+    if (_mwModal) return _mwModal;
+
+    const m = document.createElement("div");
+    m.id = "luxMwModal";
+    m.className = "lux-mw-modal";
+    m.innerHTML = `<div class="lux-mw-modal-card" role="dialog" aria-modal="true"></div>`;
+    document.body.appendChild(m);
+
+    // click outside closes
+    m.addEventListener("click", (e) => {
+      if (e.target === m) closeLibrary();
+    });
+
+    _mwModal = m;
+    return m;
+  }
+
+  function openLibrary() {
+    const m = ensureLibraryModal();
+    const card = m.querySelector(".lux-mw-modal-card");
+    if (!card) return;
+
+    // Create a "home marker" so we can put the panel back where it came from
+    if (!_mwHome) {
+      _mwHome = document.createElement("div");
+      _mwHome.id = "luxMwPanelHome";
+      _mwHome.style.display = "none";
+
+      // home marker goes right before panel.el
+      panel.el.parentNode.insertBefore(_mwHome, panel.el);
+    }
+
+    // ✅ force panel visible (important if CSS uses display:none defaults)
+    store.setOpen(true);
+    panel.el.classList.add("is-open", "is-modal");
+
+    // Move panel into the modal card
+    card.appendChild(panel.el);
+
+    // Show modal
+    m.classList.add("is-open");
+  }
+
+  function closeLibrary() {
+    if (!_mwModal || !_mwHome) return;
+
+    _mwModal.classList.remove("is-open");
+
+    // Put panel back to its original spot
+    panel.el.classList.remove("is-modal");
+    _mwHome.parentNode.insertBefore(panel.el, _mwHome);
+
+    // Re-layout if still open (sidecar mode)
+    if (store.getState().open) {
+      requestAnimationFrame(() => layoutPanel(panel.el, inputEl));
+    }
+  }
+
+  // ✅ Make available globally
+  window.LuxMyWords = window.LuxMyWords || {};
+  window.LuxMyWords.openLibrary = openLibrary;
+  window.LuxMyWords.closeLibrary = closeLibrary;
 
   // --- launcher button (triangle) ---
   const launcher = mountMyWordsCornerLauncher({
@@ -162,9 +223,12 @@ export function initMyWordsGlobal({ uid, inputEl } = {}) {
         // opening: load stats + layout + focus composer
         await ensureAttempts();
         requestAnimationFrame(() => {
-          layoutPanel(sidecar.el, inputEl);
-          sidecar.focusComposer?.();
-          sidecar.render?.();
+          // ✅ don’t run sidecar layout when panel is inside modal
+          if (!panel.el.classList.contains("is-modal")) {
+            layoutPanel(panel.el, inputEl);
+          }
+          panel.focusComposer?.();
+          panel.render?.();
         });
       }
     },
@@ -174,7 +238,9 @@ export function initMyWordsGlobal({ uid, inputEl } = {}) {
   window.addEventListener(
     "resize",
     () => {
-      if (store.getState().open) layoutPanel(sidecar.el, inputEl);
+      if (!store.getState().open) return;
+      if (panel.el.classList.contains("is-modal")) return; // ✅ modal handles its own sizing
+      layoutPanel(panel.el, inputEl);
     },
     { passive: true }
   );
@@ -182,13 +248,16 @@ export function initMyWordsGlobal({ uid, inputEl } = {}) {
   // When opened through store state
   store.subscribe(async (s) => {
     launcher.classList.toggle("is-open", !!s.open);
-    sidecar.el.classList.toggle("is-open", !!s.open);
+    panel.el.classList.toggle("is-open", !!s.open);
 
     if (s.open) {
       await ensureAttempts();
       requestAnimationFrame(() => {
-        layoutPanel(sidecar.el, inputEl);
-        sidecar.render?.();
+        // ✅ don’t run sidecar layout when panel is inside modal
+        if (!panel.el.classList.contains("is-modal")) {
+          layoutPanel(panel.el, inputEl);
+        }
+        panel.render?.();
       });
     }
   });
@@ -217,15 +286,17 @@ export function initMyWordsGlobal({ uid, inputEl } = {}) {
     }
   })();
 
-  // Global hook for Progress page button
+  // Global hook for Progress page button + external calls
   window.LuxMyWords = {
-    openLibrary: () => modal.open(),
+    ...(window.LuxMyWords || {}),
     toggle: () => store.toggleOpen(),
     open: () => store.setOpen(true),
     close: () => store.setOpen(false),
+    openLibrary, // ✅ reliable open
+    closeLibrary,
   };
 
-  return { store, sidecar, modal, launcher };
+  return { store, panel, sidecar, launcher };
 }
 
 /**

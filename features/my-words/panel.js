@@ -234,7 +234,12 @@ export function mountMyWordsPanel({
         btn.type = "button";
         btn.className = "lux-mw-viewAllBtn";
         btn.textContent = `View Library (${total})`;
-        btn.addEventListener("click", () => onOpenLibrary?.());
+
+        // ✅ FIX 2 — wire the “View Library (N)” button
+        btn.addEventListener("click", () => {
+          window.LuxMyWords?.openLibrary?.();
+        });
+
         elList.appendChild(btn);
       }
 
