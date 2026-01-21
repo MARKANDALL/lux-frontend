@@ -1,10 +1,17 @@
 /* lux-audio-mode.css */
-/* Liquid Glass Audio Mode Toggle (Normal / Pro)
-   + Practice docked placement (right of Record/Stop)
+/* Small Liquid-Glass Audio Mode Toggle (Normal / Pro)
+   - Record/Stop stay centered
+   - Toggle sits offset to the right of Stop
+   - Transparent pill + sliding glass knob
 */
 
+:root{
+  --lux-blue: #0078d7;
+}
+
 /* ===============================
-   Practice dock: Record/Stop + Toggle
+   Practice dock row wrapper
+   (audio-mode-switch.js wraps .btn-group with this)
    =============================== */
 .lux-rec-actions{
   display:flex;
@@ -15,21 +22,12 @@
   flex-wrap:wrap;
 }
 
-/* override the default btn-group spacing ONLY when docked */
+/* Ensure the record/stop group stays clean */
 .lux-rec-actions .btn-group{
   margin: 0 !important;
+  position: relative;      /* allows floating toggle positioning */
+  overflow: visible;       /* tooltips must not clip */
 }
-
-/* remove the auto-margin when docked */
-.lux-rec-actions .lux-audioModeWrap{
-  margin: 0 !important;
-}
-
-/* When inserted after Stop inside the Record/Stop .btn-group */
-.btn-group .lux-audioModeWrap.is-rightOfStop{
-  margin-left: 14px; /* ✅ not crammed against Stop */
-}
-
 
 /* ===============================
    Wrapper + label
@@ -37,125 +35,115 @@
 .lux-audioModeWrap{
   display:flex;
   align-items:center;
-  justify-content:center;
-  gap:10px;
+  gap:8px;
 
-  font: 800 12px/1.1 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font: 900 11px/1 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   letter-spacing: 0.02em;
 
-  position: relative;
-  z-index: 30; /* enough for tooltip without fighting your Tips pill */
   user-select:none;
+  z-index: 50;
 }
 
-/* slightly tighter when docked next to record/stop */
-.lux-audioModeWrap.is-docked{
-  transform: translateY(1px);
-}
-
-.lux-audioModeWrap.is-compact{
-  margin: 0;
-  justify-content: flex-start;
-}
-
+/* “Audio” label — subtle, not heavy */
 .lux-audioModeLabel{
-  opacity: 0.72;
-  font-weight: 900;
+  opacity: 0.55;
+  font-weight: 950;
 }
 
-/* compact mode: hide label for header rows if desired */
-.lux-audioModeWrap.is-compact .lux-audioModeLabel{
-  display:none;
+/* When inserted after Stop */
+.btn-group .lux-audioModeWrap.is-rightOfStop{
+  margin-left: 12px;
 }
 
+/* When we float it (so it does NOT shift Record/Stop centering) */
+.btn-group .lux-audioModeWrap.is-floatDock{
+  position: absolute;
+  margin-left: 0 !important;
+}
 
 /* ===============================
-   Liquid glass toggle shell
+   Glass pill shell
    =============================== */
 .lux-audioToggle{
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 0;
 
-  padding: 4px;
+  padding: 3px;
   border-radius: 999px;
 
-  background: rgba(255,255,255,0.18);
-  border: 1px solid rgba(255,255,255,0.30);
+  /* ✅ transparent glass */
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.22);
 
   box-shadow:
-    0 10px 26px rgba(0,0,0,0.16),
-    inset 0 1px 0 rgba(255,255,255,0.28);
+    0 10px 24px rgba(0,0,0,0.14),
+    inset 0 1px 0 rgba(255,255,255,0.22);
 
-  backdrop-filter: blur(14px) saturate(1.25);
-  -webkit-backdrop-filter: blur(14px) saturate(1.25);
+  backdrop-filter: blur(16px) saturate(1.25);
+  -webkit-backdrop-filter: blur(16px) saturate(1.25);
 
-  overflow: hidden;
+  overflow: visible; /* ✅ bring tooltips back */
+}
+
+/* Optional tiny “premium” outline when in Pro mode */
+html[data-lux-audio-mode="pro"] .lux-audioToggle{
+  box-shadow:
+    0 12px 28px rgba(0,0,0,0.16),
+    inset 0 1px 0 rgba(255,255,255,0.22),
+    0 0 0 1px rgba(0,120,215,0.10);
 }
 
 /* ===============================
-   The sliding “gel” pill (knob)
+   Sliding inner glass knob
    =============================== */
 .lux-audioKnob{
   position:absolute;
-  top: 4px;
-  bottom: 4px;
-  left: 4px;
-  width: calc(50% - 4px);
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc(50% - 3px);
   border-radius: 999px;
   z-index: 1;
 
-  /* liquid gel */
+  /* ✅ glass-on-glass (transparent) */
   background:
-    radial-gradient(circle at 30% 25%, rgba(255,255,255,0.70), rgba(255,255,255,0.20) 55%, rgba(255,255,255,0.08)),
-    linear-gradient(180deg, rgba(255,255,255,0.52), rgba(255,255,255,0.18));
+    radial-gradient(circle at 30% 25%,
+      rgba(255,255,255,0.60),
+      rgba(255,255,255,0.18) 58%,
+      rgba(255,255,255,0.06)
+    ),
+    linear-gradient(180deg,
+      rgba(255,255,255,0.34),
+      rgba(255,255,255,0.10)
+    );
 
-  border: 1px solid rgba(255,255,255,0.38);
+  border: 1px solid rgba(255,255,255,0.30);
 
   box-shadow:
-    0 8px 16px rgba(0,0,0,0.14),
-    inset 0 1px 0 rgba(255,255,255,0.44),
-    inset 0 -10px 22px rgba(0,0,0,0.10);
+    0 8px 16px rgba(0,0,0,0.12),
+    inset 0 1px 0 rgba(255,255,255,0.36);
 
-  transition: transform 260ms cubic-bezier(.2,.9,.2,1);
+  transition: transform 240ms cubic-bezier(.2,.9,.2,1);
   will-change: transform;
+
+  overflow: hidden; /* keeps sheen neat */
 }
 
-/* move right when Pro is active */
+/* knob slides right in pro mode */
 html[data-lux-audio-mode="pro"] .lux-audioKnob{
   transform: translateX(100%);
 }
 
-/* Optional (extra clarity): slightly different knob tint per mode (still subtle, but clearer) */
-html[data-lux-audio-mode="pro"] .lux-audioKnob{
-  box-shadow:
-    0 10px 22px rgba(0,0,0,0.16),
-    inset 0 1px 0 rgba(255,255,255,0.44),
-    inset 0 -10px 22px rgba(0,0,0,0.10),
-    0 0 0 1px rgba(0,120,215,0.12); /* tiny blue ring */
-}
-
-/* Subtle confirmation animation on toggle */
-.lux-audioToggle.is-bump .lux-audioKnob{
-  animation: luxKnobBump 320ms ease;
-}
-
-@keyframes luxKnobBump{
-  0%   { filter: brightness(1); }
-  45%  { filter: brightness(1.22); }
-  100% { filter: brightness(1); }
-}
-
-/* sheen streak on hover */
+/* subtle sheen streak on hover */
 .lux-audioKnob::after{
   content:"";
   position:absolute;
-  inset:-40% -70%;
+  inset:-45% -70%;
   background: linear-gradient(
     110deg,
     rgba(255,255,255,0) 35%,
-    rgba(255,255,255,0.60) 48%,
+    rgba(255,255,255,0.55) 48%,
     rgba(255,255,255,0) 62%
   );
   transform: translateX(-45%) rotate(8deg);
@@ -164,8 +152,8 @@ html[data-lux-audio-mode="pro"] .lux-audioKnob{
 }
 
 .lux-audioToggle:hover .lux-audioKnob::after{
-  opacity: 0.75;
-  animation: luxSheen 1.15s ease both;
+  opacity: 0.70;
+  animation: luxSheen 1.05s ease both;
 }
 
 @keyframes luxSheen{
@@ -173,61 +161,64 @@ html[data-lux-audio-mode="pro"] .lux-audioKnob{
   to   { transform: translateX(45%)  rotate(8deg); }
 }
 
-/* Pro mode gets a tiny premium glow */
-html[data-lux-audio-mode="pro"] .lux-audioToggle{
-  box-shadow:
-    0 12px 30px rgba(0,0,0,0.18),
-    inset 0 1px 0 rgba(255,255,255,0.28),
-    0 0 0 1px rgba(0,120,215,0.12);
-}
-
-
 /* ===============================
-   Buttons
+   Buttons (must NOT look like big blue buttons)
    =============================== */
 .lux-audioOpt{
   position:relative;
   z-index:2;
 
+  appearance:none;
   border:0;
-  background:transparent;
+  background: transparent !important;
+  box-shadow: none !important;
 
-  padding: 8px 14px;
+  padding: 7px 12px;
   border-radius: 999px;
 
-  font-weight: 900;
+  font-weight: 950;
+  font-size: 12px;
   cursor:pointer;
 
-  color: rgba(15,23,42,0.70);
-  opacity: 0.92;
-
-  transition: transform .12s ease, color .18s ease, opacity .14s ease;
+  color: rgba(15,23,42,0.44); /* hollow/grey when inactive */
+  transition: transform .12s ease, color .16s ease, opacity .14s ease;
 }
 
 .lux-audioOpt:hover{
   transform: translateY(-1px);
-  color: rgba(15,23,42,0.92);
-  opacity: 1;
+  color: rgba(15,23,42,0.70);
 }
 
-/* active text */
+/* ✅ Active mode = Lux blue text */
 html[data-lux-audio-mode="normal"] .lux-audioOpt[data-mode="NORMAL"],
 html[data-lux-audio-mode="pro"] .lux-audioOpt[data-mode="PRO"]{
-  color: rgba(15,23,42,0.98);
-  opacity: 1;
-}
-
-/* Stronger active indicator (stays, clearer) */
-html[data-lux-audio-mode="normal"] .lux-audioOpt[data-mode="NORMAL"],
-html[data-lux-audio-mode="pro"] .lux-audioOpt[data-mode="PRO"]{
+  color: var(--lux-blue);
   text-shadow:
-    0 1px 0 rgba(255,255,255,0.35),
-    0 8px 18px rgba(0,0,0,0.10);
+    0 1px 0 rgba(255,255,255,0.25),
+    0 10px 22px rgba(0,0,0,0.10);
 }
 
+/* dim the inactive one a bit */
+html[data-lux-audio-mode="normal"] .lux-audioOpt[data-mode="PRO"],
+html[data-lux-audio-mode="pro"] .lux-audioOpt[data-mode="NORMAL"]{
+  opacity: 0.58;
+}
 
 /* ===============================
-   Tooltip (kept, but slightly classier)
+   Subtle bump confirmation
+   =============================== */
+.lux-audioToggle.is-bump .lux-audioKnob{
+  animation: luxKnobBump 320ms ease;
+}
+
+@keyframes luxKnobBump{
+  0%   { filter: brightness(1); }
+  45%  { filter: brightness(1.18); }
+  100% { filter: brightness(1); }
+}
+
+/* ===============================
+   Tooltip bubbles (restored)
    =============================== */
 .lux-audioOpt[data-tip]::after{
   content: attr(data-tip);
@@ -236,14 +227,14 @@ html[data-lux-audio-mode="pro"] .lux-audioOpt[data-mode="PRO"]{
   transform: translateX(-50%);
   bottom: calc(100% + 10px);
 
-  width: min(340px, 64vw);
-  padding: 10px 12px;
+  width: min(320px, 62vw);
+  padding: 9px 11px;
   border-radius: 14px;
 
   background: rgba(15, 23, 42, 0.92);
   color: rgba(255, 255, 255, 0.95);
 
-  font-weight: 750;
+  font-weight: 800;
   line-height: 1.25;
 
   box-shadow: 0 14px 34px rgba(0,0,0,0.30);
@@ -253,7 +244,7 @@ html[data-lux-audio-mode="pro"] .lux-audioOpt[data-mode="PRO"]{
   transition: opacity 140ms ease;
 
   white-space: normal;
-  z-index: 40;
+  z-index: 999;
 }
 
 .lux-audioOpt[data-tip]:hover::after{

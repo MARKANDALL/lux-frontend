@@ -19,6 +19,38 @@ function kickBump(toggleEl) {
   window.setTimeout(() => toggleEl.classList.remove("is-bump"), 320);
 }
 
+/* ✅ Fix #3 helper: float dock so Record/Stop stay centered */
+let _dockResizeHandler = null;
+
+function dockRightOfStop(ui, stopBtn) {
+  const group = stopBtn.closest(".btn-group");
+  if (!group) return;
+
+  // Keep tooltips + knob overflow safe
+  group.style.position = group.style.position || "relative";
+  group.style.overflow = "visible";
+
+  ui.classList.add("is-floatDock");
+  ui.style.position = "absolute";
+
+  const place = () => {
+    const left = stopBtn.offsetLeft + stopBtn.offsetWidth + 14;
+    const top =
+      stopBtn.offsetTop +
+      Math.round((stopBtn.offsetHeight - ui.offsetHeight) / 2);
+
+    ui.style.left = `${left}px`;
+    ui.style.top = `${top}px`;
+  };
+
+  requestAnimationFrame(place);
+
+  // Avoid stacking resize listeners on remount
+  if (_dockResizeHandler) window.removeEventListener("resize", _dockResizeHandler);
+  _dockResizeHandler = () => requestAnimationFrame(place);
+  window.addEventListener("resize", _dockResizeHandler);
+}
+
 function ensurePracticeActionsRow() {
   const btnGroup = document.querySelector(".btn-group");
   if (!btnGroup) return null;
@@ -125,6 +157,10 @@ export function mountAudioModeSwitch(scope = "practice") {
       // Insert immediately after Stop inside the same flex row
       stopBtn.insertAdjacentElement("afterend", ui);
       ui.classList.add("is-rightOfStop");
+
+      // ✅ Float it so Record/Stop stay centered
+      dockRightOfStop(ui, stopBtn);
+
       return ui;
     }
   }
