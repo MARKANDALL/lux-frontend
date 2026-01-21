@@ -120,9 +120,7 @@ export function createMyWordsStore({ uid, onMutation } = {}) {
     if (!lines.length) return { added: 0, merged: 0, lines: [] };
 
     const byNorm = new Map();
-    state.entries.forEach((e) =>
-      byNorm.set(normalizeText(e.normalized_text || e.text), e)
-    );
+    state.entries.forEach((e) => byNorm.set(normalizeText(e.normalized_text || e.text), e));
 
     let added = 0;
     let merged = 0;
@@ -183,6 +181,7 @@ export function createMyWordsStore({ uid, onMutation } = {}) {
     mut({ type: "archive", id });
   }
 
+  // ✅ NEW: restore an archived entry
   function restore(id) {
     const e = state.entries.find((x) => x.id === id);
     if (!e) return;

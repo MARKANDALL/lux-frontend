@@ -84,25 +84,41 @@
 /* ✅ PHASE 5 — Active / Archived tabs (modal) */
 .lux-mw-tabs{
   display:flex;
+  align-items:center;
   gap:6px;
-  padding: 6px;
-  border-radius: 999px;
-  background: rgba(255,255,255,.6);
+  padding:6px;
+  border-radius:999px;
+  background: rgba(255,255,255,.65);
   border: 1px solid rgba(0,0,0,.08);
 }
 
 .lux-mw-tab{
   border:0;
-  padding: 6px 10px;
-  border-radius: 999px;
-  font-weight: 800;
-  font-size: 12px;
-  cursor: pointer;
-  background: transparent;
+  background:transparent;
+  font-weight:900;
+  font-size:12px;
+  padding:6px 10px;
+  border-radius:999px;
+  cursor:pointer;
 }
 
 .lux-mw-tab.is-active{
   background: rgba(0,0,0,.08);
+}
+
+/* ✅ NEW: badge count pill */
+.lux-mw-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width: 20px;
+  height: 18px;
+  padding: 0 6px;
+  margin-left: 6px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+  background: rgba(15,23,42,.10);
 }
 
 .lux-mw-search{
@@ -145,9 +161,13 @@
   opacity:.9;
 }
 
+/* ✅ UPDATED: textarea max-height + vertical resize + overflow */
 .lux-mw-addBox{
   width:100%;
-  resize:none;
+  resize: vertical;
+  max-height: 140px;
+  overflow: auto;
+
   border-radius: 14px;
   border:1px solid rgba(0,0,0,.10);
   background: rgba(255,255,255,.92);
@@ -330,17 +350,6 @@
   user-select: none;
 }
 
-/* --- Sidecar open/close --- */
-.lux-mw-panel {
-  display: none;
-  position: fixed;
-  z-index: 9998;
-}
-
-.lux-mw-panel.is-open {
-  display: block;
-}
-
 /* --- Modal overlay library --- */
 .lux-mw-modal {
   position: fixed;
@@ -354,6 +363,12 @@
 
 .lux-mw-modal.is-open {
   display: flex;
+  animation: luxMwOverlayIn 160ms ease;
+}
+
+@keyframes luxMwOverlayIn{
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 .lux-mw-modal-card {
@@ -364,6 +379,23 @@
   box-shadow: 0 20px 60px rgba(2, 6, 23, 0.25);
   overflow: hidden;
   padding: 10px;
+
+  animation: luxMwCardIn 180ms ease;
+}
+
+@keyframes luxMwCardIn{
+  from { opacity: 0; transform: translateY(10px) scale(0.99); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ✅ NEW: modal head helper (if your modal uses a separate header wrapper) */
+.lux-mw-modalHead{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 12px 10px 12px;
+  border-bottom:1px solid rgba(0,0,0,.08);
 }
 
 /* Make panel fill modal card cleanly */

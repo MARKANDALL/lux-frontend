@@ -105,6 +105,7 @@ export function initMyWordsGlobal({ uid, inputEl } = {}) {
           await setPinned(authedUID, evt.id, evt.pinned);
         }
 
+        // ✅ PHASE 3: Archive / Restore both go through setArchived()
         if (evt.type === "archive") {
           await setArchived(authedUID, evt.id, true);
         }

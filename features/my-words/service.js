@@ -88,6 +88,24 @@ export async function archiveEntry(uid, id) {
   if (error) console.warn("[my-words] archiveEntry error:", error);
 }
 
+// ✅ PHASE 5: Restore / Un-archive (explicit call)
+export async function restoreEntry(uid, id) {
+  if (!uid || !id) return;
+
+  const { error } = await supabase
+    .from("my_words_entries")
+    .update({ archived: false, updated_at: new Date().toISOString() })
+    .eq("uid", uid)
+    .eq("id", id);
+
+  if (error) console.warn("[my-words] restoreEntry error:", error);
+}
+
+/**
+ * ✅ Generic archived toggle helper (supports restore/unarchive)
+ * archived=true  -> archive
+ * archived=false -> restore
+ */
 export async function setArchived(uid, id, archived) {
   if (!uid || !id) return;
 
