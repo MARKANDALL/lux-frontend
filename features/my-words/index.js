@@ -182,7 +182,7 @@ export function initMyWordsGlobal({ uid, inputEl } = {}) {
       panel.el.parentNode.insertBefore(_mwHome, panel.el);
     }
 
-    // ✅ force panel visible (important if CSS uses display:none defaults)
+    // ✅ force panel visible (important if your CSS uses display:none by default)
     store.setOpen(true);
     panel.el.classList.add("is-open", "is-modal");
 

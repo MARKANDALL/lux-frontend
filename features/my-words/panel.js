@@ -149,13 +149,21 @@ export function mountMyWordsPanel({
 
     const actions = isArchived
       ? `
-        ${onSendToInput ? `<button class="lux-mw-act" data-act="send">Send</button>` : ""}
+        ${
+          onSendToInput
+            ? `<button class="lux-mw-act" data-act="send">Send</button>`
+            : ""
+        }
         <button class="lux-mw-act" data-act="wr">WR</button>
         <button class="lux-mw-act" data-act="restore">Restore</button>
         <button class="lux-mw-act danger" data-act="delete">Delete</button>
       `
       : `
-        ${onSendToInput ? `<button class="lux-mw-act" data-act="send">Send</button>` : ""}
+        ${
+          onSendToInput
+            ? `<button class="lux-mw-act" data-act="send">Send</button>`
+            : ""
+        }
         <button class="lux-mw-act" data-act="wr">WR</button>
         <button class="lux-mw-act" data-act="pin">${e.pinned ? "Unpin" : "Pin"}</button>
         <button class="lux-mw-act danger" data-act="archive">Archive</button>
@@ -250,7 +258,9 @@ export function mountMyWordsPanel({
     if (!listAll.length) {
       elList.innerHTML = `
         <div class="lux-mw-empty">
-          <strong>${tab === "archived" ? "No archived words." : "No active words yet."}</strong>
+          <strong>${
+            tab === "archived" ? "No archived words." : "No active words yet."
+          }</strong>
           ${tab === "archived" ? "Archive something first." : "Add a few above 👆"}
         </div>
       `;
