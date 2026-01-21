@@ -69,7 +69,13 @@ export function createWordcloudEventHandlers({
       // ✅ stop replay when leaving timeline
       if (next !== "timeline") timeline.stop?.();
 
-      ctx.set({ range: next });
+      // ✅ entering timeline should start at "most recent"
+      if (next === "timeline" && S.range !== "timeline") {
+        ctx.set({ range: next, timelinePos: 0 });
+      } else {
+        ctx.set({ range: next });
+      }
+
       ui.setActiveButtons();
       drawer.draw(false);
     },

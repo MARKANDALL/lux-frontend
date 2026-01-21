@@ -94,24 +94,53 @@ export function createWordcloudDrawer({
   // ✅ COMMIT 12C — sheet feature wiring stays within the draw orchestrator
   let sheetCtrl = null;
 
+  // ✅ FIX 3 — timeline auto-heal (never start empty)
+  let _timelineHealedOnce = false;
+
   async function draw(forceFetch = false) {
     const S = getState();
 
     // Wrap the two choke points so logs occur here (even though work is in render.js)
 
     const filterAttemptsByRangeLogged = (allAttempts, range, win, pos) => {
-      const attemptsInRange = filterAttemptsByRange(allAttempts, range, win, pos);
+      // Reset heal flag anytime we’re not in timeline
+      if (range !== "timeline") _timelineHealedOnce = false;
+
+      let usedPos = pos;
+      let attemptsInRange = filterAttemptsByRange(allAttempts, range, win, usedPos);
+
+      // ✅ AUTO-HEAL: timeline can’t boot into an empty slice
+      if (
+        range === "timeline" &&
+        Array.isArray(allAttempts) &&
+        allAttempts.length &&
+        attemptsInRange.length === 0 &&
+        !_timelineHealedOnce
+      ) {
+        _timelineHealedOnce = true;
+
+        usedPos = 0;
+        try {
+          ctx.set({ timelinePos: 0 });
+        } catch (_) {}
+
+        attemptsInRange = filterAttemptsByRange(allAttempts, range, win, 0);
+
+        console.warn(
+          "[wc] auto-heal: timeline slice empty → timelinePos reset to 0"
+        );
+      }
 
       // ✅ LOG B — right after range filter
       console.log(
         "[wc] attempts in range:",
         attemptsInRange?.length,
         "range=",
-        S.range,
+        range,
         "win=",
-        S.timelineWin,
+        win,
         "pos=",
-        S.timelinePos
+        usedPos
       );
 
       return attemptsInRange;

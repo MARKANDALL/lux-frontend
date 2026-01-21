@@ -141,6 +141,9 @@ export async function drawWordcloud({
       renderSavedStrip();
       renderTargetsStrip(attemptsInRange);
 
+      // ✅ (used by BOTH branches, safe to clear even if null)
+      let slowNote = null;
+
       if (!items.length) {
         metaEl.textContent =
           mode === "phonemes"
@@ -149,18 +152,42 @@ export async function drawWordcloud({
 
         // Empty canvas + stop overlay
         console.time("[wc] render layout");
-        renderWordcloudView({
-          canvas,
-          items: [],
-          focusTest: null,
-          clusterMode,
-          pinnedSet,
-          onSelect,
-          onRenderEnd: ({ reason } = {}) => {
-            console.log("[wc] render end:", reason);
-            console.timeEnd("[wc] render layout");
-            if (seq === renderSeqRef.value) setBusy(false);
-          },
+
+        await new Promise((resolve) => {
+          let done = false;
+
+          // safety escape hatch (prevents deadlock if something goes truly insane)
+          const kill = setTimeout(() => {
+            if (done) return;
+            done = true;
+            try {
+              console.timeEnd("[wc] render layout");
+            } catch (_) {}
+            resolve();
+          }, 8000);
+
+          renderWordcloudView({
+            canvas,
+            items: [],
+            focusTest: null,
+            clusterMode,
+            pinnedSet,
+
+            onRenderEnd: ({ reason } = {}) => {
+              if (done) return;
+              done = true;
+              clearTimeout(kill);
+
+              console.log("[wc] render end:", reason);
+              console.timeEnd("[wc] render layout");
+              clearTimeout(slowNote);
+
+              if (seq === renderSeqRef.value) setBusy(false);
+              resolve();
+            },
+
+            onSelect,
+          });
         });
 
         return;
@@ -170,7 +197,7 @@ export async function drawWordcloud({
       setBusy(true, "Building cloud…", "Placing targets on canvas");
 
       // ✅ Reassurance message if layout takes a while
-      let slowNote = setTimeout(() => {
+      slowNote = setTimeout(() => {
         if (seq === renderSeqRef.value) {
           setBusy(true, "Building cloud…", "Still working… (large history)");
         }
@@ -180,22 +207,42 @@ export async function drawWordcloud({
       const focusTest = q ? (idLower) => String(idLower || "").includes(q) : null;
 
       console.time("[wc] render layout");
-      renderWordcloudView({
-        canvas,
-        items,
-        focusTest,
-        clusterMode,
-        pinnedSet,
 
-        // ✅ keep overlay hide hook
-        onRenderEnd: ({ reason } = {}) => {
-          console.log("[wc] render end:", reason);
-          console.timeEnd("[wc] render layout");
-          clearTimeout(slowNote);
-          if (seq === renderSeqRef.value) setBusy(false);
-        },
+      await new Promise((resolve) => {
+        let done = false;
 
-        onSelect,
+        // safety escape hatch (prevents deadlock if something goes truly insane)
+        const kill = setTimeout(() => {
+          if (done) return;
+          done = true;
+          try {
+            console.timeEnd("[wc] render layout");
+          } catch (_) {}
+          resolve();
+        }, 8000);
+
+        renderWordcloudView({
+          canvas,
+          items,
+          focusTest,
+          clusterMode,
+          pinnedSet,
+
+          onRenderEnd: ({ reason } = {}) => {
+            if (done) return;
+            done = true;
+            clearTimeout(kill);
+
+            console.log("[wc] render end:", reason);
+            console.timeEnd("[wc] render layout");
+            clearTimeout(slowNote);
+
+            if (seq === renderSeqRef.value) setBusy(false);
+            resolve();
+          },
+
+          onSelect,
+        });
       });
 
       const label = mode === "phonemes" ? "Phonemes" : "Words";

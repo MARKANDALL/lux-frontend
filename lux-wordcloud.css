@@ -646,3 +646,14 @@
 #luxWcCanvasWrap{
   overflow: visible !important;
 }
+/* =========================
+   ✅ FINAL Drawer Un-Clipping Fix
+   Wordcloud is inside lux-progress containers that clip via overflow:hidden.
+   Scope to #wordcloud-root ONLY.
+========================= */
+
+#wordcloud-root .lux-progress-sec,
+#wordcloud-root .lux-pcard{
+  overflow: visible !important;
+  position: relative;
+}
