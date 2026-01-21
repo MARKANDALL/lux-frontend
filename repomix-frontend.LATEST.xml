@@ -11822,6 +11822,593 @@ body:has(#convoApp[data-mode="intro"]){
 }
 </file>
 
+<file path="lux-layout.core.css">
+/* lux-layout.core.css */
+
+/* Core application styles */
+
+#typewriterMsg {
+  white-space: pre;
+  opacity: 1;
+  transition: opacity 0.5s;
+}
+
+.hidden {
+  display: none !important;
+}
+
+@keyframes tipPop {
+  0% { transform: scale(0.2) rotate(-30deg); opacity: 0; color: #bbb; }
+  40% { transform: scale(1.4) rotate(10deg); opacity: 1; color: #1e90ff; }
+  70% { transform: scale(0.88) rotate(-5deg); color: #205080; }
+  85% { transform: scale(1.05) rotate(0); color: #0078d7; }
+  100% { transform: scale(1) rotate(0); color: inherit; }
+}
+
+#prettyResult a {
+  text-decoration: none !important;
+  font-weight: 700;
+}
+#prettyResult a:visited,
+#prettyResult a:active,
+#prettyResult a:focus {
+  text-decoration: none !important;
+  color: inherit !important;
+}
+#prettyResult a:hover {
+  text-decoration: underline dotted;
+  color: #0078d7;
+}
+
+.pop-in {
+  animation: tipPop 1.4s cubic-bezier(0.18, 1.7, 0.28, 1.01);
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  font-family: "Montserrat", system-ui, sans-serif;
+  background: #fff;
+  color: #333;
+  margin: 0;
+  line-height: 1.5;
+  padding: 10px;
+}
+
+#container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: calc(2vw + var(--lux-top-banner-offset, 0px)) 2vw 3vw;
+  box-sizing: border-box;
+}
+
+@keyframes slowSpin {
+  0% { transform: rotate(0); }
+  100% { transform: rotate(360deg); }
+}
+
+.ai-spinner {
+  display: inline-block;
+  animation: slowSpin 2.4s linear infinite;
+}
+
+button,
+#nextPartBtn {
+  transition: background 0.15s, transform 0.18s ease, filter 0.18s ease;
+}
+/* EDITED: Added :not(.lux-col-toggle) to prevent conflict with rotation transforms */
+button:hover:not(:disabled):not(.lux-col-toggle),
+#nextPartBtn:hover:not(:disabled) {
+  transform: scale(1.12);
+  filter: brightness(0.85);
+}
+
+/* ============================================================
+   RESULTS PILL BASE (CRITICAL FIX)
+   - Remove legacy scale + brightness from result word-pill hover
+   - Remove filter transition from result pills
+   - Do NOT define #prettyResult a:hover here anymore; let global
+     "interactive depth" handle transform/box-shadow (lift/press).
+   - Explicitly neutralize tooltip hover inside results to prevent
+     global .tooltip:hover darken from leaking into results.
+   ============================================================ */
+#prettyResult a,
+#prettyResult .tooltip {
+  display: inline-block;
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+
+/* Keep result tooltips consistent: lift + shadow only, no darken */
+#prettyResult .tooltip:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.28);
+  filter: none;
+}
+#prettyResult .tooltip:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.20);
+  filter: none;
+}
+
+/* --- Input Effects --- */
+#referenceText,
+#partsInfoTip {
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+#referenceText:hover,
+#partsInfoTip:hover {
+  transform: translateY(-2px);
+  filter: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.28);
+}
+
+.tooltip {
+  transition: transform 0.18s ease, filter 0.18s ease;
+}
+.tooltip:hover {
+  transform: scale(1.12);
+  filter: brightness(0.85);
+}
+
+h2 {
+  font-size: 2.25rem;
+  margin: 2rem 0 1rem;
+  text-align: center;
+}
+
+label {
+  font-size: 1.15rem;
+  display: inline-block;
+  text-align: center;
+  width: 100%;
+}
+
+#referenceText {
+  width: 95vw;
+  max-width: 880px;
+  min-height: 120px;
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.4;
+  padding: 1.2rem;
+  border-radius: 0.8rem;
+  resize: vertical;
+}
+
+input::placeholder {
+  color: #888 !important;
+  font-style: italic;
+  letter-spacing: 0.03em;
+  opacity: 1;
+  font-size: 1.12rem;
+}
+#referenceText::placeholder {
+  opacity: 1;
+  transition: opacity 0.45s ease;
+  font-style: italic;
+}
+#referenceText.placeholder-fade::placeholder {
+  opacity: 0;
+}
+
+select {
+  font-size: 1.17rem;
+  font-weight: 700;
+  padding: 0.5rem 1rem;
+  border: 1px solid #bbb;
+  border-radius: 0.6rem;
+  background: #f8f8f8;
+  margin: 0.3rem auto 1rem;
+}
+</file>
+
+<file path="lux-layout.harvard.css">
+/* lux-layout.harvard.css */
+
+/* Harvard picker: centered row under the passage select */
+.lux-harvard-picker{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+/* Harvard label should match "Select Passage:" label sizing */
+.lux-harvard-label{
+  font-size: 1.15rem;    /* matches your global label rule */
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* Make Harvard buttons a bit smaller (scoped to this row only) */
+.lux-harvard-picker button{
+  font-size: 1.0rem;
+  padding: 0.55rem 1.15rem;
+  border-radius: 0.6rem;
+}
+
+/* Arrows: slightly narrower so they don’t dominate */
+#harvardPrev,
+#harvardNext{
+  padding: 0.55rem 0.95rem;
+}
+
+/* Number input: slightly larger + rounder */
+.lux-harvard-picker input[type="number"]{
+  width: 76px;
+  padding: 8px 10px;
+  font-size: 1.05rem;
+  border-radius: 0.8rem;
+  text-align: center;
+}
+
+/* Optional: if you keep sr-only in HTML */
+.sr-only{
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
+</file>
+
+<file path="lux-layout.nav-cta.css">
+/* lux-layout.nav-cta.css */
+
+/* ===========================
+   AI Convo CTA — Apple Intelligence ring (v5)
+   Goals:
+   - Obvious motion (ring rotates + hotspot orbits)
+   - Visible “thickness ripple” (hotspot wedge riding the ring)
+   - One-time glass sheen sweep across the button interior on hover entry
+   - No weird interior artifacts (shimmer is its own layer, not baked into backgrounds)
+   =========================== */
+
+@property --luxRingAngle {
+  syntax: "<angle>";
+  inherits: true;          /* IMPORTANT: let ::after see it */
+  initial-value: 0deg;
+}
+@property --luxHotAngle {
+  syntax: "<angle>";
+  inherits: true;          /* IMPORTANT: let ::after see it */
+  initial-value: 0deg;
+}
+
+/* Wrapper */
+.lux-toplinks{
+  margin: 18px auto 0;
+  width: min(980px, 94vw);
+  display:flex;
+  gap: 8px;
+
+  position: relative;
+  z-index: 200; /* stay above atmo/deck layers */
+}
+
+/* Centered CTA wrapper (if used on some pages) */
+.lux-toplinks-cta{
+  display: flex;
+  justify-content: center;
+  margin-bottom: 18px;
+
+  position: relative;
+  z-index: 200; /* match top links */
+}
+
+.lux-toplink{
+  font-weight: 800;
+  text-decoration: none;
+}
+
+
+/* Base: same pill size/shape everywhere */
+.lux-navpill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: min(420px, 92vw);   /* SAME SIZE everywhere */
+  padding: 16px 30px;
+  font-size: 18px;
+  font-weight: 900;
+  text-decoration: none;
+  border-radius: 999px;
+  position: relative;
+  isolation: isolate;
+
+  color: #1f2a37;
+  background: rgba(255,255,255,0.98);
+  border: 1px solid rgba(0,0,0,0.10);
+  box-shadow: 0 12px 26px rgba(0,0,0,0.10);
+  transition:
+    transform 160ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 200ms ease,
+    color 180ms ease,
+    filter 180ms ease;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Hover: water-blue wash */
+.lux-navpill:hover:not(:disabled){
+  transform: translateY(-2px);
+  background-color: var(--lux-water-hover);
+  border-color: var(--lux-water-border);
+  box-shadow:
+    0 14px 28px rgba(0,0,0,0.10),
+    0 0 0 3px var(--lux-water-halo);
+}
+
+/* Press: slightly deeper “dip” */
+.lux-navpill:active:not(:disabled){
+  transform: translateY(0);
+  background-color: var(--lux-water-hover-2);
+  border-color: rgba(0,120,215,0.34);
+  box-shadow:
+    0 10px 18px rgba(0,0,0,0.12),
+    0 0 0 3px rgba(0,120,215,0.12);
+}
+
+.lux-navpill:focus-visible { outline: 3px solid rgba(0,120,215,0.35); outline-offset: 3px; }
+
+/* ========================================================================
+   DISABLED: Destination animation “to AI Conversations” = rainbow ring
+   (The “windmill” system)
+   ======================================================================== */
+
+/*
+.lux-navpill--to-convo {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.lux-navpill--to-convo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: conic-gradient(
+    from 0deg,
+    #3b82f6, #a855f7, #ec4899, #f97316, #f59e0b, #22c55e, #3b82f6
+  );
+  animation: luxNavRingSpin var(--luxRingDur, 4.2s) linear infinite;
+  z-index: -2;
+}
+
+.lux-navpill--to-convo::after {
+  content: "";
+  position: absolute;
+  inset: 3px;               ring thickness
+  border-radius: 999px;
+  background: rgba(255,255,255,0.98);
+  border: 1px solid rgba(0,0,0,0.10);
+  box-shadow: 0 12px 26px rgba(0,0,0,0.10);
+  z-index: -1;
+}
+
+@keyframes luxNavRingSpin {
+  to { transform: rotate(360deg); }
+}
+*/
+
+
+
+/* Use on any CTA you want to match the AI Conversations pill size */
+.lux-cta-same {
+  width: min(420px, 92vw);   /* consistent “big button” width, responsive */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* Ripple-ready: keeps filter effects from looking janky */
+[data-lux-ripple]{
+  display: inline-block;
+  transform: translateZ(0); /* encourage GPU compositing */
+  will-change: filter;
+}
+/* Don't let the ripple helper clobber navpill centering */
+.lux-navpill[data-lux-ripple]{
+  display: inline-flex;
+}
+
+
+/* Base button */
+a.lux-toplink-cta,
+button.lux-toplink-cta{
+  padding: 16px 30px;
+  font-size: 18px;
+  font-weight: 900;
+
+  --luxRingDur: 4.2s;      /* SPEED KNOB: lower = faster */
+  --luxHotDur: 2.6s;       /* hotspot moves faster than the ring */
+
+  position: relative;
+  isolation: isolate;
+
+  color: #1f2a37;
+  border: 1px solid rgba(0,0,0,0.10);
+  border-radius: 999px;
+  background: linear-gradient(rgba(255,255,255,0.98), rgba(255,255,255,0.98)) padding-box;
+
+  box-shadow: 0 12px 26px rgba(0,0,0,0.10);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+
+  /* important for button parity */
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+/* One-time “sun flash” glass sheen (interior only) */
+a.lux-toplink-cta::before,
+button.lux-toplink-cta::before{
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 2;
+
+  /* wider bright band + softer shoulders (bigger + more “glass”) */
+  background: linear-gradient(135deg,
+    rgba(255,255,255,0) 0%,
+    rgba(255,255,255,0) 28%,
+    rgba(255,255,255,0.30) 40%,
+    rgba(255,255,255,0.78) 50%,
+    rgba(255,255,255,0.98) 55%,
+    rgba(255,255,255,0.55) 66%,
+    rgba(255,255,255,0) 78%,
+    rgba(255,255,255,0) 100%
+  );
+
+  transform: translate3d(-160%, -26%, 0) rotate(12deg);
+  opacity: 0;
+  mix-blend-mode: screen; /* gives the “glass” vibe without muddying */
+}
+
+/* Outer glow halo (ring-only cutout) */
+a.lux-toplink-cta::after,
+button.lux-toplink-cta::after{
+  content: "";
+  position: absolute;
+  inset: -22px;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+
+  opacity: 0;
+
+  background: conic-gradient(
+    from var(--luxRingAngle),
+    rgba(255,55,95,0.85),
+    rgba(255,159,10,0.78),
+    rgba(255,214,10,0.74),
+    rgba(50,215,75,0.74),
+    rgba(100,210,255,0.78),
+    rgba(10,132,255,0.85),
+    rgba(191,90,242,0.85),
+    rgba(255,45,85,0.85),
+    rgba(255,55,95,0.85)
+  );
+
+  mix-blend-mode: screen;
+
+  /* ring-only cutout (prevents filling the center) */
+  padding: 18px;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+/* Hover: crisp rotating ring + moving thickness hotspot + one-time sheen */
+a.lux-toplink-cta:hover,
+a.lux-toplink-cta:focus-visible,
+button.lux-toplink-cta:hover,
+button.lux-toplink-cta:focus-visible{
+  transform: translateY(-1px) !important; /* override global a:hover */
+  box-shadow: 0 16px 36px rgba(0,0,0,0.14) !important;
+
+  border: 3px solid transparent;
+
+  background:
+    /* fill */
+    linear-gradient(rgba(255,255,255,0.98), rgba(255,255,255,0.98)) padding-box,
+
+    /* HOTSPOT (this is your “thickness ripple” cue) */
+    conic-gradient(
+      from var(--luxHotAngle),
+      rgba(255,255,255,0.00) 0deg,
+      rgba(255,255,255,0.00) 300deg,
+      rgba(255,255,255,0.85) 322deg,
+      rgba(255,255,255,0.15) 346deg,
+      rgba(255,255,255,0.00) 360deg
+    ) border-box,
+
+    /* main ring */
+    conic-gradient(
+      from var(--luxRingAngle),
+      #ff375f,
+      #ff9f0a,
+      #ffd60a,
+      #32d74b,
+      #64d2ff,
+      #0a84ff,
+      #bf5af2,
+      #ff2d55,
+      #ff375f
+    ) border-box;
+
+  /* Motion: ring rotates + hotspot orbits */
+  animation:
+    luxRingSpin var(--luxRingDur) linear infinite,
+    luxHotSpin var(--luxHotDur) linear infinite;
+}
+
+/* Start the halo + breathe it a bit */
+a.lux-toplink-cta:hover::after,
+a.lux-toplink-cta:focus-visible::after,
+button.lux-toplink-cta:hover::after,
+button.lux-toplink-cta:focus-visible::after{
+  opacity: 0.80;
+  filter: url(#luxCoronaFlare);
+  animation:
+    luxGlowBreath 3.4s ease-in-out infinite;
+}
+
+/* Sheen runs ONCE per hover entry */
+a.lux-toplink-cta:hover::before,
+a.lux-toplink-cta:focus-visible::before,
+button.lux-toplink-cta:hover::before,
+button.lux-toplink-cta:focus-visible::before{
+  opacity: 0.95;
+  animation: luxGlassSweep 980ms ease-out 1;
+}
+
+/* Animations */
+@keyframes luxRingSpin{ to { --luxRingAngle: 360deg; } }
+@keyframes luxHotSpin { to { --luxHotAngle: 360deg; } }
+
+@keyframes luxGlowBreath{
+  0%,100%{ opacity: 0.74; transform: scale(1); }
+  50%{    opacity: 0.92; transform: scale(1.035); }
+}
+
+@keyframes luxGlassSweep{
+  0%   { transform: translate3d(-160%, -26%, 0) rotate(12deg); opacity: 0; }
+  12%  { opacity: 0.85; }
+  100% { transform: translate3d(160%, 26%, 0) rotate(12deg); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  a.lux-toplink-cta:hover,
+  a.lux-toplink-cta:focus-visible,
+  button.lux-toplink-cta:hover,
+  button.lux-toplink-cta:focus-visible{ animation: none; }
+  a.lux-toplink-cta:hover::before,
+  a.lux-toplink-cta:focus-visible::before,
+  a.lux-toplink-cta:hover::after,
+  a.lux-toplink-cta:focus-visible::after,
+  button.lux-toplink-cta:hover::before,
+  button.lux-toplink-cta:focus-visible::before,
+  button.lux-toplink-cta:hover::after,
+  button.lux-toplink-cta:focus-visible::after{ animation: none; }
+}
+</file>
+
 <file path="lux-layout.tokens.css">
 /* lux-layout.tokens.css */
 /* ============================================================================
@@ -20375,242 +20962,6 @@ export function renderSyllableStrip(wordObj) {
 .toggle-en-btn:hover { background: #e0e0e0; }
 </file>
 
-<file path="lux-layout.core.css">
-/* lux-layout.core.css */
-
-/* Core application styles */
-
-#typewriterMsg {
-  white-space: pre;
-  opacity: 1;
-  transition: opacity 0.5s;
-}
-
-.hidden {
-  display: none !important;
-}
-
-@keyframes tipPop {
-  0% { transform: scale(0.2) rotate(-30deg); opacity: 0; color: #bbb; }
-  40% { transform: scale(1.4) rotate(10deg); opacity: 1; color: #1e90ff; }
-  70% { transform: scale(0.88) rotate(-5deg); color: #205080; }
-  85% { transform: scale(1.05) rotate(0); color: #0078d7; }
-  100% { transform: scale(1) rotate(0); color: inherit; }
-}
-
-#prettyResult a {
-  text-decoration: none !important;
-  font-weight: 700;
-}
-#prettyResult a:visited,
-#prettyResult a:active,
-#prettyResult a:focus {
-  text-decoration: none !important;
-  color: inherit !important;
-}
-#prettyResult a:hover {
-  text-decoration: underline dotted;
-  color: #0078d7;
-}
-
-.pop-in {
-  animation: tipPop 1.4s cubic-bezier(0.18, 1.7, 0.28, 1.01);
-}
-
-body {
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  font-family: "Montserrat", system-ui, sans-serif;
-  background: #fff;
-  color: #333;
-  margin: 0;
-  line-height: 1.5;
-  padding: 10px;
-}
-
-#container {
-  width: 100%;
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: calc(2vw + var(--lux-top-banner-offset, 0px)) 2vw 3vw;
-  box-sizing: border-box;
-}
-
-@keyframes slowSpin {
-  0% { transform: rotate(0); }
-  100% { transform: rotate(360deg); }
-}
-
-.ai-spinner {
-  display: inline-block;
-  animation: slowSpin 2.4s linear infinite;
-}
-
-button,
-#nextPartBtn {
-  transition: background 0.15s, transform 0.18s ease, filter 0.18s ease;
-}
-/* EDITED: Added :not(.lux-col-toggle) to prevent conflict with rotation transforms */
-button:hover:not(:disabled):not(.lux-col-toggle),
-#nextPartBtn:hover:not(:disabled) {
-  transform: scale(1.12);
-  filter: brightness(0.85);
-}
-
-/* ============================================================
-   RESULTS PILL BASE (CRITICAL FIX)
-   - Remove legacy scale + brightness from result word-pill hover
-   - Remove filter transition from result pills
-   - Do NOT define #prettyResult a:hover here anymore; let global
-     "interactive depth" handle transform/box-shadow (lift/press).
-   - Explicitly neutralize tooltip hover inside results to prevent
-     global .tooltip:hover darken from leaking into results.
-   ============================================================ */
-#prettyResult a,
-#prettyResult .tooltip {
-  display: inline-block;
-  transition: transform 140ms ease, box-shadow 140ms ease;
-}
-
-/* Keep result tooltips consistent: lift + shadow only, no darken */
-#prettyResult .tooltip:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.28);
-  filter: none;
-}
-#prettyResult .tooltip:active {
-  transform: translateY(0);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.20);
-  filter: none;
-}
-
-/* --- Input Effects --- */
-#referenceText,
-#partsInfoTip {
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
-}
-#referenceText:hover,
-#partsInfoTip:hover {
-  transform: translateY(-2px);
-  filter: none;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.28);
-}
-
-.tooltip {
-  transition: transform 0.18s ease, filter 0.18s ease;
-}
-.tooltip:hover {
-  transform: scale(1.12);
-  filter: brightness(0.85);
-}
-
-h2 {
-  font-size: 2.25rem;
-  margin: 2rem 0 1rem;
-  text-align: center;
-}
-
-label {
-  font-size: 1.15rem;
-  display: inline-block;
-  text-align: center;
-  width: 100%;
-}
-
-#referenceText {
-  width: 95vw;
-  max-width: 880px;
-  min-height: 120px;
-  font-size: 1.6rem;
-  font-weight: 700;
-  line-height: 1.4;
-  padding: 1.2rem;
-  border-radius: 0.8rem;
-  resize: vertical;
-}
-
-input::placeholder {
-  color: #888 !important;
-  font-style: italic;
-  letter-spacing: 0.03em;
-  opacity: 1;
-  font-size: 1.12rem;
-}
-#referenceText::placeholder {
-  opacity: 1;
-  transition: opacity 0.45s ease;
-  font-style: italic;
-}
-#referenceText.placeholder-fade::placeholder {
-  opacity: 0;
-}
-
-select {
-  font-size: 1.17rem;
-  font-weight: 700;
-  padding: 0.5rem 1rem;
-  border: 1px solid #bbb;
-  border-radius: 0.6rem;
-  background: #f8f8f8;
-  margin: 0.3rem auto 1rem;
-}
-</file>
-
-<file path="lux-layout.harvard.css">
-/* lux-layout.harvard.css */
-
-/* Harvard picker: centered row under the passage select */
-.lux-harvard-picker{
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-/* Harvard label should match "Select Passage:" label sizing */
-.lux-harvard-label{
-  font-size: 1.15rem;    /* matches your global label rule */
-  line-height: 1;
-  white-space: nowrap;
-}
-
-/* Make Harvard buttons a bit smaller (scoped to this row only) */
-.lux-harvard-picker button{
-  font-size: 1.0rem;
-  padding: 0.55rem 1.15rem;
-  border-radius: 0.6rem;
-}
-
-/* Arrows: slightly narrower so they don’t dominate */
-#harvardPrev,
-#harvardNext{
-  padding: 0.55rem 0.95rem;
-}
-
-/* Number input: slightly larger + rounder */
-.lux-harvard-picker input[type="number"]{
-  width: 76px;
-  padding: 8px 10px;
-  font-size: 1.05rem;
-  border-radius: 0.8rem;
-  text-align: center;
-}
-
-/* Optional: if you keep sr-only in HTML */
-.sr-only{
-  position: absolute !important;
-  width: 1px; height: 1px;
-  padding: 0; margin: -1px;
-  overflow: hidden;
-  clip: rect(0,0,0,0);
-  white-space: nowrap;
-  border: 0;
-}
-</file>
-
 <file path="lux-layout.interactions.css">
 /* lux-layout.interactions.css */
 
@@ -20678,355 +21029,97 @@ input[type="radio"]:focus-visible,
 }
 </file>
 
-<file path="lux-layout.nav-cta.css">
-/* lux-layout.nav-cta.css */
+<file path="lux-layout.messaging.css">
+/* lux-layout.messaging.css */
 
-/* ===========================
-   AI Convo CTA — Apple Intelligence ring (v5)
-   Goals:
-   - Obvious motion (ring rotates + hotspot orbits)
-   - Visible “thickness ripple” (hotspot wedge riding the ring)
-   - One-time glass sheen sweep across the button interior on hover entry
-   - No weird interior artifacts (shimmer is its own layer, not baked into backgrounds)
-   =========================== */
-
-@property --luxRingAngle {
-  syntax: "<angle>";
-  inherits: true;          /* IMPORTANT: let ::after see it */
-  initial-value: 0deg;
+#userMsg {
+  background: #e7f2fb;
+  color: #134e6f;
+  padding: 1em 0.7em;
+  border-radius: 0.7em;
+  opacity: 0;
+  transform: translateY(-40px);
+  transition: opacity 0.7s ease,
+    transform 0.7s cubic-bezier(0.47, 1.64, 0.41, 0.8);
+  pointer-events: none; /* don't block clicks while hidden */
 }
-@property --luxHotAngle {
-  syntax: "<angle>";
-  inherits: true;          /* IMPORTANT: let ::after see it */
-  initial-value: 0deg;
+#userMsg.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto; /* allow database tracking click once visible */
 }
-
-/* Wrapper */
-.lux-toplinks{
-  margin: 18px auto 0;
-  width: min(980px, 94vw);
-  display:flex;
-  gap: 8px;
-
-  position: relative;
-  z-index: 200; /* stay above atmo/deck layers */
+#userMsg ol {
+  margin: 0;
+  padding-left: 1.2em;
+}
+#userMsg li {
+  margin-bottom: 0.5em;
+  font-size: 1.09em;
+  line-height: 1.5;
 }
 
-/* Centered CTA wrapper (if used on some pages) */
-.lux-toplinks-cta{
+#suggested-section {
+  margin: 32px 0 18px;
+  padding: 12px 0;
+  font-size: 1.25em;
+  background: #f3faff;
+  border-radius: 0.8em;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(40, 120, 255, 0.09);
+}
+
+.raw-data-section {
+  background: #f3f3f3;
+  margin: 1em auto;
+  padding: 15px;
+  border-radius: 6px;
+  font-size: 1.16em;
+  max-width: 96vw;
+  max-height: 340px;
+  overflow: auto;
+  display: none;
+  text-align: left;
+}
+
+.show-raw-link {
+  cursor: pointer;
+  color: #0083ff;
+  text-decoration: underline;
+  font-size: 1.12em;
+  margin-left: 8px;
+}
+
+.btn-group {
   display: flex;
   justify-content: center;
-  margin-bottom: 18px;
-
-  position: relative;
-  z-index: 200; /* match top links */
+  gap: 12px;
+  margin-bottom: 1.3em;
 }
 
-.lux-toplink{
-  font-weight: 800;
-  text-decoration: none;
-}
-
-
-/* Base: same pill size/shape everywhere */
-.lux-navpill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: min(420px, 92vw);   /* SAME SIZE everywhere */
-  padding: 16px 30px;
-  font-size: 18px;
-  font-weight: 900;
-  text-decoration: none;
-  border-radius: 999px;
-  position: relative;
-  isolation: isolate;
-
-  color: #1f2a37;
-  background: rgba(255,255,255,0.98);
-  border: 1px solid rgba(0,0,0,0.10);
-  box-shadow: 0 12px 26px rgba(0,0,0,0.10);
-  transition:
-    transform 160ms ease,
-    background-color 180ms ease,
-    border-color 180ms ease,
-    box-shadow 200ms ease,
-    color 180ms ease,
-    filter 180ms ease;
-  cursor: pointer;
-  -webkit-appearance: none;
-  appearance: none;
-}
-
-/* Hover: water-blue wash */
-.lux-navpill:hover:not(:disabled){
-  transform: translateY(-2px);
-  background-color: var(--lux-water-hover);
-  border-color: var(--lux-water-border);
-  box-shadow:
-    0 14px 28px rgba(0,0,0,0.10),
-    0 0 0 3px var(--lux-water-halo);
-}
-
-/* Press: slightly deeper “dip” */
-.lux-navpill:active:not(:disabled){
-  transform: translateY(0);
-  background-color: var(--lux-water-hover-2);
-  border-color: rgba(0,120,215,0.34);
-  box-shadow:
-    0 10px 18px rgba(0,0,0,0.12),
-    0 0 0 3px rgba(0,120,215,0.12);
-}
-
-.lux-navpill:focus-visible { outline: 3px solid rgba(0,120,215,0.35); outline-offset: 3px; }
-
-/* ========================================================================
-   DISABLED: Destination animation “to AI Conversations” = rainbow ring
-   (The “windmill” system)
-   ======================================================================== */
-
-/*
-.lux-navpill--to-convo {
-  background: transparent;
+/* ✅ Scope button styling ONLY to the messaging button group
+   (prevents Word Cloud + the whole app from inheriting white button text) */
+.btn-group button {
+  font-size: 1.25rem;
+  padding: 1rem 2.2rem;
   border: none;
-  box-shadow: none;
-}
-
-.lux-navpill--to-convo::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 999px;
-  background: conic-gradient(
-    from 0deg,
-    #3b82f6, #a855f7, #ec4899, #f97316, #f59e0b, #22c55e, #3b82f6
-  );
-  animation: luxNavRingSpin var(--luxRingDur, 4.2s) linear infinite;
-  z-index: -2;
-}
-
-.lux-navpill--to-convo::after {
-  content: "";
-  position: absolute;
-  inset: 3px;               ring thickness
-  border-radius: 999px;
-  background: rgba(255,255,255,0.98);
-  border: 1px solid rgba(0,0,0,0.10);
-  box-shadow: 0 12px 26px rgba(0,0,0,0.10);
-  z-index: -1;
-}
-
-@keyframes luxNavRingSpin {
-  to { transform: rotate(360deg); }
-}
-*/
-
-
-
-/* Use on any CTA you want to match the AI Conversations pill size */
-.lux-cta-same {
-  width: min(420px, 92vw);   /* consistent “big button” width, responsive */
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-}
-
-/* Ripple-ready: keeps filter effects from looking janky */
-[data-lux-ripple]{
-  display: inline-block;
-  transform: translateZ(0); /* encourage GPU compositing */
-  will-change: filter;
-}
-/* Don't let the ripple helper clobber navpill centering */
-.lux-navpill[data-lux-ripple]{
-  display: inline-flex;
-}
-
-
-/* Base button */
-a.lux-toplink-cta,
-button.lux-toplink-cta{
-  padding: 16px 30px;
-  font-size: 18px;
-  font-weight: 900;
-
-  --luxRingDur: 4.2s;      /* SPEED KNOB: lower = faster */
-  --luxHotDur: 2.6s;       /* hotspot moves faster than the ring */
-
-  position: relative;
-  isolation: isolate;
-
-  color: #1f2a37;
-  border: 1px solid rgba(0,0,0,0.10);
-  border-radius: 999px;
-  background: linear-gradient(rgba(255,255,255,0.98), rgba(255,255,255,0.98)) padding-box;
-
-  box-shadow: 0 12px 26px rgba(0,0,0,0.10);
-  transition: transform 160ms ease, box-shadow 160ms ease;
-
-  /* important for button parity */
+  border-radius: 0.7rem;
+  background: #0078d7;
+  color: #fff;
   cursor: pointer;
-  appearance: none;
-  -webkit-appearance: none;
+  transition: background 0.15s;
+}
+.btn-group button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
 }
 
-/* One-time “sun flash” glass sheen (interior only) */
-a.lux-toplink-cta::before,
-button.lux-toplink-cta::before{
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  z-index: 2;
+/* ============================================================
+   REMOVED DUPLICATE BLOCKS HERE:
+   (Record buttons, Score Table, Word Chips, Tooltips)
+   These are now correctly handled by features-1.css
+   ============================================================ */
 
-  /* wider bright band + softer shoulders (bigger + more “glass”) */
-  background: linear-gradient(135deg,
-    rgba(255,255,255,0) 0%,
-    rgba(255,255,255,0) 28%,
-    rgba(255,255,255,0.30) 40%,
-    rgba(255,255,255,0.78) 50%,
-    rgba(255,255,255,0.98) 55%,
-    rgba(255,255,255,0.55) 66%,
-    rgba(255,255,255,0) 78%,
-    rgba(255,255,255,0) 100%
-  );
-
-  transform: translate3d(-160%, -26%, 0) rotate(12deg);
-  opacity: 0;
-  mix-blend-mode: screen; /* gives the “glass” vibe without muddying */
-}
-
-/* Outer glow halo (ring-only cutout) */
-a.lux-toplink-cta::after,
-button.lux-toplink-cta::after{
-  content: "";
-  position: absolute;
-  inset: -22px;
-  border-radius: inherit;
-  pointer-events: none;
-  z-index: 0;
-
-  opacity: 0;
-
-  background: conic-gradient(
-    from var(--luxRingAngle),
-    rgba(255,55,95,0.85),
-    rgba(255,159,10,0.78),
-    rgba(255,214,10,0.74),
-    rgba(50,215,75,0.74),
-    rgba(100,210,255,0.78),
-    rgba(10,132,255,0.85),
-    rgba(191,90,242,0.85),
-    rgba(255,45,85,0.85),
-    rgba(255,55,95,0.85)
-  );
-
-  mix-blend-mode: screen;
-
-  /* ring-only cutout (prevents filling the center) */
-  padding: 18px;
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-}
-
-/* Hover: crisp rotating ring + moving thickness hotspot + one-time sheen */
-a.lux-toplink-cta:hover,
-a.lux-toplink-cta:focus-visible,
-button.lux-toplink-cta:hover,
-button.lux-toplink-cta:focus-visible{
-  transform: translateY(-1px) !important; /* override global a:hover */
-  box-shadow: 0 16px 36px rgba(0,0,0,0.14) !important;
-
-  border: 3px solid transparent;
-
-  background:
-    /* fill */
-    linear-gradient(rgba(255,255,255,0.98), rgba(255,255,255,0.98)) padding-box,
-
-    /* HOTSPOT (this is your “thickness ripple” cue) */
-    conic-gradient(
-      from var(--luxHotAngle),
-      rgba(255,255,255,0.00) 0deg,
-      rgba(255,255,255,0.00) 300deg,
-      rgba(255,255,255,0.85) 322deg,
-      rgba(255,255,255,0.15) 346deg,
-      rgba(255,255,255,0.00) 360deg
-    ) border-box,
-
-    /* main ring */
-    conic-gradient(
-      from var(--luxRingAngle),
-      #ff375f,
-      #ff9f0a,
-      #ffd60a,
-      #32d74b,
-      #64d2ff,
-      #0a84ff,
-      #bf5af2,
-      #ff2d55,
-      #ff375f
-    ) border-box;
-
-  /* Motion: ring rotates + hotspot orbits */
-  animation:
-    luxRingSpin var(--luxRingDur) linear infinite,
-    luxHotSpin var(--luxHotDur) linear infinite;
-}
-
-/* Start the halo + breathe it a bit */
-a.lux-toplink-cta:hover::after,
-a.lux-toplink-cta:focus-visible::after,
-button.lux-toplink-cta:hover::after,
-button.lux-toplink-cta:focus-visible::after{
-  opacity: 0.80;
-  filter: url(#luxCoronaFlare);
-  animation:
-    luxGlowBreath 3.4s ease-in-out infinite;
-}
-
-/* Sheen runs ONCE per hover entry */
-a.lux-toplink-cta:hover::before,
-a.lux-toplink-cta:focus-visible::before,
-button.lux-toplink-cta:hover::before,
-button.lux-toplink-cta:focus-visible::before{
-  opacity: 0.95;
-  animation: luxGlassSweep 980ms ease-out 1;
-}
-
-/* Animations */
-@keyframes luxRingSpin{ to { --luxRingAngle: 360deg; } }
-@keyframes luxHotSpin { to { --luxHotAngle: 360deg; } }
-
-@keyframes luxGlowBreath{
-  0%,100%{ opacity: 0.74; transform: scale(1); }
-  50%{    opacity: 0.92; transform: scale(1.035); }
-}
-
-@keyframes luxGlassSweep{
-  0%   { transform: translate3d(-160%, -26%, 0) rotate(12deg); opacity: 0; }
-  12%  { opacity: 0.85; }
-  100% { transform: translate3d(160%, 26%, 0) rotate(12deg); opacity: 0; }
-}
-
-@media (prefers-reduced-motion: reduce){
-  a.lux-toplink-cta:hover,
-  a.lux-toplink-cta:focus-visible,
-  button.lux-toplink-cta:hover,
-  button.lux-toplink-cta:focus-visible{ animation: none; }
-  a.lux-toplink-cta:hover::before,
-  a.lux-toplink-cta:focus-visible::before,
-  a.lux-toplink-cta:hover::after,
-  a.lux-toplink-cta:focus-visible::after,
-  button.lux-toplink-cta:hover::before,
-  button.lux-toplink-cta:focus-visible::before,
-  button.lux-toplink-cta:hover::after,
-  button.lux-toplink-cta:focus-visible::after{ animation: none; }
-}
+/* Duplicate results-collapse block removed as requested */
 </file>
 
 <file path="lux-layout.scrollbar.css">
@@ -25231,99 +25324,6 @@ export function renderResultsHeaderModern(data) {
 }
 </file>
 
-<file path="lux-layout.messaging.css">
-/* lux-layout.messaging.css */
-
-#userMsg {
-  background: #e7f2fb;
-  color: #134e6f;
-  padding: 1em 0.7em;
-  border-radius: 0.7em;
-  opacity: 0;
-  transform: translateY(-40px);
-  transition: opacity 0.7s ease,
-    transform 0.7s cubic-bezier(0.47, 1.64, 0.41, 0.8);
-  pointer-events: none; /* don't block clicks while hidden */
-}
-#userMsg.show {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto; /* allow database tracking click once visible */
-}
-#userMsg ol {
-  margin: 0;
-  padding-left: 1.2em;
-}
-#userMsg li {
-  margin-bottom: 0.5em;
-  font-size: 1.09em;
-  line-height: 1.5;
-}
-
-#suggested-section {
-  margin: 32px 0 18px;
-  padding: 12px 0;
-  font-size: 1.25em;
-  background: #f3faff;
-  border-radius: 0.8em;
-  font-weight: 700;
-  box-shadow: 0 2px 8px rgba(40, 120, 255, 0.09);
-}
-
-.raw-data-section {
-  background: #f3f3f3;
-  margin: 1em auto;
-  padding: 15px;
-  border-radius: 6px;
-  font-size: 1.16em;
-  max-width: 96vw;
-  max-height: 340px;
-  overflow: auto;
-  display: none;
-  text-align: left;
-}
-
-.show-raw-link {
-  cursor: pointer;
-  color: #0083ff;
-  text-decoration: underline;
-  font-size: 1.12em;
-  margin-left: 8px;
-}
-
-.btn-group {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  margin-bottom: 1.3em;
-}
-
-/* ✅ Scope button styling ONLY to the messaging button group
-   (prevents Word Cloud + the whole app from inheriting white button text) */
-.btn-group button {
-  font-size: 1.25rem;
-  padding: 1rem 2.2rem;
-  border: none;
-  border-radius: 0.7rem;
-  background: #0078d7;
-  color: #fff;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.btn-group button:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-}
-
-/* ============================================================
-   REMOVED DUPLICATE BLOCKS HERE:
-   (Record buttons, Score Table, Word Chips, Tooltips)
-   These are now correctly handled by features-1.css
-   ============================================================ */
-
-/* Duplicate results-collapse block removed as requested */
-</file>
-
 <file path="lux-progress.css">
 /* lux-progress.css — user-first progress UI (clean → expandable) */
 
@@ -28411,144 +28411,6 @@ export function createCloudActionSheet({
 }
 </file>
 
-<file path="features/recorder/audio-mode-switch.js">
-// features/recorder/audio-mode-switch.js
-
-import {
-  AUDIO_MODES,
-  getAudioMode,
-  setAudioMode,
-  initAudioModeDataset,
-} from "./audio-mode-core.js";
-
-const SELECTOR = {
-  wrap: ".lux-audioModeWrap",
-};
-
-function kickBump(toggleEl) {
-  // restart the CSS animation cleanly
-  toggleEl.classList.remove("is-bump");
-  void toggleEl.offsetWidth; // reflow
-  toggleEl.classList.add("is-bump");
-  window.setTimeout(() => toggleEl.classList.remove("is-bump"), 320);
-}
-
-function ensurePracticeActionsRow() {
-  const btnGroup = document.querySelector(".btn-group");
-  if (!btnGroup) return null;
-
-  // Already wrapped?
-  const existing = btnGroup.closest(".lux-rec-actions");
-  if (existing) return existing;
-
-  // Wrap btn-group in a row container so we can place the toggle to the right
-  const row = document.createElement("div");
-  row.className = "lux-rec-actions";
-
-  const parent = btnGroup.parentElement;
-  if (!parent) return null;
-
-  parent.insertBefore(row, btnGroup);
-  row.appendChild(btnGroup);
-
-  return row;
-}
-
-function findPracticeAnchor() {
-  // ✅ Dock to the right of Record/Stop (same row)
-  return ensurePracticeActionsRow();
-}
-
-function findConvoAnchor() {
-  // If you mount it in AI Convo header actions, keep existing behavior
-  return document.querySelector(".lux-convo-actions") || null;
-}
-
-function buildUI(scope = "practice") {
-  const wrap = document.createElement("div");
-  wrap.className = "lux-audioModeWrap";
-
-  const label = document.createElement("div");
-  label.className = "lux-audioModeLabel";
-  label.textContent = "Audio";
-
-  const toggle = document.createElement("div");
-  toggle.className = "lux-audioToggle";
-
-  const btnNormal = document.createElement("button");
-  btnNormal.className = "lux-audioOpt";
-  btnNormal.type = "button";
-  btnNormal.dataset.mode = "NORMAL";
-  btnNormal.textContent = "Normal";
-  btnNormal.setAttribute("data-tip", "Balanced quality + smaller size");
-
-  const btnPro = document.createElement("button");
-  btnPro.className = "lux-audioOpt";
-  btnPro.type = "button";
-  btnPro.dataset.mode = "PRO";
-  btnPro.textContent = "Pro";
-  btnPro.setAttribute("data-tip", "Higher quality + slightly larger size");
-
-  const knob = document.createElement("span");
-  knob.className = "lux-audioKnob";
-
-  toggle.appendChild(btnNormal);
-  toggle.appendChild(btnPro);
-  toggle.appendChild(knob);
-
-  wrap.appendChild(label);
-  wrap.appendChild(toggle);
-
-  // scope styling hooks
-  if (scope === "practice") wrap.classList.add("is-docked");
-  if (scope === "convo") wrap.classList.add("is-compact");
-
-  // initial dataset mode sync
-  const mode = getAudioMode?.() || AUDIO_MODES?.NORMAL || "NORMAL";
-  initAudioModeDataset?.(mode);
-
-  toggle.addEventListener("click", (e) => {
-    const b = e.target.closest("button[data-mode]");
-    if (!b) return;
-
-    const next = b.dataset.mode;
-    setAudioMode?.(next);
-    initAudioModeDataset?.(next);
-    kickBump(toggle); // ✅ subtle “switch happened” feedback
-  });
-
-  return wrap;
-}
-
-export function mountAudioModeSwitch(scope = "practice") {
-  // Kill duplicate mounts
-  document.querySelectorAll(SELECTOR.wrap).forEach((n) => n.remove());
-
-  const ui = buildUI(scope);
-
-  let anchor = null;
-  if (scope === "convo") anchor = findConvoAnchor();
-  else anchor = findPracticeAnchor();
-
-  if (!anchor) return null;
-
-  // ✅ Practice: force the switch to live AFTER the Stop button
-  if (scope === "practice") {
-    const stopBtn = document.querySelector("#stop");
-    if (stopBtn && stopBtn.parentElement) {
-      // Insert immediately after Stop inside the same flex row
-      stopBtn.insertAdjacentElement("afterend", ui);
-      ui.classList.add("is-rightOfStop");
-      return ui;
-    }
-  }
-
-  // fallback behavior (convo/header/etc.)
-  anchor.prepend(ui);
-  return ui;
-}
-</file>
-
 <file path="features/recorder/audio-mode.js">
 // features/recorder/audio-mode.js
 // Normal vs Pro recording constraints for Lux
@@ -30151,345 +30013,6 @@ export function wireWordcloudSideDrawers(root, { onLayoutChange } = {}) {
 }
 </file>
 
-<file path="features/progress/wordcloud/template.js">
-// features/progress/wordcloud/template.js
-// ✅ Wordcloud HTML template extracted from index.js
-
-export function wordcloudTemplateHtml() {
-  return `
-    <section class="lux-wc-shell" id="luxWcShell">
-      <div class="lux-wc-head">
-        <div>
-          <div class="lux-wc-title">☁️ Cloud Visuals</div>
-          <div class="lux-wc-sub" id="luxWcSub">
-            Size = frequency · Color = difficulty (Lux scoring)
-          </div>
-        </div>
-      </div>
-
-      <div class="lux-wc-body">
-        <div class="wcDock" data-wc-dock>
-
-          <!-- =========================
-               LEFT DRAWER (Explore)
-          ========================== -->
-          <aside class="wcDrawer wcDrawer--left" data-wc-drawer="left">
-            <button
-              class="wcDrawerTab"
-              data-wc-drawer-toggle="left"
-              data-tip="Show/hide filters"
-              title="Show/hide filters"
-              aria-expanded="true"
-            >
-              ◀
-            </button>
-
-            <div class="wcDrawerPanel">
-              <div class="wcDrawerHeader">Explore</div>
-              <div class="wcDrawerBody">
-
-                <!-- Search -->
-                <div class="lux-wc-search">
-                  <input
-                    id="luxWcSearch"
-                    type="search"
-                    placeholder="Search cloud…"
-                    autocomplete="off"
-                    data-tip="Filter targets by typing part of a word/phoneme."
-                    title="Filter targets by typing part of a word/phoneme."
-                  />
-                  <button
-                    class="lux-wc-clear"
-                    id="luxWcClear"
-                    data-tip="Clear search filter."
-                    title="Clear search filter."
-                  >✕</button>
-                </div>
-
-                <!-- Sort -->
-                <div class="lux-wc-chipBar" aria-label="Sort">
-                  <button
-                    id="luxWcSortPriority"
-                    class="lux-wc-chipBtn"
-                    data-sort="priority"
-                    data-tip="Best overall targets (difficulty + frequency + persistence)."
-                    title="Best overall targets (difficulty + frequency + persistence)."
-                  >Priority</button>
-
-                  <button
-                    id="luxWcSortFrequent"
-                    class="lux-wc-chipBtn"
-                    data-sort="freq"
-                    data-tip="Most used targets (highest frequency)."
-                    title="Most used targets (highest frequency)."
-                  >Frequent</button>
-
-                  <button
-                    id="luxWcSortDifficult"
-                    class="lux-wc-chipBtn"
-                    data-sort="diff"
-                    data-tip="Hardest targets (lowest score)."
-                    title="Hardest targets (lowest score)."
-                  >Difficult</button>
-
-                  <button
-                    id="luxWcSortRecent"
-                    class="lux-wc-chipBtn"
-                    data-sort="recent"
-                    data-tip="Targets you struggled with most recently."
-                    title="Targets you struggled with most recently."
-                  >Recent</button>
-
-                  <button
-                    id="luxWcSortPersistent"
-                    class="lux-wc-chipBtn"
-                    data-sort="persist"
-                    data-tip="Targets you keep missing over time."
-                    title="Targets you keep missing over time."
-                  >Persistent</button>
-                </div>
-
-                <!-- Range -->
-                <div class="lux-wc-chipBar" aria-label="Time range">
-                  <button
-                    id="luxWcRangeAll"
-                    class="lux-wc-chipBtn"
-                    data-range="all"
-                    data-tip="Use your full history."
-                    title="Use your full history."
-                  >All time</button>
-
-                  <button
-                    id="luxWcRange30d"
-                    class="lux-wc-chipBtn"
-                    data-range="30d"
-                    data-tip="Only include the last 30 days."
-                    title="Only include the last 30 days."
-                  >30d</button>
-
-                  <button
-                    id="luxWcRange7d"
-                    class="lux-wc-chipBtn"
-                    data-range="7d"
-                    data-tip="Only include the last 7 days."
-                    title="Only include the last 7 days."
-                  >7d</button>
-
-                  <button
-                    id="luxWcRangeToday"
-                    class="lux-wc-chipBtn"
-                    data-range="today"
-                    data-tip="Only include today’s attempts."
-                    title="Only include today’s attempts."
-                  >Today</button>
-
-                  <button
-                    id="luxWcRangeTimeline"
-                    class="lux-wc-chipBtn"
-                    data-range="timeline"
-                    data-tip="Replay your targets through time."
-                    title="Replay your targets through time."
-                  >Timeline</button>
-                </div>
-
-                <!-- Timeline controls -->
-                <div class="lux-wc-timelineRow" id="luxWcTimelineRow">
-                  <div class="lux-wc-timelineLabel"
-                    data-tip="Timeline replay settings."
-                    title="Timeline replay settings."
-                  >Timeline</div>
-
-                  <div class="lux-wc-timelineGroup">
-                    <div class="lux-wc-tlineMini">Window</div>
-                    <input id="luxWcWin" type="range" min="7" max="60" step="1"
-                      data-tip="How many days to include in the replay window."
-                      title="How many days to include in the replay window."
-                    />
-                    <div class="lux-wc-tlineVal" id="luxWcWinVal"></div>
-                  </div>
-
-                  <div class="lux-wc-timelineGroup">
-                    <div class="lux-wc-tlineMini">Ends</div>
-                    <input id="luxWcPos" type="range" min="0" max="90" step="1"
-                      data-tip="How many days ago the replay window ends."
-                      title="How many days ago the replay window ends."
-                    />
-                    <div class="lux-wc-tlineVal" id="luxWcPosVal"></div>
-                  </div>
-
-                  <button class="lux-pbtn lux-pbtn--ghost" id="luxWcReplay"
-                    data-tip="Play/stop timeline replay."
-                    title="Play/stop timeline replay."
-                  >▶ Replay</button>
-                </div>
-
-              </div>
-            </div>
-          </aside>
-
-
-          <!-- =========================
-               CENTER STAGE (Square Cloud)
-          ========================== -->
-          <main class="wcStage">
-            <div class="wcStageCard">
-              <div class="lux-wc-canvasWrap wcStageSquare" id="luxWcCanvasWrap">
-                <canvas id="luxWcCanvas" class="lux-wc-canvas wcCanvas"></canvas>
-
-                <!-- Loading overlay (shows during layout + redraw) -->
-                <div class="lux-wc-overlay" id="luxWcOverlay" aria-live="polite" aria-busy="true" hidden>
-                  <div class="lux-wc-overlayCard">
-                    <div class="lux-wc-spinner" aria-hidden="true"></div>
-                    <div class="lux-wc-overlayText">
-                      <div class="lux-wc-overlayTitle" id="luxWcOverlayTitle">Loading…</div>
-                      <div class="lux-wc-overlaySub" id="luxWcOverlaySub">Building your cloud</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="wcStageFooter">
-                <div class="lux-wc-legend">
-                  <span><span class="lux-wc-dot" style="background:#2563eb;"></span>80+ (Good)</span>
-                  <span><span class="lux-wc-dot" style="background:#d97706;"></span>60–79 (Warn)</span>
-                  <span><span class="lux-wc-dot" style="background:#dc2626;"></span>&lt;60 (Needs work)</span>
-                </div>
-
-                <div id="luxWcMeta" style="margin-top:10px; color:#94a3b8; font-weight:900;"></div>
-              </div>
-            </div>
-          </main>
-
-
-          <!-- =========================
-               RIGHT DRAWER (Actions)
-          ========================== -->
-          <aside class="wcDrawer wcDrawer--right" data-wc-drawer="right">
-            <button
-              class="wcDrawerTab"
-              data-wc-drawer-toggle="right"
-              data-tip="Show/hide actions"
-              title="Show/hide actions"
-              aria-expanded="true"
-            >
-              ▶
-            </button>
-
-            <div class="wcDrawerPanel">
-              <div class="wcDrawerHeader">Actions</div>
-              <div class="wcDrawerBody">
-
-                <!-- Mode -->
-                <div class="lux-wc-toggle" role="tablist" aria-label="Cloud mode">
-                  <button
-                    id="luxWcModeWords"
-                    class="lux-wc-pill"
-                    data-mode="words"
-                    data-tip="Show word targets (size = frequency, color = difficulty)."
-                    title="Show word targets (size = frequency, color = difficulty)."
-                  >Words</button>
-
-                  <button
-                    id="luxWcModePhonemes"
-                    class="lux-wc-pill"
-                    data-mode="phonemes"
-                    data-tip="Show sound targets (phonemes) instead of words."
-                    title="Show sound targets (phonemes) instead of words."
-                  >Phonemes</button>
-                </div>
-
-                <!-- Top actions -->
-                <div class="lux-wc-actions">
-                  <button class="lux-pbtn lux-pbtn--ghost" id="luxWcThemeToggle"
-                    data-tip="Toggle theme."
-                    title="Toggle theme."
-                  >🌙</button>
-
-                  <button class="lux-pbtn" id="luxWcRefresh"
-                    data-tip="Reload history and redraw the cloud."
-                    title="Reload history and redraw the cloud."
-                  >Refresh</button>
-
-                <!-- Power row -->
-                <div class="lux-wc-powerRow">
-                  <button class="lux-pbtn lux-wc-genTop" id="luxWcGenTop"
-                    data-tip="Start a drill from your top 3 targets."
-                    title="Start a drill from your top 3 targets."
-                  >✨ Generate from Top 3</button>
-
-                  <button class="lux-pbtn lux-pbtn--ghost lux-wc-powerBtn" id="luxWcCluster"
-                    data-tip="Group targets into clusters."
-                    title="Group targets into clusters."
-                  >🧩 Cluster</button>
-
-                  <button class="lux-pbtn lux-pbtn--ghost lux-wc-powerBtn" id="luxWcSnapshot"
-                    data-tip="Save an image of the current cloud."
-                    title="Save an image of the current cloud."
-                  >📷 Snapshot</button>
-                </div>
-
-                <!-- Mix -->
-                <div class="lux-wc-mixRow" aria-label="Top target mix">
-                  <span class="lux-wc-mixLabel"
-                    data-tip="How Top 3 is chosen."
-                    title="How Top 3 is chosen."
-                  >Top 3:</span>
-
-                  <button class="lux-wc-chipBtn" id="luxWcMixView" data-mix="view"
-                    data-tip="Pick Top 3 from what’s currently visible."
-                    title="Pick Top 3 from what’s currently visible."
-                  >View-based</button>
-
-                  <button class="lux-wc-chipBtn" id="luxWcMixSmart" data-mix="smart"
-                    data-tip="Pick Top 3 using your priority formula."
-                    title="Pick Top 3 using your priority formula."
-                  >Smart Mix</button>
-                </div>
-
-                <!-- Strips -->
-                <div class="lux-wc-targetStrip" id="luxWcTargets"
-                  data-tip="Your Top 3 targets (click one to open details)."
-                  title="Your Top 3 targets (click one to open details)."
-                ></div>
-
-                <div class="lux-wc-savedStrip" id="luxWcSaved"
-                  data-tip="Pinned targets you’ve saved for focus."
-                  title="Pinned targets you’ve saved for focus."
-                ></div>
-
-                <!-- Coach lane -->
-                <div class="lux-wc-coachLane" id="luxWcCoach">
-                  <div class="lux-wc-coachTitle"
-                    data-tip="Quick actions for targeted practice."
-                    title="Quick actions for targeted practice."
-                  >Coach Lane</div>
-
-                  <div class="lux-wc-coachBtns">
-                    <button class="lux-pbtn" id="luxWcCoachQuick"
-                      data-tip="Generate a fast drill using pinned/top targets."
-                      title="Generate a fast drill using pinned/top targets."
-                    >⚡ Quick drill</button>
-
-                    <button class="lux-pbtn lux-pbtn--ghost" id="luxWcCoachPinTop"
-                      data-tip="Pin the current Top 3 targets."
-                      title="Pin the current Top 3 targets."
-                    >📌 Pin Top 3</button>
-                  </div>
-
-                  <div class="lux-wc-coachHint" id="luxWcCoachHint"></div>
-                </div>
-
-              </div>
-            </div>
-          </aside>
-
-        </div>
-      </div>
-    </section>
-  `;
-}
-</file>
-
 <file path="features/progress/wordcloud/timeline.js">
 // features/progress/wordcloud/timeline.js
 
@@ -30616,1047 +30139,193 @@ export function createTimelineController({
 }
 </file>
 
-<file path="lux-audio-mode.css">
-/* lux-audio-mode.css */
-/* Liquid Glass Audio Mode Toggle (Normal / Pro)
-   + Practice docked placement (right of Record/Stop)
-*/
+<file path="features/recorder/audio-mode-switch.js">
+// features/recorder/audio-mode-switch.js
 
-/* ===============================
-   Practice dock: Record/Stop + Toggle
-   =============================== */
-.lux-rec-actions{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:18px;
-  margin: 10px auto 14px;
-  flex-wrap:wrap;
+import {
+  AUDIO_MODES,
+  getAudioMode,
+  setAudioMode,
+  initAudioModeDataset,
+} from "./audio-mode-core.js";
+
+const SELECTOR = {
+  wrap: ".lux-audioModeWrap",
+};
+
+function kickBump(toggleEl) {
+  // restart the CSS animation cleanly
+  toggleEl.classList.remove("is-bump");
+  void toggleEl.offsetWidth; // reflow
+  toggleEl.classList.add("is-bump");
+  window.setTimeout(() => toggleEl.classList.remove("is-bump"), 320);
 }
 
-/* override the default btn-group spacing ONLY when docked */
-.lux-rec-actions .btn-group{
-  margin: 0 !important;
+/* ✅ Fix #3 helper: float dock so Record/Stop stay centered */
+let _dockResizeHandler = null;
+
+function dockRightOfStop(ui, stopBtn) {
+  const group = stopBtn.closest(".btn-group");
+  if (!group) return;
+
+  // Keep tooltips + knob overflow safe
+  group.style.position = group.style.position || "relative";
+  group.style.overflow = "visible";
+
+  ui.classList.add("is-floatDock");
+  ui.style.position = "absolute";
+
+  const place = () => {
+    const left = stopBtn.offsetLeft + stopBtn.offsetWidth + 14;
+    const top =
+      stopBtn.offsetTop +
+      Math.round((stopBtn.offsetHeight - ui.offsetHeight) / 2);
+
+    ui.style.left = `${left}px`;
+    ui.style.top = `${top}px`;
+  };
+
+  requestAnimationFrame(place);
+
+  // Avoid stacking resize listeners on remount
+  if (_dockResizeHandler) window.removeEventListener("resize", _dockResizeHandler);
+  _dockResizeHandler = () => requestAnimationFrame(place);
+  window.addEventListener("resize", _dockResizeHandler);
 }
 
-/* remove the auto-margin when docked */
-.lux-rec-actions .lux-audioModeWrap{
-  margin: 0 !important;
+function ensurePracticeActionsRow() {
+  const btnGroup = document.querySelector(".btn-group");
+  if (!btnGroup) return null;
+
+  // Already wrapped?
+  const existing = btnGroup.closest(".lux-rec-actions");
+  if (existing) return existing;
+
+  // Wrap btn-group in a row container so we can place the toggle to the right
+  const row = document.createElement("div");
+  row.className = "lux-rec-actions";
+
+  const parent = btnGroup.parentElement;
+  if (!parent) return null;
+
+  parent.insertBefore(row, btnGroup);
+  row.appendChild(btnGroup);
+
+  return row;
 }
 
-/* When inserted after Stop inside the Record/Stop .btn-group */
-.btn-group .lux-audioModeWrap.is-rightOfStop{
-  margin-left: 14px; /* ✅ not crammed against Stop */
+function findPracticeAnchor() {
+  // ✅ Dock to the right of Record/Stop (same row)
+  return ensurePracticeActionsRow();
 }
 
-
-/* ===============================
-   Wrapper + label
-   =============================== */
-.lux-audioModeWrap{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:10px;
-
-  font: 800 12px/1.1 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  letter-spacing: 0.02em;
-
-  position: relative;
-  z-index: 30; /* enough for tooltip without fighting your Tips pill */
-  user-select:none;
+function findConvoAnchor() {
+  // If you mount it in AI Convo header actions, keep existing behavior
+  return document.querySelector(".lux-convo-actions") || null;
 }
 
-/* slightly tighter when docked next to record/stop */
-.lux-audioModeWrap.is-docked{
-  transform: translateY(1px);
+function buildUI(scope = "practice") {
+  const wrap = document.createElement("div");
+  wrap.className = "lux-audioModeWrap";
+
+  const label = document.createElement("div");
+  label.className = "lux-audioModeLabel";
+  label.textContent = "Audio";
+
+  const toggle = document.createElement("div");
+  toggle.className = "lux-audioToggle";
+
+  const btnNormal = document.createElement("button");
+  btnNormal.className = "lux-audioOpt";
+  btnNormal.type = "button";
+  btnNormal.dataset.mode = "NORMAL";
+  btnNormal.textContent = "Normal";
+  btnNormal.setAttribute("data-tip", "Balanced quality + smaller size");
+
+  const btnPro = document.createElement("button");
+  btnPro.className = "lux-audioOpt";
+  btnPro.type = "button";
+  btnPro.dataset.mode = "PRO";
+  btnPro.textContent = "Pro";
+  btnPro.setAttribute("data-tip", "Higher quality + slightly larger size");
+
+  const knob = document.createElement("span");
+  knob.className = "lux-audioKnob";
+
+  toggle.appendChild(btnNormal);
+  toggle.appendChild(btnPro);
+  toggle.appendChild(knob);
+
+  wrap.appendChild(label);
+  wrap.appendChild(toggle);
+
+  // scope styling hooks
+  if (scope === "practice") wrap.classList.add("is-docked");
+  if (scope === "convo") wrap.classList.add("is-compact");
+
+  // initial dataset mode sync
+  const mode = getAudioMode?.() || AUDIO_MODES?.NORMAL || "NORMAL";
+  initAudioModeDataset?.(mode);
+
+  toggle.addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-mode]");
+    if (!b) return;
+
+    const next = b.dataset.mode;
+    setAudioMode?.(next);
+    initAudioModeDataset?.(next);
+    kickBump(toggle); // ✅ subtle “switch happened” feedback
+  });
+
+  return wrap;
 }
 
-.lux-audioModeWrap.is-compact{
-  margin: 0;
-  justify-content: flex-start;
-}
+export function mountAudioModeSwitch(scope = "practice") {
+  // Kill duplicate mounts
+  document.querySelectorAll(SELECTOR.wrap).forEach((n) => n.remove());
 
-.lux-audioModeLabel{
-  opacity: 0.72;
-  font-weight: 900;
-}
+  const ui = buildUI(scope);
 
-/* compact mode: hide label for header rows if desired */
-.lux-audioModeWrap.is-compact .lux-audioModeLabel{
-  display:none;
-}
+  let anchor = null;
+  if (scope === "convo") anchor = findConvoAnchor();
+  else anchor = findPracticeAnchor();
 
+  if (!anchor) return null;
 
-/* ===============================
-   Liquid glass toggle shell
-   =============================== */
-.lux-audioToggle{
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 0;
+  // ✅ Practice: force the switch to live AFTER the Stop button
+  if (scope === "practice") {
+    const stopBtn = document.querySelector("#stop");
+    if (stopBtn && stopBtn.parentElement) {
+      // Insert immediately after Stop inside the same flex row
+      stopBtn.insertAdjacentElement("afterend", ui);
+      ui.classList.add("is-rightOfStop");
 
-  padding: 4px;
-  border-radius: 999px;
+      // ✅ Float it so Record/Stop stay centered
+      dockRightOfStop(ui, stopBtn);
 
-  background: rgba(255,255,255,0.18);
-  border: 1px solid rgba(255,255,255,0.30);
-
-  box-shadow:
-    0 10px 26px rgba(0,0,0,0.16),
-    inset 0 1px 0 rgba(255,255,255,0.28);
-
-  backdrop-filter: blur(14px) saturate(1.25);
-  -webkit-backdrop-filter: blur(14px) saturate(1.25);
-
-  overflow: hidden;
-}
-
-/* ===============================
-   The sliding “gel” pill (knob)
-   =============================== */
-.lux-audioKnob{
-  position:absolute;
-  top: 4px;
-  bottom: 4px;
-  left: 4px;
-  width: calc(50% - 4px);
-  border-radius: 999px;
-  z-index: 1;
-
-  /* liquid gel */
-  background:
-    radial-gradient(circle at 30% 25%, rgba(255,255,255,0.70), rgba(255,255,255,0.20) 55%, rgba(255,255,255,0.08)),
-    linear-gradient(180deg, rgba(255,255,255,0.52), rgba(255,255,255,0.18));
-
-  border: 1px solid rgba(255,255,255,0.38);
-
-  box-shadow:
-    0 8px 16px rgba(0,0,0,0.14),
-    inset 0 1px 0 rgba(255,255,255,0.44),
-    inset 0 -10px 22px rgba(0,0,0,0.10);
-
-  transition: transform 260ms cubic-bezier(.2,.9,.2,1);
-  will-change: transform;
-}
-
-/* move right when Pro is active */
-html[data-lux-audio-mode="pro"] .lux-audioKnob{
-  transform: translateX(100%);
-}
-
-/* Optional (extra clarity): slightly different knob tint per mode (still subtle, but clearer) */
-html[data-lux-audio-mode="pro"] .lux-audioKnob{
-  box-shadow:
-    0 10px 22px rgba(0,0,0,0.16),
-    inset 0 1px 0 rgba(255,255,255,0.44),
-    inset 0 -10px 22px rgba(0,0,0,0.10),
-    0 0 0 1px rgba(0,120,215,0.12); /* tiny blue ring */
-}
-
-/* Subtle confirmation animation on toggle */
-.lux-audioToggle.is-bump .lux-audioKnob{
-  animation: luxKnobBump 320ms ease;
-}
-
-@keyframes luxKnobBump{
-  0%   { filter: brightness(1); }
-  45%  { filter: brightness(1.22); }
-  100% { filter: brightness(1); }
-}
-
-/* sheen streak on hover */
-.lux-audioKnob::after{
-  content:"";
-  position:absolute;
-  inset:-40% -70%;
-  background: linear-gradient(
-    110deg,
-    rgba(255,255,255,0) 35%,
-    rgba(255,255,255,0.60) 48%,
-    rgba(255,255,255,0) 62%
-  );
-  transform: translateX(-45%) rotate(8deg);
-  opacity: 0;
-  pointer-events:none;
-}
-
-.lux-audioToggle:hover .lux-audioKnob::after{
-  opacity: 0.75;
-  animation: luxSheen 1.15s ease both;
-}
-
-@keyframes luxSheen{
-  from { transform: translateX(-45%) rotate(8deg); }
-  to   { transform: translateX(45%)  rotate(8deg); }
-}
-
-/* Pro mode gets a tiny premium glow */
-html[data-lux-audio-mode="pro"] .lux-audioToggle{
-  box-shadow:
-    0 12px 30px rgba(0,0,0,0.18),
-    inset 0 1px 0 rgba(255,255,255,0.28),
-    0 0 0 1px rgba(0,120,215,0.12);
-}
-
-
-/* ===============================
-   Buttons
-   =============================== */
-.lux-audioOpt{
-  position:relative;
-  z-index:2;
-
-  border:0;
-  background:transparent;
-
-  padding: 8px 14px;
-  border-radius: 999px;
-
-  font-weight: 900;
-  cursor:pointer;
-
-  color: rgba(15,23,42,0.70);
-  opacity: 0.92;
-
-  transition: transform .12s ease, color .18s ease, opacity .14s ease;
-}
-
-.lux-audioOpt:hover{
-  transform: translateY(-1px);
-  color: rgba(15,23,42,0.92);
-  opacity: 1;
-}
-
-/* active text */
-html[data-lux-audio-mode="normal"] .lux-audioOpt[data-mode="NORMAL"],
-html[data-lux-audio-mode="pro"] .lux-audioOpt[data-mode="PRO"]{
-  color: rgba(15,23,42,0.98);
-  opacity: 1;
-}
-
-/* Stronger active indicator (stays, clearer) */
-html[data-lux-audio-mode="normal"] .lux-audioOpt[data-mode="NORMAL"],
-html[data-lux-audio-mode="pro"] .lux-audioOpt[data-mode="PRO"]{
-  text-shadow:
-    0 1px 0 rgba(255,255,255,0.35),
-    0 8px 18px rgba(0,0,0,0.10);
-}
-
-
-/* ===============================
-   Tooltip (kept, but slightly classier)
-   =============================== */
-.lux-audioOpt[data-tip]::after{
-  content: attr(data-tip);
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: calc(100% + 10px);
-
-  width: min(340px, 64vw);
-  padding: 10px 12px;
-  border-radius: 14px;
-
-  background: rgba(15, 23, 42, 0.92);
-  color: rgba(255, 255, 255, 0.95);
-
-  font-weight: 750;
-  line-height: 1.25;
-
-  box-shadow: 0 14px 34px rgba(0,0,0,0.30);
-
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 140ms ease;
-
-  white-space: normal;
-  z-index: 40;
-}
-
-.lux-audioOpt[data-tip]:hover::after{
-  opacity: 1;
-}
-
-/* motion accessibility */
-@media (prefers-reduced-motion: reduce){
-  .lux-audioKnob,
-  .lux-audioOpt{
-    transition: none !important;
+      return ui;
+    }
   }
-  .lux-audioToggle:hover .lux-audioKnob::after{
-    animation: none !important;
-  }
+
+  // fallback behavior (convo/header/etc.)
+  anchor.prepend(ui);
+  return ui;
 }
 </file>
 
-<file path="features/features/selfpb/ui.js">
-// features/features/selfpb/ui.js
-// FINAL PIVOT: Using WaveSurfer.js for reliable waveforms.
-
-import { initSelfPBCore } from "./core.js";
-import { initWaveSurfer } from "./waveform-logic.js";
-
-function ensureStyles() {
-  const STYLE_ID = "selfpb-lite-style";
-  if (document.getElementById(STYLE_ID)) return;
-
-  const s = document.createElement("style");
-  s.id = STYLE_ID;
-
-  s.textContent = `
-    /* Light Theme + Layout Styles */
-
-    /* ✅ OUTER frame always wraps the inner panel */
-    #selfpb-lite{
-      position: fixed;
-      top: 12px;
-      left: 12px;
-      z-index: 9999;
-
-      /* ✅ key: let the OUTER size itself to the inner */
-      width: fit-content;
-      max-width: calc(100vw - 24px);
-      display: inline-block;
-
-      padding: 10px 14px 14px 10px; /* extra right + bottom bezel */
-      border-radius: 18px;
-      background: rgba(255,255,255,0.55);
-
-      font:600 14px system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-      box-shadow:0 6px 18px rgba(0,0,0,.25);
-
-      box-sizing: border-box;
-      overflow: hidden;
-      overflow-x: hidden;
-    }
-
-    #selfpb-lite * { box-sizing: border-box; }
-
-    #selfpb-lite .row{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      min-width:0;
-    }
-
-    #selfpb-lite .scrubFull{
-      width:100%;
-      min-width:0;
-    }
-
-    #selfpb-lite .btn{
-      padding:6px 10px;
-      border-radius:8px;
-      border:0;
-      background:#2d6cdf;
-      color:#fff;
-      cursor:pointer;
-      transition:background 0.15s, transform 0.1s;
-    }
-
-    #selfpb-lite .btn:hover{filter:brightness(1.1);}
-    #selfpb-lite .btn:active{transform:scale(0.96);}
-    #selfpb-lite .btn[disabled]{opacity:.5;cursor:not-allowed}
-
-    #selfpb-lite .btn.icon{
-      width:44px;
-      padding:6px 0;
-      display:grid;
-      place-items:center;
-    }
-
-    #selfpb-lite .pill{border-radius:999px;padding:6px 10px}
-    #selfpb-lite .meta{opacity:.85}
-
-    :is(#selfpb-lite, #spb-modalCard) input[type="range"]{accent-color:#2d6cdf}
-
-    #selfpb-lite .ab{display:flex;gap:6px;position:relative;}
-    #selfpb-lite .tiny{font-weight:700;opacity:.8}
-
-    /* Layout Fixes */
-    #selfpb-lite .spacer{flex:1}
-    #spb-main { width: 110px; font-weight: 800; font-size: 1.05em; flex-shrink: 0; }
-    #spb-loop-action { min-width: 100px; background: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; }
-    #spb-loop-action.active { background: #4338ca; color: #fff; border-color: #312e81; }
-
-    /* Floating "Coach Mark" Bubble */
-    .spb-bubble {
-      position: absolute;
-      top: -38px;
-      left: 0;
-      background: rgba(0,0,0,0.85);
-      color: #fff;
-      padding: 4px 8px;
-      border-radius: 6px;
-      font-size: 11px;
-      white-space: nowrap;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.4s;
-    }
-    .spb-bubble.visible { opacity: 1; }
-    .spb-bubble::after {
-      content: '';
-      position: absolute;
-      bottom: -4px;
-      left: 16px;
-      border-left: 4px solid transparent;
-      border-right: 4px solid transparent;
-      border-top: 4px solid rgba(0,0,0,0.85);
-    }
-
-    /* ✅ INNER panel defines the real usable width */
-    :is(#selfpb-lite, #spb-modalCard) .spb-body{
-      width: min(390px, calc(100vw - 48px)); /* ✅ inner width (in floating mode) */
-      max-width: 100%;
-      background: #fff;
-      border-radius: 16px;
-      padding: 12px;
-
-      box-sizing: border-box;
-      overflow: hidden;
-    }
-
-    /* ✅ In expanded mode, body fills modal card */
-    #spb-modalCard .spb-body{
-      width: 100% !important;
-    }
-
-    /* ✅ Prevent waveform/canvas from forcing overflow */
-    :is(#selfpb-lite, #spb-modalCard) canvas,
-    :is(#selfpb-lite, #spb-modalCard) .spb-wave,
-    :is(#selfpb-lite, #spb-modalCard) #spb-wavebox{
-      max-width: 100% !important;
-    }
-
-    :is(#selfpb-lite, #spb-modalCard) .spb-wave{
-      height:92px;
-      border-radius:12px;
-      background: rgba(15,23,42,0.04);
-      border:1px solid rgba(15,23,42,0.10);
-      overflow:hidden;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-
-    /* rows */
-    :is(#selfpb-lite, #spb-modalCard) .spb-row{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      min-width:0;
-      width:100%;
-    }
-
-    :is(#selfpb-lite, #spb-modalCard) .spb-row + .spb-row{ margin-top:8px; }
-
-    :is(#selfpb-lite, #spb-modalCard) .spb-scrub{
-      width:100%;
-      min-width:0;
-    }
-
-    :is(#selfpb-lite, #spb-modalCard) .spb-btn{
-      border:0;
-      border-radius:10px;
-      padding:8px 12px;
-      font-weight:800;
-      cursor:pointer;
-      background:#2f6fe4;
-      color:#fff;
-      box-shadow:0 6px 16px rgba(0,0,0,0.12);
-      white-space:nowrap;
-    }
-
-    :is(#selfpb-lite, #spb-modalCard) .spb-btn.secondary{
-      background: rgba(15,23,42,0.08);
-      color: rgba(15,23,42,0.85);
-      box-shadow:none;
-    }
-
-    :is(#selfpb-lite, #spb-modalCard) .spb-btn.icon{
-      width:44px;
-      display:grid;
-      place-items:center;
-      padding:8px 0;
-    }
-
-    /* ✅ Download arrow: Lux blue */
-    :is(#selfpb-lite, #spb-modalCard) #spb-dl{
-      color: #2f6fe4;
-      font-weight: 900;
-      background: rgba(47,111,228,0.14);
-    }
-
-    /* ✅ Scrubber: looks like a real timeline */
-    :is(#selfpb-lite, #spb-modalCard) #spb-scrub{
-      -webkit-appearance: none;
-      appearance: none;
-      height: 18px;
-    }
-
-    :is(#selfpb-lite, #spb-modalCard) #spb-scrub::-webkit-slider-runnable-track{
-      height: 10px;
-      border-radius: 999px;
-      background: rgba(15,23,42,0.14);
-    }
-
-    :is(#selfpb-lite, #spb-modalCard) #spb-scrub::-webkit-slider-thumb{
-      -webkit-appearance: none;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: #2f6fe4;
-      border: 2px solid #fff;
-      margin-top: -4px;
-      box-shadow: 0 6px 14px rgba(0,0,0,0.18);
-    }
-
-    /* ✅ Speed stays slimmer + quieter */
-    :is(#selfpb-lite, #spb-modalCard) #spb-rate::-webkit-slider-runnable-track{
-      height: 6px;
-      border-radius: 999px;
-      background: rgba(15,23,42,0.10);
-    }
-    :is(#selfpb-lite, #spb-modalCard) #spb-rate::-webkit-slider-thumb{
-      -webkit-appearance:none;
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      background: rgba(15,23,42,0.60);
-      margin-top: -4px;
-    }
-
-    /* bottom row: -2s ⬇ +2s */
-    :is(#selfpb-lite, #spb-modalCard) .spb-bottom{
-      justify-content:space-between;
-    }
-
-    /* ✅ Expand button (header) */
-    #selfpb-lite .spb-miniBtn{
-      border: 0;
-      border-radius: 999px;
-      padding: 6px 10px;
-      font-weight: 900;
-      cursor: pointer;
-      background: rgba(255,255,255,0.22);
-      color: rgba(15,23,42,0.85);
-      transition: transform .12s ease, filter .12s ease;
-    }
-
-    #selfpb-lite .spb-miniBtn:hover{
-      transform: scale(1.10);  /* ✅ “big bulge” hover */
-      filter: brightness(1.12);
-    }
-
-    /* ✅ Expanded Self Playback modal */
-    #spb-modalShade{
-      position: fixed;
-      inset: 0;
-      z-index: 200000;
-      background: rgba(0,0,0,0.35);
-      display: none;
-      align-items: center;
-      justify-content: center;
-    }
-
-    #spb-modalShade.is-open{ display: flex; }
-
-    #spb-modalCard{
-      width: min(900px, calc(100vw - 40px));
-      max-height: min(680px, calc(100vh - 40px));
-      border-radius: 22px;
-      background: rgba(255,255,255,0.92);
-      box-shadow: 0 18px 50px rgba(0,0,0,0.30);
-      padding: 14px;
-      box-sizing: border-box;
-    }
-
-    #spb-modalCard *{ box-sizing: border-box; }
-
-    /* ✅ Bigger wave area in expanded mode */
-    #spb-modalCard #spb-wavebox{
-      height: 220px;
-    }
-  `;
-
-  document.head.appendChild(s);
-}
-
-function buildUI() {
-  const host = document.createElement("div");
-  host.id = "selfpb-lite";
-
-  host.innerHTML = `
-    <div class="row" style="margin-bottom:6px; position:relative;">
-      <span
-        id="spb-toast"
-        class="pill tiny"
-        style="display:none; position:absolute; right:0; top:0; background:#ef4444; border-color:#b91c1c; color:#fff; z-index:10; box-shadow: 0 2px 10px rgba(0,0,0,0.5);"
-      ></span>
-
-      <button id="spb-expand" class="spb-miniBtn" title="Expand Self Playback">
-        Expand
-      </button>
-
-      <div class="spacer"></div>
-      <span class="pill tiny" id="spb-ref">Ref: —</span>
-      <span class="pill tiny" id="spb-time">0:00 / 0:00</span>
-    </div>
-
-    <div class="spb-body">
-
-      <!-- ✅ Wave box (top) -->
-      <div class="spb-wave" id="spb-wavebox">
-        <div id="spb-waveform-container" style="width:100%; height:100%; display:flex; flex-direction:column;">
-          <div id="spb-wave-learner" style="height: 50%; width: 100%;"></div>
-          <div id="spb-wave-ref" style="height: 50%; width: 100%; border-top: 1px solid #eee;"></div>
-        </div>
-      </div>
-
-      <!-- ✅ Scrubber row -->
-      <div class="spb-row">
-        <input id="spb-scrub" class="spb-scrub" type="range" min="0" max="1000" step="1" value="0" title="Seek">
-      </div>
-
-      <!-- ✅ Speed row -->
-      <div class="spb-row">
-        <div style="min-width:54px; font-weight:800; opacity:.75;">Speed</div>
-        <input id="spb-rate" type="range" min="0.5" max="1.5" step="0.05" value="1" style="flex:1; min-width:0;">
-        <div id="spb-rate-val" style="min-width:54px; text-align:right; font-weight:900;">1.00×</div>
-      </div>
-
-      <!-- ✅ Loop status text -->
-      <div class="spb-row">
-        <div id="spb-ab-label" style="font-weight:800; opacity:.75;">Loop: Off</div>
-      </div>
-
-      <!-- ✅ Play + Set Loop row -->
-      <div class="spb-row">
-        <button class="spb-btn" id="spb-main" style="flex:1; min-width:0;">▶ Play</button>
-        <div class="ab" style="flex:1; min-width:0; display:flex; justify-content:flex-end; position:relative;">
-          <div id="spb-loop-tip" class="spb-bubble">Tap <b>A</b> then <b>B</b> to loop.</div>
-          <button class="spb-btn" id="spb-loop-action" style="flex:1; min-width:0;">⟳ Set Loop A</button>
-        </div>
-      </div>
-
-      <!-- ✅ Bottommost row: -2s  ⬇  +2s -->
-      <div class="spb-row spb-bottom">
-        <button class="spb-btn" id="spb-back">−2s</button>
-        <button class="spb-btn secondary icon" id="spb-dl" type="button" disabled title="Record something first">⬇</button>
-        <button class="spb-btn" id="spb-fwd">+2s</button>
-      </div>
-
-    </div>
-  `;
-
-  document.body.appendChild(host);
-
-  // ✅ Expanded modal shell (create once)
-  let shade = document.getElementById("spb-modalShade");
-  if (!shade) {
-    shade = document.createElement("div");
-    shade.id = "spb-modalShade";
-    shade.innerHTML = `
-      <div id="spb-modalCard">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-          <div style="font-weight:900;opacity:.85;">Self Playback (Expanded)</div>
-          <button id="spb-modalClose" class="spb-btn secondary icon" title="Close">✕</button>
-        </div>
-        <div id="spb-modalMount"></div>
-      </div>
-    `;
-    document.body.appendChild(shade);
-  }
-
-  const modalMount = shade.querySelector("#spb-modalMount");
-  const closeBtn = shade.querySelector("#spb-modalClose");
-  const expandBtn = host.querySelector("#spb-expand");
-
-  const body = host.querySelector(".spb-body");
-  const bodyHome = body.parentElement;
-  let bodyNext = body.nextSibling;
-
-  function openModal() {
-    bodyNext = body.nextSibling; // ✅ re-capture in case DOM changes
-    shade.classList.add("is-open");
-    modalMount.appendChild(body);
-  }
-
-  function closeModal() {
-    shade.classList.remove("is-open");
-    bodyHome.insertBefore(body, bodyNext || null);
-  }
-
-  expandBtn?.addEventListener("click", openModal);
-  closeBtn?.addEventListener("click", closeModal);
-
-  // click outside closes
-  shade.addEventListener("click", (e) => {
-    if (e.target === shade) closeModal();
-  });
-
-  // ESC closes
-  window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && shade.classList.contains("is-open")) closeModal();
-  });
-
-  return {
-    host,
-    toast: host.querySelector("#spb-toast"),
-    mainBtn: host.querySelector("#spb-main"),
-    dlBtn: host.querySelector("#spb-dl"),
-    backBtn: host.querySelector("#spb-back"),
-    fwdBtn: host.querySelector("#spb-fwd"),
-    scrub: host.querySelector("#spb-scrub"),
-    rate: host.querySelector("#spb-rate"),
-    rateVal: host.querySelector("#spb-rate-val"),
-    timeLab: host.querySelector("#spb-time"),
-    loopAction: host.querySelector("#spb-loop-action"),
-    loopTip: host.querySelector("#spb-loop-tip"),
-    abLabel: host.querySelector("#spb-ab-label"),
-    refLabel: host.querySelector("#spb-ref"),
-    // Containers
-    waveLearner: host.querySelector("#spb-wave-learner"),
-    waveRef: host.querySelector("#spb-wave-ref"),
-  };
-}
-
-export function mountSelfPlaybackLite() {
-  const { api, audio, refAudio, st } = initSelfPBCore();
-
-  ensureStyles();
-  const ui = buildUI();
-
-  // Initialize WaveSurfer
-  initWaveSurfer({
-    learnerContainer: ui.waveLearner,
-    refContainer: ui.waveRef,
-    masterAudio: audio,
-  });
-
-  // ✅ Download Latest Recording button wiring
-  const dlBtn = ui.dlBtn;
-  let _lastBlob = null;
-  let _lastMeta = null;
-
-  function extFromBlob(blob) {
-    const t = blob?.type || "";
-    if (t.includes("wav")) return "wav";
-    if (t.includes("webm")) return "webm";
-    if (t.includes("ogg")) return "ogg";
-    return "audio";
-  }
-
-  function downloadBlob(blob, meta) {
-    if (!blob) return;
-
-    const mode = (meta?.mode || "normal").toLowerCase();
-    const ts = new Date(meta?.ts || Date.now())
-      .toISOString()
-      .replaceAll(":", "-")
-      .replaceAll(".", "-");
-
-    const ext = extFromBlob(blob);
-    const name = `lux-recording_${mode}_${ts}.${ext}`;
-
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = name;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-
-    setTimeout(() => URL.revokeObjectURL(url), 1500);
-  }
-
-  function setLatest(blob, meta) {
-    _lastBlob = blob || null;
-    _lastMeta = meta || null;
-
-    if (dlBtn) {
-      dlBtn.disabled = !_lastBlob;
-      dlBtn.title = _lastBlob
-        ? "Download your latest recording"
-        : "Record something first";
-    }
-  }
-
-  if (dlBtn) {
-    dlBtn.addEventListener("click", () => {
-      if (!_lastBlob) return;
-      downloadBlob(_lastBlob, _lastMeta);
-    });
-  }
-
-  // Pull from global if it exists already
-  if (window.LuxLastRecordingBlob) {
-    setLatest(window.LuxLastRecordingBlob, window.LuxLastRecordingMeta || null);
-  }
-
-  // Listen for new recordings
-  window.addEventListener("lux:lastRecording", (e) => {
-    setLatest(e?.detail?.blob, e?.detail?.meta || null);
-  });
-
-  // --- Logic helpers ---
-  const showToast = (msg, duration = 2000) => {
-    ui.toast.textContent = msg;
-    ui.toast.style.display = "inline-block";
-    ui.host.animate(
-      [
-        { transform: "translateX(0)" },
-        { transform: "translateX(-4px)" },
-        { transform: "translateX(4px)" },
-        { transform: "translateX(0)" },
-      ],
-      { duration: 200 }
-    );
-    setTimeout(() => {
-      ui.toast.style.display = "none";
-    }, duration);
-  };
-
-  const showLoopHint = () => {
-    if (localStorage.getItem("spb-hint-seen") !== "true") {
-      ui.loopTip.classList.add("visible");
-      setTimeout(() => {
-        ui.loopTip.classList.remove("visible");
-        localStorage.setItem("spb-hint-seen", "true");
-      }, 4000);
-    }
-  };
-
-  const syncButtons = () => {
-    ui.mainBtn.textContent = st.playing ? "⏸ Pause" : "▶ Play";
-
-    if (st.a == null) {
-      ui.loopAction.textContent = "⟳ Set Loop A";
-      ui.loopAction.classList.remove("active");
-      ui.abLabel.textContent = "Loop: Off";
-    } else if (st.b == null) {
-      ui.loopAction.textContent = "⟳ Set Loop B";
-      ui.loopAction.classList.add("active");
-      ui.abLabel.textContent = `A: ${api.fmt(st.a)} …`;
-    } else {
-      ui.loopAction.textContent = "× Clear Loop";
-      ui.loopAction.classList.remove("active");
-      ui.abLabel.textContent = `A: ${api.fmt(st.a)}  B: ${api.fmt(st.b)}`;
-    }
-  };
-
-  const syncTime = () => {
-    ui.timeLab.textContent = `${api.fmt(audio.currentTime || 0)} / ${api.fmt(
-      audio.duration || 0
-    )}`;
-  };
-
-  const syncScrub = () => {
-    if (!st.scrubbing) {
-      const dur = audio.duration || 0;
-      const p = dur ? Math.floor((audio.currentTime / dur) * 1000) : 0;
-      ui.scrub.value = String(api.clamp(p, 0, 1000));
-    }
-  };
-
-  const syncRateUI = () => {
-    ui.rateVal.textContent = `${Number(audio.playbackRate).toFixed(2)}×`;
-    ui.rate.value = String(audio.playbackRate || 1);
-  };
-
-  const syncRefUI = () => {
-    const ready = !!refAudio.src;
-    const r = refAudio.playbackRate || 1;
-    const d = isFinite(refAudio.duration) ? api.fmt(refAudio.duration) : "—:—";
-    const meta = api.getRefMeta();
-    const v = meta && (meta.voice || meta.style) ? ` ${meta.voice || ""}` : "";
-    ui.refLabel.textContent = ready ? `Ref: ${r.toFixed(2)}× · ${d}${v}` : "Ref: —";
-  };
-
-  const handlePlayAction = async (isRestart = false) => {
-    if (!audio.currentSrc && !audio.src) {
-      showToast("No recording yet!");
-      return;
-    }
-    if (audio.duration === 0 || isNaN(audio.duration)) {
-      showToast("Audio empty/loading...");
-      return;
-    }
-
-    try {
-      if (isRestart) {
-        audio.currentTime = st.looping && st.a != null ? st.a : 0;
-        if (!st.playing) await api.play();
-      } else {
-        if (st.playing) {
-          api.pause();
-        } else {
-          if (st.looping && st.a != null && st.b != null && st.b > st.a) {
-            if (audio.currentTime < st.a || audio.currentTime > st.b)
-              audio.currentTime = st.a;
-          }
-          await api.play();
-        }
-      }
-    } catch (err) {
-      console.warn("[selfpb] Play failed", err);
-      showToast("Playback failed");
-    } finally {
-      syncButtons();
-    }
-  };
-
-  const handleLoopClick = () => {
-    if (!audio.duration) {
-      showToast("No audio to loop!");
-      return;
-    }
-
-    if (st.a == null) {
-      st.a = audio.currentTime || 0;
-      st.looping = false;
-      showLoopHint();
-    } else if (st.b == null) {
-      st.b = audio.currentTime || 0;
-      if (st.b < st.a) {
-        const t = st.a;
-        st.a = st.b;
-        st.b = t;
-      }
-      st.looping = true;
-      audio.currentTime = st.a;
-      if (!st.playing) api.play();
-    } else {
-      api.clearAB();
-    }
-
-    syncButtons();
-  };
-
-  ui.mainBtn.addEventListener("click", (e) => {
-    if (e.detail !== 2) handlePlayAction(false);
-  });
-
-  ui.mainBtn.addEventListener("dblclick", (e) => {
-    e.preventDefault();
-    handlePlayAction(true);
-  });
-
-  // 2.0 seconds skip
-  ui.backBtn.addEventListener("click", () => {
-    audio.currentTime = api.clamp(
-      (audio.currentTime || 0) - 2.0,
-      0,
-      audio.duration || 0
-    );
-    syncTime();
-    syncScrub();
-  });
-
-  ui.fwdBtn.addEventListener("click", () => {
-    audio.currentTime = api.clamp(
-      (audio.currentTime || 0) + 2.0,
-      0,
-      audio.duration || 0
-    );
-    syncTime();
-    syncScrub();
-  });
-
-  ui.scrub.addEventListener("input", () => {
-    api._setScrubbingOn();
-    const p = Number(ui.scrub.value) / 1000;
-    audio.currentTime = api.clamp(p * (audio.duration || 0), 0, audio.duration || 0);
-    syncTime();
-  });
-
-  ui.scrub.addEventListener("change", () => api._setScrubbingOff());
-
-  ui.rate.addEventListener("input", () => {
-    const v = api.clamp(Number(ui.rate.value) || 1, 0.5, 1.5);
-    api.setRate(v);
-    syncRateUI();
-  });
-
-  ui.loopAction.addEventListener("click", handleLoopClick);
-
-  audio.addEventListener("timeupdate", () => {
-    syncTime();
-    syncScrub();
-  });
-  audio.addEventListener("play", () => {
-    st.playing = true;
-    syncButtons();
-  });
-  audio.addEventListener("pause", () => {
-    st.playing = false;
-    syncButtons();
-  });
-  audio.addEventListener("loadedmetadata", () => {
-    syncTime();
-    syncScrub();
-  });
-  audio.addEventListener("ratechange", syncRateUI);
-  audio.addEventListener("ended", () => {
-    st.playing = false;
-    syncButtons();
-  });
-
-  refAudio.addEventListener("loadedmetadata", syncRefUI);
-  refAudio.addEventListener("ratechange", syncRefUI);
-
-  // Shortcuts logic (unchanged)
-  window.addEventListener(
-    "keydown",
-    (e) => {
-      if (
-        e.target.tagName === "INPUT" ||
-        e.target.tagName === "TEXTAREA" ||
-        e.target.isContentEditable
-      )
-        return;
-
-      if (e.code === "Space") {
-        e.preventDefault();
-        ui.mainBtn.click();
-      } else if (e.key === ",") {
-        e.preventDefault();
-        ui.backBtn.click();
-      } else if (e.key === ".") {
-        e.preventDefault();
-        ui.fwdBtn.click();
-      } else if (e.key === "[") {
-        e.preventDefault();
-        api.setRate(api.clamp((audio.playbackRate || 1) - 0.05, 0.5, 1.5));
-        syncRateUI();
-      } else if (e.key === "]") {
-        e.preventDefault();
-        api.setRate(api.clamp((audio.playbackRate || 1) + 0.05, 0.5, 1.5));
-        syncRateUI();
-      } else if (e.key.toLowerCase() === "l") {
-        e.preventDefault();
-        ui.loopAction.click();
-      }
-    },
-    { passive: false }
-  );
-
-  initialSync();
-  window.LuxSelfPB = Object.assign(window.LuxSelfPB || {}, { el: ui.host });
-  console.info("[self-pb] WaveSurfer UI Mounted");
-
-  function initialSync() {
-    syncTime();
-    syncScrub();
-    syncButtons();
-    syncRefUI();
-  }
-}
-
-export { mountSelfPlaybackLite as default };
+<file path="lux-layout.css">
+/* lux-layout.css */
+@import "./lux-layout.tokens.css";
+@import "./lux-layout.core.css";
+@import "./lux-layout.harvard.css";
+@import "./lux-layout.nav-cta.css";
+@import "./lux-layout.messaging.css";
+@import "./lux-layout.interactions.css";
+@import "./lux-layout.ai-feedback.css";
+@import "./lux-layout.scrollbar.css";
+@import "./lux-layout.top-banner.css";
+/* ✅ My Words overlay */
+@import "./features/my-words/my-words.css";
 </file>
 
 <file path="features/my-words/store.js">
@@ -32163,6 +30832,613 @@ export async function drawWordcloud({
 }
 </file>
 
+<file path="features/progress/wordcloud/template.js">
+// features/progress/wordcloud/template.js
+// ✅ Wordcloud HTML template extracted from index.js
+
+export function wordcloudTemplateHtml() {
+  return `
+    <section class="lux-wc-shell" id="luxWcShell">
+      <div class="lux-wc-head">
+        <div>
+          <div class="lux-wc-title">☁️ Cloud Visuals</div>
+          <div class="lux-wc-sub" id="luxWcSub">
+            Size = frequency · Color = difficulty (Lux scoring)
+          </div>
+        </div>
+      </div>
+
+      <div class="lux-wc-body">
+        <div class="wcDock" data-wc-dock>
+
+          <!-- =========================
+               LEFT DRAWER (Explore)
+          ========================== -->
+          <aside class="wcDrawer wcDrawer--left" data-wc-drawer="left">
+            <button
+              class="wcDrawerTab"
+              data-wc-drawer-toggle="left"
+              data-tip="Show/hide filters"
+              title="Show/hide filters"
+              aria-expanded="true"
+            >
+              ◀
+            </button>
+
+            <div class="wcDrawerPanel">
+              <div class="wcDrawerHeader">Explore</div>
+              <div class="wcDrawerBody">
+
+                <!-- Search -->
+                <div class="lux-wc-search">
+                  <input
+                    id="luxWcSearch"
+                    type="search"
+                    placeholder="Search cloud…"
+                    autocomplete="off"
+                    data-tip="Filter targets by typing part of a word/phoneme."
+                    title="Filter targets by typing part of a word/phoneme."
+                  />
+                  <button
+                    class="lux-wc-clear"
+                    id="luxWcClear"
+                    data-tip="Clear search filter."
+                    title="Clear search filter."
+                  >✕</button>
+                </div>
+
+                <!-- Sort -->
+                <div class="lux-wc-chipBar" aria-label="Sort">
+                  <button
+                    id="luxWcSortPriority"
+                    class="lux-wc-chipBtn"
+                    data-sort="priority"
+                    data-tip="Best overall targets (difficulty + frequency + persistence)."
+                    title="Best overall targets (difficulty + frequency + persistence)."
+                  >Priority</button>
+
+                  <button
+                    id="luxWcSortFrequent"
+                    class="lux-wc-chipBtn"
+                    data-sort="freq"
+                    data-tip="Most used targets (highest frequency)."
+                    title="Most used targets (highest frequency)."
+                  >Frequent</button>
+
+                  <button
+                    id="luxWcSortDifficult"
+                    class="lux-wc-chipBtn"
+                    data-sort="diff"
+                    data-tip="Hardest targets (lowest score)."
+                    title="Hardest targets (lowest score)."
+                  >Difficult</button>
+
+                  <button
+                    id="luxWcSortRecent"
+                    class="lux-wc-chipBtn"
+                    data-sort="recent"
+                    data-tip="Targets you struggled with most recently."
+                    title="Targets you struggled with most recently."
+                  >Recent</button>
+
+                  <button
+                    id="luxWcSortPersistent"
+                    class="lux-wc-chipBtn"
+                    data-sort="persist"
+                    data-tip="Targets you keep missing over time."
+                    title="Targets you keep missing over time."
+                  >Persistent</button>
+                </div>
+
+                <!-- Range -->
+                <div class="lux-wc-chipBar" aria-label="Time range">
+                  <button
+                    id="luxWcRangeAll"
+                    class="lux-wc-chipBtn"
+                    data-range="all"
+                    data-tip="Use your full history."
+                    title="Use your full history."
+                  >All time</button>
+
+                  <button
+                    id="luxWcRange30d"
+                    class="lux-wc-chipBtn"
+                    data-range="30d"
+                    data-tip="Only include the last 30 days."
+                    title="Only include the last 30 days."
+                  >30d</button>
+
+                  <button
+                    id="luxWcRange7d"
+                    class="lux-wc-chipBtn"
+                    data-range="7d"
+                    data-tip="Only include the last 7 days."
+                    title="Only include the last 7 days."
+                  >7d</button>
+
+                  <button
+                    id="luxWcRangeToday"
+                    class="lux-wc-chipBtn"
+                    data-range="today"
+                    data-tip="Only include today’s attempts."
+                    title="Only include today’s attempts."
+                  >Today</button>
+
+                  <button
+                    id="luxWcRangeTimeline"
+                    class="lux-wc-chipBtn"
+                    data-range="timeline"
+                    data-tip="Replay your targets through time."
+                    title="Replay your targets through time."
+                  >Timeline</button>
+                </div>
+
+                <!-- Timeline controls -->
+                <div class="lux-wc-timelineRow" id="luxWcTimelineRow">
+                  <div class="lux-wc-timelineLabel"
+                    data-tip="Timeline replay settings."
+                    title="Timeline replay settings."
+                  >Timeline</div>
+
+                  <div class="lux-wc-timelineGroup">
+                    <div class="lux-wc-tlineMini">Window</div>
+                    <input id="luxWcWin" type="range" min="7" max="60" step="1"
+                      data-tip="How many days to include in the replay window."
+                      title="How many days to include in the replay window."
+                    />
+                    <div class="lux-wc-tlineVal" id="luxWcWinVal"></div>
+                  </div>
+
+                  <div class="lux-wc-timelineGroup">
+                    <div class="lux-wc-tlineMini">Ends</div>
+                    <input id="luxWcPos" type="range" min="0" max="90" step="1"
+                      data-tip="How many days ago the replay window ends."
+                      title="How many days ago the replay window ends."
+                    />
+                    <div class="lux-wc-tlineVal" id="luxWcPosVal"></div>
+                  </div>
+
+                  <button class="lux-pbtn lux-pbtn--ghost" id="luxWcReplay"
+                    data-tip="Play/stop timeline replay."
+                    title="Play/stop timeline replay."
+                  >▶ Replay</button>
+                </div>
+
+              </div>
+            </div>
+          </aside>
+
+
+          <!-- =========================
+               CENTER STAGE (Square Cloud)
+          ========================== -->
+          <main class="wcStage">
+            <div class="wcStageCard">
+              <div class="lux-wc-canvasWrap wcStageSquare" id="luxWcCanvasWrap">
+                <canvas id="luxWcCanvas" class="lux-wc-canvas wcCanvas"></canvas>
+
+                <!-- Loading overlay (shows during layout + redraw) -->
+                <div class="lux-wc-overlay" id="luxWcOverlay" aria-live="polite" aria-busy="true" hidden>
+                  <div class="lux-wc-overlayCard">
+                    <div class="lux-wc-spinner" aria-hidden="true"></div>
+                    <div class="lux-wc-overlayText">
+                      <div class="lux-wc-overlayTitle" id="luxWcOverlayTitle">Loading…</div>
+                      <div class="lux-wc-overlaySub" id="luxWcOverlaySub">Building your cloud</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="wcStageFooter">
+                <div class="lux-wc-legend">
+                  <span><span class="lux-wc-dot" style="background:#2563eb;"></span>80+ (Good)</span>
+                  <span><span class="lux-wc-dot" style="background:#d97706;"></span>60–79 (Warn)</span>
+                  <span><span class="lux-wc-dot" style="background:#dc2626;"></span>&lt;60 (Needs work)</span>
+                </div>
+
+                <div id="luxWcMeta" style="margin-top:10px; color:#94a3b8; font-weight:900;"></div>
+              </div>
+            </div>
+          </main>
+
+
+          <!-- =========================
+               RIGHT DRAWER (Actions)
+          ========================== -->
+          <aside class="wcDrawer wcDrawer--right" data-wc-drawer="right">
+            <button
+              class="wcDrawerTab"
+              data-wc-drawer-toggle="right"
+              data-tip="Show/hide actions"
+              title="Show/hide actions"
+              aria-expanded="true"
+            >
+              ▶
+            </button>
+
+            <div class="wcDrawerPanel">
+              <div class="wcDrawerHeader">Actions</div>
+              <div class="wcDrawerBody">
+
+                <!-- Mode -->
+                <div class="lux-wc-toggle" role="tablist" aria-label="Cloud mode">
+                  <button
+                    id="luxWcModeWords"
+                    class="lux-wc-pill"
+                    data-mode="words"
+                    data-tip-pos="down"
+                    data-tip="Show word targets (size = frequency, color = difficulty)."
+                    title="Show word targets (size = frequency, color = difficulty)."
+                  >Words</button>
+
+                  <button
+                    id="luxWcModePhonemes"
+                    class="lux-wc-pill"
+                    data-mode="phonemes"
+                    data-tip-pos="down"
+                    data-tip="Show sound targets (phonemes) instead of words."
+                    title="Show sound targets (phonemes) instead of words."
+                  >Phonemes</button>
+                </div>
+
+                <!-- Top actions -->
+                <div class="lux-wc-actions">
+                  <button class="lux-pbtn lux-pbtn--ghost" id="luxWcThemeToggle"
+                    data-tip="Toggle theme."
+                    title="Toggle theme."
+                  >🌙</button>
+
+                  <button class="lux-pbtn" id="luxWcRefresh"
+                    data-tip="Reload history and redraw the cloud."
+                    title="Reload history and redraw the cloud."
+                  >Refresh</button>
+
+                <!-- Power row -->
+                <div class="lux-wc-powerRow">
+                  <button class="lux-pbtn lux-wc-genTop" id="luxWcGenTop"
+                    data-tip="Start a drill from your top 3 targets."
+                    title="Start a drill from your top 3 targets."
+                  >✨ Generate from Top 3</button>
+
+                  <button class="lux-pbtn lux-pbtn--ghost lux-wc-powerBtn" id="luxWcCluster"
+                    data-tip="Group targets into clusters."
+                    title="Group targets into clusters."
+                  >🧩 Cluster</button>
+
+                  <button class="lux-pbtn lux-pbtn--ghost lux-wc-powerBtn" id="luxWcSnapshot"
+                    data-tip="Save an image of the current cloud."
+                    title="Save an image of the current cloud."
+                  >📷 Snapshot</button>
+                </div>
+
+                <!-- Mix -->
+                <div class="lux-wc-mixRow" aria-label="Top target mix">
+                  <span class="lux-wc-mixLabel"
+                    data-tip="How Top 3 is chosen."
+                    title="How Top 3 is chosen."
+                  >Top 3:</span>
+
+                  <button class="lux-wc-chipBtn" id="luxWcMixView" data-mix="view"
+                    data-tip="Pick Top 3 from what’s currently visible."
+                    title="Pick Top 3 from what’s currently visible."
+                  >View-based</button>
+
+                  <button class="lux-wc-chipBtn" id="luxWcMixSmart" data-mix="smart"
+                    data-tip="Pick Top 3 using your priority formula."
+                    title="Pick Top 3 using your priority formula."
+                  >Smart Mix</button>
+                </div>
+
+                <!-- Strips -->
+                <div class="lux-wc-targetStrip" id="luxWcTargets"
+                  data-tip="Your Top 3 targets (click one to open details)."
+                  title="Your Top 3 targets (click one to open details)."
+                ></div>
+
+                <div class="lux-wc-savedStrip" id="luxWcSaved"
+                  data-tip="Pinned targets you’ve saved for focus."
+                  title="Pinned targets you’ve saved for focus."
+                ></div>
+
+                <!-- Coach lane -->
+                <div class="lux-wc-coachLane" id="luxWcCoach">
+                  <div class="lux-wc-coachTitle"
+                    data-tip="Quick actions for targeted practice."
+                    title="Quick actions for targeted practice."
+                  >Coach Lane</div>
+
+                  <div class="lux-wc-coachBtns">
+                    <button class="lux-pbtn" id="luxWcCoachQuick"
+                      data-tip="Generate a fast drill using pinned/top targets."
+                      title="Generate a fast drill using pinned/top targets."
+                    >⚡ Quick drill</button>
+
+                    <button class="lux-pbtn lux-pbtn--ghost" id="luxWcCoachPinTop"
+                      data-tip="Pin the current Top 3 targets."
+                      title="Pin the current Top 3 targets."
+                    >📌 Pin Top 3</button>
+                  </div>
+
+                  <div class="lux-wc-coachHint" id="luxWcCoachHint"></div>
+                </div>
+
+              </div>
+            </div>
+          </aside>
+
+        </div>
+      </div>
+    </section>
+  `;
+}
+</file>
+
+<file path="lux-audio-mode.css">
+/* lux-audio-mode.css */
+/* Small Liquid-Glass Audio Mode Toggle (Normal / Pro)
+   - Record/Stop stay centered
+   - Toggle sits offset to the right of Stop
+   - Transparent pill + sliding glass knob
+*/
+
+:root{
+  --lux-blue: #0078d7;
+}
+
+/* ===============================
+   Practice dock row wrapper
+   (audio-mode-switch.js wraps .btn-group with this)
+   =============================== */
+.lux-rec-actions{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:18px;
+  margin: 10px auto 14px;
+  flex-wrap:wrap;
+}
+
+/* Ensure the record/stop group stays clean */
+.lux-rec-actions .btn-group{
+  margin: 0 !important;
+  position: relative;      /* allows floating toggle positioning */
+  overflow: visible;       /* tooltips must not clip */
+}
+
+/* ===============================
+   Wrapper + label
+   =============================== */
+.lux-audioModeWrap{
+  display:flex;
+  align-items:center;
+  gap:8px;
+
+  font: 900 11px/1 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  letter-spacing: 0.02em;
+
+  user-select:none;
+  z-index: 50;
+}
+
+/* “Audio” label — subtle, not heavy */
+.lux-audioModeLabel{
+  opacity: 0.55;
+  font-weight: 950;
+}
+
+/* When inserted after Stop */
+.btn-group .lux-audioModeWrap.is-rightOfStop{
+  margin-left: 12px;
+}
+
+/* When we float it (so it does NOT shift Record/Stop centering) */
+.btn-group .lux-audioModeWrap.is-floatDock{
+  position: absolute;
+  margin-left: 0 !important;
+}
+
+/* ===============================
+   Glass pill shell
+   =============================== */
+.lux-audioToggle{
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+
+  padding: 3px;
+  border-radius: 999px;
+
+  /* ✅ transparent glass */
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.22);
+
+  box-shadow:
+    0 10px 24px rgba(0,0,0,0.14),
+    inset 0 1px 0 rgba(255,255,255,0.22);
+
+  backdrop-filter: blur(16px) saturate(1.25);
+  -webkit-backdrop-filter: blur(16px) saturate(1.25);
+
+  overflow: visible; /* ✅ bring tooltips back */
+}
+
+/* Optional tiny “premium” outline when in Pro mode */
+html[data-lux-audio-mode="pro"] .lux-audioToggle{
+  box-shadow:
+    0 12px 28px rgba(0,0,0,0.16),
+    inset 0 1px 0 rgba(255,255,255,0.22),
+    0 0 0 1px rgba(0,120,215,0.10);
+}
+
+/* ===============================
+   Sliding inner glass knob
+   =============================== */
+.lux-audioKnob{
+  position:absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc(50% - 3px);
+  border-radius: 999px;
+  z-index: 1;
+
+  /* ✅ glass-on-glass (transparent) */
+  background:
+    radial-gradient(circle at 30% 25%,
+      rgba(255,255,255,0.60),
+      rgba(255,255,255,0.18) 58%,
+      rgba(255,255,255,0.06)
+    ),
+    linear-gradient(180deg,
+      rgba(255,255,255,0.34),
+      rgba(255,255,255,0.10)
+    );
+
+  border: 1px solid rgba(255,255,255,0.30);
+
+  box-shadow:
+    0 8px 16px rgba(0,0,0,0.12),
+    inset 0 1px 0 rgba(255,255,255,0.36);
+
+  transition: transform 240ms cubic-bezier(.2,.9,.2,1);
+  will-change: transform;
+
+  overflow: hidden; /* keeps sheen neat */
+}
+
+/* knob slides right in pro mode */
+html[data-lux-audio-mode="pro"] .lux-audioKnob{
+  transform: translateX(100%);
+}
+
+/* subtle sheen streak on hover */
+.lux-audioKnob::after{
+  content:"";
+  position:absolute;
+  inset:-45% -70%;
+  background: linear-gradient(
+    110deg,
+    rgba(255,255,255,0) 35%,
+    rgba(255,255,255,0.55) 48%,
+    rgba(255,255,255,0) 62%
+  );
+  transform: translateX(-45%) rotate(8deg);
+  opacity: 0;
+  pointer-events:none;
+}
+
+.lux-audioToggle:hover .lux-audioKnob::after{
+  opacity: 0.70;
+  animation: luxSheen 1.05s ease both;
+}
+
+@keyframes luxSheen{
+  from { transform: translateX(-45%) rotate(8deg); }
+  to   { transform: translateX(45%)  rotate(8deg); }
+}
+
+/* ===============================
+   Buttons (must NOT look like big blue buttons)
+   =============================== */
+.lux-audioOpt{
+  position:relative;
+  z-index:2;
+
+  appearance:none;
+  border:0;
+  background: transparent !important;
+  box-shadow: none !important;
+
+  padding: 7px 12px;
+  border-radius: 999px;
+
+  font-weight: 950;
+  font-size: 12px;
+  cursor:pointer;
+
+  color: rgba(15,23,42,0.44); /* hollow/grey when inactive */
+  transition: transform .12s ease, color .16s ease, opacity .14s ease;
+}
+
+.lux-audioOpt:hover{
+  transform: translateY(-1px);
+  color: rgba(15,23,42,0.70);
+}
+
+/* ✅ Active mode = Lux blue text */
+html[data-lux-audio-mode="normal"] .lux-audioOpt[data-mode="NORMAL"],
+html[data-lux-audio-mode="pro"] .lux-audioOpt[data-mode="PRO"]{
+  color: var(--lux-blue);
+  text-shadow:
+    0 1px 0 rgba(255,255,255,0.25),
+    0 10px 22px rgba(0,0,0,0.10);
+}
+
+/* dim the inactive one a bit */
+html[data-lux-audio-mode="normal"] .lux-audioOpt[data-mode="PRO"],
+html[data-lux-audio-mode="pro"] .lux-audioOpt[data-mode="NORMAL"]{
+  opacity: 0.58;
+}
+
+/* ===============================
+   Subtle bump confirmation
+   =============================== */
+.lux-audioToggle.is-bump .lux-audioKnob{
+  animation: luxKnobBump 320ms ease;
+}
+
+@keyframes luxKnobBump{
+  0%   { filter: brightness(1); }
+  45%  { filter: brightness(1.18); }
+  100% { filter: brightness(1); }
+}
+
+/* ===============================
+   Tooltip bubbles (restored)
+   =============================== */
+.lux-audioOpt[data-tip]::after{
+  content: attr(data-tip);
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(100% + 10px);
+
+  width: min(320px, 62vw);
+  padding: 9px 11px;
+  border-radius: 14px;
+
+  background: rgba(15, 23, 42, 0.92);
+  color: rgba(255, 255, 255, 0.95);
+
+  font-weight: 800;
+  line-height: 1.25;
+
+  box-shadow: 0 14px 34px rgba(0,0,0,0.30);
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 140ms ease;
+
+  white-space: normal;
+  z-index: 999;
+}
+
+.lux-audioOpt[data-tip]:hover::after{
+  opacity: 1;
+}
+
+/* motion accessibility */
+@media (prefers-reduced-motion: reduce){
+  .lux-audioKnob,
+  .lux-audioOpt{
+    transition: none !important;
+  }
+  .lux-audioToggle:hover .lux-audioKnob::after{
+    animation: none !important;
+  }
+}
+</file>
+
 <file path="src/main.js">
 // src/main.js
 // The Main Entry Point: Boots the app, handles the Typewriter, and wires the Dropdown.
@@ -32493,6 +31769,842 @@ if (document.readyState === "loading") {
 } else {
   bootApp();
 }
+</file>
+
+<file path="features/features/selfpb/ui.js">
+// features/features/selfpb/ui.js
+// FINAL PIVOT: Using WaveSurfer.js for reliable waveforms.
+
+import { initSelfPBCore } from "./core.js";
+import { initWaveSurfer } from "./waveform-logic.js";
+
+function ensureStyles() {
+  const STYLE_ID = "selfpb-lite-style";
+  if (document.getElementById(STYLE_ID)) return;
+
+  const s = document.createElement("style");
+  s.id = STYLE_ID;
+
+  s.textContent = `
+    /* Light Theme + Layout Styles */
+
+    /* ✅ OUTER bezel: always hugs inner width perfectly */
+    #selfpb-lite{
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      z-index: 9999;
+
+      /* 🔒 lock inner width into a variable so outer can wrap it */
+      --spbW: min(390px, calc(100vw - 48px));
+
+      width: calc(var(--spbW) + 24px);  /* ✅ inner + bezel */
+      max-width: calc(100vw - 24px);
+
+      padding: 10px 14px 14px 10px;     /* bezel (extra right/bottom) */
+      border-radius: 18px;
+
+      /* ✅ make bezel visible */
+      background: rgba(15,23,42,0.06);
+      border: 1px solid rgba(15,23,42,0.10);
+      box-shadow: 0 10px 26px rgba(0,0,0,0.22);
+
+      box-sizing: border-box;
+      overflow: visible; /* ✅ don’t clip the bezel */
+    }
+
+    #selfpb-lite *{ box-sizing:border-box; }
+
+    /* ✅ INNER panel always matches spbW */
+    #selfpb-lite .spb-body{
+      width: var(--spbW);
+      background: #fff;
+      border-radius: 16px;
+      padding: 12px;
+      overflow: hidden;
+    }
+
+    #selfpb-lite .row{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      min-width:0;
+    }
+
+    #selfpb-lite .scrubFull{
+      width:100%;
+      min-width:0;
+    }
+
+    #selfpb-lite .btn{
+      padding:6px 10px;
+      border-radius:8px;
+      border:0;
+      background:#2d6cdf;
+      color:#fff;
+      cursor:pointer;
+      transition:background 0.15s, transform 0.1s;
+    }
+
+    #selfpb-lite .btn:hover{filter:brightness(1.1);}
+    #selfpb-lite .btn:active{transform:scale(0.96);}
+    #selfpb-lite .btn[disabled]{opacity:.5;cursor:not-allowed}
+
+    #selfpb-lite .btn.icon{
+      width:44px;
+      padding:6px 0;
+      display:grid;
+      place-items:center;
+    }
+
+    #selfpb-lite .pill{border-radius:999px;padding:6px 10px}
+    #selfpb-lite .meta{opacity:.85}
+
+    :is(#selfpb-lite, #spb-float) input[type="range"]{accent-color:#2d6cdf}
+
+    #selfpb-lite .ab{display:flex;gap:6px;position:relative;}
+    #selfpb-lite .tiny{font-weight:700;opacity:.8}
+
+    /* Layout Fixes */
+    #selfpb-lite .spacer{flex:1}
+    #spb-main { width: 110px; font-weight: 800; font-size: 1.05em; flex-shrink: 0; }
+    #spb-loop-action { min-width: 100px; background: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; }
+    #spb-loop-action.active { background: #4338ca; color: #fff; border-color: #312e81; }
+
+    /* Floating "Coach Mark" Bubble */
+    .spb-bubble {
+      position: absolute;
+      top: -38px;
+      left: 0;
+      background: rgba(0,0,0,0.85);
+      color: #fff;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+    .spb-bubble.visible { opacity: 1; }
+    .spb-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 16px;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-top: 4px solid rgba(0,0,0,0.85);
+    }
+
+    /* ✅ In expanded mode, body fills floating card */
+    #spb-float .spb-body{
+      width: 100% !important;
+    }
+
+    /* ✅ Prevent waveform/canvas from forcing overflow */
+    :is(#selfpb-lite, #spb-float) canvas,
+    :is(#selfpb-lite, #spb-float) .spb-wave,
+    :is(#selfpb-lite, #spb-float) #spb-wavebox{
+      max-width: 100% !important;
+    }
+
+    :is(#selfpb-lite, #spb-float) .spb-wave{
+      height:92px;
+      border-radius:12px;
+      background: rgba(15,23,42,0.04);
+      border:1px solid rgba(15,23,42,0.10);
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    /* rows */
+    :is(#selfpb-lite, #spb-float) .spb-row{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+      width:100%;
+    }
+
+    :is(#selfpb-lite, #spb-float) .spb-row + .spb-row{ margin-top:8px; }
+
+    :is(#selfpb-lite, #spb-float) .spb-scrub{
+      width:100%;
+      min-width:0;
+    }
+
+    :is(#selfpb-lite, #spb-float) .spb-btn{
+      border:0;
+      border-radius:10px;
+      padding:8px 12px;
+      font-weight:800;
+      cursor:pointer;
+      background:#2f6fe4;
+      color:#fff;
+      box-shadow:0 6px 16px rgba(0,0,0,0.12);
+      white-space:nowrap;
+    }
+
+    :is(#selfpb-lite, #spb-float) .spb-btn.secondary{
+      background: rgba(15,23,42,0.08);
+      color: rgba(15,23,42,0.85);
+      box-shadow:none;
+    }
+
+    :is(#selfpb-lite, #spb-float) .spb-btn.icon{
+      width:44px;
+      display:grid;
+      place-items:center;
+      padding:8px 0;
+    }
+
+    /* ✅ Download arrow matches TTS (blue link-style) */
+    #selfpb-lite #spb-dl{
+      background: transparent !important;
+      box-shadow: none !important;
+      border: 0 !important;
+
+      color: #0078d7 !important;   /* ✅ same as .tts-link */
+      font-size: 1.8rem;
+      line-height: 1;
+      padding: 6px 10px;
+    }
+
+    #selfpb-lite #spb-dl:hover{
+      filter: brightness(0.9);
+    }
+
+    /* ✅ Scrubber: looks like a real timeline */
+    :is(#selfpb-lite, #spb-float) #spb-scrub{
+      -webkit-appearance: none;
+      appearance: none;
+      height: 18px;
+    }
+
+    :is(#selfpb-lite, #spb-float) #spb-scrub::-webkit-slider-runnable-track{
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.14);
+    }
+
+    :is(#selfpb-lite, #spb-float) #spb-scrub::-webkit-slider-thumb{
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #2f6fe4;
+      border: 2px solid #fff;
+      margin-top: -4px;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.18);
+    }
+
+    /* ✅ Speed stays slimmer + quieter */
+    :is(#selfpb-lite, #spb-float) #spb-rate::-webkit-slider-runnable-track{
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.10);
+    }
+    :is(#selfpb-lite, #spb-float) #spb-rate::-webkit-slider-thumb{
+      -webkit-appearance:none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: rgba(15,23,42,0.60);
+      margin-top: -4px;
+    }
+
+    /* bottom row: -2s ⬇ +2s */
+    :is(#selfpb-lite, #spb-float) .spb-bottom{
+      justify-content:space-between;
+    }
+
+    /* ✅ Expand button (header) */
+    #selfpb-lite .spb-miniBtn{
+      border: 0;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-weight: 900;
+      cursor: pointer;
+      background: rgba(255,255,255,0.22);
+      color: rgba(15,23,42,0.85);
+      transition: transform .12s ease, filter .12s ease;
+    }
+
+    #selfpb-lite .spb-miniBtn:hover{
+      transform: scale(1.10);  /* ✅ “big bulge” hover */
+      filter: brightness(1.12);
+    }
+
+    /* ✅ Floating expanded window (non-modal) */
+    #spb-float{
+      position: fixed;
+      z-index: 200000;
+      display: none;
+
+      width: min(920px, calc(100vw - 40px));
+      max-height: min(720px, calc(100vh - 40px));
+
+      left: 50%;
+      top: 90px;
+      transform: translateX(-50%);
+
+      border-radius: 22px;
+      background: rgba(255,255,255,0.96);
+      border: 1px solid rgba(15,23,42,0.12);
+      box-shadow: 0 18px 52px rgba(0,0,0,0.30);
+      overflow: hidden;
+    }
+
+    #spb-float.is-open{ display:block; }
+
+    #spb-floatHead{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding: 10px 12px;
+      font-weight: 900;
+      cursor: grab;            /* ✅ draggable */
+      user-select: none;
+      background: rgba(15,23,42,0.04);
+    }
+
+    #spb-floatHead:active{ cursor: grabbing; }
+
+    #spb-floatMount{
+      padding: 12px;
+    }
+
+    /* ✅ bigger waveform in expanded mode */
+    #spb-float #spb-wavebox{
+      height: 240px;
+    }
+
+    /* ✅ expanded mode: speed slider not absurdly wide */
+    #spb-float #spb-rate{
+      max-width: 320px;
+    }
+  `;
+
+  document.head.appendChild(s);
+}
+
+function buildUI() {
+  const host = document.createElement("div");
+  host.id = "selfpb-lite";
+
+  host.innerHTML = `
+    <div class="row" style="margin-bottom:6px; position:relative;">
+      <span
+        id="spb-toast"
+        class="pill tiny"
+        style="display:none; position:absolute; right:0; top:0; background:#ef4444; border-color:#b91c1c; color:#fff; z-index:10; box-shadow: 0 2px 10px rgba(0,0,0,0.5);"
+      ></span>
+
+      <button id="spb-expand" class="spb-miniBtn" title="Expand Self Playback">
+        Expand
+      </button>
+
+      <div class="spacer"></div>
+      <span class="pill tiny" id="spb-ref">Ref: —</span>
+      <span class="pill tiny" id="spb-time">0:00 / 0:00</span>
+    </div>
+
+    <div class="spb-body">
+
+      <!-- ✅ Wave box (top) -->
+      <div class="spb-wave" id="spb-wavebox">
+        <div id="spb-waveform-container" style="width:100%; height:100%; display:flex; flex-direction:column;">
+          <div id="spb-wave-learner" style="height: 50%; width: 100%;"></div>
+          <div id="spb-wave-ref" style="height: 50%; width: 100%; border-top: 1px solid #eee;"></div>
+        </div>
+      </div>
+
+      <!-- ✅ Scrubber row -->
+      <div class="spb-row">
+        <input id="spb-scrub" class="spb-scrub" type="range" min="0" max="1000" step="1" value="0" title="Seek">
+      </div>
+
+      <!-- ✅ Speed row -->
+      <div class="spb-row">
+        <div style="min-width:54px; font-weight:800; opacity:.75;">Speed</div>
+        <input id="spb-rate" type="range" min="0.5" max="1.5" step="0.05" value="1" style="flex:1; min-width:0;">
+        <div id="spb-rate-val" style="min-width:54px; text-align:right; font-weight:900;">1.00×</div>
+        <div id="spb-loop-slot" style="min-width:110px; text-align:right; font-weight:900; opacity:.75;"></div>
+      </div>
+
+      <!-- ✅ Loop status text -->
+      <div class="spb-row" id="spb-loop-row">
+        <div id="spb-ab-label" style="font-weight:800; opacity:.75;">Loop: Off</div>
+      </div>
+
+      <!-- ✅ Play + Set Loop row -->
+      <div class="spb-row">
+        <button class="spb-btn" id="spb-main" style="flex:1; min-width:0;">▶ Play</button>
+        <div class="ab" style="flex:1; min-width:0; display:flex; justify-content:flex-end; position:relative;">
+          <div id="spb-loop-tip" class="spb-bubble">Tap <b>A</b> then <b>B</b> to loop.</div>
+          <button class="spb-btn" id="spb-loop-action" style="flex:1; min-width:0;">⟳ Set Loop A</button>
+        </div>
+      </div>
+
+      <!-- ✅ Bottommost row: -2s  ⬇  +2s -->
+      <div class="spb-row spb-bottom">
+        <button class="spb-btn" id="spb-back">−2s</button>
+        <button class="spb-btn secondary icon" id="spb-dl" type="button" disabled title="Record something first">⬇</button>
+        <button class="spb-btn" id="spb-fwd">+2s</button>
+      </div>
+
+    </div>
+  `;
+
+  document.body.appendChild(host);
+
+  // ✅ Expanded floating window (create once)
+  let float = document.getElementById("spb-float");
+  if (!float) {
+    float = document.createElement("div");
+    float.id = "spb-float";
+    float.innerHTML = `
+      <div id="spb-floatHead">
+        <div>Self Playback (Expanded)</div>
+        <button id="spb-floatClose" class="spb-btn secondary icon" title="Close">✕</button>
+      </div>
+      <div id="spb-floatMount"></div>
+    `;
+    document.body.appendChild(float);
+  }
+
+  const floatHead = float.querySelector("#spb-floatHead");
+  const floatClose = float.querySelector("#spb-floatClose");
+  const floatMount = float.querySelector("#spb-floatMount");
+
+  const expandBtn = host.querySelector("#spb-expand");
+  const body = host.querySelector(".spb-body");
+  const bodyHome = body.parentElement;
+  let bodyNext = body.nextSibling;
+
+  const loopLabel = host.querySelector("#spb-ab-label");
+  const loopRow = host.querySelector("#spb-loop-row");
+  const loopSlot = host.querySelector("#spb-loop-slot");
+
+  function openExpanded() {
+    bodyNext = body.nextSibling; // ✅ re-capture in case DOM changes
+    float.classList.add("is-open");
+    floatMount.appendChild(body);
+
+    // move Loop label into speed row slot (expanded only)
+    if (loopSlot && loopLabel) loopSlot.appendChild(loopLabel);
+    if (loopRow) loopRow.style.display = "none";
+  }
+
+  function closeExpanded() {
+    float.classList.remove("is-open");
+    bodyHome.insertBefore(body, bodyNext || null);
+
+    // put Loop label back into its normal row
+    if (loopRow && loopLabel) loopRow.appendChild(loopLabel);
+    if (loopRow) loopRow.style.display = "";
+  }
+
+  expandBtn?.addEventListener("click", openExpanded);
+  floatClose?.addEventListener("click", closeExpanded);
+
+  // ✅ Drag floating expanded window
+  let dragOn = false;
+  let dragOffX = 0;
+  let dragOffY = 0;
+
+  floatHead.addEventListener("pointerdown", (e) => {
+    // prevent dragging when clicking the close button
+    if (e.target && e.target.id === "spb-floatClose") return;
+
+    dragOn = true;
+    const r = float.getBoundingClientRect();
+
+    // convert from centered transform layout -> absolute px positioning
+    float.style.transform = "none";
+    float.style.left = r.left + "px";
+    float.style.top = r.top + "px";
+
+    dragOffX = e.clientX - r.left;
+    dragOffY = e.clientY - r.top;
+
+    floatHead.setPointerCapture(e.pointerId);
+  });
+
+  floatHead.addEventListener("pointermove", (e) => {
+    if (!dragOn) return;
+    float.style.left = e.clientX - dragOffX + "px";
+    float.style.top = e.clientY - dragOffY + "px";
+  });
+
+  floatHead.addEventListener("pointerup", () => {
+    dragOn = false;
+  });
+
+  return {
+    host,
+    toast: host.querySelector("#spb-toast"),
+    mainBtn: host.querySelector("#spb-main"),
+    dlBtn: host.querySelector("#spb-dl"),
+    backBtn: host.querySelector("#spb-back"),
+    fwdBtn: host.querySelector("#spb-fwd"),
+    scrub: host.querySelector("#spb-scrub"),
+    rate: host.querySelector("#spb-rate"),
+    rateVal: host.querySelector("#spb-rate-val"),
+    timeLab: host.querySelector("#spb-time"),
+    loopAction: host.querySelector("#spb-loop-action"),
+    loopTip: host.querySelector("#spb-loop-tip"),
+    abLabel: host.querySelector("#spb-ab-label"),
+    refLabel: host.querySelector("#spb-ref"),
+    // Containers
+    waveLearner: host.querySelector("#spb-wave-learner"),
+    waveRef: host.querySelector("#spb-wave-ref"),
+  };
+}
+
+export function mountSelfPlaybackLite() {
+  const { api, audio, refAudio, st } = initSelfPBCore();
+
+  ensureStyles();
+  const ui = buildUI();
+
+  // Initialize WaveSurfer
+  initWaveSurfer({
+    learnerContainer: ui.waveLearner,
+    refContainer: ui.waveRef,
+    masterAudio: audio,
+  });
+
+  // ✅ Download Latest Recording button wiring
+  const dlBtn = ui.dlBtn;
+  let _lastBlob = null;
+  let _lastMeta = null;
+
+  function extFromBlob(blob) {
+    const t = blob?.type || "";
+    if (t.includes("wav")) return "wav";
+    if (t.includes("webm")) return "webm";
+    if (t.includes("ogg")) return "ogg";
+    return "audio";
+  }
+
+  function downloadBlob(blob, meta) {
+    if (!blob) return;
+
+    const mode = (meta?.mode || "normal").toLowerCase();
+    const ts = new Date(meta?.ts || Date.now())
+      .toISOString()
+      .replaceAll(":", "-")
+      .replaceAll(".", "-");
+
+    const ext = extFromBlob(blob);
+    const name = `lux-recording_${mode}_${ts}.${ext}`;
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+  }
+
+  function setLatest(blob, meta) {
+    _lastBlob = blob || null;
+    _lastMeta = meta || null;
+
+    if (dlBtn) {
+      dlBtn.disabled = !_lastBlob;
+      dlBtn.title = _lastBlob
+        ? "Download your latest recording"
+        : "Record something first";
+    }
+  }
+
+  if (dlBtn) {
+    dlBtn.addEventListener("click", () => {
+      if (!_lastBlob) return;
+      downloadBlob(_lastBlob, _lastMeta);
+    });
+  }
+
+  // Pull from global if it exists already
+  if (window.LuxLastRecordingBlob) {
+    setLatest(window.LuxLastRecordingBlob, window.LuxLastRecordingMeta || null);
+  }
+
+  // Listen for new recordings
+  window.addEventListener("lux:lastRecording", (e) => {
+    setLatest(e?.detail?.blob, e?.detail?.meta || null);
+  });
+
+  // --- Logic helpers ---
+  const showToast = (msg, duration = 2000) => {
+    ui.toast.textContent = msg;
+    ui.toast.style.display = "inline-block";
+    ui.host.animate(
+      [
+        { transform: "translateX(0)" },
+        { transform: "translateX(-4px)" },
+        { transform: "translateX(4px)" },
+        { transform: "translateX(0)" },
+      ],
+      { duration: 200 }
+    );
+    setTimeout(() => {
+      ui.toast.style.display = "none";
+    }, duration);
+  };
+
+  const showLoopHint = () => {
+    if (localStorage.getItem("spb-hint-seen") !== "true") {
+      ui.loopTip.classList.add("visible");
+      setTimeout(() => {
+        ui.loopTip.classList.remove("visible");
+        localStorage.setItem("spb-hint-seen", "true");
+      }, 4000);
+    }
+  };
+
+  const syncButtons = () => {
+    ui.mainBtn.textContent = st.playing ? "⏸ Pause" : "▶ Play";
+
+    if (st.a == null) {
+      ui.loopAction.textContent = "⟳ Set Loop A";
+      ui.loopAction.classList.remove("active");
+      ui.abLabel.textContent = "Loop: Off";
+    } else if (st.b == null) {
+      ui.loopAction.textContent = "⟳ Set Loop B";
+      ui.loopAction.classList.add("active");
+      ui.abLabel.textContent = `A: ${api.fmt(st.a)} …`;
+    } else {
+      ui.loopAction.textContent = "× Clear Loop";
+      ui.loopAction.classList.remove("active");
+      ui.abLabel.textContent = `A: ${api.fmt(st.a)}  B: ${api.fmt(st.b)}`;
+    }
+  };
+
+  const syncTime = () => {
+    ui.timeLab.textContent = `${api.fmt(audio.currentTime || 0)} / ${api.fmt(
+      audio.duration || 0
+    )}`;
+  };
+
+  const syncScrub = () => {
+    if (!st.scrubbing) {
+      const dur = audio.duration || 0;
+      const p = dur ? Math.floor((audio.currentTime / dur) * 1000) : 0;
+      ui.scrub.value = String(api.clamp(p, 0, 1000));
+    }
+  };
+
+  const syncRateUI = () => {
+    ui.rateVal.textContent = `${Number(audio.playbackRate).toFixed(2)}×`;
+    ui.rate.value = String(audio.playbackRate || 1);
+  };
+
+  const syncRefUI = () => {
+    const ready = !!refAudio.src;
+    const r = refAudio.playbackRate || 1;
+    const d = isFinite(refAudio.duration) ? api.fmt(refAudio.duration) : "—:—";
+    const meta = api.getRefMeta();
+    const v = meta && (meta.voice || meta.style) ? ` ${meta.voice || ""}` : "";
+    ui.refLabel.textContent = ready ? `Ref: ${r.toFixed(2)}× · ${d}${v}` : "Ref: —";
+  };
+
+  const handlePlayAction = async (isRestart = false) => {
+    if (!audio.currentSrc && !audio.src) {
+      showToast("No recording yet!");
+      return;
+    }
+    if (audio.duration === 0 || isNaN(audio.duration)) {
+      showToast("Audio empty/loading...");
+      return;
+    }
+
+    try {
+      if (isRestart) {
+        audio.currentTime = st.looping && st.a != null ? st.a : 0;
+        if (!st.playing) await api.play();
+      } else {
+        if (st.playing) {
+          api.pause();
+        } else {
+          if (st.looping && st.a != null && st.b != null && st.b > st.a) {
+            if (audio.currentTime < st.a || audio.currentTime > st.b)
+              audio.currentTime = st.a;
+          }
+          await api.play();
+        }
+      }
+    } catch (err) {
+      console.warn("[selfpb] Play failed", err);
+      showToast("Playback failed");
+    } finally {
+      syncButtons();
+    }
+  };
+
+  const handleLoopClick = () => {
+    if (!audio.duration) {
+      showToast("No audio to loop!");
+      return;
+    }
+
+    if (st.a == null) {
+      st.a = audio.currentTime || 0;
+      st.looping = false;
+      showLoopHint();
+    } else if (st.b == null) {
+      st.b = audio.currentTime || 0;
+      if (st.b < st.a) {
+        const t = st.a;
+        st.a = st.b;
+        st.b = t;
+      }
+      st.looping = true;
+      audio.currentTime = st.a;
+      if (!st.playing) api.play();
+    } else {
+      api.clearAB();
+    }
+
+    syncButtons();
+  };
+
+  ui.mainBtn.addEventListener("click", (e) => {
+    if (e.detail !== 2) handlePlayAction(false);
+  });
+
+  ui.mainBtn.addEventListener("dblclick", (e) => {
+    e.preventDefault();
+    handlePlayAction(true);
+  });
+
+  // 2.0 seconds skip
+  ui.backBtn.addEventListener("click", () => {
+    audio.currentTime = api.clamp(
+      (audio.currentTime || 0) - 2.0,
+      0,
+      audio.duration || 0
+    );
+    syncTime();
+    syncScrub();
+  });
+
+  ui.fwdBtn.addEventListener("click", () => {
+    audio.currentTime = api.clamp(
+      (audio.currentTime || 0) + 2.0,
+      0,
+      audio.duration || 0
+    );
+    syncTime();
+    syncScrub();
+  });
+
+  // ✅ If user grabs scrubber while playing -> PAUSE (pro behavior)
+  ui.scrub.addEventListener("pointerdown", () => {
+    if (!audio.paused) {
+      audio.pause();
+    }
+  });
+
+  ui.scrub.addEventListener("input", () => {
+    api._setScrubbingOn();
+    const p = Number(ui.scrub.value) / 1000;
+    audio.currentTime = api.clamp(p * (audio.duration || 0), 0, audio.duration || 0);
+    syncTime();
+  });
+
+  ui.scrub.addEventListener("change", () => api._setScrubbingOff());
+
+  ui.rate.addEventListener("input", () => {
+    const v = api.clamp(Number(ui.rate.value) || 1, 0.5, 1.5);
+    api.setRate(v);
+    syncRateUI();
+  });
+
+  ui.loopAction.addEventListener("click", handleLoopClick);
+
+  audio.addEventListener("timeupdate", () => {
+    syncTime();
+    syncScrub();
+  });
+  audio.addEventListener("play", () => {
+    st.playing = true;
+    syncButtons();
+  });
+  audio.addEventListener("pause", () => {
+    st.playing = false;
+    syncButtons();
+  });
+  audio.addEventListener("loadedmetadata", () => {
+    syncTime();
+    syncScrub();
+  });
+  audio.addEventListener("ratechange", syncRateUI);
+  audio.addEventListener("ended", () => {
+    st.playing = false;
+    syncButtons();
+  });
+
+  refAudio.addEventListener("loadedmetadata", syncRefUI);
+  refAudio.addEventListener("ratechange", syncRefUI);
+
+  // Shortcuts logic (unchanged)
+  window.addEventListener(
+    "keydown",
+    (e) => {
+      if (
+        e.target.tagName === "INPUT" ||
+        e.target.tagName === "TEXTAREA" ||
+        e.target.isContentEditable
+      )
+        return;
+
+      if (e.code === "Space") {
+        e.preventDefault();
+        ui.mainBtn.click();
+      } else if (e.key === ",") {
+        e.preventDefault();
+        ui.backBtn.click();
+      } else if (e.key === ".") {
+        e.preventDefault();
+        ui.fwdBtn.click();
+      } else if (e.key === "[") {
+        e.preventDefault();
+        api.setRate(api.clamp((audio.playbackRate || 1) - 0.05, 0.5, 1.5));
+        syncRateUI();
+      } else if (e.key === "]") {
+        e.preventDefault();
+        api.setRate(api.clamp((audio.playbackRate || 1) + 0.05, 0.5, 1.5));
+        syncRateUI();
+      } else if (e.key.toLowerCase() === "l") {
+        e.preventDefault();
+        ui.loopAction.click();
+      }
+    },
+    { passive: false }
+  );
+
+  initialSync();
+  window.LuxSelfPB = Object.assign(window.LuxSelfPB || {}, { el: ui.host });
+  console.info("[self-pb] WaveSurfer UI Mounted");
+
+  function initialSync() {
+    syncTime();
+    syncScrub();
+    syncButtons();
+    syncRefUI();
+  }
+}
+
+export { mountSelfPlaybackLite as default };
 </file>
 
 <file path="features/progress/render/dashboard.js">
@@ -33514,6 +33626,13 @@ function renderMetricTrendCard(m) {
   background: rgba(255,255,255,.85);
 }
 
+/* ✅ 10) Bigger, more prominent search in Library */
+.lux-mw-panel.is-modal .lux-mw-search {
+  width: 280px;
+  font-size: 14px;
+  padding: 9px 12px;
+}
+
 .lux-mw-iconBtn{
   width: 32px;
   height: 32px;
@@ -33643,8 +33762,8 @@ function renderMetricTrendCard(m) {
 
 /* --- My Words action buttons: compact + rounded, no jitter --- */
 .lux-mw-actions{
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display:grid;
+  grid-template-columns: repeat(var(--mw-cols, 2), 1fr);
   gap: 0;
   border-radius: 14px;
   overflow: hidden;
@@ -33821,21 +33940,6 @@ function renderMetricTrendCard(m) {
 .lux-mw-viewAllBtn:hover { filter: brightness(1.01); }
 </file>
 
-<file path="lux-layout.css">
-/* lux-layout.css */
-@import "./lux-layout.tokens.css";
-@import "./lux-layout.core.css";
-@import "./lux-layout.harvard.css";
-@import "./lux-layout.nav-cta.css";
-@import "./lux-layout.messaging.css";
-@import "./lux-layout.interactions.css";
-@import "./lux-layout.ai-feedback.css";
-@import "./lux-layout.scrollbar.css";
-@import "./lux-layout.top-banner.css";
-/* ✅ My Words overlay */
-@import "./features/my-words/my-words.css";
-</file>
-
 <file path="features/my-words/panel.js">
 // features/my-words/panel.js
 // Phase 5: Library Modal + Active/Archived tabs + badge counts
@@ -33883,6 +33987,14 @@ function openWordReference(text) {
   window.open(url, "_blank", "noopener,noreferrer");
 }
 
+// ✅ 1) Youglish helper
+function openYouglish(text) {
+  const q = String(text || "").trim();
+  if (!q) return;
+  const url = `https://youglish.com/pronounce/${encodeURIComponent(q)}/english`;
+  window.open(url, "_blank", "noopener,noreferrer");
+}
+
 export function mountMyWordsPanel({
   store,
   getAttempts,
@@ -33895,6 +34007,8 @@ export function mountMyWordsPanel({
   asModal = false,
 
   onOpenLibrary,
+  onCloseLibrary,
+  onCoach,
 } = {}) {
   // ------------------------------------------------------------
   // Root panel
@@ -33940,6 +34054,7 @@ export function mountMyWordsPanel({
     </div>
   `;
 
+  const elTitle = root.querySelector(".lux-mw-title");
   const elSearch = root.querySelector(".lux-mw-search");
   const elClose = root.querySelector('button[data-act="close"]');
   const elTa = root.querySelector(".lux-mw-addBox");
@@ -33974,18 +34089,35 @@ export function mountMyWordsPanel({
       b.classList.toggle("is-active", is);
     });
 
-    // Composer only makes sense on Active
+    // Composer only makes sense on Active (and never in modal/library)
+    const isModal = root.classList.contains("is-modal");
     if (elComposerZone) {
-      elComposerZone.style.display = tab === "active" ? "" : "none";
+      if (isModal) elComposerZone.style.display = "none";
+      else elComposerZone.style.display = tab === "active" ? "" : "none";
     }
 
     render();
   }
 
-  function entryRowHTML(e, isArchived) {
+  function entryRowHTML(e, isArchived, opts = {}) {
+    const isModal = !!opts.isModal;
+
     const dotCls = `lux-mw-dot ${esc(e.mw_cls || "mw-new")}`;
     const titleText = `${e.pinned ? "📌 " : ""}${e.text || ""}`;
 
+    // ✅ Modal “Added” timestamp line (only in library)
+    let addedLine = "";
+    if (isModal) {
+      const added = e.created_at || e.updated_at;
+      const addedStr = added ? new Date(added).toLocaleString() : "";
+      if (addedStr) {
+        addedLine = `<div class="lux-mw-meta">Added ${esc(addedStr)}</div>`;
+      }
+    }
+
+    // ✅ Actions differ depending on modal vs sidecar
+    // Sidecar (non-modal): Active gets Archive.
+    // Modal (library): Active gets Delete only (no Archive).
     const actions = isArchived
       ? `
         ${
@@ -33994,6 +34126,8 @@ export function mountMyWordsPanel({
             : ""
         }
         <button class="lux-mw-act" data-act="wr">WR</button>
+        <button class="lux-mw-act" data-act="yg">YG</button>
+        <button class="lux-mw-act" data-act="coach">Coach</button>
         <button class="lux-mw-act" data-act="restore">Restore</button>
         <button class="lux-mw-act danger" data-act="delete">Delete</button>
       `
@@ -34004,8 +34138,14 @@ export function mountMyWordsPanel({
             : ""
         }
         <button class="lux-mw-act" data-act="wr">WR</button>
+        <button class="lux-mw-act" data-act="yg">YG</button>
+        <button class="lux-mw-act" data-act="coach">Coach</button>
         <button class="lux-mw-act" data-act="pin">${e.pinned ? "Unpin" : "Pin"}</button>
-        <button class="lux-mw-act danger" data-act="archive">Archive</button>
+        ${
+          isModal
+            ? `<button class="lux-mw-act danger" data-act="delete">Delete</button>`
+            : `<button class="lux-mw-act danger" data-act="archive">Archive</button>`
+        }
       `;
 
     return `
@@ -34015,6 +34155,7 @@ export function mountMyWordsPanel({
         <div class="lux-mw-main">
           <div class="lux-mw-text">${esc(titleText)}</div>
           <div class="lux-mw-meta">${esc(buildMeta(e))}</div>
+          ${addedLine}
         </div>
 
         <div class="lux-mw-actions">
@@ -34044,7 +34185,43 @@ export function mountMyWordsPanel({
     return applyMyWordsStats(active, attempts);
   }
 
+  function renderBackButton(total) {
+    // ✅ If panel is currently living inside the modal, show "Back to My Words"
+    const isModal = root.classList.contains("is-modal");
+
+    // Remove any existing footer button before adding a new one
+    const existing = elList.querySelector(".lux-mw-viewAllBtn");
+    if (existing) existing.remove();
+
+    // In modal: always show back
+    // In sidecar: show view library only when it makes sense
+    if (isModal || total > 0) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "lux-mw-viewAllBtn";
+
+      btn.textContent = isModal ? "Back to My Words" : `View Library (${total})`;
+
+      btn.addEventListener("click", () => {
+        if (isModal) {
+          onCloseLibrary?.();
+          window.LuxMyWords?.closeLibrary?.();
+        } else {
+          onOpenLibrary?.();
+          window.LuxMyWords?.openLibrary?.();
+        }
+      });
+
+      elList.appendChild(btn);
+    }
+  }
+
   function render() {
+    const isModal = root.classList.contains("is-modal");
+
+    // ✅ Title: Library vs My Words
+    if (elTitle) elTitle.textContent = isModal ? "Library" : "My Words";
+
     const { activeTotal, archivedTotal, total } = computeCountsAll();
 
     if (elBadgeActive) elBadgeActive.textContent = String(activeTotal);
@@ -34052,8 +34229,20 @@ export function mountMyWordsPanel({
 
     const listAll = getFilteredListForTab();
 
-    // compact mode only previews ACTIVE tab
-    if (mode === "compact") {
+    // ✅ Library should NOT show composer/add box
+    if (elComposerZone) {
+      if (isModal) {
+        elComposerZone.style.display = "none";
+      } else {
+        elComposerZone.style.display = tab === "active" ? "" : "none";
+      }
+    }
+
+    // If moved into modal, behave like library mode automatically
+    const effectiveMode = isModal ? "library" : mode;
+
+    // compact mode only previews ACTIVE tab (sidecar only)
+    if (effectiveMode === "compact") {
       // Force active view in compact
       tab = "active";
       root.querySelectorAll(".lux-mw-tab").forEach((b) => {
@@ -34072,42 +34261,48 @@ export function mountMyWordsPanel({
           </div>
         `;
       } else {
-        elList.innerHTML = preview.map((e) => entryRowHTML(e, false)).join("");
+        elList.innerHTML = preview
+          .map((e) => entryRowHTML(e, false, { isModal: false }))
+          .join("");
       }
 
-      // ✅ Phase 5: View Library (N)
+      // ✅ Sidecar: show View Library (N) only when it makes sense
       if (total > 0 && (total > maxPreview || archivedTotal > 0)) {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "lux-mw-viewAllBtn";
-        btn.textContent = `View Library (${total})`;
-
-        // ✅ FIX 2 — wire the “View Library (N)” button
-        btn.addEventListener("click", () => {
-          window.LuxMyWords?.openLibrary?.();
-        });
-
-        elList.appendChild(btn);
+        renderBackButton(total);
       }
 
       return;
     }
 
-    // Library mode (modal): active OR archived
+    // Library mode: active OR archived (includes modal-moved panel)
     if (!listAll.length) {
       elList.innerHTML = `
         <div class="lux-mw-empty">
           <strong>${
             tab === "archived" ? "No archived words." : "No active words yet."
           }</strong>
-          ${tab === "archived" ? "Archive something first." : "Add a few above 👆"}
+          ${
+            tab === "archived"
+              ? "Archive something first."
+              : isModal
+              ? "Try searching your history above."
+              : "Add a few above 👆"
+          }
         </div>
       `;
+
+      // ✅ Modal still gets a Back button
+      if (isModal) renderBackButton(total);
       return;
     }
 
     const isArchived = tab === "archived";
-    elList.innerHTML = listAll.map((e) => entryRowHTML(e, isArchived)).join("");
+    elList.innerHTML = listAll
+      .map((e) => entryRowHTML(e, isArchived, { isModal }))
+      .join("");
+
+    // ✅ Modal gets Back button (never “View Library”)
+    if (isModal) renderBackButton(total);
   }
 
   function focusComposer() {
@@ -34136,12 +34331,21 @@ export function mountMyWordsPanel({
   });
 
   elClose?.addEventListener("click", () => {
+    // If we're inside the modal → go “back”
+    if (root.classList.contains("is-modal")) {
+      onCloseLibrary?.();
+      window.LuxMyWords?.closeLibrary?.();
+      return;
+    }
+
     // Sidecar closes store open state.
-    // Modal close is handled by the modal controller (below).
     store.setOpen(false);
   });
 
   elAdd?.addEventListener("click", () => {
+    // Composer hidden in modal/library, but keep safe anyway
+    if (root.classList.contains("is-modal")) return;
+
     const raw = elTa.value || "";
     const res = store.addMany(raw);
     if (res.added || res.merged) elTa.value = "";
@@ -34178,12 +34382,24 @@ export function mountMyWordsPanel({
       return;
     }
 
+    if (act === "yg") {
+      openYouglish(entry.text);
+      return;
+    }
+
+    if (act === "coach") {
+      onCoach?.(entry.text);
+      return;
+    }
+
     if (act === "pin") {
       store.togglePin(id);
       return;
     }
 
     if (act === "archive") {
+      // ✅ Never archive inside the library modal
+      if (root.classList.contains("is-modal")) return;
       store.archive(id);
       return;
     }
@@ -34268,6 +34484,8 @@ export function ensureMyWordsLibraryModal({
         mountTo: panelMount,
         asModal: true,
         onOpenLibrary: null,
+        onCloseLibrary: close,
+        onCoach: null,
       });
 
       // Default tab Active when opening
@@ -34288,615 +34506,6 @@ export function ensureMyWordsLibraryModal({
   }
 
   return { open, close, el: modalEl };
-}
-</file>
-
-<file path="features/my-words/index.js">
-// features/my-words/index.js
-
-import { fetchHistory } from "/src/api/index.js";
-import { ensureUID } from "../../api/identity.js";
-
-import { createMyWordsStore } from "./store.js";
-import { mountMyWordsPanel } from "./panel.js";
-import { mountMyWordsCornerLauncher } from "./launcher.js";
-
-import {
-  getAuthedUID,
-  fetchMyWords,
-  upsertManyMyWords,
-  setPinned,
-  setArchived,
-  deleteEntry,
-} from "./service.js";
-
-/**
- * Layout: bottom-left “lane”
- * - Top hugs bottom of Self Playback drawer (".lux-sp-panel")
- * - Right edge hugs LEFT edge of the practice input (#referenceText)
- */
-function layoutPanel(panelEl, inputEl) {
-  if (!panelEl) return;
-
-  const GAP = 12;
-  const LEFT = 18;
-  const BOTTOM = 18;
-
-  panelEl.style.left = LEFT + "px";
-  panelEl.style.right = "auto";
-  panelEl.style.bottom = BOTTOM + "px";
-
-  // top = bottom of Self Playback panel (if present)
-  let top = 92;
-  const sp = document.querySelector(".lux-sp-panel");
-  if (sp) {
-    const r = sp.getBoundingClientRect();
-    top = Math.ceil(r.bottom + GAP);
-  }
-
-  const maxTop = Math.max(92, window.innerHeight - 260);
-  top = Math.min(top, maxTop);
-  panelEl.style.top = top + "px";
-
-  // Width ends near the left edge of input (if present)
-  let width = 420;
-  if (inputEl) {
-    const inputRect = inputEl.getBoundingClientRect();
-    const targetRight = Math.ceil(inputRect.left - GAP);
-    width = targetRight - LEFT;
-  }
-
-  width = Math.max(300, Math.min(width, 560));
-  width = Math.min(width, Math.floor(window.innerWidth - LEFT - GAP));
-
-  panelEl.style.width = width + "px";
-  panelEl.style.height = `calc(100vh - ${top}px - ${BOTTOM}px)`;
-  panelEl.style.maxHeight = `calc(100vh - ${top}px - ${BOTTOM}px)`;
-}
-
-export function initMyWordsGlobal({ uid, inputEl } = {}) {
-  // ✅ Hide on AI landing page (convo.html)
-  if (location.pathname.endsWith("convo.html")) return null;
-
-  if (!uid) return null;
-
-  let authedUID = null;
-
-  // --- attempts cache for stats ---
-  let attemptsLoaded = false;
-  let attemptsCache = [];
-
-  async function ensureAttempts() {
-    if (attemptsLoaded) return attemptsCache;
-    attemptsLoaded = true;
-
-    try {
-      const all = await fetchHistory(uid);
-      attemptsCache = Array.isArray(all) ? all : [];
-    } catch (e) {
-      console.warn("[my-words] fetchHistory failed:", e);
-      attemptsCache = [];
-    }
-
-    return attemptsCache;
-  }
-
-  const store = createMyWordsStore({
-    uid,
-    onMutation: async (evt) => {
-      // Only sync to Supabase if logged in
-      if (!authedUID) return;
-
-      try {
-        if (evt.type === "addMany") {
-          await upsertManyMyWords(authedUID, evt.lines || []);
-          const remote = await fetchMyWords(authedUID);
-          if (remote?.length) store.replaceEntries(remote);
-        }
-
-        if (evt.type === "togglePin") {
-          await setPinned(authedUID, evt.id, evt.pinned);
-        }
-
-        // ✅ Archive / Restore via setArchived()
-        if (evt.type === "archive") {
-          await setArchived(authedUID, evt.id, true);
-        }
-
-        if (evt.type === "restore") {
-          await setArchived(authedUID, evt.id, false);
-        }
-
-        if (evt.type === "hardDelete") {
-          await deleteEntry(authedUID, evt.id);
-        }
-      } catch (e) {
-        console.warn("[my-words] supabase sync failed:", e);
-      }
-    },
-  });
-
-  // --- sidecar panel ---
-  const panel = mountMyWordsPanel({
-    store,
-    getAttempts: () => attemptsCache,
-    onSendToInput: inputEl
-      ? (text) => {
-          inputEl.value = text;
-          inputEl.focus();
-          inputEl.dispatchEvent(new Event("input", { bubbles: true }));
-        }
-      : null,
-    mode: "compact",
-    maxPreview: 5,
-    onOpenLibrary: () => openLibrary(), // ✅ wire to reliable modal
-  });
-
-  // ✅ Alias for older code that expects "sidecar"
-  const sidecar = panel;
-
-  // ============================================================
-  // ✅ FIX 1 — Make Library Modal open reliably (View Library)
-  // ============================================================
-
-  // --- Library Modal (View Library) ---
-  let _mwModal = null;
-  let _mwHome = null;
-
-  function ensureLibraryModal() {
-    if (_mwModal) return _mwModal;
-
-    const m = document.createElement("div");
-    m.id = "luxMwModal";
-    m.className = "lux-mw-modal";
-    m.innerHTML = `<div class="lux-mw-modal-card" role="dialog" aria-modal="true"></div>`;
-    document.body.appendChild(m);
-
-    // click outside closes
-    m.addEventListener("click", (e) => {
-      if (e.target === m) closeLibrary();
-    });
-
-    _mwModal = m;
-    return m;
-  }
-
-  function openLibrary() {
-    const m = ensureLibraryModal();
-    const card = m.querySelector(".lux-mw-modal-card");
-    if (!card) return;
-
-    // Create a "home marker" so we can put the panel back where it came from
-    if (!_mwHome) {
-      _mwHome = document.createElement("div");
-      _mwHome.id = "luxMwPanelHome";
-      _mwHome.style.display = "none";
-
-      // home marker goes right before panel.el
-      panel.el.parentNode.insertBefore(_mwHome, panel.el);
-    }
-
-    // ✅ force panel visible (important if your CSS uses display:none by default)
-    store.setOpen(true);
-    panel.el.classList.add("is-open", "is-modal");
-
-    // Move panel into the modal card
-    card.appendChild(panel.el);
-
-    // Show modal
-    m.classList.add("is-open");
-  }
-
-  function closeLibrary() {
-    if (!_mwModal || !_mwHome) return;
-
-    _mwModal.classList.remove("is-open");
-
-    // Put panel back to its original spot
-    panel.el.classList.remove("is-modal");
-    _mwHome.parentNode.insertBefore(panel.el, _mwHome);
-
-    // Re-layout if still open (sidecar mode)
-    if (store.getState().open) {
-      requestAnimationFrame(() => layoutPanel(panel.el, inputEl));
-    }
-  }
-
-  // ✅ Make available globally
-  window.LuxMyWords = window.LuxMyWords || {};
-  window.LuxMyWords.openLibrary = openLibrary;
-  window.LuxMyWords.closeLibrary = closeLibrary;
-
-  // --- launcher button (triangle) ---
-  const launcher = mountMyWordsCornerLauncher({
-    onClick: async () => {
-      const isOpen = store.getState().open;
-      store.setOpen(!isOpen);
-
-      if (!isOpen) {
-        // opening: load stats + layout + focus composer
-        await ensureAttempts();
-        requestAnimationFrame(() => {
-          // ✅ don’t run sidecar layout when panel is inside modal
-          if (!panel.el.classList.contains("is-modal")) {
-            layoutPanel(panel.el, inputEl);
-          }
-          panel.focusComposer?.();
-          panel.render?.();
-        });
-      }
-    },
-  });
-
-  // Keep it aligned on resize (when open)
-  window.addEventListener(
-    "resize",
-    () => {
-      if (!store.getState().open) return;
-      if (panel.el.classList.contains("is-modal")) return; // ✅ modal handles its own sizing
-      layoutPanel(panel.el, inputEl);
-    },
-    { passive: true }
-  );
-
-  // When opened through store state
-  store.subscribe(async (s) => {
-    launcher.classList.toggle("is-open", !!s.open);
-    panel.el.classList.toggle("is-open", !!s.open);
-
-    if (s.open) {
-      await ensureAttempts();
-      requestAnimationFrame(() => {
-        // ✅ don’t run sidecar layout when panel is inside modal
-        if (!panel.el.classList.contains("is-modal")) {
-          layoutPanel(panel.el, inputEl);
-        }
-        panel.render?.();
-      });
-    }
-  });
-
-  // --- Remote hydration when logged in ---
-  (async () => {
-    authedUID = await getAuthedUID();
-    if (!authedUID) return;
-
-    const remote = await fetchMyWords(authedUID);
-    if (remote?.length) {
-      store.replaceEntries(remote);
-      return;
-    }
-
-    // If remote empty but local has data, upload local once
-    const localTexts = store
-      .getState()
-      .entries.filter((e) => !e.archived)
-      .map((e) => e.text);
-
-    if (localTexts.length) {
-      await upsertManyMyWords(authedUID, localTexts);
-      const after = await fetchMyWords(authedUID);
-      if (after?.length) store.replaceEntries(after);
-    }
-  })();
-
-  // Global hook for Progress page button + external calls
-  window.LuxMyWords = {
-    ...(window.LuxMyWords || {}),
-    toggle: () => store.toggleOpen(),
-    open: () => store.setOpen(true),
-    close: () => store.setOpen(false),
-    openLibrary, // ✅ reliable open
-    closeLibrary,
-  };
-
-  return { store, panel, sidecar, launcher };
-}
-
-/**
- * ✅ FIX 2 — always produce a UID (correct import)
- * This is what launcher.js lazy-imports and uses.
- */
-export function initMyWordsEverywhere() {
-  const uid = ensureUID(); // ✅ always returns a stable local UID
-  const inputEl = document.getElementById("referenceText") || null;
-  return initMyWordsGlobal({ uid, inputEl });
-}
-</file>
-
-<file path="features/progress/wordcloud/wordcloud-dock.css">
-/* features/progress/wordcloud/wordcloud-dock.css */
-
-/* ---------------------------
-   Tiny 1-line tooltip
---------------------------- */
-[data-tip] { position: relative; }
-
-[data-tip]::after {
-  content: attr(data-tip);
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + 10px);
-  transform: translateX(-50%) translateY(4px);
-  opacity: 0;
-  pointer-events: none;
-  white-space: nowrap;
-  max-width: 320px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 12px;
-  line-height: 1.2;
-  padding: 6px 10px;
-  border-radius: 10px;
-  background: rgba(10, 14, 20, 0.92);
-  color: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
-  transition: opacity 160ms ease, transform 160ms ease;
-  z-index: 50;
-}
-
-[data-tip]:hover::after,
-[data-tip]:focus-visible::after {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-
-/* ✅ FIX: allow drawers to slide OUTSIDE the shell (shell clips by default) */
-.lux-wc-shell,
-.lux-wc-body {
-  overflow: visible !important;
-}
-
-/* ---------------------------
-   Dock layout: drawers + stage
---------------------------- */
-.wcDock {
-  --wc-side-col: 44px;
-  --wc-drawer-w: 260px;
-  --wc-gap: 18px;
-
-  position: relative;
-  overflow: visible;
-
-  display: grid;
-  grid-template-columns: var(--wc-side-col) minmax(0, 1fr) var(--wc-side-col);
-  gap: var(--wc-gap);
-
-  /* ✅ FIX: drawers stretch to match the stage height */
-  align-items: stretch;
-}
-
-/* ===========================
-   ✅ FIX 5A: Stage ABOVE panels
-   Panels slide BEHIND stage
-=========================== */
-
-/* --- Dock layout: stage must sit ABOVE panels so panels can hide behind it --- */
-.wcStage{
-  position: relative;
-  z-index: 5; /* ✅ stage above panels */
-}
-
-.wcStageCard{
-  position: relative;
-  z-index: 5;
-  background: rgba(255,255,255,0.97);  /* ✅ hides anything behind */
-  border: 1px solid rgba(15,23,42,.10);
-  border-radius: 18px;
-  overflow: hidden;                   /* ✅ clips panels behind */
-}
-
-.wcStageFooter {
-  padding-top: 10px;
-}
-
-/* ---------------------------
-   Drawers (tab gutter + outside panels)
---------------------------- */
-
-/* drawers should NOT sit above stage by default */
-.wcDrawer{
-  width: var(--wc-side-col);
-  position: relative;
-  z-index: 1;
-
-  /* ✅ drawers stretch vertically so panels can fill height */
-  align-self: stretch;
-  height: 100%;
-
-  /* ✅ UX: sky blue, cloud-friendly */
-  background: linear-gradient(180deg, #d9f1ff 0%, #bfe6ff 100%);
-  color: #0f172a;
-
-  /* ✅ kill horizontal scrollbars at the root */
-  overflow-x: hidden !important;
-}
-
-/* ✅ Remove horizontal scrollbars entirely */
-.wcDrawerInner,
-.wcDrawerContent{
-  overflow-x: hidden !important;
-}
-
-/* drawer panels can slide “into” the stage area (behind it) */
-.wcDrawerPanel{
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: var(--wc-drawer-w);
-
-  border-radius: 16px;
-
-  overflow-x: hidden !important; /* ✅ no sideways scroll */
-  overflow-y: auto;              /* ✅ vertical is allowed */
-
-  /* ✅ UX: SKY BLUE panel, not harsh dark */
-  background: linear-gradient(180deg, #d9f1ff 0%, #bfe6ff 100%);
-  color: #0f172a;
-
-  box-shadow: 0 14px 28px rgba(0,0,0,0.18);
-
-  /* ✅ allow header + scrollable body */
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-
-  transition: transform 220ms ease;
-  will-change: transform;
-
-  /* ✅ OPEN panels behave normally */
-  transform: translateX(0);
-  pointer-events: auto;
-
-  /* ✅ Optional reinforcement: panels always visible in the gap */
-  z-index: 2;
-}
-
-/* closed panels should not intercept clicks */
-.wcDrawer.is-closed .wcDrawerPanel{
-  pointer-events: none;
-}
-
-/* OPEN state = panel is outside, not stealing center */
-.wcDrawer--left .wcDrawerPanel { right: 0; }
-.wcDrawer--right .wcDrawerPanel { left: 0; }
-
-/* ✅ KEY: closed = slide INTO the stage (behind it), not away from it */
-.wcDrawer--left.is-closed .wcDrawerPanel{
-  transform: translateX(100%);
-}
-
-.wcDrawer--right.is-closed .wcDrawerPanel{
-  transform: translateX(-100%);
-}
-
-.wcDrawerHeader {
-  padding: 12px 12px 6px;
-  font-weight: 900;
-  font-size: 12px;
-  opacity: 0.9;
-}
-
-.wcDrawerBody {
-  padding: 10px 12px 14px;
-  display: grid;
-  gap: 10px;
-
-  /* ✅ CRITICAL: allow drawer panels to slide OUTSIDE the 44px dock column */
-  overflow: visible !important;
-  min-height: 0;
-}
-
-/* ✅ allow children to shrink instead of overflow */
-.wcDrawerBody > *{
-  min-width: 0;
-  max-width: 100%;
-}
-
-/* prevents “weird sideways push” */
-.wcDrawerPanel *{
-  box-sizing: border-box;
-}
-
-/* ✅ Buttons: white, readable, full-width, wrap text (no sideways push) */
-.wcDrawer button{
-  background: rgba(255,255,255,0.9);
-  color: #0f172a;
-
-  width: 100%;
-  max-width: 100%;
-
-  white-space: normal;
-}
-
-/* Tabs always stay clickable + premium contrast */
-.wcDrawerTab{
-  position: absolute;
-  top: 16px;
-  width: 34px;
-  height: 46px;
-
-  display: grid;
-  place-items: center;
-
-  border-radius: 12px;
-
-  z-index: 10;
-  background: rgba(15, 23, 42, 0.92);
-  color: rgba(255,255,255,0.95);
-  box-shadow: 0 10px 28px rgba(0,0,0,0.28);
-  transition: transform .18s ease, filter .18s ease;
-
-  cursor: pointer;
-}
-
-.wcDrawerTab:hover{
-  filter: brightness(1.06);
-}
-
-.wcDrawerTab:focus-visible {
-  outline: 3px solid rgba(37, 99, 235, 0.50);
-  outline-offset: 3px;
-}
-
-/* aria-expanded=true means OPEN → clicking will CLOSE (move inward),
-   so the arrow should point inward */
-.wcDrawerTab[aria-expanded="true"]{
-  transform: rotate(180deg);
-}
-
-.wcDrawer--left .wcDrawerTab { right: -12px; }
-.wcDrawer--right .wcDrawerTab { left: -12px; }
-
-/* Timeline sliders: stack label ABOVE slider to save horizontal space */
-.wcDrawerPanel .lux-wc-timelineGroup{
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 6px;
-}
-
-.wcDrawerPanel .lux-wc-timelineGroup input[type="range"]{
-  width: 100%;
-}
-
-/* ---------------------------
-   Mobile fallback: stack everything
---------------------------- */
-@media (max-width: 560px) {
-  .wcDock { grid-template-columns: 1fr; }
-
-  .wcDrawer {
-    width: 100%;
-    height: auto;
-  }
-
-  .wcDrawerTab { display: none; }
-
-  .wcDrawerPanel {
-    position: relative;
-    width: 100%;
-    transform: none !important;
-    pointer-events: auto;
-    z-index: 4;
-  }
-}
-
-/* ---------------------------
-   HARD OVERRIDES: make stage square
-   (beats any older wordcloud CSS)
---------------------------- */
-#luxWcCanvasWrap.wcStageSquare {
-  width: 100% !important;
-  height: auto !important;
-  aspect-ratio: 1 / 1 !important;
-  min-height: 520px;
-}
-
-/* canvas must fill the square */
-#luxWcCanvas {
-  width: 100% !important;
-  height: 100% !important;
-  display: block;
 }
 </file>
 
@@ -35198,6 +34807,693 @@ html.lux-tts-booted .lux-tts-panel{
   .lux-tts-tab {
     display: none !important;
   }
+}
+</file>
+
+<file path="features/my-words/index.js">
+// features/my-words/index.js
+
+import { fetchHistory } from "/src/api/index.js";
+import { ensureUID } from "../../api/identity.js";
+
+import { createMyWordsStore } from "./store.js";
+import { mountMyWordsPanel } from "./panel.js";
+import { mountMyWordsCornerLauncher } from "./launcher.js";
+
+import {
+  getAuthedUID,
+  fetchMyWords,
+  upsertManyMyWords,
+  setPinned,
+  setArchived,
+  deleteEntry,
+} from "./service.js";
+
+/**
+ * Layout: bottom-left “lane”
+ * - Top hugs bottom of Self Playback drawer (".lux-sp-panel")
+ * - Right edge hugs LEFT edge of the practice input (#referenceText)
+ */
+function layoutPanel(panelEl, inputEl) {
+  if (!panelEl) return;
+
+  const GAP = 12;
+  const LEFT = 18;
+  const BOTTOM = 18;
+
+  panelEl.style.left = LEFT + "px";
+  panelEl.style.right = "auto";
+  panelEl.style.bottom = BOTTOM + "px";
+
+  // top = bottom of Self Playback panel (if present)
+  let top = 92;
+  const sp = document.querySelector(".lux-sp-panel");
+  if (sp) {
+    const r = sp.getBoundingClientRect();
+    top = Math.ceil(r.bottom + GAP);
+  }
+
+  const maxTop = Math.max(92, window.innerHeight - 260);
+  top = Math.min(top, maxTop);
+  panelEl.style.top = top + "px";
+
+  // Width ends near the left edge of input (if present)
+  let width = 420;
+  if (inputEl) {
+    const inputRect = inputEl.getBoundingClientRect();
+    const targetRight = Math.ceil(inputRect.left - GAP);
+    width = targetRight - LEFT;
+  }
+
+  width = Math.max(300, Math.min(width, 560));
+  width = Math.min(width, Math.floor(window.innerWidth - LEFT - GAP));
+
+  panelEl.style.width = width + "px";
+  panelEl.style.height = `calc(100vh - ${top}px - ${BOTTOM}px)`;
+  panelEl.style.maxHeight = `calc(100vh - ${top}px - ${BOTTOM}px)`;
+}
+
+export function initMyWordsGlobal({ uid, inputEl } = {}) {
+  // ✅ Hide on AI landing page (convo.html)
+  if (location.pathname.endsWith("convo.html")) return null;
+
+  if (!uid) return null;
+
+  let authedUID = null;
+
+  // --- attempts cache for stats ---
+  let attemptsLoaded = false;
+  let attemptsCache = [];
+
+  async function ensureAttempts() {
+    if (attemptsLoaded) return attemptsCache;
+    attemptsLoaded = true;
+
+    try {
+      const all = await fetchHistory(uid);
+      attemptsCache = Array.isArray(all) ? all : [];
+    } catch (e) {
+      console.warn("[my-words] fetchHistory failed:", e);
+      attemptsCache = [];
+    }
+
+    return attemptsCache;
+  }
+
+  // ============================================================
+  // ✅ FIX — Real AI Coach handler (Coach button)
+  // ============================================================
+  async function sendToAICoach(text) {
+    const t = String(text || "").trim();
+    if (!t) return;
+
+    // open the AI coach drawer
+    const drawer = document.querySelector("#aiCoachDrawer");
+    if (drawer) drawer.open = true;
+
+    // Scroll so AI section is visible and low in viewport
+    requestAnimationFrame(() => {
+      try {
+        drawer?.scrollIntoView({ behavior: "smooth", block: "end" });
+      } catch (_) {}
+    });
+
+    // show loading feedback
+    const box = document.querySelector("#aiFeedback");
+    if (box)
+      box.innerHTML = `<div style="padding:12px;opacity:.8;">Thinking…</div>`;
+
+    // Persona (default tutor)
+    const persona =
+      document.querySelector(".ai-voice-btn.active")?.dataset?.value || "tutor";
+
+    // Default to Quick Tip (placeholder until backend call)
+    if (box) {
+      box.innerHTML = `
+        <div style="padding:14px;">
+          <strong>Quick Tip for:</strong> ${t}<br/><br/>
+          <em>Persona:</em> ${persona}<br/><br/>
+          (placeholder until API call is wired)
+        </div>`;
+    }
+  }
+
+  const store = createMyWordsStore({
+    uid,
+    onMutation: async (evt) => {
+      // Only sync to Supabase if logged in
+      if (!authedUID) return;
+
+      try {
+        if (evt.type === "addMany") {
+          await upsertManyMyWords(authedUID, evt.lines || []);
+          const remote = await fetchMyWords(authedUID);
+          if (remote?.length) store.replaceEntries(remote);
+        }
+
+        if (evt.type === "togglePin") {
+          await setPinned(authedUID, evt.id, evt.pinned);
+        }
+
+        // ✅ Archive / Restore via setArchived()
+        if (evt.type === "archive") {
+          await setArchived(authedUID, evt.id, true);
+        }
+
+        if (evt.type === "restore") {
+          await setArchived(authedUID, evt.id, false);
+        }
+
+        if (evt.type === "hardDelete") {
+          await deleteEntry(authedUID, evt.id);
+        }
+      } catch (e) {
+        console.warn("[my-words] supabase sync failed:", e);
+      }
+    },
+  });
+
+  // --- sidecar panel ---
+  const panel = mountMyWordsPanel({
+    store,
+    getAttempts: () => attemptsCache,
+    onSendToInput: inputEl
+      ? (text) => {
+          inputEl.value = text;
+          inputEl.focus();
+          inputEl.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+      : null,
+    mode: "compact",
+    maxPreview: 5,
+    onOpenLibrary: () => openLibrary(), // ✅ wire to reliable modal
+    onCoach: (text) => sendToAICoach(text), // ✅ Coach button now works
+  });
+
+  // ✅ Alias for older code that expects "sidecar"
+  const sidecar = panel;
+
+  // ============================================================
+  // ✅ FIX 1 — Make Library Modal open reliably (View Library)
+  // ============================================================
+
+  // --- Library Modal (View Library) ---
+  let _mwModal = null;
+  let _mwHome = null;
+
+  function ensureLibraryModal() {
+    if (_mwModal) return _mwModal;
+
+    const m = document.createElement("div");
+    m.id = "luxMwModal";
+    m.className = "lux-mw-modal";
+    m.innerHTML = `<div class="lux-mw-modal-card" role="dialog" aria-modal="true"></div>`;
+    document.body.appendChild(m);
+
+    // click outside closes
+    m.addEventListener("click", (e) => {
+      if (e.target === m) closeLibrary();
+    });
+
+    _mwModal = m;
+    return m;
+  }
+
+  function openLibrary() {
+    const m = ensureLibraryModal();
+    const card = m.querySelector(".lux-mw-modal-card");
+    if (!card) return;
+
+    // Create a "home marker" so we can put the panel back where it came from
+    if (!_mwHome) {
+      _mwHome = document.createElement("div");
+      _mwHome.id = "luxMwPanelHome";
+      _mwHome.style.display = "none";
+
+      // home marker goes right before panel.el
+      panel.el.parentNode.insertBefore(_mwHome, panel.el);
+    }
+
+    // ✅ force panel visible (important if your CSS uses display:none by default)
+    store.setOpen(true);
+    panel.el.classList.add("is-open", "is-modal");
+
+    // Move panel into the modal card
+    card.appendChild(panel.el);
+
+    // Show modal
+    m.classList.add("is-open");
+  }
+
+  function closeLibrary() {
+    if (!_mwModal || !_mwHome) return;
+
+    _mwModal.classList.remove("is-open");
+
+    // Put panel back to its original spot
+    panel.el.classList.remove("is-modal");
+    _mwHome.parentNode.insertBefore(panel.el, _mwHome);
+
+    // Re-layout if still open (sidecar mode)
+    if (store.getState().open) {
+      requestAnimationFrame(() => layoutPanel(panel.el, inputEl));
+    }
+  }
+
+  // ✅ Make available globally
+  window.LuxMyWords = window.LuxMyWords || {};
+  window.LuxMyWords.openLibrary = openLibrary;
+  window.LuxMyWords.closeLibrary = closeLibrary;
+
+  // --- launcher button (triangle) ---
+  const launcher = mountMyWordsCornerLauncher({
+    onClick: async () => {
+      const isOpen = store.getState().open;
+      store.setOpen(!isOpen);
+
+      if (!isOpen) {
+        // opening: load stats + layout + focus composer
+        await ensureAttempts();
+        requestAnimationFrame(() => {
+          // ✅ don’t run sidecar layout when panel is inside modal
+          if (!panel.el.classList.contains("is-modal")) {
+            layoutPanel(panel.el, inputEl);
+          }
+          panel.focusComposer?.();
+          panel.render?.();
+        });
+      }
+    },
+  });
+
+  // Keep it aligned on resize (when open)
+  window.addEventListener(
+    "resize",
+    () => {
+      if (!store.getState().open) return;
+      if (panel.el.classList.contains("is-modal")) return; // ✅ modal handles its own sizing
+      layoutPanel(panel.el, inputEl);
+    },
+    { passive: true }
+  );
+
+  // When opened through store state
+  store.subscribe(async (s) => {
+    launcher.classList.toggle("is-open", !!s.open);
+    panel.el.classList.toggle("is-open", !!s.open);
+
+    if (s.open) {
+      await ensureAttempts();
+      requestAnimationFrame(() => {
+        // ✅ don’t run sidecar layout when panel is inside modal
+        if (!panel.el.classList.contains("is-modal")) {
+          layoutPanel(panel.el, inputEl);
+        }
+        panel.render?.();
+      });
+    }
+  });
+
+  // --- Remote hydration when logged in ---
+  (async () => {
+    authedUID = await getAuthedUID();
+    if (!authedUID) return;
+
+    const remote = await fetchMyWords(authedUID);
+    if (remote?.length) {
+      store.replaceEntries(remote);
+      return;
+    }
+
+    // If remote empty but local has data, upload local once
+    const localTexts = store
+      .getState()
+      .entries.filter((e) => !e.archived)
+      .map((e) => e.text);
+
+    if (localTexts.length) {
+      await upsertManyMyWords(authedUID, localTexts);
+      const after = await fetchMyWords(authedUID);
+      if (after?.length) store.replaceEntries(after);
+    }
+  })();
+
+  // Global hook for Progress page button + external calls
+  window.LuxMyWords = {
+    ...(window.LuxMyWords || {}),
+    toggle: () => store.toggleOpen(),
+    open: () => store.setOpen(true),
+    close: () => store.setOpen(false),
+    openLibrary, // ✅ reliable open
+    closeLibrary,
+  };
+
+  return { store, panel, sidecar, launcher };
+}
+
+/**
+ * ✅ FIX 2 — always produce a UID (correct import)
+ * This is what launcher.js lazy-imports and uses.
+ */
+export function initMyWordsEverywhere() {
+  const uid = ensureUID(); // ✅ always returns a stable local UID
+  const inputEl = document.getElementById("referenceText") || null;
+  return initMyWordsGlobal({ uid, inputEl });
+}
+</file>
+
+<file path="features/progress/wordcloud/wordcloud-dock.css">
+/* features/progress/wordcloud/wordcloud-dock.css */
+
+/* ---------------------------
+   Tiny 1-line tooltip
+--------------------------- */
+[data-tip] { position: relative; }
+
+[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  transform: translateX(-50%) translateY(4px);
+  opacity: 0;
+  pointer-events: none;
+  white-space: nowrap;
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  line-height: 1.2;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: rgba(10, 14, 20, 0.92);
+  color: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+  transition: opacity 160ms ease, transform 160ms ease;
+  z-index: 50;
+}
+
+[data-tip]:hover::after,
+[data-tip]:focus-visible::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ✅ FIX: allow drawers to slide OUTSIDE the shell (shell clips by default) */
+.lux-wc-shell,
+.lux-wc-body {
+  overflow: visible !important;
+}
+
+/* ---------------------------
+   Dock layout: drawers + stage
+--------------------------- */
+.wcDock {
+  --wc-side-col: 44px;
+  --wc-drawer-w: 260px;
+  --wc-gap: 18px;
+
+  position: relative;
+  overflow: visible;
+
+  display: grid;
+  grid-template-columns: var(--wc-side-col) minmax(0, 1fr) var(--wc-side-col);
+  gap: var(--wc-gap);
+
+  /* ✅ FIX: drawers stretch to match the stage height */
+  align-items: stretch;
+}
+
+/* ===========================
+   ✅ FIX 5A: Stage ABOVE panels
+   Panels slide BEHIND stage
+=========================== */
+
+/* --- Dock layout: stage must sit ABOVE panels so panels can hide behind it --- */
+.wcStage{
+  position: relative;
+  z-index: 5; /* ✅ stage above panels */
+}
+
+.wcStageCard{
+  position: relative;
+  z-index: 5;
+  background: rgba(255,255,255,0.97);  /* ✅ hides anything behind */
+  border: 1px solid rgba(15,23,42,.10);
+  border-radius: 18px;
+  overflow: hidden;                   /* ✅ clips panels behind */
+}
+
+.wcStageFooter {
+  padding-top: 10px;
+}
+
+/* ---------------------------
+   Drawers (tab gutter + outside panels)
+--------------------------- */
+
+/* drawers should NOT sit above stage by default */
+.wcDrawer{
+  width: var(--wc-side-col);
+  position: relative;
+  z-index: 1;
+
+  /* ✅ drawers stretch vertically so panels can fill height */
+  align-self: stretch;
+  height: 100%;
+
+  /* ✅ UX: sky blue, cloud-friendly */
+  background: linear-gradient(180deg, #d9f1ff 0%, #bfe6ff 100%);
+  color: #0f172a;
+
+  /* ✅ allow drawer panels to escape the 44px gutter */
+  overflow: visible !important;
+  overflow-x: visible !important;
+}
+
+/* ✅ Remove horizontal scrollbars entirely */
+.wcDrawerInner,
+.wcDrawerContent{
+  overflow-x: hidden !important;
+}
+
+/* drawer panels can slide “into” the stage area (behind it) */
+.wcDrawerPanel{
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: var(--wc-drawer-w);
+
+  border-radius: 16px;
+
+  overflow-x: hidden !important; /* ✅ no sideways scroll */
+  overflow-y: auto;              /* ✅ vertical is allowed */
+
+  /* ✅ UX: SKY BLUE panel, not harsh dark */
+  background: linear-gradient(180deg, #d9f1ff 0%, #bfe6ff 100%);
+  color: #0f172a;
+
+  box-shadow: 0 14px 28px rgba(0,0,0,0.18);
+
+  /* ✅ allow header + scrollable body */
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+
+  transition: transform 220ms ease;
+  will-change: transform;
+
+  /* ✅ OPEN panels behave normally */
+  transform: translateX(0);
+  pointer-events: auto;
+
+  /* ✅ Optional reinforcement: panels always visible in the gap */
+  z-index: 2;
+}
+
+/* closed panels should not intercept clicks */
+.wcDrawer.is-closed .wcDrawerPanel{
+  pointer-events: none;
+}
+
+/* OPEN state = panel is outside, not stealing center */
+.wcDrawer--left .wcDrawerPanel { right: 0; }
+.wcDrawer--right .wcDrawerPanel { left: 0; }
+
+/* ✅ KEY: closed = slide INTO the stage (behind it), not away from it */
+.wcDrawer--left.is-closed .wcDrawerPanel{
+  transform: translateX(100%);
+}
+
+.wcDrawer--right.is-closed .wcDrawerPanel{
+  transform: translateX(-100%);
+}
+
+.wcDrawerHeader {
+  padding: 12px 12px 6px;
+  font-weight: 900;
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+.wcDrawerBody {
+  padding: 10px 12px 14px;
+  display: grid;
+  gap: 10px;
+
+  /* ✅ CRITICAL: allow drawer panels to slide OUTSIDE the 44px dock column */
+  overflow: visible !important;
+  min-height: 0;
+}
+
+/* ✅ allow children to shrink instead of overflow */
+.wcDrawerBody > *{
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* prevents “weird sideways push” */
+.wcDrawerPanel *{
+  box-sizing: border-box;
+}
+
+/* ✅ Buttons: white, readable, full-width, wrap text (no sideways push) */
+.wcDrawer button{
+  background: rgba(255,255,255,0.9);
+  color: #0f172a;
+
+  width: 100%;
+  max-width: 100%;
+
+  white-space: normal;
+}
+
+/* Tabs always stay clickable + premium contrast */
+.wcDrawerTab{
+  position: absolute;
+  top: 16px;
+  width: 34px;
+  height: 46px;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 12px;
+
+  z-index: 10;
+  background: rgba(15, 23, 42, 0.92);
+  color: rgba(255,255,255,0.95);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.28);
+  transition: transform .18s ease, filter .18s ease;
+
+  cursor: pointer;
+}
+
+.wcDrawerTab:hover{
+  filter: brightness(1.06);
+}
+
+.wcDrawerTab:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.50);
+  outline-offset: 3px;
+}
+
+/* aria-expanded=true means OPEN → clicking will CLOSE (move inward),
+   so the arrow should point inward */
+.wcDrawerTab[aria-expanded="true"]{
+  transform: rotate(180deg);
+}
+
+.wcDrawer--left .wcDrawerTab { right: -12px; }
+.wcDrawer--right .wcDrawerTab { left: -12px; }
+
+/* Timeline sliders: stack label ABOVE slider to save horizontal space */
+.wcDrawerPanel .lux-wc-timelineGroup{
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+.wcDrawerPanel .lux-wc-timelineGroup input[type="range"]{
+  width: 100%;
+}
+
+/* ---------------------------
+   Mobile fallback: stack everything
+--------------------------- */
+@media (max-width: 560px) {
+  .wcDock { grid-template-columns: 1fr; }
+
+  .wcDrawer {
+    width: 100%;
+    height: auto;
+  }
+
+  .wcDrawerTab { display: none; }
+
+  .wcDrawerPanel {
+    position: relative;
+    width: 100%;
+    transform: none !important;
+    pointer-events: auto;
+    z-index: 4;
+  }
+}
+
+/* ---------------------------
+   HARD OVERRIDES: make stage square
+   (beats any older wordcloud CSS)
+--------------------------- */
+#luxWcCanvasWrap.wcStageSquare {
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 1 / 1 !important;
+  min-height: 520px;
+}
+
+/* canvas must fill the square */
+#luxWcCanvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+/* =========================
+   ✅ Drawer Tooltip Un-Clip Fix
+   Tooltips are CSS pseudo-elements and can get clipped by scroll/overflow.
+   Keep them INSIDE the drawer width so they’re always readable.
+========================= */
+
+.wcDrawerPanel [data-tip]::after{
+  /* pin tooltip inside the panel instead of centering past the edges */
+  left: 12px !important;
+  right: 12px !important;
+
+  /* cancel the horizontal centering transform */
+  transform: translateY(4px) !important;
+
+  /* allow wrapping instead of ellipsis */
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: initial !important;
+
+  max-width: none !important;
+}
+
+/* keep your hover reveal animation */
+.wcDrawerPanel [data-tip]:hover::after,
+.wcDrawerPanel [data-tip]:focus-visible::after{
+  transform: translateY(0) !important;
+}
+/* =========================
+   ✅ Tooltip: force DOWN for top mode pills
+========================= */
+.wcDrawerPanel [data-tip-pos="down"]::after{
+  bottom: auto !important;
+  top: calc(100% + 10px) !important;
+
+  /* our drawer tooltip override removes translateX already,
+     so we only animate Y */
+  transform: translateY(-4px) !important;
 }
 </file>
 
@@ -35999,6 +36295,48 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
   // ✅ GLOBAL sizing boost (you want BIG + readable)
   const SIZE_MULT = 1.35;
 
+  // ✅ Fit-to-canvas helper (fill the square more)
+  function fitToCanvas(layoutWords) {
+    if (!layoutWords?.length) return layoutWords;
+
+    let minX = Infinity,
+      maxX = -Infinity,
+      minY = Infinity,
+      maxY = -Infinity;
+
+    for (const d of layoutWords) {
+      const base = (d._pinned ? d.size * PIN_BOOST : d.size) * SIZE_MULT;
+      ctx.font = `${Math.max(8, Math.round(base))}px system-ui`;
+
+      const m = ctx.measureText(d.text);
+      const left = m.actualBoundingBoxLeft ?? m.width / 2;
+      const right = m.actualBoundingBoxRight ?? m.width / 2;
+      const ascent = m.actualBoundingBoxAscent ?? base * 0.55;
+      const descent = m.actualBoundingBoxDescent ?? base * 0.45;
+
+      minX = Math.min(minX, d.x - left);
+      maxX = Math.max(maxX, d.x + right);
+      minY = Math.min(minY, d.y - ascent);
+      maxY = Math.max(maxY, d.y + descent);
+    }
+
+    const bw = maxX - minX;
+    const bh = maxY - minY;
+    if (!Number.isFinite(bw) || !Number.isFinite(bh) || bw < 20 || bh < 20)
+      return layoutWords;
+
+    const s = Math.min((w * 0.92) / bw, (h * 0.92) / bh);
+    const cx0 = (minX + maxX) / 2;
+    const cy0 = (minY + maxY) / 2;
+
+    return layoutWords.map((d) => ({
+      ...d,
+      x: (d.x - cx0) * s,
+      y: (d.y - cy0) * s,
+      size: d.size * s,
+    }));
+  }
+
   // Phase C state
   let placed = null;
   let boxes = [];
@@ -36022,6 +36360,8 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
 
     const cx = w / 2;
     const cy = h / 2;
+
+    const isDark = window.matchMedia?.("(prefers-color-scheme: dark)")?.matches;
 
     // search focus
     const focusFn = typeof opts?.focusTest === "function" ? opts.focusTest : null;
@@ -36107,10 +36447,11 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
       const pinMul = isPinned ? PIN_CENTER : 1;
 
       ctx.save();
-      ctx.translate(
-        cx + d.x * pinMul + pullX + driftX,
-        cy + d.y * pinMul + pullY + driftY
-      );
+
+      const centerX = cx + d.x * pinMul + pullX + driftX;
+      const centerY = cy + d.y * pinMul + pullY + driftY;
+
+      ctx.translate(centerX, centerY);
 
       const baseSize = d.size;
       const size =
@@ -36130,8 +36471,12 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
         ctx.fill();
       }
 
-      ctx.shadowColor = isHover ? glow : hexToRgba(col, 0.14);
-      ctx.shadowBlur = isHover ? 18 : 10;
+      // ✅ stronger, more visible halo on hover
+      ctx.shadowColor = isHover
+        ? hexToRgba(col, isDark ? 0.42 : 0.34)
+        : hexToRgba(col, isDark ? 0.18 : 0.14);
+
+      ctx.shadowBlur = isHover ? (isDark ? 28 : 22) : 10;
 
       ctx.globalAlpha = alpha;
       ctx.fillStyle = col;
@@ -36141,29 +36486,45 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
         ctx.shadowBlur = 0;
         ctx.globalAlpha = Math.max(alpha, 0.55);
         ctx.lineWidth = 3;
-        ctx.strokeStyle = "rgba(255,255,255,0.55)";
+
+        ctx.strokeStyle = isDark
+          ? "rgba(255,255,255,0.65)"
+          : "rgba(15,23,42,0.70)";
+
         ctx.strokeText(d.text, 0, 0);
         ctx.globalAlpha = alpha;
         ctx.fillStyle = col;
         ctx.fillText(d.text, 0, 0);
       }
 
-      // bbox
+      // bbox (tight) ✅ drastically reduces the “invisible halo” blocking clicks
       ctx.shadowBlur = 0;
-      const tw = ctx.measureText(d.text).width;
-      const th = size * 1.05;
+
+      const m = ctx.measureText(d.text);
+      const left = m.actualBoundingBoxLeft ?? m.width / 2;
+      const right = m.actualBoundingBoxRight ?? m.width / 2;
+      const ascent = m.actualBoundingBoxAscent ?? size * 0.55;
+      const descent = m.actualBoundingBoxDescent ?? size * 0.45;
+
+      const bw = left + right;
+      const bh = ascent + descent;
+
+      // tiny padding so it’s still easy to click (but not huge)
+      const padPx = Math.max(1, Math.round(size * 0.045));
 
       boxes.push({
         text: d.text,
         avg: d.avg,
         count: d.count,
         meta: d.meta,
-        x: cx + d.x * pinMul + pullX + driftX - tw / 2,
-        y: cy + d.y * pinMul + pullY + driftY - th / 2,
-        w: tw,
-        h: th,
-        cx: cx + d.x * pinMul + pullX + driftX,
-        cy: cy + d.y * pinMul + pullY + driftY,
+
+        x: centerX - left - padPx,
+        y: centerY - ascent - padPx,
+        w: bw + padPx * 2,
+        h: bh + padPx * 2,
+
+        cx: centerX,
+        cy: centerY,
         col,
       });
 
@@ -36195,9 +36556,12 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
   }
 
   function hitTest(mx, my) {
-    return boxes.findIndex(
-      (b) => mx >= b.x && mx <= b.x + b.w && my >= b.y && my <= b.y + b.h
-    );
+    // ✅ scan from topmost (last drawn) to bottom
+    for (let i = boxes.length - 1; i >= 0; i--) {
+      const b = boxes[i];
+      if (mx >= b.x && mx <= b.x + b.w && my >= b.y && my <= b.y + b.h) return i;
+    }
+    return -1;
   }
 
   function startRipple(idx) {
@@ -36210,7 +36574,7 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
   }
 
   function layoutAndDraw(layoutWords) {
-    placed = layoutWords;
+    placed = fitToCanvas(layoutWords);
 
     // ✅ cache last layout so drawer reflow doesn't reshuffle
     canvas.__lux_wc_layout = {

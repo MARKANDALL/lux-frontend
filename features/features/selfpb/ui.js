@@ -312,6 +312,234 @@ function ensureStyles() {
     #spb-float #spb-rate{
       max-width: 320px;
     }
+
+    /* ============================================================
+       ✅ Expanded-only Karaoke Timeline
+       ============================================================ */
+
+    #spb-karaokeWrap{
+      display:none; /* ✅ hidden in small drawer */
+      margin-top: 10px;
+    }
+
+    #spb-karaokeWrap .spb-karaokeTitle{
+      font-weight: 900;
+      font-size: 12px;
+      opacity: .70;
+      margin: 2px 0 8px;
+    }
+
+    /* ============================================================
+       ✅ Center Karaoke Strip (Expanded-only)
+       ============================================================ */
+
+    #spb-kCenterWrap{
+      position: relative;
+      height: 46px;
+      border-radius: 14px;
+      background: rgba(15,23,42,0.04);
+      border: 1px solid rgba(15,23,42,0.10);
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+
+    /* soft fade edges */
+    #spb-kCenterWrap::before,
+    #spb-kCenterWrap::after{
+      content:"";
+      position:absolute;
+      top:0; bottom:0;
+      width: 48px;
+      pointer-events:none;
+      z-index: 3;
+    }
+    #spb-kCenterWrap::before{
+      left:0;
+      background: linear-gradient(90deg, rgba(255,255,255,0.96), rgba(255,255,255,0));
+    }
+    #spb-kCenterWrap::after{
+      right:0;
+      background: linear-gradient(270deg, rgba(255,255,255,0.96), rgba(255,255,255,0));
+    }
+
+    /* track slides under the fades */
+    #spb-kCenterTrack{
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      padding: 0 56px; /* room so the centered word can sit under fades */
+      will-change: transform;
+      transition: transform 260ms ease;
+    }
+
+    /* words in strip */
+    #spb-kCenterTrack .spbKCWord{
+      --p: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      height: 28px;
+      padding: 0 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(15,23,42,0.12);
+
+      font-weight: 900;
+      font-size: 12px;
+      color: rgba(15,23,42,0.86);
+
+      background:
+        linear-gradient(
+          90deg,
+          rgba(47,111,228,0.22) calc(var(--p) * 100%),
+          rgba(255,255,255,0.78) 0
+        );
+
+      cursor: pointer;
+      transition: transform .10s ease, filter .12s ease, opacity .12s ease;
+    }
+
+    #spb-kCenterTrack .spbKCWord:hover{
+      transform: scale(1.04);
+      filter: brightness(1.04);
+    }
+
+    /* Past/future fading */
+    #spb-kCenterTrack .spbKCWord.is-past{ opacity: .48; }
+    #spb-kCenterTrack .spbKCWord.is-future{ opacity: .72; }
+
+    /* Active pops */
+    #spb-kCenterTrack .spbKCWord.is-active{
+      opacity: 1;
+      transform: scale(1.08);
+      border-color: rgba(47,111,228,0.40);
+      box-shadow: 0 12px 22px rgba(47,111,228,0.14);
+    }
+
+    /* Low accuracy */
+    #spb-kCenterTrack .spbKCWord.is-bad{
+      border-color: rgba(220,38,38,0.35);
+      box-shadow: 0 12px 22px rgba(220,38,38,0.14);
+      background:
+        linear-gradient(
+          90deg,
+          rgba(220,38,38,0.18) calc(var(--p) * 100%),
+          rgba(255,255,255,0.78) 0
+        );
+    }
+
+    /* ✅ lane wrapper (timeline) */
+    #spb-karaokeLaneWrap{
+      position: relative;
+      border-radius: 14px;
+      background: rgba(15,23,42,0.04);
+      border: 1px solid rgba(15,23,42,0.10);
+      height: 76px;          /* JS can expand this if we need multiple rows */
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    /* subtle center “timeline rail” */
+    #spb-karaokeLaneWrap::before{
+      content:"";
+      position:absolute;
+      left:10px; right:10px;
+      top: 38px;
+      height: 2px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.10);
+    }
+
+    /* holds absolute-positioned words */
+    #spb-karaokeLane{
+      position:absolute;
+      inset: 8px 8px 8px 8px;
+    }
+
+    /* playback cursor */
+    #spb-karaokeCursor{
+      position:absolute;
+      top: 8px;
+      bottom: 8px;
+      width: 2px;
+      left: 0%;
+      transform: translateX(-1px);
+      background: rgba(47,111,228,0.55);
+      border-radius: 999px;
+      pointer-events: none;
+    }
+
+    /* each word pill */
+    #spb-karaokeLane .spbKWord{
+      --p: 0;
+      position:absolute;
+      height: 24px;
+      padding: 0 10px;
+      border-radius: 999px;
+
+      border: 1px solid rgba(15,23,42,0.12);
+      background:
+        linear-gradient(
+          90deg,
+          rgba(47,111,228,0.22) calc(var(--p) * 100%),
+          rgba(255,255,255,0.72) 0
+        );
+
+      font-weight: 900;
+      font-size: 12px;
+      color: rgba(15,23,42,0.86);
+
+      display:flex;
+      align-items:center;
+      justify-content:center;
+
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+
+      cursor: pointer;
+      transition: transform .08s ease, filter .12s ease;
+    }
+
+    #spb-karaokeLane .spbKWord:hover{
+      transform: scale(1.03);
+      filter: brightness(1.04);
+    }
+
+    #spb-karaokeLane .spbKWord.is-active{
+      border-color: rgba(47,111,228,0.40);
+      box-shadow: 0 10px 18px rgba(47,111,228,0.14);
+    }
+
+    /* ✅ error glow if word accuracy is low */
+    #spb-karaokeLane .spbKWord.is-bad{
+      border-color: rgba(220,38,38,0.35);
+      box-shadow: 0 10px 20px rgba(220,38,38,0.14);
+      background:
+        linear-gradient(
+          90deg,
+          rgba(220,38,38,0.18) calc(var(--p) * 100%),
+          rgba(255,255,255,0.72) 0
+        );
+    }
+
+    /* ✅ great words get a soft “good glow” */
+    #spb-karaokeLane .spbKWord.is-great{
+      border-color: rgba(47,111,228,0.30);
+      box-shadow: 0 10px 20px rgba(47,111,228,0.12);
+    }
+
+    /* ✅ show karaoke ONLY inside Expanded containers */
+    #spb-modalCard #spb-karaokeWrap,
+    #spb-float #spb-karaokeWrap{
+      display:block;
+    }
   `;
 
   document.head.appendChild(s);
@@ -345,6 +573,22 @@ function buildUI() {
         <div id="spb-waveform-container" style="width:100%; height:100%; display:flex; flex-direction:column;">
           <div id="spb-wave-learner" style="height: 50%; width: 100%;"></div>
           <div id="spb-wave-ref" style="height: 50%; width: 100%; border-top: 1px solid #eee;"></div>
+        </div>
+      </div>
+
+      <!-- ✅ Expanded-only Karaoke Timeline -->
+      <div id="spb-karaokeWrap">
+        <div class="spb-karaokeTitle">Word Sync</div>
+
+        <!-- ✅ CENTER karaoke strip -->
+        <div id="spb-kCenterWrap" title="Karaoke strip • Click a word to seek">
+          <div id="spb-kCenterTrack"></div>
+        </div>
+
+        <!-- ✅ Timeline lane -->
+        <div id="spb-karaokeLaneWrap" title="Click a word to seek • Click the lane to jump">
+          <div id="spb-karaokeLane"></div>
+          <div id="spb-karaokeCursor"></div>
         </div>
       </div>
 
@@ -423,6 +667,11 @@ function buildUI() {
     // move Loop label into speed row slot (expanded only)
     if (loopSlot && loopLabel) loopSlot.appendChild(loopLabel);
     if (loopRow) loopRow.style.display = "none";
+
+    // ✅ Karaoke refresh hook
+    try {
+      window.dispatchEvent(new CustomEvent("lux:selfpbExpandedOpen"));
+    } catch {}
   }
 
   function closeExpanded() {
@@ -488,6 +737,12 @@ function buildUI() {
     // Containers
     waveLearner: host.querySelector("#spb-wave-learner"),
     waveRef: host.querySelector("#spb-wave-ref"),
+    karaokeWrap: host.querySelector("#spb-karaokeWrap"),
+    karaokeLaneWrap: host.querySelector("#spb-karaokeLaneWrap"),
+    karaokeLane: host.querySelector("#spb-karaokeLane"),
+    karaokeCursor: host.querySelector("#spb-karaokeCursor"),
+    kCenterWrap: host.querySelector("#spb-kCenterWrap"),
+    kCenterTrack: host.querySelector("#spb-kCenterTrack"),
   };
 }
 
@@ -629,6 +884,292 @@ export function mountSelfPlaybackLite() {
     }
   };
 
+  /* ============================================================
+     ✅ Karaoke Timeline (Expanded-only)
+     - words are positioned across time
+     - fill + active highlight during playback
+     - click word = seek
+     - click lane = jump to time
+     ============================================================ */
+
+  let kWords = [];
+  let kEls = [];
+  let kDur = 0;
+  let kLinesUsed = 1;
+
+  let kCenterEls = [];
+  let _centerActiveIdx = -1;
+
+  const isExpandedOpen = () => {
+    const shade = document.getElementById("spb-modalShade");
+    if (shade?.classList?.contains("is-open")) return true;
+
+    const float = document.getElementById("spb-float");
+    if (float?.classList?.contains("is-open")) return true;
+
+    return false;
+  };
+
+  const clamp01 = (v) => Math.max(0, Math.min(1, v));
+
+  function getKaraokeDuration(words) {
+    const ad = audio.duration || 0;
+    if (ad > 0) return ad;
+    const last = words?.[words.length - 1];
+    return last?.end || 0;
+  }
+
+  function seekTo(sec) {
+    if (!isFinite(sec)) return;
+    const dur = audio.duration || kDur || 0;
+    if (!dur) return;
+
+    audio.currentTime = api.clamp(sec, 0, dur);
+    syncTime();
+    syncScrub();
+  }
+
+  function renderKaraokeCenter(words) {
+    if (!ui.kCenterTrack) return;
+
+    ui.kCenterTrack.innerHTML = "";
+    kCenterEls = [];
+
+    for (let i = 0; i < words.length; i++) {
+      const w = words[i];
+
+      const el = document.createElement("span");
+      el.className = "spbKCWord";
+      el.textContent = w.word;
+
+      if (typeof w.acc === "number" && w.acc < 60) el.classList.add("is-bad");
+
+      el.style.setProperty("--p", "0");
+
+      el.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        seekTo((w.start || 0) + 0.001);
+      });
+
+      ui.kCenterTrack.appendChild(el);
+      kCenterEls.push(el);
+    }
+
+    // center at current time initially
+    _centerActiveIdx = -1;
+    updateKaraokeCenterAt(audio.currentTime || 0);
+  }
+
+  function centerToWord(idx) {
+    if (!ui.kCenterWrap || !ui.kCenterTrack) return;
+    const el = kCenterEls[idx];
+    if (!el) return;
+
+    const wrapW = ui.kCenterWrap.clientWidth;
+    const trackW = ui.kCenterTrack.scrollWidth;
+
+    if (trackW <= wrapW) {
+      // center whole track if short
+      const mid = (wrapW - trackW) / 2;
+      ui.kCenterTrack.style.transform = `translateX(${mid}px)`;
+      return;
+    }
+
+    const wordCenter = el.offsetLeft + el.offsetWidth / 2;
+    let target = wrapW / 2 - wordCenter;
+
+    const min = wrapW - trackW; // most negative
+    const max = 0;
+
+    if (target < min) target = min;
+    if (target > max) target = max;
+
+    ui.kCenterTrack.style.transform = `translateX(${target}px)`;
+  }
+
+  function updateKaraokeCenterAt(t) {
+    if (!kWords.length || !kCenterEls.length) return;
+
+    let activeIdx = -1;
+
+    for (let i = 0; i < kWords.length; i++) {
+      const w = kWords[i];
+      const el = kCenterEls[i];
+      if (!el) continue;
+
+      const span = Math.max(0.001, w.end - w.start);
+      const p = clamp01((t - w.start) / span);
+      el.style.setProperty("--p", String(p));
+
+      if (t >= w.start && t < w.end) activeIdx = i;
+    }
+
+    for (let i = 0; i < kCenterEls.length; i++) {
+      const el = kCenterEls[i];
+      el.classList.toggle("is-active", i === activeIdx);
+      el.classList.toggle("is-past", activeIdx !== -1 && i < activeIdx);
+      el.classList.toggle("is-future", activeIdx !== -1 && i > activeIdx);
+    }
+
+    // smooth auto-center only when active word changes
+    if (activeIdx !== -1 && activeIdx !== _centerActiveIdx) {
+      _centerActiveIdx = activeIdx;
+      centerToWord(activeIdx);
+    }
+  }
+
+  function renderKaraoke(words) {
+    if (!ui.karaokeLane || !ui.karaokeLaneWrap) return;
+
+    ui.karaokeLane.innerHTML = "";
+    kEls = [];
+
+    kWords = Array.isArray(words) ? words : [];
+    kDur = getKaraokeDuration(kWords);
+
+    for (let i = 0; i < kWords.length; i++) {
+      const w = kWords[i];
+
+      const el = document.createElement("button");
+      el.type = "button";
+      el.className = "spbKWord";
+      el.textContent = w.word;
+      el.title = `${w.word} • ${w.start.toFixed(2)}s → ${w.end.toFixed(2)}s`;
+
+      if (typeof w.acc === "number") {
+        if (w.acc < 60) el.classList.add("is-bad");
+        if (w.acc >= 90) el.classList.add("is-great");
+      }
+
+      el.style.setProperty("--p", "0");
+
+      el.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // keep play state; just move time
+        seekTo((w.start || 0) + 0.001);
+      });
+
+      ui.karaokeLane.appendChild(el);
+      kEls.push(el);
+    }
+
+    layoutKaraoke();
+    updateKaraokeAt(audio.currentTime || 0);
+    renderKaraokeCenter(kWords);
+  }
+
+  function layoutKaraoke() {
+    if (!ui.karaokeLaneWrap || !ui.karaokeLane) return;
+    if (!kWords.length || !kEls.length) return;
+
+    const wrap = ui.karaokeLaneWrap;
+    const lane = ui.karaokeLane;
+
+    const W = wrap.clientWidth - 16; // inset padding
+    if (W <= 10) return;
+
+    const dur = kDur || audio.duration || 0;
+    if (!dur) return;
+
+    const ROW_H = 26;
+    const GAP = 8;
+    const MAX_LINES = 3;
+
+    const lineEnds = new Array(MAX_LINES).fill(0);
+    let maxLine = 0;
+
+    for (let i = 0; i < kWords.length; i++) {
+      const w = kWords[i];
+      const el = kEls[i];
+      if (!el) continue;
+
+      const startP = clamp01(w.start / dur);
+      const endP = clamp01(w.end / dur);
+
+      let x = startP * W;
+      let ww = Math.max(28, (endP - startP) * W); // min width
+
+      // pick a line that doesn't overlap
+      let line = 0;
+      while (line < MAX_LINES && x < (lineEnds[line] + GAP)) line++;
+      if (line >= MAX_LINES) line = MAX_LINES - 1;
+
+      lineEnds[line] = x + ww;
+      maxLine = Math.max(maxLine, line);
+
+      el.style.left = `${8 + x}px`;
+      el.style.top = `${8 + line * ROW_H}px`;
+      el.style.width = `${ww}px`;
+    }
+
+    kLinesUsed = maxLine + 1;
+    wrap.style.height = `${Math.max(76, 16 + kLinesUsed * ROW_H)}px`;
+  }
+
+  function updateKaraokeAt(t) {
+    if (!ui.karaokeCursor || !kWords.length || !kEls.length) return;
+
+    const dur = kDur || audio.duration || 0;
+    if (!dur) return;
+
+    // cursor
+    const pct = clamp01(t / dur) * 100;
+    ui.karaokeCursor.style.left = `${pct}%`;
+
+    // word fill + active
+    let active = -1;
+
+    for (let i = 0; i < kWords.length; i++) {
+      const w = kWords[i];
+      const el = kEls[i];
+      if (!el) continue;
+
+      const span = Math.max(0.001, w.end - w.start);
+      const p = clamp01((t - w.start) / span);
+      el.style.setProperty("--p", String(p));
+
+      if (t >= w.start && t < w.end) active = i;
+    }
+
+    for (let i = 0; i < kEls.length; i++) {
+      kEls[i].classList.toggle("is-active", i === active);
+    }
+  }
+
+  // click lane (empty space) to jump
+  ui.karaokeLaneWrap?.addEventListener("click", (e) => {
+    if (!isExpandedOpen()) return;
+    const dur = kDur || audio.duration || 0;
+    if (!dur) return;
+
+    const r = ui.karaokeLaneWrap.getBoundingClientRect();
+    const p = clamp01((e.clientX - r.left) / Math.max(1, r.width));
+    seekTo(p * dur);
+  });
+
+  // refresh on expanded open
+  window.addEventListener("lux:selfpbExpandedOpen", () => {
+    const words = window.LuxLastWordTimings || [];
+    renderKaraoke(words);
+  });
+
+  // refresh when a new assessment comes in (even if expanded is already open)
+  window.addEventListener("lux:lastAssessment", (e) => {
+    const words = e?.detail?.timings || window.LuxLastWordTimings || [];
+    if (isExpandedOpen()) renderKaraoke(words);
+  });
+
+  // keep layout stable on resize
+  window.addEventListener("resize", () => {
+    if (!isExpandedOpen()) return;
+    layoutKaraoke();
+
+    if (isExpandedOpen() && _centerActiveIdx !== -1) centerToWord(_centerActiveIdx);
+  });
+
   const syncRateUI = () => {
     ui.rateVal.textContent = `${Number(audio.playbackRate).toFixed(2)}×`;
     ui.rate.value = String(audio.playbackRate || 1);
@@ -745,6 +1286,9 @@ export function mountSelfPlaybackLite() {
     const p = Number(ui.scrub.value) / 1000;
     audio.currentTime = api.clamp(p * (audio.duration || 0), 0, audio.duration || 0);
     syncTime();
+
+    if (isExpandedOpen()) updateKaraokeAt(audio.currentTime || 0);
+    if (isExpandedOpen()) updateKaraokeCenterAt(audio.currentTime || 0);
   });
 
   ui.scrub.addEventListener("change", () => api._setScrubbingOff());
@@ -760,6 +1304,8 @@ export function mountSelfPlaybackLite() {
   audio.addEventListener("timeupdate", () => {
     syncTime();
     syncScrub();
+    if (isExpandedOpen()) updateKaraokeAt(audio.currentTime || 0);
+    if (isExpandedOpen()) updateKaraokeCenterAt(audio.currentTime || 0);
   });
   audio.addEventListener("play", () => {
     st.playing = true;

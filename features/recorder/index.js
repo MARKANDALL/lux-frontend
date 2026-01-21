@@ -125,6 +125,18 @@ async function handleRecordingComplete(audioBlob) {
 
     logDebug("AZURE RESULT RECEIVED", result);
 
+    // ✅ expose word timings for SelfPB Expanded "karaoke"
+    try {
+      const timings = extractWordTimingsForKaraoke(result);
+
+      window.LuxLastAzureResult = result;
+      window.LuxLastWordTimings = timings;
+
+      window.dispatchEvent(
+        new CustomEvent("lux:lastAssessment", { detail: { result, timings } })
+      );
+    } catch {}
+
     // Guardrail 2: Bad Score / No Speech Detected?
     const score = result?.NBest?.[0]?.PronScore || 0;
     if (score < MIN_SCORE_TO_SAVE) {
@@ -199,6 +211,35 @@ async function saveToDatabase(result, text, lang) {
   } catch (e) {
     console.warn("DB Save Error", e);
   }
+}
+
+function extractWordTimingsForKaraoke(result) {
+  const words = result?.NBest?.[0]?.Words;
+  if (!Array.isArray(words) || words.length === 0) return [];
+
+  const out = [];
+
+  for (const w of words) {
+    const word = String(w?.Word ?? w?.word ?? "").trim();
+    const off = Number(w?.Offset ?? w?.offset ?? NaN);
+    const dur = Number(w?.Duration ?? w?.duration ?? NaN);
+
+    if (!word) continue;
+    if (!isFinite(off) || !isFinite(dur)) continue;
+
+    // Azure Offset/Duration are 100ns ticks → seconds
+    const start = off / 10_000_000;
+    const end = (off + dur) / 10_000_000;
+
+    const acc =
+      w?.PronunciationAssessment?.AccuracyScore ??
+      w?.PronunciationAssessment?.Accuracy ??
+      null;
+
+    out.push({ word, start, end, acc });
+  }
+
+  return out;
 }
 
 export function initLuxRecorder() {
