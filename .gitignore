@@ -24,14 +24,11 @@ yarn.lock
 
 # local video backups
 public/convo-vid/*_ORIG.mp4
-    
-# Repomix output
+
+# Repomix output (keep ONLY the single latest file)
 repomix-output.xml
-
 repomix-*.xml
+!repomix-frontend.LATEST.xml
 
+# combined CSS artifact
 lux-layout.COMBINED.css
-
-# Repomix outputs
-repomix-frontend.LATEST.xml
-repomix-frontend.xml
