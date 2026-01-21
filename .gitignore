@@ -31,3 +31,7 @@ repomix-output.xml
 repomix-*.xml
 
 lux-layout.COMBINED.css
+
+# Repomix outputs
+repomix-frontend.LATEST.xml
+repomix-frontend.xml

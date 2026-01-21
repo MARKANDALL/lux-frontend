@@ -18,3 +18,8 @@ public/convo-img/
 # Logs / caches
 **/*.log
 **/*.cache
+
+# Big token hogs
+public/vendor/
+_ARCHIVE/
+**/*.min.js
