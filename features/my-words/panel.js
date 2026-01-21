@@ -44,6 +44,14 @@ function openWordReference(text) {
   window.open(url, "_blank", "noopener,noreferrer");
 }
 
+// ✅ 1) Youglish helper
+function openYouglish(text) {
+  const q = String(text || "").trim();
+  if (!q) return;
+  const url = `https://youglish.com/pronounce/${encodeURIComponent(q)}/english`;
+  window.open(url, "_blank", "noopener,noreferrer");
+}
+
 export function mountMyWordsPanel({
   store,
   getAttempts,
@@ -56,6 +64,8 @@ export function mountMyWordsPanel({
   asModal = false,
 
   onOpenLibrary,
+  onCloseLibrary,
+  onCoach,
 } = {}) {
   // ------------------------------------------------------------
   // Root panel
@@ -101,6 +111,7 @@ export function mountMyWordsPanel({
     </div>
   `;
 
+  const elTitle = root.querySelector(".lux-mw-title");
   const elSearch = root.querySelector(".lux-mw-search");
   const elClose = root.querySelector('button[data-act="close"]');
   const elTa = root.querySelector(".lux-mw-addBox");
@@ -135,18 +146,35 @@ export function mountMyWordsPanel({
       b.classList.toggle("is-active", is);
     });
 
-    // Composer only makes sense on Active
+    // Composer only makes sense on Active (and never in modal/library)
+    const isModal = root.classList.contains("is-modal");
     if (elComposerZone) {
-      elComposerZone.style.display = tab === "active" ? "" : "none";
+      if (isModal) elComposerZone.style.display = "none";
+      else elComposerZone.style.display = tab === "active" ? "" : "none";
     }
 
     render();
   }
 
-  function entryRowHTML(e, isArchived) {
+  function entryRowHTML(e, isArchived, opts = {}) {
+    const isModal = !!opts.isModal;
+
     const dotCls = `lux-mw-dot ${esc(e.mw_cls || "mw-new")}`;
     const titleText = `${e.pinned ? "📌 " : ""}${e.text || ""}`;
 
+    // ✅ Modal “Added” timestamp line (only in library)
+    let addedLine = "";
+    if (isModal) {
+      const added = e.created_at || e.updated_at;
+      const addedStr = added ? new Date(added).toLocaleString() : "";
+      if (addedStr) {
+        addedLine = `<div class="lux-mw-meta">Added ${esc(addedStr)}</div>`;
+      }
+    }
+
+    // ✅ Actions differ depending on modal vs sidecar
+    // Sidecar (non-modal): Active gets Archive.
+    // Modal (library): Active gets Delete only (no Archive).
     const actions = isArchived
       ? `
         ${
@@ -155,6 +183,8 @@ export function mountMyWordsPanel({
             : ""
         }
         <button class="lux-mw-act" data-act="wr">WR</button>
+        <button class="lux-mw-act" data-act="yg">YG</button>
+        <button class="lux-mw-act" data-act="coach">Coach</button>
         <button class="lux-mw-act" data-act="restore">Restore</button>
         <button class="lux-mw-act danger" data-act="delete">Delete</button>
       `
@@ -165,8 +195,14 @@ export function mountMyWordsPanel({
             : ""
         }
         <button class="lux-mw-act" data-act="wr">WR</button>
+        <button class="lux-mw-act" data-act="yg">YG</button>
+        <button class="lux-mw-act" data-act="coach">Coach</button>
         <button class="lux-mw-act" data-act="pin">${e.pinned ? "Unpin" : "Pin"}</button>
-        <button class="lux-mw-act danger" data-act="archive">Archive</button>
+        ${
+          isModal
+            ? `<button class="lux-mw-act danger" data-act="delete">Delete</button>`
+            : `<button class="lux-mw-act danger" data-act="archive">Archive</button>`
+        }
       `;
 
     return `
@@ -176,6 +212,7 @@ export function mountMyWordsPanel({
         <div class="lux-mw-main">
           <div class="lux-mw-text">${esc(titleText)}</div>
           <div class="lux-mw-meta">${esc(buildMeta(e))}</div>
+          ${addedLine}
         </div>
 
         <div class="lux-mw-actions">
@@ -205,7 +242,43 @@ export function mountMyWordsPanel({
     return applyMyWordsStats(active, attempts);
   }
 
+  function renderBackButton(total) {
+    // ✅ If panel is currently living inside the modal, show "Back to My Words"
+    const isModal = root.classList.contains("is-modal");
+
+    // Remove any existing footer button before adding a new one
+    const existing = elList.querySelector(".lux-mw-viewAllBtn");
+    if (existing) existing.remove();
+
+    // In modal: always show back
+    // In sidecar: show view library only when it makes sense
+    if (isModal || total > 0) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "lux-mw-viewAllBtn";
+
+      btn.textContent = isModal ? "Back to My Words" : `View Library (${total})`;
+
+      btn.addEventListener("click", () => {
+        if (isModal) {
+          onCloseLibrary?.();
+          window.LuxMyWords?.closeLibrary?.();
+        } else {
+          onOpenLibrary?.();
+          window.LuxMyWords?.openLibrary?.();
+        }
+      });
+
+      elList.appendChild(btn);
+    }
+  }
+
   function render() {
+    const isModal = root.classList.contains("is-modal");
+
+    // ✅ Title: Library vs My Words
+    if (elTitle) elTitle.textContent = isModal ? "Library" : "My Words";
+
     const { activeTotal, archivedTotal, total } = computeCountsAll();
 
     if (elBadgeActive) elBadgeActive.textContent = String(activeTotal);
@@ -213,8 +286,20 @@ export function mountMyWordsPanel({
 
     const listAll = getFilteredListForTab();
 
-    // compact mode only previews ACTIVE tab
-    if (mode === "compact") {
+    // ✅ Library should NOT show composer/add box
+    if (elComposerZone) {
+      if (isModal) {
+        elComposerZone.style.display = "none";
+      } else {
+        elComposerZone.style.display = tab === "active" ? "" : "none";
+      }
+    }
+
+    // If moved into modal, behave like library mode automatically
+    const effectiveMode = isModal ? "library" : mode;
+
+    // compact mode only previews ACTIVE tab (sidecar only)
+    if (effectiveMode === "compact") {
       // Force active view in compact
       tab = "active";
       root.querySelectorAll(".lux-mw-tab").forEach((b) => {
@@ -233,42 +318,48 @@ export function mountMyWordsPanel({
           </div>
         `;
       } else {
-        elList.innerHTML = preview.map((e) => entryRowHTML(e, false)).join("");
+        elList.innerHTML = preview
+          .map((e) => entryRowHTML(e, false, { isModal: false }))
+          .join("");
       }
 
-      // ✅ Phase 5: View Library (N)
+      // ✅ Sidecar: show View Library (N) only when it makes sense
       if (total > 0 && (total > maxPreview || archivedTotal > 0)) {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "lux-mw-viewAllBtn";
-        btn.textContent = `View Library (${total})`;
-
-        // ✅ FIX 2 — wire the “View Library (N)” button
-        btn.addEventListener("click", () => {
-          window.LuxMyWords?.openLibrary?.();
-        });
-
-        elList.appendChild(btn);
+        renderBackButton(total);
       }
 
       return;
     }
 
-    // Library mode (modal): active OR archived
+    // Library mode: active OR archived (includes modal-moved panel)
     if (!listAll.length) {
       elList.innerHTML = `
         <div class="lux-mw-empty">
           <strong>${
             tab === "archived" ? "No archived words." : "No active words yet."
           }</strong>
-          ${tab === "archived" ? "Archive something first." : "Add a few above 👆"}
+          ${
+            tab === "archived"
+              ? "Archive something first."
+              : isModal
+              ? "Try searching your history above."
+              : "Add a few above 👆"
+          }
         </div>
       `;
+
+      // ✅ Modal still gets a Back button
+      if (isModal) renderBackButton(total);
       return;
     }
 
     const isArchived = tab === "archived";
-    elList.innerHTML = listAll.map((e) => entryRowHTML(e, isArchived)).join("");
+    elList.innerHTML = listAll
+      .map((e) => entryRowHTML(e, isArchived, { isModal }))
+      .join("");
+
+    // ✅ Modal gets Back button (never “View Library”)
+    if (isModal) renderBackButton(total);
   }
 
   function focusComposer() {
@@ -297,12 +388,21 @@ export function mountMyWordsPanel({
   });
 
   elClose?.addEventListener("click", () => {
+    // If we're inside the modal → go “back”
+    if (root.classList.contains("is-modal")) {
+      onCloseLibrary?.();
+      window.LuxMyWords?.closeLibrary?.();
+      return;
+    }
+
     // Sidecar closes store open state.
-    // Modal close is handled by the modal controller (below).
     store.setOpen(false);
   });
 
   elAdd?.addEventListener("click", () => {
+    // Composer hidden in modal/library, but keep safe anyway
+    if (root.classList.contains("is-modal")) return;
+
     const raw = elTa.value || "";
     const res = store.addMany(raw);
     if (res.added || res.merged) elTa.value = "";
@@ -339,12 +439,24 @@ export function mountMyWordsPanel({
       return;
     }
 
+    if (act === "yg") {
+      openYouglish(entry.text);
+      return;
+    }
+
+    if (act === "coach") {
+      onCoach?.(entry.text);
+      return;
+    }
+
     if (act === "pin") {
       store.togglePin(id);
       return;
     }
 
     if (act === "archive") {
+      // ✅ Never archive inside the library modal
+      if (root.classList.contains("is-modal")) return;
       store.archive(id);
       return;
     }
@@ -429,6 +541,8 @@ export function ensureMyWordsLibraryModal({
         mountTo: panelMount,
         asModal: true,
         onOpenLibrary: null,
+        onCloseLibrary: close,
+        onCoach: null,
       });
 
       // Default tab Active when opening

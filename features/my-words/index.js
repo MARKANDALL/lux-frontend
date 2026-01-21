@@ -87,6 +87,44 @@ export function initMyWordsGlobal({ uid, inputEl } = {}) {
     return attemptsCache;
   }
 
+  // ============================================================
+  // ✅ FIX — Real AI Coach handler (Coach button)
+  // ============================================================
+  async function sendToAICoach(text) {
+    const t = String(text || "").trim();
+    if (!t) return;
+
+    // open the AI coach drawer
+    const drawer = document.querySelector("#aiCoachDrawer");
+    if (drawer) drawer.open = true;
+
+    // Scroll so AI section is visible and low in viewport
+    requestAnimationFrame(() => {
+      try {
+        drawer?.scrollIntoView({ behavior: "smooth", block: "end" });
+      } catch (_) {}
+    });
+
+    // show loading feedback
+    const box = document.querySelector("#aiFeedback");
+    if (box)
+      box.innerHTML = `<div style="padding:12px;opacity:.8;">Thinking…</div>`;
+
+    // Persona (default tutor)
+    const persona =
+      document.querySelector(".ai-voice-btn.active")?.dataset?.value || "tutor";
+
+    // Default to Quick Tip (placeholder until backend call)
+    if (box) {
+      box.innerHTML = `
+        <div style="padding:14px;">
+          <strong>Quick Tip for:</strong> ${t}<br/><br/>
+          <em>Persona:</em> ${persona}<br/><br/>
+          (placeholder until API call is wired)
+        </div>`;
+    }
+  }
+
   const store = createMyWordsStore({
     uid,
     onMutation: async (evt) => {
@@ -136,6 +174,7 @@ export function initMyWordsGlobal({ uid, inputEl } = {}) {
     mode: "compact",
     maxPreview: 5,
     onOpenLibrary: () => openLibrary(), // ✅ wire to reliable modal
+    onCoach: (text) => sendToAICoach(text), // ✅ Coach button now works
   });
 
   // ✅ Alias for older code that expects "sidecar"

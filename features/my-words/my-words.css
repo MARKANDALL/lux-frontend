@@ -132,6 +132,13 @@
   background: rgba(255,255,255,.85);
 }
 
+/* ✅ 10) Bigger, more prominent search in Library */
+.lux-mw-panel.is-modal .lux-mw-search {
+  width: 280px;
+  font-size: 14px;
+  padding: 9px 12px;
+}
+
 .lux-mw-iconBtn{
   width: 32px;
   height: 32px;
@@ -261,8 +268,8 @@
 
 /* --- My Words action buttons: compact + rounded, no jitter --- */
 .lux-mw-actions{
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display:grid;
+  grid-template-columns: repeat(var(--mw-cols, 2), 1fr);
   gap: 0;
   border-radius: 14px;
   overflow: hidden;

@@ -292,3 +292,30 @@
   height: 100% !important;
   display: block;
 }
+/* =========================
+   ✅ Drawer Tooltip Un-Clip Fix
+   Tooltips are CSS pseudo-elements and can get clipped by scroll/overflow.
+   Keep them INSIDE the drawer width so they’re always readable.
+========================= */
+
+.wcDrawerPanel [data-tip]::after{
+  /* pin tooltip inside the panel instead of centering past the edges */
+  left: 12px !important;
+  right: 12px !important;
+
+  /* cancel the horizontal centering transform */
+  transform: translateY(4px) !important;
+
+  /* allow wrapping instead of ellipsis */
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: initial !important;
+
+  max-width: none !important;
+}
+
+/* keep your hover reveal animation */
+.wcDrawerPanel [data-tip]:hover::after,
+.wcDrawerPanel [data-tip]:focus-visible::after{
+  transform: translateY(0) !important;
+}
