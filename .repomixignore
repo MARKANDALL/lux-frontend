@@ -1,13 +1,20 @@
-# Always exclude archives / trash
-_ARCHIVE/**
+# Repomix: ignore heavy / generated stuff only
 
-# Vendor/minified noise (keep integration code, drop the blob)
-public/vendor/**
-**/*.min.js
-**/*.min.css
-**/*.map
+node_modules/
+dist/
+.vite/
+coverage/
+tmp/
+temp/
 
-# Optional: common output folders (just in case)
-dist/**
-build/**
-coverage/**
+# Big media
+public/convo-vid/
+public/convo-img/
+**/*.mp4
+**/*.webm
+**/*.mov
+**/*.wav
+
+# Logs / caches
+**/*.log
+**/*.cache

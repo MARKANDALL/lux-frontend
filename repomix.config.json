@@ -1,7 +1,6 @@
 {
-  "$schema": "https://repomix.com/schemas/latest/schema.json",
   "output": {
-    "filePath": "repomix-frontend.xml",
+    "filePath": "repomix-frontend.LATEST.xml",
     "style": "xml"
   }
 }
