@@ -101,8 +101,9 @@
   background: linear-gradient(180deg, #d9f1ff 0%, #bfe6ff 100%);
   color: #0f172a;
 
-  /* ✅ kill horizontal scrollbars at the root */
-  overflow-x: hidden !important;
+  /* ✅ allow drawer panels to escape the 44px gutter */
+  overflow: visible !important;
+  overflow-x: visible !important;
 }
 
 /* ✅ Remove horizontal scrollbars entirely */
@@ -140,6 +141,9 @@
   /* ✅ OPEN panels behave normally */
   transform: translateX(0);
   pointer-events: auto;
+
+  /* ✅ Optional reinforcement: panels always visible in the gap */
+  z-index: 2;
 }
 
 /* closed panels should not intercept clicks */
@@ -172,12 +176,9 @@
   display: grid;
   gap: 10px;
 
-  /* ✅ content never spills out */
-  overflow: auto;
+  /* ✅ CRITICAL: allow drawer panels to slide OUTSIDE the 44px dock column */
+  overflow: visible !important;
   min-height: 0;
-
-  /* ✅ kill horizontal scrollbars entirely */
-  overflow-x: hidden !important;
 }
 
 /* ✅ allow children to shrink instead of overflow */

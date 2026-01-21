@@ -11822,6 +11822,46 @@ body:has(#convoApp[data-mode="intro"]){
 }
 </file>
 
+<file path="lux-layout.tokens.css">
+/* lux-layout.tokens.css */
+/* ============================================================================
+   THE LUX CONSTITUTION: Global Variables
+   Single Source of Truth for Layers & Theme
+   ============================================================================ */
+:root {
+  /* --- 1. Z-INDEX TIER SCALE (The Peace Treaty) --- 
+      FIXED: Elevated Drawer tier to 900 to sit above the new Modal/Blue Box tier (800) */
+  --z-base: 1;
+  --z-ui-low: 100;    /* Result pills, generic UI */
+  --z-popover: 600;   /* Standard Tooltips */
+  --z-modal: 800;     /* Blue Box, Context Menus, High-Priority Cards */
+  --z-drawer: 900;    /* Self-Playback & TTS Drawers (Must slide OVER the Blue Box) */
+  --z-toast: 950;     /* Error messages / Toasts */
+  --z-max: 1000;      /* The absolute ceiling (Onboarding Overlay) */
+
+  /* --- 2. GLOBAL COLORS --- */
+  --lux-blue-primary: #0078d7;
+  --lux-blue-hover: #005a9e;
+  --lux-bg-light: #ffffff;
+  --lux-text-main: #333333;
+  --lux-text-muted: #666666;
+
+  /* --- 3. RECORDING STATES (Moved from base.css) --- */
+  --rec-base: #eab308;
+  --rec-ink: #111;
+  --rec-glow-soft: rgba(234, 179, 8, 0.55);
+  --rec-glow-strong: rgba(234, 179, 8, 0.92);
+  --stripe-green-1: #34d399;
+  --stripe-green-2: #059669;
+
+  /* --- 4. NAV PILL WATER HOVER (CTA polish) --- */
+  --lux-water-hover: #e9f6ff;        /* light water blue */
+  --lux-water-hover-2: #dff1ff;      /* slightly deeper for active */
+  --lux-water-border: rgba(0,120,215,0.28);
+  --lux-water-halo: rgba(0,120,215,0.16);
+}
+</file>
+
 <file path="lux-onboarding.css">
 /* features/onboarding/lux-onboarding.css */
 
@@ -21023,46 +21063,6 @@ button.lux-toplink-cta:focus-visible::before{
 }
 </file>
 
-<file path="lux-layout.tokens.css">
-/* lux-layout.tokens.css */
-/* ============================================================================
-   THE LUX CONSTITUTION: Global Variables
-   Single Source of Truth for Layers & Theme
-   ============================================================================ */
-:root {
-  /* --- 1. Z-INDEX TIER SCALE (The Peace Treaty) --- 
-      FIXED: Elevated Drawer tier to 900 to sit above the new Modal/Blue Box tier (800) */
-  --z-base: 1;
-  --z-ui-low: 100;    /* Result pills, generic UI */
-  --z-popover: 600;   /* Standard Tooltips */
-  --z-modal: 800;     /* Blue Box, Context Menus, High-Priority Cards */
-  --z-drawer: 900;    /* Self-Playback & TTS Drawers (Must slide OVER the Blue Box) */
-  --z-toast: 950;     /* Error messages / Toasts */
-  --z-max: 1000;      /* The absolute ceiling (Onboarding Overlay) */
-
-  /* --- 2. GLOBAL COLORS --- */
-  --lux-blue-primary: #0078d7;
-  --lux-blue-hover: #005a9e;
-  --lux-bg-light: #ffffff;
-  --lux-text-main: #333333;
-  --lux-text-muted: #666666;
-
-  /* --- 3. RECORDING STATES (Moved from base.css) --- */
-  --rec-base: #eab308;
-  --rec-ink: #111;
-  --rec-glow-soft: rgba(234, 179, 8, 0.55);
-  --rec-glow-strong: rgba(234, 179, 8, 0.92);
-  --stripe-green-1: #34d399;
-  --stripe-green-2: #059669;
-
-  /* --- 4. NAV PILL WATER HOVER (CTA polish) --- */
-  --lux-water-hover: #e9f6ff;        /* light water blue */
-  --lux-water-hover-2: #dff1ff;      /* slightly deeper for active */
-  --lux-water-border: rgba(0,120,215,0.28);
-  --lux-water-halo: rgba(0,120,215,0.16);
-}
-</file>
-
 <file path="lux-layout.top-banner.css">
 /* lux-layout.top-banner.css */
 
@@ -22678,46 +22678,6 @@ export default defineConfig({
     },
   },
 });
-</file>
-
-<file path=".gitignore">
-# dependencies
-node_modules/
-
-# CodeSandbox
-.codesandbox/scripts/
-.codesandbox/
-
-# build output / caches
-dist/
-.vite/
-
-# local env files (keep secrets out of git)
-.env*
-!.env.example
-
-# logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-pnpm-debug.log*
-
-# lockfiles (keep only the one you actually use)
-yarn.lock
-
-# local video backups
-public/convo-vid/*_ORIG.mp4
-    
-# Repomix output
-repomix-output.xml
-
-repomix-*.xml
-
-lux-layout.COMBINED.css
-
-# Repomix outputs
-repomix-frontend.LATEST.xml
-repomix-frontend.xml
 </file>
 
 <file path=".repomixignore">
@@ -26570,6 +26530,43 @@ export function renderResultsHeaderModern(data) {
     <script type="module" src="./ui/warp-nav.js"></script>
   </body>
 </html>
+</file>
+
+<file path=".gitignore">
+# dependencies
+node_modules/
+
+# CodeSandbox
+.codesandbox/scripts/
+.codesandbox/
+
+# build output / caches
+dist/
+.vite/
+
+# local env files (keep secrets out of git)
+.env*
+!.env.example
+
+# logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# lockfiles (keep only the one you actually use)
+yarn.lock
+
+# local video backups
+public/convo-vid/*_ORIG.mp4
+
+# Repomix output (keep ONLY the single latest file)
+repomix-output.xml
+repomix-*.xml
+!repomix-frontend.LATEST.xml
+
+# combined CSS artifact
+lux-layout.COMBINED.css
 </file>
 
 <file path="features/convo/convo-flow.js">
@@ -33824,6 +33821,21 @@ function renderMetricTrendCard(m) {
 .lux-mw-viewAllBtn:hover { filter: brightness(1.01); }
 </file>
 
+<file path="lux-layout.css">
+/* lux-layout.css */
+@import "./lux-layout.tokens.css";
+@import "./lux-layout.core.css";
+@import "./lux-layout.harvard.css";
+@import "./lux-layout.nav-cta.css";
+@import "./lux-layout.messaging.css";
+@import "./lux-layout.interactions.css";
+@import "./lux-layout.ai-feedback.css";
+@import "./lux-layout.scrollbar.css";
+@import "./lux-layout.top-banner.css";
+/* ✅ My Words overlay */
+@import "./features/my-words/my-words.css";
+</file>
+
 <file path="features/my-words/panel.js">
 // features/my-words/panel.js
 // Phase 5: Library Modal + Active/Archived tabs + badge counts
@@ -34277,21 +34289,6 @@ export function ensureMyWordsLibraryModal({
 
   return { open, close, el: modalEl };
 }
-</file>
-
-<file path="lux-layout.css">
-/* lux-layout.css */
-@import "./lux-layout.tokens.css";
-@import "./lux-layout.core.css";
-@import "./lux-layout.harvard.css";
-@import "./lux-layout.nav-cta.css";
-@import "./lux-layout.messaging.css";
-@import "./lux-layout.interactions.css";
-@import "./lux-layout.ai-feedback.css";
-@import "./lux-layout.scrollbar.css";
-@import "./lux-layout.top-banner.css";
-/* ✅ My Words overlay */
-@import "./features/my-words/my-words.css";
 </file>
 
 <file path="features/my-words/index.js">
@@ -34750,6 +34747,9 @@ export function initMyWordsEverywhere() {
   /* ✅ OPEN panels behave normally */
   transform: translateX(0);
   pointer-events: auto;
+
+  /* ✅ Optional reinforcement: panels always visible in the gap */
+  z-index: 2;
 }
 
 /* closed panels should not intercept clicks */
@@ -34782,12 +34782,9 @@ export function initMyWordsEverywhere() {
   display: grid;
   gap: 10px;
 
-  /* ✅ content never spills out */
-  overflow: auto;
+  /* ✅ CRITICAL: allow drawer panels to slide OUTSIDE the 44px dock column */
+  overflow: visible !important;
   min-height: 0;
-
-  /* ✅ kill horizontal scrollbars entirely */
-  overflow-x: hidden !important;
 }
 
 /* ✅ allow children to shrink instead of overflow */
