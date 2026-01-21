@@ -1,5 +1,5 @@
 // features/progress/wordcloud/side-drawers.js
-// ✅ Drawer wiring (safe localStorage + no redraw reset)
+// ✅ Drawer wiring (safe localStorage + NO redraw/reload on toggle)
 
 const KEY = "lux_wc_drawers_v1";
 
@@ -42,7 +42,9 @@ export function wireWordcloudSideDrawers(root, { onLayoutChange } = {}) {
   };
 
   function persist() {
-    localStorage.setItem(KEY, JSON.stringify(state));
+    try {
+      localStorage.setItem(KEY, JSON.stringify(state));
+    } catch (_) {}
   }
 
   function setOpen(side, open, { silent = false } = {}) {
@@ -60,20 +62,28 @@ export function wireWordcloudSideDrawers(root, { onLayoutChange } = {}) {
 
     persist();
 
+    // ✅ CRITICAL FIX:
+    // Drawer toggles are purely visual.
+    // DO NOT call onLayoutChange() here.
     if (!silent) {
-      // allow CSS to settle then reflow canvas only
-      requestAnimationFrame(() => onLayoutChange?.());
+      try {
+        root.dispatchEvent(
+          new CustomEvent("wc:drawer-toggle", {
+            detail: { side, open },
+          })
+        );
+      } catch (_) {}
     }
   }
 
-  // ✅ Init WITHOUT firing two layout changes
+  // ✅ Init drawers (no spam, no double-redraw)
   setOpen("left", state.leftOpen, { silent: true });
   setOpen("right", state.rightOpen, { silent: true });
 
-  // ✅ one reflow after both are set
+  // ✅ OPTIONAL: one layout call on init (safe)
   requestAnimationFrame(() => onLayoutChange?.());
 
-  // Toggle clicks
+  // Toggle clicks (NO redraw)
   root.querySelectorAll("[data-wc-drawer-toggle]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const side = btn.getAttribute("data-wc-drawer-toggle");
@@ -81,7 +91,8 @@ export function wireWordcloudSideDrawers(root, { onLayoutChange } = {}) {
 
       const el = side === "left" ? left : right;
       const openNow = !el.classList.contains("is-closed");
-      setOpen(side, !openNow);
+
+      setOpen(side, !openNow); // ✅ purely visual toggle
     });
   });
 }

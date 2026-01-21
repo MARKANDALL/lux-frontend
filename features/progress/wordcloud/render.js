@@ -26,6 +26,9 @@ export function renderWordcloudView({
   });
 }
 
+// ✅ FIX #3 — Prevent redraw overlaps (timer collision)
+let drawing = false;
+
 /**
  * Draw orchestration extracted from index.js.
  * This function stays UI-agnostic by receiving all dependencies/callbacks as args.
@@ -85,130 +88,138 @@ export async function drawWordcloud({
 }) {
   if (!canvas || !metaEl) return;
 
-  const seq = ++renderSeqRef.value;
-
-  // Show overlay immediately so click feedback is instant
-  setBusy(true, "Loading cloud…", "Preparing layout");
-  await waitTwoFrames();
+  // ✅ Prevent re-entrancy stampedes
+  if (drawing) return;
+  drawing = true;
 
   try {
-    metaEl.textContent = "Loading…";
+    const seq = ++renderSeqRef.value;
 
-    setBusy(true, "Loading cloud engine…", "D3 layout + canvas renderer");
+    // Show overlay immediately so click feedback is instant
+    setBusy(true, "Loading cloud…", "Preparing layout");
+    await waitTwoFrames();
 
-    console.time("[wc] ensure libs");
-    const ok = await ensureWordCloudLibs();
-    console.timeEnd("[wc] ensure libs");
+    try {
+      metaEl.textContent = "Loading…";
 
-    if (seq !== renderSeqRef.value) return;
+      setBusy(true, "Loading cloud engine…", "D3 layout + canvas renderer");
 
-    if (!ok) {
-      setBusy(false);
-      metaEl.textContent =
-        "Word Cloud libraries not found. Add /public/vendor/d3.v7.min.js + /public/vendor/d3.layout.cloud.js";
-      return;
-    }
+      console.time("[wc] ensure libs");
+      const ok = await ensureWordCloudLibs();
+      console.timeEnd("[wc] ensure libs");
 
-    setBusy(true, "Loading your practice history…", "Fetching attempt data");
+      if (seq !== renderSeqRef.value) return;
 
-    console.time("[wc] ensure data");
-    await ensureData(forceFetch);
-    console.timeEnd("[wc] ensure data");
+      if (!ok) {
+        setBusy(false);
+        metaEl.textContent =
+          "Word Cloud libraries not found. Add /public/vendor/d3.v7.min.js + /public/vendor/d3.layout.cloud.js";
+        return;
+      }
 
-    if (seq !== renderSeqRef.value) return;
+      setBusy(true, "Loading your practice history…", "Fetching attempt data");
 
-    console.time("[wc] compute items");
-    const attemptsInRange = filterAttemptsByRange(
-      attemptsAll,
-      range,
-      timelineWin,
-      timelinePos
-    );
-    const items = computeItemsForView(attemptsInRange);
-    console.timeEnd("[wc] compute items");
+      console.time("[wc] ensure data");
+      await ensureData(forceFetch);
+      console.timeEnd("[wc] ensure data");
 
-    // IMPORTANT: keep index.js top3 logic correct
-    if (typeof setLastItems === "function") setLastItems(items);
+      if (seq !== renderSeqRef.value) return;
 
-    renderSavedStrip();
-    renderTargetsStrip(attemptsInRange);
+      console.time("[wc] compute items");
+      const attemptsInRange = filterAttemptsByRange(
+        attemptsAll,
+        range,
+        timelineWin,
+        timelinePos
+      );
+      const items = computeItemsForView(attemptsInRange);
+      console.timeEnd("[wc] compute items");
 
-    if (!items.length) {
-      metaEl.textContent =
-        mode === "phonemes"
-          ? "Not enough phoneme data yet — do a little more practice first."
-          : "Not enough word data yet — do a little more practice first.";
+      // IMPORTANT: keep index.js top3 logic correct
+      if (typeof setLastItems === "function") setLastItems(items);
 
-      // Empty canvas + stop overlay
+      renderSavedStrip();
+      renderTargetsStrip(attemptsInRange);
+
+      if (!items.length) {
+        metaEl.textContent =
+          mode === "phonemes"
+            ? "Not enough phoneme data yet — do a little more practice first."
+            : "Not enough word data yet — do a little more practice first.";
+
+        // Empty canvas + stop overlay
+        console.time("[wc] render layout");
+        renderWordcloudView({
+          canvas,
+          items: [],
+          focusTest: null,
+          clusterMode,
+          pinnedSet,
+          onSelect,
+          onRenderEnd: ({ reason } = {}) => {
+            console.log("[wc] render end:", reason);
+            console.timeEnd("[wc] render layout");
+            if (seq === renderSeqRef.value) setBusy(false);
+          },
+        });
+
+        return;
+      }
+
+      // Keep overlay ON until D3 layout finishes and paint happens
+      setBusy(true, "Building cloud…", "Placing targets on canvas");
+
+      // ✅ Reassurance message if layout takes a while
+      let slowNote = setTimeout(() => {
+        if (seq === renderSeqRef.value) {
+          setBusy(true, "Building cloud…", "Still working… (large history)");
+        }
+      }, 1200);
+
+      const q = lower(query);
+      const focusTest = q ? (idLower) => String(idLower || "").includes(q) : null;
+
       console.time("[wc] render layout");
       renderWordcloudView({
         canvas,
-        items: [],
-        focusTest: null,
+        items,
+        focusTest,
         clusterMode,
         pinnedSet,
-        onSelect,
+
+        // ✅ keep overlay hide hook
         onRenderEnd: ({ reason } = {}) => {
           console.log("[wc] render end:", reason);
           console.timeEnd("[wc] render layout");
+          clearTimeout(slowNote);
           if (seq === renderSeqRef.value) setBusy(false);
         },
+
+        onSelect,
       });
 
-      return;
+      const label = mode === "phonemes" ? "Phonemes" : "Words";
+      const tl =
+        range === "timeline"
+          ? ` · Window: ${timelineWin}d ending ${fmtDaysAgo(timelinePos)}`
+          : "";
+
+      metaEl.textContent =
+        `Updated ${new Date().toLocaleString()} · ${label} · ${rangeLabel(
+          range
+        )}${tl} · Sort: ${sortLabel(sort)} · Mix: ${mixLabel(mix)}` +
+        (q ? ` · Search: “${String(query || "").trim()}”` : "");
+
+      persist();
+      syncUrl();
+      setActiveButtons();
+      setModeStory();
+    } catch (err) {
+      console.error("[Cloud Visuals] draw failed:", err);
+      if (seq === renderSeqRef.value) setBusy(false);
+      metaEl.textContent = "Cloud load failed — check console for details.";
     }
-
-    // Keep overlay ON until D3 layout finishes and paint happens
-    setBusy(true, "Building cloud…", "Placing targets on canvas");
-
-    // ✅ Reassurance message if layout takes a while
-    let slowNote = setTimeout(() => {
-      if (seq === renderSeqRef.value) {
-        setBusy(true, "Building cloud…", "Still working… (large history)");
-      }
-    }, 1200);
-
-    const q = lower(query);
-    const focusTest = q ? (idLower) => String(idLower || "").includes(q) : null;
-
-    console.time("[wc] render layout");
-    renderWordcloudView({
-      canvas,
-      items,
-      focusTest,
-      clusterMode,
-      pinnedSet,
-
-      // ✅ keep overlay hide hook
-      onRenderEnd: ({ reason } = {}) => {
-        console.log("[wc] render end:", reason);
-        console.timeEnd("[wc] render layout");
-        clearTimeout(slowNote);
-        if (seq === renderSeqRef.value) setBusy(false);
-      },
-
-      onSelect,
-    });
-
-    const label = mode === "phonemes" ? "Phonemes" : "Words";
-    const tl =
-      range === "timeline"
-        ? ` · Window: ${timelineWin}d ending ${fmtDaysAgo(timelinePos)}`
-        : "";
-
-    metaEl.textContent =
-      `Updated ${new Date().toLocaleString()} · ${label} · ${rangeLabel(
-        range
-      )}${tl} · Sort: ${sortLabel(sort)} · Mix: ${mixLabel(mix)}` +
-      (q ? ` · Search: “${String(query || "").trim()}”` : "");
-
-    persist();
-    syncUrl();
-    setActiveButtons();
-    setModeStory();
-  } catch (err) {
-    console.error("[Cloud Visuals] draw failed:", err);
-    if (seq === renderSeqRef.value) setBusy(false);
-    metaEl.textContent = "Cloud load failed — check console for details.";
+  } finally {
+    drawing = false;
   }
 }

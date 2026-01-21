@@ -13,22 +13,29 @@ function ensureStyles() {
 
   s.textContent = `
     /* Light Theme + Layout Styles */
-    #selfpb-lite{
-      position:fixed;
-      top:12px;left:12px;
-      z-index:9999;
 
-      /* ✅ Outer container creates visible "frame" around the white panel */
-      padding: 10px 14px 14px 10px; /* a tiny extra on RIGHT + bottom */
-      background: rgba(255,255,255,0.55);
+    /* ✅ OUTER frame always wraps the inner panel */
+    #selfpb-lite{
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      z-index: 9999;
+
+      /* ✅ key: let the OUTER size itself to the inner */
+      width: fit-content;
+      max-width: calc(100vw - 24px);
+      display: inline-block;
+
+      padding: 10px 14px 14px 10px; /* extra right + bottom bezel */
       border-radius: 18px;
+      background: rgba(255,255,255,0.55);
 
       font:600 14px system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
       box-shadow:0 6px 18px rgba(0,0,0,.25);
 
-      width: min(380px, calc(100vw - 24px));
       box-sizing: border-box;
-      overflow-x: hidden;   /* ✅ kills sideways scroll */
+      overflow: hidden;
+      overflow-x: hidden;
     }
 
     #selfpb-lite * { box-sizing: border-box; }
@@ -68,7 +75,9 @@ function ensureStyles() {
 
     #selfpb-lite .pill{border-radius:999px;padding:6px 10px}
     #selfpb-lite .meta{opacity:.85}
-    #selfpb-lite input[type="range"]{accent-color:#2d6cdf}
+
+    :is(#selfpb-lite, #spb-modalCard) input[type="range"]{accent-color:#2d6cdf}
+
     #selfpb-lite .ab{display:flex;gap:6px;position:relative;}
     #selfpb-lite .tiny{font-weight:700;opacity:.8}
 
@@ -104,35 +113,31 @@ function ensureStyles() {
       border-top: 4px solid rgba(0,0,0,0.85);
     }
 
-    /* ✅ Self Playback: hard containment + zero horizontal scroll */
-    #selfpb-lite{
-      width: min(390px, calc(100vw - 24px));
+    /* ✅ INNER panel defines the real usable width */
+    :is(#selfpb-lite, #spb-modalCard) .spb-body{
+      width: min(390px, calc(100vw - 48px)); /* ✅ inner width (in floating mode) */
+      max-width: 100%;
+      background: #fff;
+      border-radius: 16px;
+      padding: 12px;
+
       box-sizing: border-box;
-      overflow: hidden;      /* ✅ kills weird bleed */
-      overflow-x: hidden;    /* ✅ never scroll sideways */
+      overflow: hidden;
     }
 
-    #selfpb-lite *{ box-sizing:border-box; }
-
-    #selfpb-lite .spb-body{
-      background:#fff;
-      border-radius:16px;
-      padding:12px;
-      overflow:hidden;       /* ✅ inner box cannot overlap */
-
-      /* ✅ Inner white panel never exceeds container width */
-      width: 100%;
-      max-width: 100%;
+    /* ✅ In expanded mode, body fills modal card */
+    #spb-modalCard .spb-body{
+      width: 100% !important;
     }
 
     /* ✅ Prevent waveform/canvas from forcing overflow */
-    #selfpb-lite canvas,
-    #selfpb-lite .spb-wave,
-    #selfpb-lite #spb-wavebox{
+    :is(#selfpb-lite, #spb-modalCard) canvas,
+    :is(#selfpb-lite, #spb-modalCard) .spb-wave,
+    :is(#selfpb-lite, #spb-modalCard) #spb-wavebox{
       max-width: 100% !important;
     }
 
-    #selfpb-lite .spb-wave{
+    :is(#selfpb-lite, #spb-modalCard) .spb-wave{
       height:92px;
       border-radius:12px;
       background: rgba(15,23,42,0.04);
@@ -144,7 +149,7 @@ function ensureStyles() {
     }
 
     /* rows */
-    #selfpb-lite .spb-row{
+    :is(#selfpb-lite, #spb-modalCard) .spb-row{
       display:flex;
       align-items:center;
       gap:10px;
@@ -152,14 +157,14 @@ function ensureStyles() {
       width:100%;
     }
 
-    #selfpb-lite .spb-row + .spb-row{ margin-top:8px; }
+    :is(#selfpb-lite, #spb-modalCard) .spb-row + .spb-row{ margin-top:8px; }
 
-    #selfpb-lite .spb-scrub{
+    :is(#selfpb-lite, #spb-modalCard) .spb-scrub{
       width:100%;
       min-width:0;
     }
 
-    #selfpb-lite .spb-btn{
+    :is(#selfpb-lite, #spb-modalCard) .spb-btn{
       border:0;
       border-radius:10px;
       padding:8px 12px;
@@ -171,40 +176,40 @@ function ensureStyles() {
       white-space:nowrap;
     }
 
-    #selfpb-lite .spb-btn.secondary{
+    :is(#selfpb-lite, #spb-modalCard) .spb-btn.secondary{
       background: rgba(15,23,42,0.08);
       color: rgba(15,23,42,0.85);
       box-shadow:none;
     }
 
-    #selfpb-lite .spb-btn.icon{
+    :is(#selfpb-lite, #spb-modalCard) .spb-btn.icon{
       width:44px;
       display:grid;
       place-items:center;
       padding:8px 0;
     }
 
-    /* ✅ Download icon should be Lux-blue (match TTS download vibe) */
-    #selfpb-lite #spb-dl{
-      background: rgba(47,111,228,0.14);
+    /* ✅ Download arrow: Lux blue */
+    :is(#selfpb-lite, #spb-modalCard) #spb-dl{
       color: #2f6fe4;
       font-weight: 900;
+      background: rgba(47,111,228,0.14);
     }
 
-    /* ✅ Scrubber: thicker + more "timeline" looking than speed */
-    #selfpb-lite #spb-scrub{
-      height: 18px;
+    /* ✅ Scrubber: looks like a real timeline */
+    :is(#selfpb-lite, #spb-modalCard) #spb-scrub{
       -webkit-appearance: none;
       appearance: none;
+      height: 18px;
     }
 
-    #selfpb-lite #spb-scrub::-webkit-slider-runnable-track{
+    :is(#selfpb-lite, #spb-modalCard) #spb-scrub::-webkit-slider-runnable-track{
       height: 10px;
       border-radius: 999px;
       background: rgba(15,23,42,0.14);
     }
 
-    #selfpb-lite #spb-scrub::-webkit-slider-thumb{
+    :is(#selfpb-lite, #spb-modalCard) #spb-scrub::-webkit-slider-thumb{
       -webkit-appearance: none;
       width: 18px;
       height: 18px;
@@ -215,13 +220,13 @@ function ensureStyles() {
       box-shadow: 0 6px 14px rgba(0,0,0,0.18);
     }
 
-    /* ✅ Speed slider: slimmer + quieter */
-    #selfpb-lite #spb-rate::-webkit-slider-runnable-track{
+    /* ✅ Speed stays slimmer + quieter */
+    :is(#selfpb-lite, #spb-modalCard) #spb-rate::-webkit-slider-runnable-track{
       height: 6px;
       border-radius: 999px;
       background: rgba(15,23,42,0.10);
     }
-    #selfpb-lite #spb-rate::-webkit-slider-thumb{
+    :is(#selfpb-lite, #spb-modalCard) #spb-rate::-webkit-slider-thumb{
       -webkit-appearance:none;
       width: 14px;
       height: 14px;
@@ -231,8 +236,55 @@ function ensureStyles() {
     }
 
     /* bottom row: -2s ⬇ +2s */
-    #selfpb-lite .spb-bottom{
+    :is(#selfpb-lite, #spb-modalCard) .spb-bottom{
       justify-content:space-between;
+    }
+
+    /* ✅ Expand button (header) */
+    #selfpb-lite .spb-miniBtn{
+      border: 0;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-weight: 900;
+      cursor: pointer;
+      background: rgba(255,255,255,0.22);
+      color: rgba(15,23,42,0.85);
+      transition: transform .12s ease, filter .12s ease;
+    }
+
+    #selfpb-lite .spb-miniBtn:hover{
+      transform: scale(1.10);  /* ✅ “big bulge” hover */
+      filter: brightness(1.12);
+    }
+
+    /* ✅ Expanded Self Playback modal */
+    #spb-modalShade{
+      position: fixed;
+      inset: 0;
+      z-index: 200000;
+      background: rgba(0,0,0,0.35);
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #spb-modalShade.is-open{ display: flex; }
+
+    #spb-modalCard{
+      width: min(900px, calc(100vw - 40px));
+      max-height: min(680px, calc(100vh - 40px));
+      border-radius: 22px;
+      background: rgba(255,255,255,0.92);
+      box-shadow: 0 18px 50px rgba(0,0,0,0.30);
+      padding: 14px;
+      box-sizing: border-box;
+    }
+
+    #spb-modalCard *{ box-sizing: border-box; }
+
+    /* ✅ Bigger wave area in expanded mode */
+    #spb-modalCard #spb-wavebox{
+      height: 220px;
     }
   `;
 
@@ -250,6 +302,10 @@ function buildUI() {
         class="pill tiny"
         style="display:none; position:absolute; right:0; top:0; background:#ef4444; border-color:#b91c1c; color:#fff; z-index:10; box-shadow: 0 2px 10px rgba(0,0,0,0.5);"
       ></span>
+
+      <button id="spb-expand" class="spb-miniBtn" title="Expand Self Playback">
+        Expand
+      </button>
 
       <div class="spacer"></div>
       <span class="pill tiny" id="spb-ref">Ref: —</span>
@@ -303,6 +359,55 @@ function buildUI() {
   `;
 
   document.body.appendChild(host);
+
+  // ✅ Expanded modal shell (create once)
+  let shade = document.getElementById("spb-modalShade");
+  if (!shade) {
+    shade = document.createElement("div");
+    shade.id = "spb-modalShade";
+    shade.innerHTML = `
+      <div id="spb-modalCard">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div style="font-weight:900;opacity:.85;">Self Playback (Expanded)</div>
+          <button id="spb-modalClose" class="spb-btn secondary icon" title="Close">✕</button>
+        </div>
+        <div id="spb-modalMount"></div>
+      </div>
+    `;
+    document.body.appendChild(shade);
+  }
+
+  const modalMount = shade.querySelector("#spb-modalMount");
+  const closeBtn = shade.querySelector("#spb-modalClose");
+  const expandBtn = host.querySelector("#spb-expand");
+
+  const body = host.querySelector(".spb-body");
+  const bodyHome = body.parentElement;
+  let bodyNext = body.nextSibling;
+
+  function openModal() {
+    bodyNext = body.nextSibling; // ✅ re-capture in case DOM changes
+    shade.classList.add("is-open");
+    modalMount.appendChild(body);
+  }
+
+  function closeModal() {
+    shade.classList.remove("is-open");
+    bodyHome.insertBefore(body, bodyNext || null);
+  }
+
+  expandBtn?.addEventListener("click", openModal);
+  closeBtn?.addEventListener("click", closeModal);
+
+  // click outside closes
+  shade.addEventListener("click", (e) => {
+    if (e.target === shade) closeModal();
+  });
+
+  // ESC closes
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && shade.classList.contains("is-open")) closeModal();
+  });
 
   return {
     host,

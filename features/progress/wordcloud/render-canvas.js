@@ -130,6 +130,9 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
     return;
   }
 
+  // ✅ GLOBAL sizing boost (you want BIG + readable)
+  const SIZE_MULT = 1.35;
+
   // Phase C state
   let placed = null;
   let boxes = [];
@@ -155,8 +158,7 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
     const cy = h / 2;
 
     // search focus
-    const focusFn =
-      typeof opts?.focusTest === "function" ? opts.focusTest : null;
+    const focusFn = typeof opts?.focusTest === "function" ? opts.focusTest : null;
     let focusActive = false;
     if (focusFn) {
       for (const d of placed) {
@@ -246,7 +248,8 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
 
       const baseSize = d.size;
       const size =
-        (isPinned ? baseSize * PIN_BOOST : baseSize) * (isHover ? 1.08 : 1);
+        ((isPinned ? baseSize * PIN_BOOST : baseSize) * SIZE_MULT) *
+        (isHover ? 1.08 : 1);
 
       ctx.font = `900 ${size}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
       ctx.textAlign = "center";
@@ -358,8 +361,8 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
     fireEnd("ok"); // ✅ IMPORTANT
   }
 
-  // ✅ Adaptive padding helps 40–60 items pack
-  const pad = items.length >= 40 ? 1 : 2;
+  // ✅ Cloud should occupy more space: reduce padding
+  const pad = 1;
 
   // ✅ Drawer slide reflow: reuse existing placed words (no recompute)
   if (opts.reuseLayoutOnly) {
@@ -391,7 +394,9 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
       .padding(pad)
       .rotate(() => 0)
       .font("system-ui")
-      .fontSize((d) => (d._pinned ? d.size * PIN_BOOST : d.size))
+      .fontSize((d) =>
+        (d._pinned ? d.size * PIN_BOOST : d.size) * SIZE_MULT
+      )
       .on("end", layoutAndDraw)
       .start();
   } catch (err) {

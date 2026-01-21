@@ -72,7 +72,7 @@ export function createWordcloudDrawer({
   goToConvo,
 
   getState,
-  topN = 20,
+  topN = 40,
 }) {
   if (!ctx) throw new Error("[wc/draw] ctx is required");
   if (!dom) throw new Error("[wc/draw] dom is required");

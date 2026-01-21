@@ -39,6 +39,7 @@ export function createTimelineController({
     return !!timer;
   }
 
+  // ✅ UI-only: must never start playback/timers
   function syncButton() {
     if (!btnReplay) return;
 
@@ -107,7 +108,8 @@ export function createTimelineController({
     requestDraw?.();
   }
 
-  // initial label
+  // ✅ Force STOPPED on load: never auto-replay
+  stop();
   syncButton();
 
   return {

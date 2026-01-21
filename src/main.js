@@ -1,11 +1,15 @@
 // src/main.js
 // The Main Entry Point: Boots the app, handles the Typewriter, and wires the Dropdown.
 
+import "../lux-audio-mode.css";
+
 import { wirePassageSelect, wireNextBtn } from "../features/passages/index.js";
 
 import { wireHarvardPicker } from "../features/harvard/index.js";
 
 import { initLuxRecorder, wireRecordingButtons } from "../features/recorder/index.js";
+
+import { mountAudioModeSwitch } from "../features/recorder/audio-mode-switch.js";
 
 import { showSummary } from "../features/results/index.js";
 
@@ -167,6 +171,9 @@ async function bootApp() {
   // 4. Setup Recorder
   await initLuxRecorder();
   wireRecordingButtons();
+
+  // ✅ Mount audio mode switch AFTER recorder DOM exists
+  mountAudioModeSwitch("practice");
 
   // 5. Setup Summary Button
   const summaryBtn = document.getElementById("showSummaryBtn");
