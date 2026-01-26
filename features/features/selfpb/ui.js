@@ -5,6 +5,8 @@ import { initSelfPBCore } from "./core.js";
 import { initWaveSurfer } from "./waveform-logic.js";
 import { ensureStyles } from "./styles.js";
 import { buildUI } from "./dom.js";
+import { initLatestDownload } from "./download-latest.js";
+import { makeUISync } from "./ui-sync.js";
 
 export function mountSelfPlaybackLite() {
   const { api, audio, refAudio, st } = initSelfPBCore();
@@ -19,130 +21,17 @@ export function mountSelfPlaybackLite() {
     masterAudio: audio,
   });
 
-  // ✅ Download Latest Recording button wiring
-  const dlBtn = ui.dlBtn;
-  let _lastBlob = null;
-  let _lastMeta = null;
+  initLatestDownload(ui);
 
-  function extFromBlob(blob) {
-    const t = blob?.type || "";
-    if (t.includes("wav")) return "wav";
-    if (t.includes("webm")) return "webm";
-    if (t.includes("ogg")) return "ogg";
-    return "audio";
-  }
-
-  function downloadBlob(blob, meta) {
-    if (!blob) return;
-
-    const mode = (meta?.mode || "normal").toLowerCase();
-    const ts = new Date(meta?.ts || Date.now())
-      .toISOString()
-      .replaceAll(":", "-")
-      .replaceAll(".", "-");
-
-    const ext = extFromBlob(blob);
-    const name = `lux-recording_${mode}_${ts}.${ext}`;
-
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = name;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-
-    setTimeout(() => URL.revokeObjectURL(url), 1500);
-  }
-
-  function setLatest(blob, meta) {
-    _lastBlob = blob || null;
-    _lastMeta = meta || null;
-
-    if (dlBtn) {
-      dlBtn.disabled = !_lastBlob;
-      dlBtn.title = _lastBlob
-        ? "Download your latest recording"
-        : "Record something first";
-    }
-  }
-
-  if (dlBtn) {
-    dlBtn.addEventListener("click", () => {
-      if (!_lastBlob) return;
-      downloadBlob(_lastBlob, _lastMeta);
-    });
-  }
-
-  // Pull from global if it exists already
-  if (window.LuxLastRecordingBlob) {
-    setLatest(window.LuxLastRecordingBlob, window.LuxLastRecordingMeta || null);
-  }
-
-  // Listen for new recordings
-  window.addEventListener("lux:lastRecording", (e) => {
-    setLatest(e?.detail?.blob, e?.detail?.meta || null);
-  });
-
-  // --- Logic helpers ---
-  const showToast = (msg, duration = 2000) => {
-    ui.toast.textContent = msg;
-    ui.toast.style.display = "inline-block";
-    ui.host.animate(
-      [
-        { transform: "translateX(0)" },
-        { transform: "translateX(-4px)" },
-        { transform: "translateX(4px)" },
-        { transform: "translateX(0)" },
-      ],
-      { duration: 200 }
-    );
-    setTimeout(() => {
-      ui.toast.style.display = "none";
-    }, duration);
-  };
-
-  const showLoopHint = () => {
-    if (localStorage.getItem("spb-hint-seen") !== "true") {
-      ui.loopTip.classList.add("visible");
-      setTimeout(() => {
-        ui.loopTip.classList.remove("visible");
-        localStorage.setItem("spb-hint-seen", "true");
-      }, 4000);
-    }
-  };
-
-  const syncButtons = () => {
-    ui.mainBtn.textContent = st.playing ? "⏸ Pause" : "▶ Play";
-
-    if (st.a == null) {
-      ui.loopAction.textContent = "⟳ Set Loop A";
-      ui.loopAction.classList.remove("active");
-      ui.abLabel.textContent = "Loop: Off";
-    } else if (st.b == null) {
-      ui.loopAction.textContent = "⟳ Set Loop B";
-      ui.loopAction.classList.add("active");
-      ui.abLabel.textContent = `A: ${api.fmt(st.a)} …`;
-    } else {
-      ui.loopAction.textContent = "× Clear Loop";
-      ui.loopAction.classList.remove("active");
-      ui.abLabel.textContent = `A: ${api.fmt(st.a)}  B: ${api.fmt(st.b)}`;
-    }
-  };
-
-  const syncTime = () => {
-    ui.timeLab.textContent = `${api.fmt(audio.currentTime || 0)} / ${api.fmt(
-      audio.duration || 0
-    )}`;
-  };
-
-  const syncScrub = () => {
-    if (!st.scrubbing) {
-      const dur = audio.duration || 0;
-      const p = dur ? Math.floor((audio.currentTime / dur) * 1000) : 0;
-      ui.scrub.value = String(api.clamp(p, 0, 1000));
-    }
-  };
+  const {
+    showToast,
+    showLoopHint,
+    syncButtons,
+    syncTime,
+    syncScrub,
+    syncRateUI,
+    syncRefUI,
+  } = makeUISync({ ui, api, audio, refAudio, st });
 
   /* ============================================================
      ✅ Karaoke Timeline (Expanded-only)
@@ -429,20 +318,6 @@ export function mountSelfPlaybackLite() {
 
     if (isExpandedOpen() && _centerActiveIdx !== -1) centerToWord(_centerActiveIdx);
   });
-
-  const syncRateUI = () => {
-    ui.rateVal.textContent = `${Number(audio.playbackRate).toFixed(2)}×`;
-    ui.rate.value = String(audio.playbackRate || 1);
-  };
-
-  const syncRefUI = () => {
-    const ready = !!refAudio.src;
-    const r = refAudio.playbackRate || 1;
-    const d = isFinite(refAudio.duration) ? api.fmt(refAudio.duration) : "—:—";
-    const meta = api.getRefMeta();
-    const v = meta && (meta.voice || meta.style) ? ` ${meta.voice || ""}` : "";
-    ui.refLabel.textContent = ready ? `Ref: ${r.toFixed(2)}× · ${d}${v}` : "Ref: —";
-  };
 
   const handlePlayAction = async (isRestart = false) => {
     if (!audio.currentSrc && !audio.src) {
