@@ -74,29 +74,15 @@ export function mountMyWordsPanel({
   root.className = "lux-mw-panel" + (asModal ? " is-modal" : "");
   mountTo.appendChild(root);
 
-  // Local UI state (tab mode)
-  let tab = "active"; // "active" | "archived"
+  // ✅ Change C — stop tab state entirely
+  const isLibrary = mode === "library" || asModal === true;
 
-  root.innerHTML = `
-    <div class="${asModal ? "lux-mw-modalHead" : "lux-mw-head"}">
-      <div class="lux-mw-title">My Words</div>
+  // Mode-specific title
+  const titleText = isLibrary ? "Library" : "My Words";
 
-      <div class="lux-mw-headRight">
-        <div class="lux-mw-tabs">
-          <button class="lux-mw-tab is-active" data-tab="active" type="button">
-            Active <span class="lux-mw-badge" data-badge="active">0</span>
-          </button>
-          <button class="lux-mw-tab" data-tab="archived" type="button">
-            Archived <span class="lux-mw-badge" data-badge="archived">0</span>
-          </button>
-        </div>
-
-        <input class="lux-mw-search" type="text" placeholder="Search…" />
-        <button class="lux-mw-iconBtn" data-act="close" type="button" title="Close">×</button>
-      </div>
-    </div>
-
-    <div class="lux-mw-body">
+  // Composer only exists in compact sidecar
+  const composerHTML = !isLibrary
+    ? `
       <div class="lux-mw-add" data-zone="composer">
         <div class="lux-mw-addLabel">Add words/phrases (one per line)</div>
         <textarea class="lux-mw-addBox" rows="3" spellcheck="false"></textarea>
@@ -106,7 +92,21 @@ export function mountMyWordsPanel({
           <div class="lux-mw-hint">Tip: Tap <b>Send</b> to push into the input instantly.</div>
         </div>
       </div>
+    `
+    : "";
 
+  root.innerHTML = `
+    <div class="${asModal ? "lux-mw-modalHead" : "lux-mw-head"}">
+      <div class="lux-mw-title">${esc(titleText)}</div>
+
+      <div class="lux-mw-headRight">
+        <input class="lux-mw-search" type="text" placeholder="Search…" />
+        <button class="lux-mw-iconBtn" data-act="close" type="button" title="Close">×</button>
+      </div>
+    </div>
+
+    <div class="lux-mw-body">
+      ${composerHTML}
       <div class="lux-mw-list"></div>
     </div>
   `;
@@ -117,9 +117,6 @@ export function mountMyWordsPanel({
   const elTa = root.querySelector(".lux-mw-addBox");
   const elAdd = root.querySelector(".lux-mw-addBtn");
   const elList = root.querySelector(".lux-mw-list");
-  const elTabs = root.querySelector(".lux-mw-tabs");
-  const elBadgeActive = root.querySelector('[data-badge="active"]');
-  const elBadgeArchived = root.querySelector('[data-badge="archived"]');
   const elComposerZone = root.querySelector('[data-zone="composer"]');
 
   function buildMeta(e) {
@@ -138,24 +135,6 @@ export function mountMyWordsPanel({
     return { activeTotal, archivedTotal, total: all.length };
   }
 
-  function setTab(nextTab) {
-    tab = nextTab === "archived" ? "archived" : "active";
-
-    root.querySelectorAll(".lux-mw-tab").forEach((b) => {
-      const is = b.dataset.tab === tab;
-      b.classList.toggle("is-active", is);
-    });
-
-    // Composer only makes sense on Active (and never in modal/library)
-    const isModal = root.classList.contains("is-modal");
-    if (elComposerZone) {
-      if (isModal) elComposerZone.style.display = "none";
-      else elComposerZone.style.display = tab === "active" ? "" : "none";
-    }
-
-    render();
-  }
-
   function entryRowHTML(e, isArchived, opts = {}) {
     const isModal = !!opts.isModal;
 
@@ -172,9 +151,7 @@ export function mountMyWordsPanel({
       }
     }
 
-    // ✅ Actions differ depending on modal vs sidecar
-    // Sidecar (non-modal): Active gets Archive.
-    // Modal (library): Active gets Delete only (no Archive).
+    // ✅ Actions differ depending on archived vs active
     const actions = isArchived
       ? `
         ${
@@ -198,11 +175,7 @@ export function mountMyWordsPanel({
         <button class="lux-mw-act" data-act="yg">YG</button>
         <button class="lux-mw-act" data-act="coach">Coach</button>
         <button class="lux-mw-act" data-act="pin">${e.pinned ? "Unpin" : "Pin"}</button>
-        ${
-          isModal
-            ? `<button class="lux-mw-act danger" data-act="delete">Delete</button>`
-            : `<button class="lux-mw-act danger" data-act="archive">Archive</button>`
-        }
+        <button class="lux-mw-act danger" data-act="archive">Archive</button>
       `;
 
     return `
@@ -222,51 +195,63 @@ export function mountMyWordsPanel({
     `;
   }
 
-  function getFilteredListForTab() {
-    const attempts = (typeof getAttempts === "function" ? getAttempts() : []) || [];
-    const all = store.getState().entries || [];
+  function getCompactActiveList() {
+    const attempts =
+      (typeof getAttempts === "function" ? getAttempts() : []) || [];
 
-    // Stats are applied to whichever list we’re showing
-    const q = normalizeText(store.getState().query || "");
-
-    if (tab === "archived") {
-      const archived = all
-        .filter((e) => !!e.archived)
-        .filter((e) => (q ? normalizeText(e.text).includes(q) : true));
-
-      return applyMyWordsStats(archived, attempts);
-    }
-
-    // Active tab uses visibleEntries (already excludes archived + applies store query)
-    const active = store.visibleEntries();
-    return applyMyWordsStats(active, attempts);
+    // ✅ Compact list:
+    // visibleEntries() already excludes archived + respects store query
+    const list = store.visibleEntries();
+    return applyMyWordsStats(list, attempts);
   }
 
-  function renderBackButton(total) {
-    // ✅ If panel is currently living inside the modal, show "Back to My Words"
+  function getLibraryArchivedList() {
+    const attempts =
+      (typeof getAttempts === "function" ? getAttempts() : []) || [];
+
+    const all = store.getState().entries || [];
+    const q = normalizeText(store.getState().query || "");
+
+    const archived = all
+      .filter((e) => !!e.archived)
+      .filter((e) => (q ? normalizeText(e.text).includes(q) : true));
+
+    return applyMyWordsStats(archived, attempts);
+  }
+
+  function renderFooterButton(archivedTotal) {
     const isModal = root.classList.contains("is-modal");
 
     // Remove any existing footer button before adding a new one
     const existing = elList.querySelector(".lux-mw-viewAllBtn");
     if (existing) existing.remove();
 
-    // In modal: always show back
-    // In sidecar: show view library only when it makes sense
-    if (isModal || total > 0) {
+    // Modal: always show Back
+    if (isModal) {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "lux-mw-viewAllBtn";
-
-      btn.textContent = isModal ? "Back to My Words" : `View Library (${total})`;
+      btn.textContent = "Back to My Words";
 
       btn.addEventListener("click", () => {
-        if (isModal) {
-          onCloseLibrary?.();
-          window.LuxMyWords?.closeLibrary?.();
-        } else {
-          onOpenLibrary?.();
-          window.LuxMyWords?.openLibrary?.();
-        }
+        onCloseLibrary?.();
+        window.LuxMyWords?.closeLibrary?.();
+      });
+
+      elList.appendChild(btn);
+      return;
+    }
+
+    // Sidecar: show View Library only if there is anything archived
+    if (archivedTotal > 0) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "lux-mw-viewAllBtn";
+      btn.textContent = `View Library (${archivedTotal})`;
+
+      btn.addEventListener("click", () => {
+        onOpenLibrary?.();
+        window.LuxMyWords?.openLibrary?.();
       });
 
       elList.appendChild(btn);
@@ -276,38 +261,22 @@ export function mountMyWordsPanel({
   function render() {
     const isModal = root.classList.contains("is-modal");
 
-    // ✅ Title: Library vs My Words
-    if (elTitle) elTitle.textContent = isModal ? "Library" : "My Words";
+    // ✅ Mode-specific header
+    if (elTitle) elTitle.textContent = isLibrary ? "Library" : "My Words";
 
-    const { activeTotal, archivedTotal, total } = computeCountsAll();
+    const { archivedTotal } = computeCountsAll();
 
-    if (elBadgeActive) elBadgeActive.textContent = String(activeTotal);
-    if (elBadgeArchived) elBadgeArchived.textContent = String(archivedTotal);
-
-    const listAll = getFilteredListForTab();
-
-    // ✅ Library should NOT show composer/add box
+    // ✅ Compact = active only (no archived rendering)
+    // ✅ Library = archived only (no composer input)
     if (elComposerZone) {
-      if (isModal) {
-        elComposerZone.style.display = "none";
-      } else {
-        elComposerZone.style.display = tab === "active" ? "" : "none";
-      }
+      elComposerZone.style.display = isLibrary ? "none" : "";
     }
 
-    // If moved into modal, behave like library mode automatically
-    const effectiveMode = isModal ? "library" : mode;
-
-    // compact mode only previews ACTIVE tab (sidecar only)
-    if (effectiveMode === "compact") {
-      // Force active view in compact
-      tab = "active";
-      root.querySelectorAll(".lux-mw-tab").forEach((b) => {
-        const is = b.dataset.tab === "active";
-        b.classList.toggle("is-active", is);
-      });
-      if (elComposerZone) elComposerZone.style.display = "";
-
+    if (!isLibrary) {
+      // ----------------------------
+      // COMPACT: Active-only preview
+      // ----------------------------
+      const listAll = getCompactActiveList();
       const preview = listAll.slice(0, Math.max(0, maxPreview));
 
       if (!preview.length) {
@@ -323,43 +292,35 @@ export function mountMyWordsPanel({
           .join("");
       }
 
-      // ✅ Sidecar: show View Library (N) only when it makes sense
-      if (total > 0 && (total > maxPreview || archivedTotal > 0)) {
-        renderBackButton(total);
-      }
-
+      // Show "View Library (N)" if anything is archived
+      renderFooterButton(archivedTotal);
       return;
     }
 
-    // Library mode: active OR archived (includes modal-moved panel)
+    // ----------------------------
+    // LIBRARY: Archived-only list
+    // ----------------------------
+    const listAll = getLibraryArchivedList();
+
     if (!listAll.length) {
       elList.innerHTML = `
         <div class="lux-mw-empty">
-          <strong>${
-            tab === "archived" ? "No archived words." : "No active words yet."
-          }</strong>
-          ${
-            tab === "archived"
-              ? "Archive something first."
-              : isModal
-              ? "Try searching your history above."
-              : "Add a few above 👆"
-          }
+          <strong>No archived words.</strong>
+          Archive something first.
         </div>
       `;
 
-      // ✅ Modal still gets a Back button
-      if (isModal) renderBackButton(total);
+      // Modal still gets Back button
+      renderFooterButton(archivedTotal);
       return;
     }
 
-    const isArchived = tab === "archived";
     elList.innerHTML = listAll
-      .map((e) => entryRowHTML(e, isArchived, { isModal }))
+      .map((e) => entryRowHTML(e, true, { isModal }))
       .join("");
 
-    // ✅ Modal gets Back button (never “View Library”)
-    if (isModal) renderBackButton(total);
+    // Modal gets Back button
+    renderFooterButton(archivedTotal);
   }
 
   function focusComposer() {
@@ -377,12 +338,6 @@ export function mountMyWordsPanel({
   // ------------------------------------------------------------
   // Events
   // ------------------------------------------------------------
-  elTabs?.addEventListener("click", (e) => {
-    const btn = e.target.closest("button[data-tab]");
-    if (!btn) return;
-    setTab(btn.dataset.tab);
-  });
-
   elSearch?.addEventListener("input", (e) => {
     store.setQuery(e.target.value);
   });
@@ -400,8 +355,8 @@ export function mountMyWordsPanel({
   });
 
   elAdd?.addEventListener("click", () => {
-    // Composer hidden in modal/library, but keep safe anyway
-    if (root.classList.contains("is-modal")) return;
+    // Composer does not exist in library mode, but keep safe anyway
+    if (isLibrary) return;
 
     const raw = elTa.value || "";
     const res = store.addMany(raw);
@@ -455,9 +410,13 @@ export function mountMyWordsPanel({
     }
 
     if (act === "archive") {
-      // ✅ Never archive inside the library modal
-      if (root.classList.contains("is-modal")) return;
-      store.archive(id);
+      // ✅ Only in compact mode (active list)
+      if (isLibrary) return;
+
+      store.archive(entry.id);
+
+      // ✅ immediately open Library modal
+      window.LuxMyWords?.openLibrary?.();
       return;
     }
 
@@ -483,7 +442,6 @@ export function mountMyWordsPanel({
     render,
     focusComposer,
     focusSearch,
-    setTab,
   };
 }
 
@@ -544,9 +502,6 @@ export function ensureMyWordsLibraryModal({
         onCloseLibrary: close,
         onCoach: null,
       });
-
-      // Default tab Active when opening
-      panelApi?.setTab?.("active");
     }
 
     el.classList.add("is-open");

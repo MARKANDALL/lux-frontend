@@ -173,7 +173,6 @@ export function initMyWordsGlobal({ uid, inputEl } = {}) {
       : null,
     mode: "compact",
     maxPreview: 5,
-    onOpenLibrary: () => openLibrary(), // ✅ wire to reliable modal
     onCoach: (text) => sendToAICoach(text), // ✅ Coach button now works
   });
 

@@ -35,9 +35,9 @@
 .lux-audioModeWrap{
   display:flex;
   align-items:center;
-  gap:8px;
+  gap:5px;
 
-  font: 900 11px/1 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font: 900 10px/1 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   letter-spacing: 0.02em;
 
   user-select:none;
@@ -69,7 +69,7 @@
   display: inline-flex;
   align-items: center;
 
-  padding: 2px;
+  padding: 0px;
   border-radius: 999px;
 
   /* ✅ transparent glass */
@@ -99,10 +99,10 @@ html[data-lux-audio-mode="pro"] .lux-audioToggle{
    =============================== */
 .lux-audioKnob{
   position:absolute;
-  top: 2px;
-  bottom: 2px;
-  left: 2px;
-  width: calc(50% - 2px);
+  top: 0px;
+  bottom: 0px;
+  left: 0px;
+  width: 50%;
   border-radius: 999px;
   z-index: 1;
 
@@ -173,35 +173,43 @@ html[data-lux-audio-mode="pro"] .lux-audioKnob{
   background: transparent !important;
   box-shadow: none !important;
 
-  padding: 6px 10px;
+  /* ✅ even smaller + less prominent */
+  padding: 3px 7px;
   border-radius: 999px;
 
   font-weight: 950;
-  font-size: 11px;
+  font-size: 9px;
   cursor:pointer;
 
-  color: rgba(15,23,42,0.44); /* hollow/grey when inactive */
+  /* ✅ Base (inactive-ish) text should still be visible */
+  color: rgba(15,23,42,0.38);
+  opacity: 0.80;
+
   transition: transform .12s ease, color .16s ease, opacity .14s ease;
 }
 
+/* Hover: bulge + darker (both active and inactive) */
 .lux-audioOpt:hover{
-  transform: translateY(-1px);
-  color: rgba(15,23,42,0.70);
+  transform: translateY(-1px) scale(1.03);
+  color: rgba(15,23,42,0.72);
+  opacity: 1;
 }
 
-/* ✅ Active mode = Lux blue text */
+/* ✅ Active mode = Lux blue */
 html[data-lux-audio-mode="normal"] .lux-audioOpt[data-mode="NORMAL"],
 html[data-lux-audio-mode="pro"] .lux-audioOpt[data-mode="PRO"]{
-  color: var(--lux-blue);
+  color: var(--lux-blue, #0078d7);
+  opacity: 1;
   text-shadow:
     0 1px 0 rgba(255,255,255,0.25),
     0 10px 22px rgba(0,0,0,0.10);
 }
 
-/* dim the inactive one a bit */
+/* Inactive mode: pale gray but clearly readable */
 html[data-lux-audio-mode="normal"] .lux-audioOpt[data-mode="PRO"],
 html[data-lux-audio-mode="pro"] .lux-audioOpt[data-mode="NORMAL"]{
-  opacity: 0.58;
+  color: rgba(15,23,42,0.32);
+  opacity: 0.62;
 }
 
 /* ===============================
@@ -220,10 +228,6 @@ html[data-lux-audio-mode="pro"] .lux-audioOpt[data-mode="NORMAL"]{
 /* ===============================
    Tooltip bubbles (DOM version)
    =============================== */
-
-.lux-audioOpt{
-  position: relative; /* anchor tooltip */
-}
 
 .lux-audioTip{
   position: absolute;

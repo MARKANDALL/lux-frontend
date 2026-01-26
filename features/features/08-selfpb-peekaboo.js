@@ -111,7 +111,7 @@
         })();
 
         // ✅ 3) Now import the heavy UI
-        const module = await import("./selfpb/ui.js");
+const module = await import("./selfpb/ui-GOLD.js");
 
         // Mount the heavy UI
         if (module && module.mountSelfPlaybackLite) {

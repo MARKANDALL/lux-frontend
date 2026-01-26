@@ -171,8 +171,10 @@
 /* ✅ UPDATED: textarea max-height + vertical resize + overflow */
 .lux-mw-addBox{
   width:100%;
+  box-sizing: border-box;
+  max-width: 100%;
+  max-height: 45%;
   resize: vertical;
-  max-height: 140px;
   overflow: auto;
 
   border-radius: 14px;
