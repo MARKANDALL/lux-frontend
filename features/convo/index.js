@@ -24,12 +24,15 @@ import {
 } from "./convo-shared.js";
 
 import { mountAICoachAlwaysOn } from "../../ui/ui-ai-ai-logic.js";
-import { highlightHtml, stripMarks } from "./convo-highlight.js";
 import { createConvoCoach } from "./convo-coach.js";
 
 import { mountAudioModeSwitch } from "../recorder/audio-mode-switch.js";
 
 import { loadKnobs, saveKnobs, knobsSummaryText } from "./convo-knobs.js";
+
+import { initConvoRender, renderMessages, renderSuggestions } from "./convo-render.js";
+
+import { wireConvoNav } from "./convo-nav.js";
 
 export function bootConvo() {
   const root = document.getElementById("convoApp");
@@ -118,6 +121,9 @@ export function bootConvo() {
   const coach = createConvoCoach({ state, coachBar, input, el });
   coach.wireTypeTip();
 
+  // ✅ Render helpers now live in convo-render.js
+  initConvoRender({ state, msgs, sugs, sugsNote, input, el, coach });
+
   function render() {
     // Ensure the AI Coach shell exists as soon as we enter chat mode.
     if (state.mode === "chat") {
@@ -154,23 +160,9 @@ export function bootConvo() {
   const { normalizeMode, setMode } = modeCtl;
   modeCtl.wirePopstate({ warpSwap });
 
-  function warpToPicker() {
-    // intro -> picker gets the warp treatment
-    if (state.mode !== "intro") return setMode("picker");
-    warpSwap(() => setMode("picker"), { outMs: 200, inMs: 240 });
-  }
+  // ✅ Intro/picker/chat navigation wiring now lives in convo-nav.js
+  wireConvoNav({ state, intro, heroNext, scenBtn, setMode, warpSwap });
 
-  // Intro click => picker (Edge-like “push”)
-  intro.addEventListener("click", warpToPicker);
-  heroNext.addEventListener("click", (e) => {
-    e.stopPropagation();
-    warpToPicker();
-  });
-
-  // Chat header buttons
-  scenBtn.addEventListener("click", () =>
-    warpSwap(() => setMode("picker"), { outMs: 170, inMs: 220 })
-  );
   knobsBtn.addEventListener("click", () => setKnobs(!state.knobsOpen));
 
   if (pickerKnobsBtn) {
@@ -216,67 +208,6 @@ export function bootConvo() {
     saveKnobs(state.knobs);
     renderPickerKnobsSummary();
   });
-
-  // Helpers (for rendering / highlight inputs)
-  function getWordBank() {
-    return (state.nextActivity?.targets?.words || [])
-      .map((x) => x?.word || x)
-      .filter(Boolean)
-      .map((x) => String(x).trim())
-      .filter(Boolean);
-  }
-
-  function getFocusIpa() {
-    return state.nextActivity?.targets?.phoneme?.ipa || "";
-  }
-
-  // --- Chat rendering ---
-  function renderMessages() {
-    msgs.innerHTML = "";
-    const focusIpa = getFocusIpa();
-    const wb = getWordBank();
-
-    for (const m of state.messages) {
-      const bubble = el("div", "msg " + (m.role === "user" ? "user" : "assistant"));
-      bubble.innerHTML = highlightHtml(m.content, {
-        wordBank: wb,
-        focusIpa,
-        autoBlue: m.role !== "user",
-      });
-      msgs.append(bubble);
-    }
-    msgs.scrollTop = msgs.scrollHeight;
-  }
-
-  function renderSuggestions(list) {
-    sugs.innerHTML = "";
-    const focusIpa = getFocusIpa();
-    const wb = getWordBank();
-
-    (list || []).forEach((t) => {
-      const raw = stripMarks(t);
-      const b = el("button", "sug");
-      b.dataset.raw = raw;
-      b.innerHTML = highlightHtml(t, { wordBank: wb, focusIpa, autoBlue: true });
-      b.addEventListener("click", () => {
-        input.value = raw;
-        input.focus();
-      });
-      sugs.append(b);
-    });
-
-    // Tiny, always-light label (not overwhelming)
-    if (state.nextActivity && (list || []).length) {
-      const t = coach.targetsInline(state.nextActivity);
-      sugsNote.textContent = t
-        ? `Suggested replies are tuned to: ${t}`
-        : "Suggested replies are tuned to your targets.";
-    } else {
-      sugsNote.textContent = "";
-    }
-
-    coach.noteSuggestionsRendered(list);
-  }
 
   // --- Convo flow (extracted) ---
   const { startScenario } = wireConvoFlow({
