@@ -277,7 +277,15 @@ export function mountMyWordsPanel({
       // COMPACT: Active-only preview
       // ----------------------------
       const listAll = getCompactActiveList();
-      const preview = listAll.slice(0, Math.max(0, maxPreview));
+
+      const pinned = listAll.filter((e) => e.pinned);
+      const rest = listAll.filter((e) => !e.pinned);
+
+      // Top N, but pins always show (even if > N)
+      const preview =
+        pinned.length > 0
+          ? pinned.concat(rest.slice(0, Math.max(0, maxPreview - pinned.length)))
+          : rest.slice(0, Math.max(0, maxPreview));
 
       if (!preview.length) {
         elList.innerHTML = `
@@ -414,9 +422,8 @@ export function mountMyWordsPanel({
       if (isLibrary) return;
 
       store.archive(entry.id);
-
-      // ✅ immediately open Library modal
-      window.LuxMyWords?.openLibrary?.();
+      store.setOpen(false);              // close sidecar
+      window.LuxMyWords?.openLibrary?.(); // open modal library
       return;
     }
 
