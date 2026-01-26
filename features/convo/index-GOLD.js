@@ -29,8 +29,6 @@ import { createConvoCoach } from "./convo-coach.js";
 
 import { mountAudioModeSwitch } from "../recorder/audio-mode-switch.js";
 
-import { loadKnobs, saveKnobs, knobsSummaryText } from "./convo-knobs.js";
-
 export function bootConvo() {
   const root = document.getElementById("convoApp");
   if (!root) return;
@@ -38,6 +36,31 @@ export function bootConvo() {
   // Prevent duplicate listeners on hot reload
   if (root.dataset.luxBooted === "1") return;
   root.dataset.luxBooted = "1";
+
+  const KNOBS_KEY = "lux_knobs_v1";
+  const KNOBS_DEFAULTS = { tone: "friendly", stress: "low", pace: "normal" };
+
+  function loadKnobs() {
+    try {
+      const raw = localStorage.getItem(KNOBS_KEY);
+      if (!raw) return { ...KNOBS_DEFAULTS };
+      const parsed = JSON.parse(raw);
+      return { ...KNOBS_DEFAULTS, ...(parsed || {}) };
+    } catch {
+      return { ...KNOBS_DEFAULTS };
+    }
+  }
+
+  function saveKnobs(knobs) {
+    try {
+      localStorage.setItem(KNOBS_KEY, JSON.stringify(knobs));
+    } catch {}
+  }
+
+  function knobsSummaryText(knobs) {
+    const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : "");
+    return `Tone: ${cap(knobs.tone)} • Stress: ${cap(knobs.stress)} • Pace: ${cap(knobs.pace)}`;
+  }
 
   const state = {
     sessionId: newSessionId(),
