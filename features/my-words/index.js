@@ -4,7 +4,7 @@ import { fetchHistory } from "/src/api/index.js";
 import { ensureUID } from "../../api/identity.js";
 
 import { createMyWordsStore } from "./store.js";
-import { mountMyWordsPanel } from "./panel.js";
+import { mountMyWordsPanel, ensureMyWordsLibraryModal } from "./panel.js";
 import { mountMyWordsCornerLauncher } from "./launcher.js";
 
 import {
@@ -176,80 +176,26 @@ export function initMyWordsGlobal({ uid, inputEl } = {}) {
     onCoach: (text) => sendToAICoach(text), // ✅ Coach button now works
   });
 
+  // --- Library Modal (separate instance; does NOT reuse compact panel) ---
+  const library = ensureMyWordsLibraryModal({
+    store,
+    getAttempts: () => attemptsCache,
+    onSendToInput: inputEl
+      ? (text) => {
+          inputEl.value = text;
+          inputEl.focus();
+          inputEl.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+      : null,
+  });
+
+  // expose globally (panel.js View Library button can call this)
+  window.LuxMyWords = window.LuxMyWords || {};
+  window.LuxMyWords.openLibrary = library.open;
+  window.LuxMyWords.closeLibrary = library.close;
+
   // ✅ Alias for older code that expects "sidecar"
   const sidecar = panel;
-
-  // ============================================================
-  // ✅ FIX 1 — Make Library Modal open reliably (View Library)
-  // ============================================================
-
-  // --- Library Modal (View Library) ---
-  let _mwModal = null;
-  let _mwHome = null;
-
-  function ensureLibraryModal() {
-    if (_mwModal) return _mwModal;
-
-    const m = document.createElement("div");
-    m.id = "luxMwModal";
-    m.className = "lux-mw-modal";
-    m.innerHTML = `<div class="lux-mw-modal-card" role="dialog" aria-modal="true"></div>`;
-    document.body.appendChild(m);
-
-    // click outside closes
-    m.addEventListener("click", (e) => {
-      if (e.target === m) closeLibrary();
-    });
-
-    _mwModal = m;
-    return m;
-  }
-
-  function openLibrary() {
-    const m = ensureLibraryModal();
-    const card = m.querySelector(".lux-mw-modal-card");
-    if (!card) return;
-
-    // Create a "home marker" so we can put the panel back where it came from
-    if (!_mwHome) {
-      _mwHome = document.createElement("div");
-      _mwHome.id = "luxMwPanelHome";
-      _mwHome.style.display = "none";
-
-      // home marker goes right before panel.el
-      panel.el.parentNode.insertBefore(_mwHome, panel.el);
-    }
-
-    // ✅ force panel visible (important if your CSS uses display:none by default)
-    store.setOpen(true);
-    panel.el.classList.add("is-open", "is-modal");
-
-    // Move panel into the modal card
-    card.appendChild(panel.el);
-
-    // Show modal
-    m.classList.add("is-open");
-  }
-
-  function closeLibrary() {
-    if (!_mwModal || !_mwHome) return;
-
-    _mwModal.classList.remove("is-open");
-
-    // Put panel back to its original spot
-    panel.el.classList.remove("is-modal");
-    _mwHome.parentNode.insertBefore(panel.el, _mwHome);
-
-    // Re-layout if still open (sidecar mode)
-    if (store.getState().open) {
-      requestAnimationFrame(() => layoutPanel(panel.el, inputEl));
-    }
-  }
-
-  // ✅ Make available globally
-  window.LuxMyWords = window.LuxMyWords || {};
-  window.LuxMyWords.openLibrary = openLibrary;
-  window.LuxMyWords.closeLibrary = closeLibrary;
 
   // --- launcher button (triangle) ---
   const launcher = mountMyWordsCornerLauncher({
@@ -330,8 +276,8 @@ export function initMyWordsGlobal({ uid, inputEl } = {}) {
     toggle: () => store.toggleOpen(),
     open: () => store.setOpen(true),
     close: () => store.setOpen(false),
-    openLibrary, // ✅ reliable open
-    closeLibrary,
+    openLibrary: library.open, // ✅ separate modal instance
+    closeLibrary: library.close,
   };
 
   return { store, panel, sidecar, launcher };
