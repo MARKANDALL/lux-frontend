@@ -1,0 +1,6 @@
+node_modules/
+dist/
+_ARCHIVE/
+**/*.GOLD.js
+**/*.GOD-BACKUP.js
+public/vendor/

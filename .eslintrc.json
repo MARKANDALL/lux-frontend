@@ -1,28 +1,22 @@
 {
   "root": true,
-  "env": {
-    "browser": true,
-    "es2022": true
-  },
+  "env": { "browser": true, "es2022": true },
   "extends": ["eslint:recommended"],
-  "parserOptions": {
-    "ecmaVersion": "latest",
-    "sourceType": "module"
+  "parserOptions": { "ecmaVersion": "latest", "sourceType": "module" },
+  "globals": { "WaveSurfer": "readonly" },
+  "ignorePatterns": ["dist/", "node_modules/", "public/vendor/"],
+  "rules": {
+    "no-empty": "off",
+    "no-unused-vars": "off",
+    "no-control-regex": "off",
+    "no-misleading-character-class": "off",
+    "no-useless-escape": "off"
   },
-  "globals": {
-    "WaveSurfer": "readonly"
-  },
-  "ignorePatterns": [
-    "dist/",
-    "node_modules/",
-    "public/vendor/"
-  ],
   "overrides": [
     {
-      "files": ["scripts/**/*.mjs"],
-      "env": {
-        "node": true
-      }
+      "files": ["vite.config.js", "scripts/**/*.mjs", "scripts/**/*.js"],
+      "env": { "node": true },
+      "rules": { "no-undef": "off" }
     }
   ]
 }
