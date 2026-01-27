@@ -1,44 +1,4 @@
-/* ============================================================
-   UI stage
-   ============================================================ */
-.lux-ui{
-  position: relative;
-  z-index: 1;
-  min-height: 100%;
-  display: grid;
-  place-items: center;
-  padding: 22px 16px;
-}
-
-/* Mode routing */
-.lux-intro, .lux-picker, .lux-chatwrap, .lux-convo-progress{
-  width: 100%;
-  display: none;
-}
-
-#convoApp[data-mode="intro"]  .lux-intro { display: grid; place-items: center; }
-#convoApp[data-mode="picker"] .lux-picker{ display: flex; flex-direction: column; align-items: center; gap: 14px; }
-
-#convoApp[data-mode="chat"] .lux-chatwrap{
-  display: flex;
-  flex-direction: column;   /* KEY: stack pill ABOVE chat box */
-  align-items: center;
-  justify-content: flex-start;
-  gap: 10px;
-}
-
-/* Progress widget: ONLY show in chat mode */
-#convoApp[data-mode="chat"] .lux-convo-progress{
-  display:flex;
-  justify-content:center;
-}
-
-/* Safety: never show it outside chat */
-#convoApp:not([data-mode="chat"]) .lux-convo-progress{
-  display:none !important;
-}
-
-
+@import "./_parts/lux-convo.picker.01-ui-stage.css";
 
 /* ============================================================
    Intro -> Picker “warp” transition (transform-only)
