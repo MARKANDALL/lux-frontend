@@ -1,34 +1,55 @@
-# dependencies
+# =========================
+# Dependencies
+# =========================
 node_modules/
 
+# =========================
 # CodeSandbox
-.codesandbox/scripts/
+# =========================
 .codesandbox/
+.codesandbox/scripts/
 
-# build output / caches
+# =========================
+# Build output / caches
+# =========================
 dist/
 .vite/
 
-# local env files (keep secrets out of git)
+# =========================
+# Local env files (keep secrets out of git)
+# =========================
 .env*
 !.env.example
 
-# logs
+# =========================
+# Logs
+# =========================
 *.log
 npm-debug.log*
 yarn-debug.log*
 pnpm-debug.log*
 
-# lockfiles (keep only the one you actually use)
+# =========================
+# Lockfiles (keep only the one you actually use)
+# =========================
 yarn.lock
 
-# local video backups
+# =========================
+# Local video backups
+# =========================
 public/convo-vid/*_ORIG.mp4
 
-# Repomix output (keep ONLY the single latest file)
+# =========================
+# Repomix outputs (generated; local-only)
+# =========================
 repomix-output.xml
+repomix-frontend.LATEST.xml
 repomix-*.xml
-!repomix-frontend.LATEST.xml
+**/repomix-output.xml
+**/repomix-frontend.LATEST.xml
+**/repomix-*.xml
 
-# combined CSS artifact
+# =========================
+# Combined CSS artifact
+# =========================
 lux-layout.COMBINED.css
