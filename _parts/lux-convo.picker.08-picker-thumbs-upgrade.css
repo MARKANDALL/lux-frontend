@@ -1,0 +1,88 @@
+/* =========================================================
+   Picker: thumbnail dots (bigger + actual image preview)
+   NOTE: Your DOM uses .lux-thumbs + .lux-thumb already.
+   This block upgrades them in picker mode (size + cover/center).
+========================================================= */
+
+#convoApp[data-mode="picker"] .lux-thumbs{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+
+  /* NEW: prevent wrap intrusion; make it a horizontal strip */
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+
+  width: min(980px, 94vw);
+  max-width: min(980px, 94vw);
+
+  padding: 6px 10px;
+  margin: 14px auto 0; /* give it breathing room */
+  position: relative;
+  z-index: 10;
+}
+
+/* base “dot” becomes a tiny thumbnail */
+#convoApp[data-mode="picker"] .lux-thumb{
+  width: 28px;              /* bigger than circles, still small */
+  height: 18px;
+  border-radius: 6px;
+
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  border: 1px solid rgba(0,0,0,0.10);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.10);
+
+  opacity: 0.70;
+  transform: translateY(0);
+  transition: transform 160ms ease, opacity 160ms ease, box-shadow 160ms ease;
+  cursor: pointer;
+
+  /* NEW: keep each thumb from shrinking/wrapping */
+  flex: 0 0 auto;
+}
+
+/* keep non-image fallback readable (single letter) */
+#convoApp[data-mode="picker"] .lux-thumb:not(.has-img){
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  line-height: 1;
+}
+
+#convoApp[data-mode="picker"] .lux-thumb:hover{
+  opacity: 0.95;
+  transform: translateY(-1px) scale(1.04);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.12);
+}
+
+#convoApp[data-mode="picker"] .lux-thumb.is-active{
+  opacity: 1;
+  border-color: rgba(0,120,215,0.45);
+  box-shadow:
+    0 12px 26px rgba(0,0,0,0.14),
+    0 0 0 3px rgba(0,120,215,0.18);
+}
+
+/* Picker nav row (Back / Next) */
+#convoApp[data-mode="picker"] .lux-navrow{
+  width: min(980px, 94vw);
+  margin: 14px auto 0;
+  display:flex;
+  justify-content: space-between;
+  align-items:center;
+  position: relative;
+  z-index: 20;
+}
+
+#convoApp[data-mode="picker"] .lux-navbtn{
+  min-width: 110px;
+  text-align: center;
+}

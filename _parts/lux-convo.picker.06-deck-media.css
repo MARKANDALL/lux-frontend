@@ -1,0 +1,70 @@
+/* Deck card media layering:
+   ::before = soft blurred fill (always)
+   ::after  = sharp still “poster” (contain)
+   .lux-cardMedia/.lux-cardVideo = video (contain), shown only when playing
+*/
+.lux-deck-card.has-img::before{
+  content:"";
+  position:absolute;
+  inset:-12%;
+  background-image: var(--lux-card-img);
+  background-size: cover;
+  background-position: center;
+  filter: blur(14px) saturate(1.08);
+  transform: scale(1.04);
+  opacity: 0.28;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.lux-deck-card.has-img::after{
+  content:"";
+  position:absolute;
+  inset: 0;
+  background-image: var(--lux-card-img);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.92;
+  transition: opacity 260ms ease;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* video layer sits under the sharp still; the still fades out while playing */
+.lux-cardMedia{
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.lux-cardVideo{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 50%;
+  opacity: 0;
+  transition: opacity 420ms ease;
+}
+
+/* PLAYING: show video, hide sharp still */
+.lux-deck-card.has-video[data-vstate="playing"] .lux-cardVideo{ opacity: 0.34; }
+.lux-deck-card.has-video[data-vstate="playing"]::after{ opacity: 0; }
+
+/* ENDED/ERROR: hide video, restore sharp still */
+.lux-deck-card.has-video[data-vstate="ended"] .lux-cardVideo{ opacity: 0; }
+.lux-deck-card.has-video[data-vstate="ended"]::after{ opacity: 0.92; }
+
+.lux-deck-card.has-video[data-vstate="error"] .lux-cardVideo{ opacity: 0; }
+.lux-deck-card.has-video[data-vstate="error"]::after{ opacity: 0.92; }
+
+/* text above all media */
+.lux-deck-card.has-img > *:not(.lux-cardMedia){
+  position: relative;
+  z-index: 3;
+}

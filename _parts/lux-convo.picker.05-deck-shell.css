@@ -1,0 +1,53 @@
+/* ============================================================
+   Deck (scenario picker)
+   ============================================================ */
+.lux-deck{
+  position: relative;
+  width: min(980px, 94vw);
+  height: min(var(--lux-media-h, 520px), 76vh);
+  transform-style: preserve-3d;
+}
+
+/* Picker sizing bump */
+#convoApp[data-mode="picker"] .lux-deck{
+  width: min(1120px, 96vw);
+  height: min(780px, 76vh);
+}
+
+/* The card adopts the media's NATURAL ratio.
+   Height is capped to viewport; width is derived automatically. */
+#convoApp[data-mode="picker"] .lux-deck-card{
+  height: min(var(--lux-media-h, 520px), 76vh);
+  aspect-ratio: var(--lux-media-ar, 16 / 9);
+  width: auto;
+}
+#convoApp[data-mode="picker"] .lux-deckTitle{ font-size: 44px; }
+#convoApp[data-mode="picker"] .lux-deckDesc{ font-size: 18px; }
+#convoApp[data-mode="picker"] .lux-navArrow,
+#convoApp[data-mode="picker"] .lux-navNext{
+  font-size: 16px;
+  padding: 12px 18px;
+}
+#convoApp[data-mode="picker"] .lux-navArrow{ min-width: 108px; }
+
+.lux-deck-card{
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  /* variable-sized cards must be vertically centered */
+  transform: translate(-50%, -50%);
+
+  border-radius: 26px;
+  overflow: hidden;
+  isolation: isolate;
+  background: rgba(255,255,255,0.88);
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow: var(--convo-shadow);
+
+  padding: 18px 18px 16px;
+  backdrop-filter: blur(10px);
+
+  transition: transform 520ms cubic-bezier(0.18, 0.9, 0.2, 1),
+              filter 520ms cubic-bezier(0.18, 0.9, 0.2, 1),
+              opacity 520ms cubic-bezier(0.18, 0.9, 0.2, 1);
+}

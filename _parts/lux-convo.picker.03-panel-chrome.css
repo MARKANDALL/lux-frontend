@@ -1,0 +1,42 @@
+/* ============================================================
+   Shared panel chrome (matches Lux “card” language)
+   ============================================================ */
+.lux-panel{
+  background: var(--convo-card);
+  border: 1px solid var(--convo-border);
+  border-radius: var(--convo-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--convo-shadow);
+}
+
+.lux-hd{
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+  background: var(--convo-tint);
+
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 10px;
+
+  color: var(--convo-ink);
+}
+
+.lux-title{
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  color: var(--convo-ink);
+}
+
+.lux-sub{
+  color: var(--convo-muted);
+  font-size: 12px;
+}
+
+.lux-body{ padding: 12px 14px; }
+
+.lux-actions{
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
