@@ -6,9 +6,13 @@
 // - Archived actions: Send / WR / Restore / Delete
 // - NO Copy (removed)
 
-import { applyMyWordsStats } from "./stats.js";
-import { normalizeText } from "./normalize.js";
 import { esc, relTime, openWordReference, openYouglish } from "./panel-utils.js";
+import {
+  computeCountsAll,
+  getCompactActiveList,
+  getLibraryArchivedList,
+} from "./panel-data.js";
+import { ensureMyWordsLibraryModalImpl } from "./library-modal-controller.js";
 
 export function mountMyWordsPanel({
   store,
@@ -86,13 +90,6 @@ export function mountMyWordsPanel({
     return `Practiced ${attempts}× · Last ${lastScoreStr} ${trend} · ${lastAtStr}`;
   }
 
-  function computeCountsAll() {
-    const all = store.getState().entries || [];
-    const activeTotal = all.filter((e) => !e.archived).length;
-    const archivedTotal = all.filter((e) => !!e.archived).length;
-    return { activeTotal, archivedTotal, total: all.length };
-  }
-
   function entryRowHTML(e, isArchived, opts = {}) {
     const isModal = !!opts.isModal;
 
@@ -153,30 +150,6 @@ export function mountMyWordsPanel({
     `;
   }
 
-  function getCompactActiveList() {
-    const attempts =
-      (typeof getAttempts === "function" ? getAttempts() : []) || [];
-
-    // ✅ Compact list:
-    // visibleEntries() already excludes archived + respects store query
-    const list = store.visibleEntries();
-    return applyMyWordsStats(list, attempts);
-  }
-
-  function getLibraryArchivedList() {
-    const attempts =
-      (typeof getAttempts === "function" ? getAttempts() : []) || [];
-
-    const all = store.getState().entries || [];
-    const q = normalizeText(store.getState().query || "");
-
-    const archived = all
-      .filter((e) => !!e.archived)
-      .filter((e) => (q ? normalizeText(e.text).includes(q) : true));
-
-    return applyMyWordsStats(archived, attempts);
-  }
-
   function renderFooterButton(archivedTotal) {
     const isModal = root.classList.contains("is-modal");
 
@@ -222,7 +195,7 @@ export function mountMyWordsPanel({
     // ✅ Mode-specific header
     if (elTitle) elTitle.textContent = isLibrary ? "Library" : "My Words";
 
-    const { archivedTotal } = computeCountsAll();
+    const { archivedTotal } = computeCountsAll(store);
 
     // ✅ Compact = active only (no archived rendering)
     // ✅ Library = archived only (no composer input)
@@ -234,7 +207,7 @@ export function mountMyWordsPanel({
       // ----------------------------
       // COMPACT: Active-only preview
       // ----------------------------
-      const listAll = getCompactActiveList();
+      const listAll = getCompactActiveList(store, getAttempts);
 
       const pinned = listAll.filter((e) => e.pinned);
       const rest = listAll.filter((e) => !e.pinned);
@@ -266,7 +239,7 @@ export function mountMyWordsPanel({
     // ----------------------------
     // LIBRARY: Archived-only list
     // ----------------------------
-    const listAll = getLibraryArchivedList();
+    const listAll = getLibraryArchivedList(store, getAttempts);
 
     if (!listAll.length) {
       elList.innerHTML = `
@@ -418,69 +391,10 @@ export function ensureMyWordsLibraryModal({
   getAttempts,
   onSendToInput,
 } = {}) {
-  let modalEl = document.querySelector(".lux-mw-modal");
-  let panelMount = null;
-  let panelApi = null;
-
-  function ensure() {
-    if (modalEl) return modalEl;
-
-    modalEl = document.createElement("div");
-    modalEl.className = "lux-mw-modal";
-    modalEl.innerHTML = `
-      <div class="lux-mw-modal-card"></div>
-    `;
-
-    document.body.appendChild(modalEl);
-
-    // Click outside card closes
-    modalEl.addEventListener("click", (e) => {
-      if (e.target === modalEl) close();
-    });
-
-    // Esc closes
-    window.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && modalEl.classList.contains("is-open")) {
-        close();
-      }
-    });
-
-    return modalEl;
-  }
-
-  function open() {
-    const el = ensure();
-    const card = el.querySelector(".lux-mw-modal-card");
-
-    // Mount panel once
-    if (!panelMount) {
-      panelMount = card;
-
-      panelApi = mountMyWordsPanel({
-        store,
-        getAttempts,
-        onSendToInput,
-        mode: "library",
-        mountTo: panelMount,
-        asModal: true,
-        onOpenLibrary: null,
-        onCloseLibrary: close,
-        onCoach: null,
-      });
-    }
-
-    el.classList.add("is-open");
-
-    // Focus search for fast browsing
-    try {
-      panelApi?.focusSearch?.();
-    } catch {}
-  }
-
-  function close() {
-    if (!modalEl) return;
-    modalEl.classList.remove("is-open");
-  }
-
-  return { open, close, el: modalEl };
+  return ensureMyWordsLibraryModalImpl({
+    mountPanel: mountMyWordsPanel,
+    store,
+    getAttempts,
+    onSendToInput,
+  });
 }
