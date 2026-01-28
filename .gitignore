@@ -53,3 +53,7 @@ repomix-*.xml
 # Combined CSS artifact
 # =========================
 lux-layout.COMBINED.css
+
+# Local backup bin
+_ARCHIVE/
+
