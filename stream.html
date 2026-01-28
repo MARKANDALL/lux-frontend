@@ -1,0 +1,31 @@
+<!-- stream.html (Streaming AI Conversations) -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lux — Streaming Conversations</title>
+
+    <!-- ✅ Keep only SAFE shared tokens (no global layout CSS here) -->
+    <link rel="stylesheet" href="lux-layout.tokens.css" />
+
+    <!-- ✅ Streaming-only styles (namespaced under #lux-stream-root) -->
+    <link rel="stylesheet" href="/features/streaming/stream.css" />
+
+    <!-- Warp nav (optional, but nice) -->
+    <link rel="stylesheet" href="./ui/warp.css" />
+
+    <!-- Match main page typography -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <div id="lux-stream-root"></div>
+
+    <script type="module" src="./src/stream.js"></script>
+    <script type="module" src="./ui/warp-nav.js"></script>
+  </body>
+</html>

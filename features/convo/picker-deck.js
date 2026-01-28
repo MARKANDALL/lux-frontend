@@ -303,38 +303,61 @@ export function wirePickerDeck({
 
     // CTA only on active card (keeps preview calm / non-interactive)
     if (isActive) {
+      const ctaRow = el("div", "lux-deckCtaRow");
+
+      // Guided CTA (existing behavior)
       const cta = el("button", "lux-deckCta", "Practice this dialogue");
       cta.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
         safeBeginScenario();
       });
-      textWrap.append(cta);
 
-      // NEW: Knobs row in picker card (active card only)
+      // Streaming CTA (new)
+      const streamLink = el("a", "lux-deckCta is-stream", "Start Streaming");
+      streamLink.setAttribute("data-lux-ripple", "");
+
+      const k = getKnobs();
+      const qp = new URLSearchParams();
+      qp.set("scenario", scenario.id);
+      if (k?.tone) qp.set("tone", k.tone);
+      if (k?.stress) qp.set("stress", k.stress);
+      if (k?.pace) qp.set("pace", k.pace);
+
+      qp.set("input", "ptt");
+      qp.set("transport", "webrtc");
+
+      streamLink.href = `./stream.html?${qp.toString()}`;
+      streamLink.addEventListener("click", (e) => {
+        e.stopPropagation();
+      });
+
+      ctaRow.append(cta, streamLink);
+      textWrap.append(ctaRow);
+
+      // Knobs row (active card only) — ✅ declared ONCE
       const knobsRow = el("div", "lux-deckKnobsRow");
 
       const knobsBtn = el("button", "lux-deckKnobsBtn", "Knobs");
       knobsBtn.type = "button";
       knobsBtn.addEventListener("click", (e) => {
         e.preventDefault();
-        e.stopPropagation();       // IMPORTANT: don't advance deck
+        e.stopPropagation();
         knobsDrawer.open();
       });
 
       const summary = el("div", "lux-deckKnobsSummary", formatKnobsSummary(getKnobs()));
-      const unsub = onKnobsChange((k) => { summary.textContent = formatKnobsSummary(k); });
+      const unsub = onKnobsChange((k) => {
+        summary.textContent = formatKnobsSummary(k);
+      });
 
-      // If you ever destroy/rebuild cards aggressively, you can call unsub() then.
       knobsRow.append(knobsBtn, summary);
       host.append(knobsRow);
 
-      // Active card: click toggles expanded description (never advances, never begins)
       host.onclick = () => {
         host.classList.toggle("isExpanded");
       };
     } else {
-      // Preview card: don't set onclick here (wirePickerDeck already has a click listener on deckPreview)
       host.onclick = null;
     }
 

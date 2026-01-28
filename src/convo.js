@@ -7,6 +7,7 @@ import { bootTTS } from "../features/features/tts/boot-tts.js";
 import { initConvoProgress } from "../features/convo/progress.js";
 import { initAuthUI } from "../ui/auth-dom.js";
 import { bootRippleButtons } from "../ui/ui-ripple-filter.js";
+import { bootMyWordsLauncher } from "../features/my-words/launcher.js";
 
 // 0. Initialize UID (single source of truth)
 ensureUID();
@@ -24,6 +25,9 @@ bootTTS();
 
 // 4. Boot Save Progress / Login button (top-right)
 initAuthUI();
+
+// ✅ My Words corner launcher (lazy-loads full feature on click)
+bootMyWordsLauncher();
 
 // 5. Start the AI Conversation app
 bootConvo();

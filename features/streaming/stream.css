@@ -1,0 +1,173 @@
+/* features/streaming/stream.css */
+/* Everything stays under #lux-stream-root so global CSS can't sabotage this page. */
+
+#lux-stream-root{
+  min-height: 100vh;
+  padding: 22px;
+  box-sizing: border-box;
+
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color: #111;
+  background: radial-gradient(1200px 520px at 20% 8%, rgba(0,120,215,0.12), transparent 60%),
+              radial-gradient(900px 520px at 80% 12%, rgba(234,179,8,0.10), transparent 55%),
+              #f7f8fb;
+}
+
+#lux-stream-root .ls-wrap{
+  max-width: 920px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 14px;
+  min-height: calc(100vh - 44px);
+}
+
+#lux-stream-root .ls-header{
+  display:flex;
+  align-items:flex-start;
+  justify-content: space-between;
+  gap: 12px;
+
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.78);
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.06);
+  backdrop-filter: blur(10px);
+}
+
+#lux-stream-root .ls-title{
+  font-family: "Montserrat", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+#lux-stream-root .ls-sub{
+  margin-top: 4px;
+  font-size: 13px;
+  color: rgba(0,0,0,0.62);
+}
+
+#lux-stream-root .ls-pill{
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,0.10);
+  background: rgba(0,0,0,0.04);
+  color: rgba(0,0,0,0.70);
+  min-width: 160px;
+  text-align: center;
+}
+
+#lux-stream-root .ls-pill[data-status="live"]{
+  background: rgba(0,120,215,0.14);
+  border-color: rgba(0,120,215,0.22);
+}
+
+#lux-stream-root .ls-pill[data-status="connecting"]{
+  background: rgba(234,179,8,0.16);
+  border-color: rgba(234,179,8,0.22);
+}
+
+#lux-stream-root .ls-pill[data-status="error"]{
+  background: rgba(220,38,38,0.12);
+  border-color: rgba(220,38,38,0.22);
+}
+
+#lux-stream-root .ls-thread{
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.76);
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.05);
+  backdrop-filter: blur(10px);
+
+  overflow: auto;
+}
+
+#lux-stream-root .ls-empty{
+  color: rgba(0,0,0,0.58);
+  font-size: 14px;
+}
+
+#lux-stream-root .ls-bubbleRow{ display:flex; margin: 10px 0; }
+#lux-stream-root .ls-bubbleRow.is-user{ justify-content:flex-end; }
+#lux-stream-root .ls-bubbleRow.is-assistant{ justify-content:flex-start; }
+
+#lux-stream-root .ls-bubble{
+  max-width: min(620px, 88%);
+  padding: 10px 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(0,0,0,0.10);
+  background: rgba(0,0,0,0.04);
+  color: rgba(0,0,0,0.82);
+  line-height: 1.35;
+}
+
+#lux-stream-root .ls-bubbleRow.is-user .ls-bubble{
+  background: rgba(0,120,215,0.10);
+  border-color: rgba(0,120,215,0.20);
+}
+
+#lux-stream-root .ls-controls{
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.78);
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.06);
+  backdrop-filter: blur(10px);
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+#lux-stream-root .ls-controlsLeft{ display:flex; gap: 10px; align-items:center; }
+#lux-stream-root .ls-controlsRight{ display:flex; align-items:center; justify-content:flex-end; }
+
+#lux-stream-root .ls-hint{
+  font-size: 13px;
+  color: rgba(0,0,0,0.62);
+}
+
+#lux-stream-root .ls-textRow{
+  grid-column: 1 / -1;
+  display:flex;
+  gap: 10px;
+}
+
+#lux-stream-root .ls-textInput{
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,0.14);
+  background: rgba(255,255,255,0.95);
+  outline: none;
+  font-size: 14px;
+}
+
+#lux-stream-root .ls-textInput:focus{
+  border-color: rgba(0,120,215,0.35);
+  box-shadow: 0 0 0 3px rgba(0,120,215,0.14);
+}
+
+#lux-stream-root .ls-btn{
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,0.12);
+  background: rgba(0,0,0,0.04);
+  cursor: pointer;
+  font-weight: 800;
+}
+
+#lux-stream-root .ls-btn:hover{ background: rgba(0,0,0,0.06); }
+#lux-stream-root .ls-btn.ghost{ background: transparent; }
+
+@media (max-width: 720px){
+  #lux-stream-root .ls-controls{ grid-template-columns: 1fr; }
+  #lux-stream-root .ls-controlsRight{ justify-content:flex-start; }
+}

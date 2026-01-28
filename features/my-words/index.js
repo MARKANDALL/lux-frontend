@@ -169,13 +169,22 @@ if (isConvo) {
   const panel = mountMyWordsPanel({
     store,
     getAttempts: () => attemptsCache,
-    onSendToInput: inputEl
-      ? (text) => {
-          inputEl.value = text;
-          inputEl.focus();
-          inputEl.dispatchEvent(new Event("input", { bubbles: true }));
-        }
-      : null,
+    onSendToInput: (text) => {
+      // Practice Skills: push straight into the textarea
+      if (inputEl) {
+        inputEl.value = text;
+        inputEl.focus();
+        inputEl.dispatchEvent(new Event("input", { bubbles: true }));
+        return;
+      }
+
+      // Other pages: warp to Practice Skills with payload in URL
+      const u = new URL("/index.html", window.location.origin);
+      u.searchParams.set("mw", text);
+      // optional: lets us detect this came from My Words
+      u.hash = "mw";
+      window.location.href = u.toString();
+    },
     mode: "compact",
     maxPreview: 5,
     onCoach: (text) => sendToAICoach(text), // ✅ Coach button now works
@@ -185,13 +194,22 @@ if (isConvo) {
   const library = ensureMyWordsLibraryModal({
     store,
     getAttempts: () => attemptsCache,
-    onSendToInput: inputEl
-      ? (text) => {
-          inputEl.value = text;
-          inputEl.focus();
-          inputEl.dispatchEvent(new Event("input", { bubbles: true }));
-        }
-      : null,
+    onSendToInput: (text) => {
+      // Practice Skills: push straight into the textarea
+      if (inputEl) {
+        inputEl.value = text;
+        inputEl.focus();
+        inputEl.dispatchEvent(new Event("input", { bubbles: true }));
+        return;
+      }
+
+      // Other pages: warp to Practice Skills with payload in URL
+      const u = new URL("/index.html", window.location.origin);
+      u.searchParams.set("mw", text);
+      // optional: lets us detect this came from My Words
+      u.hash = "mw";
+      window.location.href = u.toString();
+    },
   });
 
   // expose globally (panel.js View Library button can call this)
