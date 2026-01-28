@@ -2,11 +2,73 @@
 /* Global button system */
 
 /* ============================================================
+   Buttons → Practice Skills base (relinked + stabilized)
+   ============================================================ */
+
+#ghostControls button,
+#playbackBtn,
+#nextPartBtn,
+#showSummaryBtn {
+  appearance: none;
+  border: 0;
+  border-radius: 14px;          /* ⬅ less round (rounded-rect) */
+  padding: 12px 18px;           /* ⬅ bigger than the tiny pills */
+  font-weight: 800;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 12px 26px rgba(2, 6, 23, 0.14);
+  transition: background 160ms ease, transform 160ms ease, filter 160ms ease, box-shadow 160ms ease;
+}
+
+/* Lux blue base */
+#nextPartBtn,
+#showSummaryBtn {
+  background: var(--lux-blue-primary, #0078d7);
+  color: #fff;
+}
+
+/* Custom-mode teal (now CSS-driven, not inline JS) */
+#nextPartBtn.lux-ghost-custom {
+  background: #0f766e;
+}
+
+/* override global button:hover scale for these */
+#ghostControls button:hover:not(:disabled),
+#playbackBtn:hover:not(:disabled),
+#nextPartBtn:hover:not(:disabled),
+#showSummaryBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(0.96);
+}
+
+#ghostControls button:active:not(:disabled),
+#playbackBtn:active:not(:disabled),
+#nextPartBtn:active:not(:disabled),
+#showSummaryBtn:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+  filter: none;
+}
+
+#ghostControls button:disabled,
+#playbackBtn:disabled,
+#nextPartBtn:disabled,
+#showSummaryBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ============================================================
    Buttons → recording states & effects
    ============================================================ */
 #record::before { content: "🎙️  "; display: inline-block; }
 #stop::before { content: "🛑  "; }
-#nextPartBtn::before { content: "➡️  "; }
+#nextPartBtn:not(.lux-ghost-custom)::before { content: "➡️  "; }
+#nextPartBtn.lux-ghost-custom::before { content: "➕  "; }
 
 #record.record-intro,
 #record.record-glow,

@@ -88,13 +88,13 @@ export function updateNavVisibility({ showNext, enableNext, nextMsgText, nextMsg
   if (ui.nextBtn) {
     setVisible(ui.nextBtn, showNext);
     ui.nextBtn.disabled = !enableNext;
-    
+
+    ui.nextBtn.classList.toggle("lux-ghost-custom", !!customMode);
+
     if (customMode) {
-        ui.nextBtn.textContent = "➕ Add Another Section";
-        ui.nextBtn.style.backgroundColor = "#0f766e"; // Teal
+      ui.nextBtn.textContent = "Add Another Section";
     } else {
-        ui.nextBtn.textContent = "Next Part"; 
-        ui.nextBtn.style.backgroundColor = ""; 
+      ui.nextBtn.textContent = "Next Part";
     }
   }
 
