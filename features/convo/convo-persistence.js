@@ -1,5 +1,7 @@
 // features/convo/convo-persistence.js
 
+import { setLastAttemptId } from "../../app-core/runtime.js";
+
 export async function persistConvoAttempt({
   saveAttempt,
   uid,
@@ -21,7 +23,7 @@ export async function persistConvoAttempt({
     });
 
     // Keep AI Coach wired to the latest convo attempt (Practice Skills parity)
-    window.lastAttemptId = saved?.id || null;
+    setLastAttemptId(saved?.id || null);
 
     state.turns.push({ turn: state.turns.length, userText, azureResult, attemptId: saved?.id });
   } catch (e) {
