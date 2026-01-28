@@ -2,6 +2,7 @@
 import { ensureUID } from "../../api/index.js";
 import { computeRollups } from "../progress/rollups.js";
 import { promptUserForAI } from "../../ui/ui-ai-ai-logic.js";
+import { setLastAttemptId } from "../../app-core/runtime.js";
 
 // --- Deck card sizing: make the CARD match the media's natural aspect ratio ---
 const _luxMediaMeta = new Map();
@@ -136,7 +137,7 @@ function wireCoachTurnList(host, turns) {
       // Close overlay first so coach panel is visible
       host.remove();
 
-      window.lastAttemptId = t.attemptId || null;
+      setLastAttemptId(t.attemptId || null);
       promptUserForAI(t.azureResult, t.userText || "", "universal");
 
       document.getElementById("aiFeedbackSection")?.scrollIntoView?.({
