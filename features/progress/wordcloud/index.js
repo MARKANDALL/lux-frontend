@@ -37,7 +37,6 @@ import { createWordcloudDrawer, fmtDaysAgo } from "./drawing-orchestrator.js";
 // ✅ COMMIT 17: event handler factory extracted
 import { createWordcloudEventHandlers } from "./event-handlers.js";
 
-import "./wordcloud-dock.css";
 
 // ✅ FIX C: drawer arrows must work even if something else crashes later
 import { wireWordcloudSideDrawers } from "./side-drawers.js";
