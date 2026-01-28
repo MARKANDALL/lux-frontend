@@ -1,5 +1,6 @@
 import { supabase } from "../src/supabase.js";
 import { API_BASE } from "/src/api/util.js";
+import { setUID } from "../api/index.js";
 
 export function initAuthUI() {
   renderAuthButton();
@@ -150,8 +151,7 @@ function handleAuthStateChange() {
       }
 
       // Update global ID to the Real ID
-      window.LUX_USER_ID = realUid;
-      localStorage.setItem("LUX_USER_ID", realUid); // Persist the Real ID
+      setUID(realUid);
 
       // Refresh Dashboard
       if (window.refreshDashboard) window.refreshDashboard();
