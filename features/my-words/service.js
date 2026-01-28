@@ -21,7 +21,8 @@ export async function fetchMyWords(uid) {
     .from("my_words_entries")
     .select("*")
     .eq("uid", uid)
-    .eq("archived", false)
+    // NOTE: do NOT filter archived here — Library needs archived items too
+    .order("archived", { ascending: true })
     .order("pinned", { ascending: false })
     .order("updated_at", { ascending: false });
 

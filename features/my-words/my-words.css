@@ -416,7 +416,14 @@
   max-height: none !important;
   box-shadow: none !important;
   border-radius: 16px !important;
+
+  /* ✅ critical: modal panel never gets .is-open */
+  opacity: 1 !important;
+  transform: none !important;
+  pointer-events: auto !important;
+  z-index: auto !important;
 }
+
 
 /* --- Status dots (match Lux colors) --- */
 .lux-mw-dot {

@@ -38,7 +38,20 @@ export function ensureMyWordsLibraryModalImpl({
 
   function open() {
     const el = ensure();
-    const card = el.querySelector(".lux-mw-modal-card");
+
+    // Ensure the card exists even if an older modal shell is present
+    let card = el.querySelector(".lux-mw-modal-card");
+    if (!card) {
+      el.innerHTML = `<div class="lux-mw-modal-card"></div>`;
+      card = el.querySelector(".lux-mw-modal-card");
+    }
+
+    // If something rebuilt the modal card, our mount becomes stale.
+    // Remount cleanly instead of showing a blank card.
+    if (panelMount && (!panelMount.isConnected || !el.contains(panelMount))) {
+      panelMount = null;
+      panelApi = null;
+    }
 
     // Mount panel once
     if (!panelMount) {
@@ -58,6 +71,11 @@ export function ensureMyWordsLibraryModalImpl({
     }
 
     el.classList.add("is-open");
+
+    // ✅ Re-render on open (prevents “blank modal” even if something failed earlier)
+    try {
+      panelApi?.render?.();
+    } catch {}
 
     // Focus search for fast browsing
     try {
