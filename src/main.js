@@ -37,6 +37,28 @@ import { initArrowTrail } from "../ui/ui-arrow-trail.js";
 // ✅ My Words Lazy-Load Launcher (NEW)
 import { bootMyWordsLauncher } from "../features/my-words/launcher.js";
 
+// ✅ My Words warp prefill (?mw=...) into Practice Skills textarea
+function applyMyWordsWarpPrefill() {
+  try {
+    const url = new URL(window.location.href);
+    const mw = url.searchParams.get("mw");
+    if (!mw) return;
+
+    const input = document.getElementById("referenceText");
+    if (!input) return;
+
+    // Fill + focus
+    input.value = mw;
+    input.focus();
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+
+    // Optional: clear the param so refresh doesn't keep re-filling
+    url.searchParams.delete("mw");
+    if (url.hash === "#mw") url.hash = "";
+    window.history.replaceState({}, "", url.toString());
+  } catch (_) {}
+}
+
 // --- VISUALS: Typewriter Effect ---
 let typewriterTimeout;
 
@@ -123,6 +145,9 @@ async function bootApp() {
   // 2. Setup Passages
   wirePassageSelect();
   wireNextBtn();
+
+  // ✅ If we arrived via My Words "Send" from another page, prefill the textarea now
+  applyMyWordsWarpPrefill();
 
   wireHarvardPicker(); // ✅ new
 
