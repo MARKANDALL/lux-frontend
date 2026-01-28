@@ -91,8 +91,8 @@ export function initSceneAtmo({ root, atmo, state, scenarios = [] }) {
     if (rotTimer) return;
     if (!scenarios?.length || scenarios.length <= sceneCards.length) return;
 
-    const ROTATE_MS = 4200;
-    const FADE_MS = 520;
+    const ROTATE_MS = 3500;
+    const FADE_MS = 500;
 
     rotTimer = window.setInterval(() => {
       if (state.mode !== "intro") return;
