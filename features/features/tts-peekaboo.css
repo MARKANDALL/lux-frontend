@@ -4,6 +4,9 @@
    Scope: only layout/UX chrome for the panel + tab
    ========================================================================== */
 
+/* Guard: hide legacy controls if present (kept centralized across entrypoints) */
+#tts-controls { display: none !important; }
+
 /* ---- Safety: if inline guard fails, keep the host hidden until adopted ---- */
 #tts-controls[data-luxHidden="1"] {
   display: none !important;
