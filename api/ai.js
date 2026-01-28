@@ -2,6 +2,8 @@
 // GPT coaching fetcher
 
 import { API_BASE, dbg, jsonOrThrow } from "./util.js";
+import { getUID } from "./identity.js";
+import { getLastAttemptId } from "../app-core/runtime.js";
 
 const FEEDBACK_URL = `${API_BASE}/api/pronunciation-gpt`;
 
@@ -32,8 +34,8 @@ export async function fetchAIFeedback({
   persona = "tutor", // <--- Default to Tutor
 
   // NEW
-  uid = window.LUX_USER_ID || "",
-  attemptId = window.lastAttemptId || null,
+  uid = getUID() || "",
+  attemptId = getLastAttemptId() || null,
   tipIndex = 0,
   tipCount = 3,
   includeHistory = undefined

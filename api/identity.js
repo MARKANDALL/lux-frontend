@@ -92,3 +92,38 @@ export function getUID() {
   }
   return ensureUID(); // lazy init if needed
 }
+
+/**
+ * Canonical setter for UID (used when a "real" UID replaces guest UID).
+ * Keeps window + localStorage + <html data-uid> in sync.
+ */
+export function setUID(uid) {
+  if (typeof window === "undefined") return null;
+
+  const u = String(uid || "").trim();
+  if (!u) return getUID();
+
+  // Respect existing validation if the file already has a looksValid() helper.
+  try {
+    if (typeof looksValid === "function" && !looksValid(u)) return getUID();
+  } catch (_) {}
+
+  window.LUX_USER_ID = u;
+
+  try {
+    // Use same keys the file already uses; if these identifiers exist in the module,
+    // this will match your current behavior.
+    if (typeof KEY !== "undefined") localStorage.setItem(KEY, u);
+    if (typeof LEGACY_KEY !== "undefined") localStorage.setItem(LEGACY_KEY, u);
+
+    // Fallback if those constants don't exist (harmless, and keeps behavior consistent).
+    localStorage.setItem("lux.uid", u);
+    localStorage.setItem("LUX_USER_ID", u);
+  } catch (_) {}
+
+  try {
+    document.documentElement.setAttribute("data-uid", u);
+  } catch (_) {}
+
+  return u;
+}

@@ -16,6 +16,7 @@ import {
 } from "./ui-ai-ai-dom.js";
 
 import { fetchAIFeedback, updateAttempt } from "/src/api/index.js";
+import { getLastAttemptId } from "../app-core/runtime.js";
 
 // State
 let chunkHistory = [];
@@ -189,8 +190,9 @@ function resetState() {
 }
 
 function persistFeedbackToDB(sections) {
-  if (window.lastAttemptId) {
-    updateAttempt(window.lastAttemptId, { sections: sections });
+  const attemptId = getLastAttemptId();
+  if (attemptId) {
+    updateAttempt(attemptId, { sections });
   }
 }
 
@@ -283,7 +285,7 @@ async function fetchNextChunk() {
 
   try {
     // DeepDive: includeHistory ~1/3 of the time deterministically on chunk 1
-    const attemptIdNum = Number(window.lastAttemptId);
+    const attemptIdNum = Number(getLastAttemptId());
     const includeHistory =
       nextChunkId === 1 && Number.isFinite(attemptIdNum) ? attemptIdNum % 3 === 0 : undefined;
 

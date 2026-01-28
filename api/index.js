@@ -8,5 +8,5 @@ export { fetchAIFeedback } from "./ai.js";
 // This automatically includes saveAttempt, fetchHistory, AND updateAttempt
 export * from "./attempts.js"; 
 
-export { getUID, ensureUID } from "./identity.js";
+export { getUID, ensureUID, setUID } from "./identity.js";
 export { API_BASE, dbg } from "./util.js";
