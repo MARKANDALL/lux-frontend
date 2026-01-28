@@ -82,6 +82,50 @@
 }
 
 /* ============================================================
+   Practice Skills → Next Part / Show Summary (ghostControls)
+   - These buttons were falling back to UA defaults because
+     .btn-group > button is scoped and #ghostControls is not.
+   ============================================================ */
+
+#ghostControls{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 1.3em;
+  flex-wrap: wrap;
+}
+
+#ghostControls > button{
+  font-size: 1.25rem;
+  padding: 1rem 2.2rem;
+  border: none;
+  border-radius: 0.7rem;
+  background: #0078d7;
+  color: #fff;
+  cursor: pointer;
+
+  /* match global interaction timing, but prevent “weird” scaling */
+  transition: background 0.15s, transform 0.18s ease, filter 0.18s ease;
+}
+
+#ghostControls > button:disabled{
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* override global button:hover scale for these */
+#ghostControls > button:hover:not(:disabled){
+  transform: translateY(-1px);
+  filter: brightness(0.96);
+}
+
+#ghostControls > button:active:not(:disabled){
+  transform: translateY(0) scale(0.98);
+  filter: none;
+}
+
+/* ============================================================
    REMOVED DUPLICATE BLOCKS HERE:
    (Record buttons, Score Table, Word Chips, Tooltips)
    These are now correctly handled by features-1.css
