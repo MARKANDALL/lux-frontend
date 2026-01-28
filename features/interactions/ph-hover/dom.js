@@ -185,14 +185,16 @@ export function injectTooltipCSS() {
       margin-bottom:10px;
     }
 
-    #lux-global-ph-tooltip .lux-ph-vidBtns{
+    #lux-global-ph-tooltip .lux-ph-vidBtns,
+    .lux-ph-modalCard .lux-ph-vidBtns{
       display:flex;
       gap:8px;
       flex-wrap:wrap;
       align-items:center;
     }
 
-    #lux-global-ph-tooltip .lux-ph-miniBtn{
+    #lux-global-ph-tooltip .lux-ph-miniBtn,
+    .lux-ph-modalCard .lux-ph-miniBtn{
       border:0;
       background:rgba(255,255,255,0.10);
       color:#e2e8f0;
@@ -203,11 +205,13 @@ export function injectTooltipCSS() {
       cursor:pointer;
     }
 
-    #lux-global-ph-tooltip .lux-ph-miniBtn.is-primary{
+    #lux-global-ph-tooltip .lux-ph-miniBtn.is-primary,
+    .lux-ph-modalCard .lux-ph-miniBtn.is-primary{
       background:rgba(96,165,250,0.35);
     }
 
-    #lux-global-ph-tooltip .lux-ph-miniBtn:active{
+    #lux-global-ph-tooltip .lux-ph-miniBtn:active,
+    .lux-ph-modalCard .lux-ph-miniBtn:active{
       transform: translateY(1px);
     }
 
@@ -273,7 +277,8 @@ export function injectTooltipCSS() {
       }
     }
 
-    #lux-global-ph-tooltip .lux-ph-speed{
+    #lux-global-ph-tooltip .lux-ph-speed,
+    .lux-ph-modalCard .lux-ph-speed{
       background: rgba(255,255,255,0.10);
       color:#e2e8f0;
       border: 0;
@@ -372,9 +377,9 @@ export function injectTooltipCSS() {
     .lux-ph-modalTop{
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      flex-wrap: wrap;
+      justify-content: flex-start; /* title + controls, not shoved right */
+      gap: 12px;
+      flex-wrap: wrap;            /* still behaves on small widths */
     }
 
     .lux-ph-modalTitle{
@@ -384,6 +389,25 @@ export function injectTooltipCSS() {
       opacity: 0.9;
       white-space: nowrap;
       margin-right: 10px;
+    }
+
+    /* ---- Modal controls: occupy space + feel bigger ---- */
+    .lux-ph-modalCard .lux-ph-vidBtns{
+      flex: 1;                    /* take remaining row width */
+      justify-content: center;    /* visually balances the top bar */
+      gap: 10px;
+    }
+
+    .lux-ph-modalCard .lux-ph-miniBtn{
+      padding: 7px 12px;
+      font-size: 13px;
+      min-height: 34px;
+    }
+
+    .lux-ph-modalCard .lux-ph-speed{
+      padding: 7px 12px;
+      font-size: 13px;
+      min-height: 34px;
     }
 
     .lux-ph-modalGrid{
