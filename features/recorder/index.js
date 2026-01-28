@@ -21,6 +21,7 @@ import { promptUserForAI } from "../../ui/ui-ai-ai-logic.js";
 
 import { mountAudioModeSwitch } from "./audio-mode-switch.js";
 import { getAudioMode, initAudioModeDataset } from "./audio-mode-core.js";
+import { setLastAttemptId, setLastRecording } from "../../app-core/runtime.js";
 
 let isInitialized = false;
 let recordingStartTime = 0; // NEW: Track duration
@@ -29,6 +30,7 @@ const STOP_DELAY_MS = 800;
 // --- Guardrail Config ---
 const MIN_DURATION_MS = 1500; // Must record for at least 1.5s
 const MIN_SCORE_TO_SAVE = 10; // Don't save if score is < 10% (garbage audio)
+
 
 /* ===========================
    Workflow Logic
@@ -73,23 +75,16 @@ function stopRecordingFlow() {
 
 async function handleRecordingComplete(audioBlob) {
   try {
-    // ✅ Store latest recording globally so Self Playback can download it
+    // ✅ Store latest recording (runtime contract) so Self Playback can download it
     try {
       const mode = getAudioMode();
-      window.LuxLastRecordingBlob = audioBlob;
-      window.LuxLastRecordingMeta = {
+      setLastRecording(audioBlob, {
         mode,
         type: audioBlob?.type || "",
         size: audioBlob?.size || 0,
         ts: Date.now(),
         scope: "practice",
-      };
-
-      window.dispatchEvent(
-        new CustomEvent("lux:lastRecording", {
-          detail: { blob: audioBlob, meta: window.LuxLastRecordingMeta },
-        })
-      );
+      });
     } catch {}
 
     // Guardrail 1 Check: Audio Size
@@ -179,7 +174,7 @@ async function handleRecordingComplete(audioBlob) {
 
 async function saveToDatabase(result, text, lang) {
   try {
-    window.lastAttemptId = null;
+    setLastAttemptId(null);
     const uid = getUID && getUID();
     const sessionId = getSessionId();
     const localTime = new Date().toISOString();
@@ -197,8 +192,8 @@ async function saveToDatabase(result, text, lang) {
       });
 
       if (saved && saved.id) {
-        window.lastAttemptId = saved.id;
-        console.log("[Lux] Saved Attempt ID:", window.lastAttemptId);
+        setLastAttemptId(saved.id);
+        console.log("[Lux] Saved Attempt ID:", saved.id);
 
         // REFRESH DASHBOARD (keeps the drawer intact)
         if (window.refreshDashboard) {
