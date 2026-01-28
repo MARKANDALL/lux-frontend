@@ -61,8 +61,13 @@ function layoutPanel(panelEl, inputEl) {
 }
 
 export function initMyWordsGlobal({ uid, inputEl } = {}) {
-  // ✅ Hide on AI landing page (convo.html)
-  if (location.pathname.endsWith("convo.html")) return null;
+// ✅ Only hide on AI landing/picker; allow on convo working route (#chat)
+const isConvo = location.pathname.toLowerCase().endsWith("convo.html");
+if (isConvo) {
+  const h = (location.hash || "").toLowerCase();
+  if (!h.includes("chat")) return null;
+}
+
 
   if (!uid) return null;
 
