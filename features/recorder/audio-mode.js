@@ -1,49 +1,57 @@
 // features/recorder/audio-mode.js
-// Normal vs Pro recording constraints for Lux
+// Compatibility layer: keep the legacy API (normal/pro) while using the canonical core (NORMAL/PRO)
 
-const MODE_KEY = "luxAudioMode";
+import {
+  AUDIO_MODES as CORE_MODES,
+  getAudioMode as getCoreAudioMode,
+  setAudioMode as setCoreAudioMode,
+  initAudioModeDataset as initCoreDataset,
+} from "./audio-mode-core.js";
 
+// Legacy (lowercase) enum — some modules expect these exact strings
 export const AUDIO_MODES = {
   NORMAL: "normal",
   PRO: "pro",
 };
 
+// ---- Legacy API (kept) ----
+
 export function getAudioMode() {
-  const v = (localStorage.getItem(MODE_KEY) || "").toLowerCase();
-  return v === "pro" ? "pro" : "normal";
+  const m = getCoreAudioMode(); // "NORMAL" | "PRO"
+  return m === CORE_MODES.PRO ? "pro" : "normal";
 }
 
 export function setAudioMode(mode) {
-  const m = String(mode || "").toLowerCase() === "pro" ? "pro" : "normal";
-  localStorage.setItem(MODE_KEY, m);
+  const wantLower = String(mode || "").toLowerCase() === "pro" ? "pro" : "normal";
+  const wantCore = wantLower === "pro" ? CORE_MODES.PRO : CORE_MODES.NORMAL;
 
-  // ✅ drive CSS / UI state
-  try {
-    document.documentElement.setAttribute("data-lux-audio-mode", m);
-  } catch {}
+  // Persist via core (also stamps <html data-lux-audio-mode="...">)
+  const savedCore = setCoreAudioMode(wantCore);
 
-  // ✅ broadcast for any listeners (switch UI, inspector, etc)
+  // Ensure dataset is stamped (core already does this, but safe)
+  initCoreDataset(savedCore);
+
+  // Broadcast in legacy lower-case (listeners may expect "pro"/"normal")
   try {
     window.dispatchEvent(
-      new CustomEvent("lux:audioModeChanged", { detail: { mode: m } })
+      new CustomEvent("lux:audioModeChanged", { detail: { mode: wantLower } })
     );
   } catch {}
 
-  return m;
+  return wantLower;
 }
 
 export function toggleAudioMode() {
-  const next = getAudioMode() === "pro" ? "normal" : "pro";
-  return setAudioMode(next);
+  return setAudioMode(getAudioMode() === "pro" ? "normal" : "pro");
 }
 
 export function initAudioModeDataset() {
-  const m = getAudioMode();
-  try {
-    document.documentElement.setAttribute("data-lux-audio-mode", m);
-  } catch {}
-  return m;
+  const core = getCoreAudioMode();
+  initCoreDataset(core);
+  return getAudioMode();
 }
+
+// ---- Constraints API (kept) ----
 
 function supportedConstraints() {
   try {
@@ -54,10 +62,9 @@ function supportedConstraints() {
 }
 
 export function getAudioConstraints() {
-  const mode = getAudioMode();
+  const mode = getAudioMode(); // "normal" | "pro"
   const supported = supportedConstraints();
 
-  // ✅ Force explicit settings so we can compare apples-to-apples
   const normal = {
     echoCancellation: true,
     noiseSuppression: true,
@@ -71,20 +78,18 @@ export function getAudioConstraints() {
     echoCancellation: false,
     noiseSuppression: false,
     autoGainControl: false,
-    channelCount: 1, // ✅ request mono even in Pro
+    channelCount: 1,
     sampleRate: 48000,
     sampleSize: 16,
   };
 
   const want = mode === "pro" ? pro : normal;
 
-  // Only include constraints browser supports
   const audio = {};
   for (const [k, v] of Object.entries(want)) {
     if (supported[k] === true) audio[k] = v;
   }
 
-  // If none supported, fallback to just `true`
   return { audio: Object.keys(audio).length ? audio : true };
 }
 

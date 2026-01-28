@@ -27,12 +27,26 @@ export function initAudioModeDataset(mode) {
 }
 
 /**
- * Read from localStorage (defaults to NORMAL)
+ * Read from localStorage.
+ * - Accepts both canonical ("NORMAL"/"PRO") and legacy ("normal"/"pro")
+ * - Defaults to NORMAL for first-run/invalid values
+ * - Seeds localStorage to "NORMAL" only if nothing valid is stored
+ *   (does not override a saved PRO)
  */
 export function getAudioMode() {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw === AUDIO_MODES.PRO) return AUDIO_MODES.PRO;
+    const low = String(raw || "").toLowerCase();
+
+    // Accept both canonical + legacy values
+    if (raw === AUDIO_MODES.PRO || low === "pro") return AUDIO_MODES.PRO;
+    if (raw === AUDIO_MODES.NORMAL || low === "normal") return AUDIO_MODES.NORMAL;
+
+    // Default for everyone (first run / invalid value): NORMAL
+    try {
+      localStorage.setItem(KEY, AUDIO_MODES.NORMAL);
+    } catch {}
+
     return AUDIO_MODES.NORMAL;
   } catch {
     return AUDIO_MODES.NORMAL;

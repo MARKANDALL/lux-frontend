@@ -35,9 +35,9 @@
 .lux-audioModeWrap{
   display:flex;
   align-items:center;
-  gap:5px;
+  gap:8px;
 
-  font: 900 10px/1 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font: 700 11px/1 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   letter-spacing: 0.02em;
 
   user-select:none;
@@ -69,7 +69,7 @@
   display: inline-flex;
   align-items: center;
 
-  padding: 0px;
+  padding: 2px;
   border-radius: 999px;
 
   /* ✅ transparent glass */
@@ -99,10 +99,10 @@ html[data-lux-audio-mode="pro"] .lux-audioToggle{
    =============================== */
 .lux-audioKnob{
   position:absolute;
-  top: 0px;
-  bottom: 0px;
-  left: 0px;
-  width: 50%;
+  top: 2px;
+  bottom: 2px;
+  left: 2px;
+  width: calc(50% - 2px);
   border-radius: 999px;
   z-index: 1;
 
@@ -174,11 +174,11 @@ html[data-lux-audio-mode="pro"] .lux-audioKnob{
   box-shadow: none !important;
 
   /* ✅ even smaller + less prominent */
-  padding: 3px 7px;
+  padding: 6px 12px;
   border-radius: 999px;
 
-  font-weight: 950;
-  font-size: 9px;
+  font-weight: 600;
+  font-size: 11px;
   cursor:pointer;
 
   /* ✅ Base (inactive-ish) text should still be visible */

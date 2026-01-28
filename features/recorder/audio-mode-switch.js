@@ -126,25 +126,25 @@ function buildUI(scope = "practice") {
   btnNormal.className = "lux-audioOpt";
   btnNormal.type = "button";
   btnNormal.dataset.mode = "NORMAL";
-  btnNormal.textContent = "Normal";
+  btnNormal.textContent = "Filter";
 
   const btnPro = document.createElement("button");
   btnPro.className = "lux-audioOpt";
   btnPro.type = "button";
   btnPro.dataset.mode = "PRO";
-  btnPro.textContent = "Pro";
+  btnPro.textContent = "Direct";
 
   // ✅ Replace data-tip tooltips with richer tooltip DOM
   attachAudioTooltip(
     btnNormal,
-    "Balanced quality + smaller size",
+    "Filter (processed) + smaller size",
     ["Echo cancellation: ON", "Noise suppression: ON", "Auto gain control: ON"],
     "Best in: everyday rooms (handles light background noise)."
   );
 
   attachAudioTooltip(
     btnPro,
-    "Higher quality + slightly larger size",
+    "Direct (raw) + slightly larger size",
     ["Echo cancellation: OFF", "Noise suppression: OFF", "Auto gain control: OFF"],
     "Best in: quiet rooms (cleanest, most natural audio)."
   );

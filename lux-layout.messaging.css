@@ -66,7 +66,7 @@
 
 /* ✅ Scope button styling ONLY to the messaging button group
    (prevents Word Cloud + the whole app from inheriting white button text) */
-.btn-group button {
+.btn-group > button {
   font-size: 1.25rem;
   padding: 1rem 2.2rem;
   border: none;
@@ -76,7 +76,7 @@
   cursor: pointer;
   transition: background 0.15s;
 }
-.btn-group button:disabled {
+.btn-group > button:disabled {
   background: #ccc;
   cursor: not-allowed;
 }
