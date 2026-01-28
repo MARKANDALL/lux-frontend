@@ -1,8 +1,6 @@
 // src/main.js
 // The Main Entry Point: Boots the app, handles the Typewriter, and wires the Dropdown.
 
-import "../lux-audio-mode.css";
-
 import { wirePassageSelect, wireNextBtn } from "../features/passages/index.js";
 
 import { wireHarvardPicker } from "../features/harvard/index.js";
