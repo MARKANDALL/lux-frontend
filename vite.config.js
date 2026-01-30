@@ -11,17 +11,12 @@ export default defineConfig({
     sourcemap: true,
     emptyOutDir: true,
 
-    // ✅ IMPORTANT: build all your separate HTML pages
     rollupOptions: {
       input: {
         main: resolve(__dirname, "index.html"),
         convo: resolve(__dirname, "convo.html"),
         progress: resolve(__dirname, "progress.html"),
         wordcloud: resolve(__dirname, "wordcloud.html"),
-        mydata: resolve(__dirname, "mydata.html"),
-        login: resolve(__dirname, "login.html"),
-
-        // ✅ NEW
         stream: resolve(__dirname, "stream.html"),
 
         // Admin pages
