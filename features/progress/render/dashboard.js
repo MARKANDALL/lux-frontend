@@ -3,6 +3,7 @@
 // features/progress/render/dashboard.js
 
 import { openDetailsModal } from "../attempt-detail-modal.js";
+import { wireAttemptDetailChipExplainers } from "../attempt-detail/chip-explainers.js";
 
 import {
   buildNextActivityPlanFromModel,
@@ -172,27 +173,38 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
         <summary>⚠️ Trouble Sounds <span style="color:#94a3b8; font-weight:800">${
           (trouble.phonemesAll || []).length
         }</span></summary>
+
         <div class="lux-sec-body">
           <div class="lux-chiprow">
             ${
               topPh.length
                 ? topPh
                     .map(
-                      (p) => `
-              <span class="lux-chip" title="${esc(
-                `Seen ${p.count}× · ${p.days || 1} day(s) · priority ${
-                  Number.isFinite(p.priority) ? p.priority.toFixed(2) : "—"
-                }`
-              )}">
-                <span>${esc(p.ipa)}</span>
-                <span class="lux-pill ${scoreClass(p.avg)}">${fmtScore(p.avg)}</span>
-              </span>
-            `
+                      (p, i) => `
+          <span
+            class="lux-chip"
+            data-kind="phoneme"
+            data-idx="${i}"
+            role="button"
+            tabindex="0"
+            title="${esc(
+              `Seen ${p.count}× · ${p.days || 1} day(s) · priority ${
+                Number.isFinite(p.priority) ? p.priority.toFixed(2) : "—"
+              }`
+            )}"
+          >
+            <span>${esc(p.ipa)}</span>
+            <span class="lux-pill ${scoreClass(p.avg)}">${fmtScore(p.avg)}</span>
+          </span>
+        `
                     )
                     .join("")
                 : `<span style="color:#64748b">Not enough data yet — keep practicing.</span>`
             }
           </div>
+
+          <!-- ✅ inline explainer slot (click chip -> details appear here) -->
+          <div id="luxExplainSounds" style="margin-top:10px;" hidden></div>
         </div>
       </details>
 
@@ -200,27 +212,38 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
         <summary>⚠️ Trouble Words <span style="color:#94a3b8; font-weight:800">${
           (trouble.wordsAll || []).length
         }</span></summary>
+
         <div class="lux-sec-body">
           <div class="lux-chiprow">
             ${
               topWd.length
                 ? topWd
                     .map(
-                      (w) => `
-              <span class="lux-chip" title="${esc(
-                `Seen ${w.count}× · ${w.days || 1} day(s) · priority ${
-                  Number.isFinite(w.priority) ? w.priority.toFixed(2) : "—"
-                }`
-              )}">
-                <span>${esc(w.word)}</span>
-                <span class="lux-pill ${scoreClass(w.avg)}">${fmtScore(w.avg)}</span>
-              </span>
-            `
+                      (w, i) => `
+          <span
+            class="lux-chip"
+            data-kind="word"
+            data-idx="${i}"
+            role="button"
+            tabindex="0"
+            title="${esc(
+              `Seen ${w.count}× · ${w.days || 1} day(s) · priority ${
+                Number.isFinite(w.priority) ? w.priority.toFixed(2) : "—"
+              }`
+            )}"
+          >
+            <span>${esc(w.word)}</span>
+            <span class="lux-pill ${scoreClass(w.avg)}">${fmtScore(w.avg)}</span>
+          </span>
+        `
                     )
                     .join("")
                 : `<span style="color:#64748b">Not enough data yet — keep practicing.</span>`
             }
           </div>
+
+          <!-- ✅ inline explainer slot (click chip -> details appear here) -->
+          <div id="luxExplainWords" style="margin-top:10px;" hidden></div>
         </div>
       </details>
 
@@ -281,6 +304,9 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
       }
     </section>
   `;
+
+  // ✅ Enable “click trouble chip -> show details” on the main dashboard too
+  wireAttemptDetailChipExplainers(host, { phItems: topPh, wdItems: topWd });
 
   function renderAiFeedback(sum) {
     const secs =

@@ -11,24 +11,42 @@ export function wireAttemptDetailChipExplainers(card, { phItems = [], wdItems = 
 
   let lastPick = ""; // `${kind}:${idx}`
 
-  function showExplain(kind, idx) {
+  function clearActiveChips() {
+    card.querySelectorAll(".lux-chip.is-active").forEach((el) => el.classList.remove("is-active"));
+  }
+
+  function hidePanel(panel) {
+    if (!panel) return;
+    panel.innerHTML = "";
+    panel.setAttribute("hidden", "");
+  }
+
+  function showExplain(kind, idx, chipEl) {
     const key = `${kind}:${idx}`;
     const same = key === lastPick;
     lastPick = same ? "" : key;
 
     const panel = kind === "phoneme" ? explainSounds : explainWords;
+    const otherPanel = kind === "phoneme" ? explainWords : explainSounds;
     const items = kind === "phoneme" ? phItems : wdItems;
 
     if (!panel) return;
 
+    // switching sections? close the other one
+    hidePanel(otherPanel);
+
+    // clicking same chip toggles closed
     if (same) {
-      panel.innerHTML = "";
-      panel.setAttribute("hidden", "");
+      hidePanel(panel);
+      if (chipEl) chipEl.classList.remove("is-active");
       return;
     }
 
     const item = items[idx];
     if (!item) return;
+
+    clearActiveChips();
+    if (chipEl) chipEl.classList.add("is-active");
 
     const avg = Math.round(Number(item.avg) || 0);
     const count = Number(item.count) || 0;
@@ -57,9 +75,12 @@ export function wireAttemptDetailChipExplainers(card, { phItems = [], wdItems = 
             Avg ${avg}%
           </div>
         </div>
+
         ${examples}
+
         <div style="margin-top:10px; color:#64748b; font-size:0.92rem;">
-          <span style="font-weight:900;">Why it’s here:</span> low accuracy + repeated exposure (count/days) increases priority.
+          <span style="font-weight:900;">Why it’s here:</span>
+          low accuracy + repeated exposure (count/days) increases priority.
         </div>
       </div>
     `;
@@ -78,13 +99,13 @@ export function wireAttemptDetailChipExplainers(card, { phItems = [], wdItems = 
     chip.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
-      showExplain(kind, idx);
+      showExplain(kind, idx, chip);
     });
 
     chip.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
-        showExplain(kind, idx);
+        showExplain(kind, idx, chip);
       }
     });
   }

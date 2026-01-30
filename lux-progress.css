@@ -145,6 +145,41 @@
   font-size: 0.95rem;
 }
 
+/* ✅ Trouble chips: make it obvious they are clickable */
+.lux-chip{
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease,
+    border-color 120ms ease,
+    filter 120ms ease;
+}
+
+.lux-chip:hover{
+  transform: translateY(-1px) scale(1.03);
+  box-shadow: 0 8px 22px rgba(15,23,42,0.12);
+  border-color: rgba(15,23,42,0.18);
+  filter: brightness(1.02);
+}
+
+.lux-chip:active{
+  transform: translateY(0px) scale(0.985);
+  box-shadow: 0 5px 14px rgba(15,23,42,0.10);
+}
+
+.lux-chip:focus-visible{
+  outline: 2px solid rgba(43,111,255,0.65);
+  outline-offset: 2px;
+}
+
+/* ✅ Selected chip */
+.lux-chip.is-active{
+  border-color: rgba(43,111,255,0.35);
+  box-shadow: 0 10px 26px rgba(43,111,255,0.14);
+}
+
 .lux-pill{
   display:inline-flex;
   align-items:center;
