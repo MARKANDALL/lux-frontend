@@ -22,6 +22,11 @@ dist/
 !.env.example
 
 # =========================
+# Local secrets (keep out of git)
+# =========================
+scripts/KEY.txt
+
+# =========================
 # Logs
 # =========================
 *.log
@@ -54,6 +59,10 @@ repomix-*.xml
 # =========================
 lux-layout.COMBINED.css
 
+# =========================
 # Local backup bin
+# =========================
 _ARCHIVE/
 
+# Local secrets (keep out of git)
+scripts/KEY.txt
