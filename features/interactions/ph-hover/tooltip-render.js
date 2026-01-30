@@ -62,6 +62,23 @@ export function showTooltip(state, chip, { pinned = false } = {}, hooks = {}) {
     },
   ];
 
+  // Modal meta (so expanded view can show EVERYTHING tooltip has)
+  // If we don't have an examples array, try to pull one word from the display label: "/eɪ/ (day)" or "as in 'day'"
+  let modalWords = Array.isArray(words) ? words.slice(0, 3) : [];
+  if (!modalWords.length && displayLabel) {
+    const mAsIn = displayLabel.match(/as in ['"]([^'"]+)['"]/i);
+    const mParen = displayLabel.match(/\(([^)]+)\)/);
+    const w = (mAsIn?.[1] || mParen?.[1] || "").trim();
+    if (w) modalWords = [w];
+  }
+
+  const modalMeta = {
+    ipa,
+    displayLabel,
+    words: modalWords,
+    panels,
+  };
+
   // Topbar examples string
   const examplesStr = words.length
     ? `(${words.map(escapeHTML).join(", ")})`
@@ -185,7 +202,9 @@ export function showTooltip(state, chip, { pinned = false } = {}, hooks = {}) {
   // Wire carousel + video controls now that DOM exists
   initTooltipTextCarousel?.(state.globalTooltip, panels);
   initTooltipVideoControls?.(state.globalTooltip, {
-    openVideoFocusModal,
+    openVideoFocusModal: openVideoFocusModal
+      ? ({ sideSrc, frontSrc }) => openVideoFocusModal({ sideSrc, frontSrc, meta: modalMeta })
+      : null,
   });
 
   // Close button

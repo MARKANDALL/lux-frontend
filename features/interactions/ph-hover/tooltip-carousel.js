@@ -1,11 +1,11 @@
 // features/interactions/ph-hover/tooltip-carousel.js
 // Tooltip panel carousel: Plain / Technical / Common mix-ups
 
-export function initTooltipTextCarousel(globalTooltipEl, panels) {
-  const title = globalTooltipEl?.querySelector("#lux-ph-modeTitle");
-  const prev = globalTooltipEl?.querySelector("#lux-ph-panel-prev");
-  const next = globalTooltipEl?.querySelector("#lux-ph-panel-next");
-  const panelText = globalTooltipEl?.querySelector("#lux-ph-panelText");
+export function initTooltipTextCarousel(rootEl, panels, { prefix = "lux-ph-" } = {}) {
+  const title = rootEl?.querySelector(`#${prefix}modeTitle`);
+  const prev = rootEl?.querySelector(`#${prefix}panel-prev`);
+  const next = rootEl?.querySelector(`#${prefix}panel-next`);
+  const panelText = rootEl?.querySelector(`#${prefix}panelText`);
 
   if (!title || !prev || !next || !panelText) return;
 

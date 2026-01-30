@@ -2,6 +2,9 @@
 // Video Focus Modal (expand/shrink) + its controls
 // Mirrors the tooltip-video system, but scoped to the modal DOM.
 
+import { initTooltipTextCarousel } from "./tooltip-carousel.js";
+import { norm, getCodesForIPA } from "../../../src/data/phonemes/core.js";
+
 export function initModalVideoControls(back) {
   const sideVid = back?.querySelector('video[data-vid="side"]');
   const frontVid = back?.querySelector('video[data-vid="front"]');
@@ -179,7 +182,7 @@ export function initModalVideoControls(back) {
   applySpeed();
 }
 
-export function openVideoFocusModal({ sideSrc, frontSrc }) {
+export function openVideoFocusModal({ sideSrc, frontSrc, meta } = {}) {
   // kill existing
   const existing = document.querySelector("#lux-ph-vidModalBack");
   if (existing) existing.remove();
@@ -195,6 +198,29 @@ export function openVideoFocusModal({ sideSrc, frontSrc }) {
 
   back.innerHTML = `
     <div class="lux-ph-modalCard" role="dialog" aria-modal="true">
+      ${
+        meta
+          ? `
+      <div class="lux-ph-modalInfo">
+        <div class="lux-ph-topbar">
+          <div class="lux-ph-ipaBlock">
+            <span id="lux-ph-m-ipa" class="lux-ph-ipa">/?/</span>
+            <span id="lux-ph-m-code" class="lux-ph-code"></span>
+            <span id="lux-ph-m-examples" class="lux-ph-examples"></span>
+          </div>
+
+          <div class="lux-ph-modeNav">
+            <button id="lux-ph-m-panel-prev" class="lux-ph-nav-btn" type="button" aria-label="Previous panel">‹</button>
+            <div id="lux-ph-m-modeTitle" class="lux-ph-modeTitle"></div>
+            <button id="lux-ph-m-panel-next" class="lux-ph-nav-btn" type="button" aria-label="Next panel">›</button>
+          </div>
+        </div>
+        <div id="lux-ph-m-panelText" class="lux-ph-panelText"></div>
+      </div>
+          `
+          : ``
+      }
+
       <div class="lux-ph-modalTop">
         <div class="lux-ph-modalTitle">Video Focus</div>
 
@@ -203,7 +229,7 @@ export function openVideoFocusModal({ sideSrc, frontSrc }) {
           ${hasFront ? `<button id="lux-ph-m-front" class="lux-ph-miniBtn" type="button">Front</button>` : ``}
           ${hasBoth ? `<button id="lux-ph-m-both" class="lux-ph-miniBtn is-primary" type="button">Both</button>` : ``}
           <button id="lux-ph-m-stop" class="lux-ph-miniBtn" type="button">Stop</button>
-          <button id="lux-ph-m-shrink" class="lux-ph-miniBtn" type="button">Shrink</button>
+          <button id="lux-ph-m-shrink" class="lux-ph-miniBtn" type="button">Close</button>
           <button id="lux-ph-m-loop" class="lux-ph-miniBtn" type="button" data-loop="0">Repeat Off</button>
 
           <select id="lux-ph-m-speed" class="lux-ph-speed">
@@ -255,6 +281,39 @@ export function openVideoFocusModal({ sideSrc, frontSrc }) {
   const card = back.querySelector(".lux-ph-modalCard");
   if (!card) return;
 
+  // If meta is present, populate the info panel + wire carousel
+  if (meta) {
+    const ipa = norm(meta.ipa || "") || "?";
+    const elIPA = card.querySelector("#lux-ph-m-ipa");
+    const elCode = card.querySelector("#lux-ph-m-code");
+    const elExamples = card.querySelector("#lux-ph-m-examples");
+
+    if (elIPA) elIPA.textContent = `/${ipa}/`;
+
+    const codes = getCodesForIPA(ipa).slice(0, 3); // keep it compact
+    if (elCode) {
+      // Show BOTH: "EY · ey | SCHWA · schwa"
+      const parts = codes.map((c) => `${c.toUpperCase()} · ${c.toLowerCase()}`);
+      elCode.textContent = parts.length ? parts.join(" | ") : "";
+    }
+
+    const words = Array.isArray(meta.words) ? meta.words.filter(Boolean).slice(0, 3) : [];
+    if (elExamples) {
+      elExamples.textContent = words.length ? `(${words.join(", ")})` : "";
+    }
+
+    const panels = Array.isArray(meta.panels) ? meta.panels : [];
+    if (panels.length) {
+      initTooltipTextCarousel(card, panels, { prefix: "lux-ph-m-" });
+    } else {
+      // If no panels, hide the nav affordance by clearing title/text
+      const t = card.querySelector("#lux-ph-m-modeTitle");
+      const p = card.querySelector("#lux-ph-m-panelText");
+      if (t) t.textContent = "";
+      if (p) p.textContent = "";
+    }
+  }
+
   function close() {
     // pause everything inside modal
     back.querySelectorAll("video").forEach((v) => {
@@ -265,7 +324,7 @@ export function openVideoFocusModal({ sideSrc, frontSrc }) {
     back.remove();
   }
 
-  // Shrink closes instantly
+  // Close closes instantly
   back.querySelector("#lux-ph-m-shrink")?.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();

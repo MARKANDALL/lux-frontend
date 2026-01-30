@@ -96,6 +96,17 @@ const phonemeAlias = {
   "ɳ": "ɳ",
 };
 
+// Reverse index: canonical IPA -> list of project/Azure-friendly codes (ASCII-ish keys only)
+const _codesByIPA = Object.create(null);
+Object.entries(phonemeAlias).forEach(([code, ipa]) => {
+  // Keep only readable ASCII-ish codes (iy, ey, th, u_short, schwa, etc.)
+  if (!/^[a-z0-9_]+$/i.test(code)) return;
+  (_codesByIPA[ipa] ||= []).push(code);
+});
+Object.values(_codesByIPA).forEach((arr) => {
+  arr.sort((a, b) => a.length - b.length || a.localeCompare(b));
+});
+
 // combining tie-bars, ZWJ, etc.
 const TIE = /[\u0361\u035C\u200D\u034F]/g;
 
@@ -126,6 +137,14 @@ export function norm(sym) {
 
   // Finally map Azure/legacy -> canonical IPA (and any remaining aliases)
   return phonemeAlias[s] || s;
+}
+
+/** Return Azure/project-friendly codes for a canonical IPA (e.g., eɪ -> ["ey"], ə -> ["ax","schwa"]). */
+export function getCodesForIPA(symbol) {
+  const ipa = norm(symbol);
+  const arr = _codesByIPA[ipa] || [];
+  // Unique + stable
+  return Array.from(new Set(arr));
 }
 
 /* ---------- Sequence coalescing (fix for ɚ not surfacing) ---------- */
