@@ -2,8 +2,13 @@
 const PROD_API = "https://luxury-language-api.vercel.app";
 
 export const API_BASE = (() => {
-  const API_BASE = globalThis.API_BASE || import.meta.env.VITE_API_BASE || PROD_API;
-  return API_BASE;
+  const explicit = globalThis.API_BASE || import.meta.env.VITE_API_BASE;
+
+  // ✅ Dev: default to same-origin so "/api/..." hits Vite proxy
+  if (import.meta.env.DEV) return explicit || "";
+
+  // ✅ Prod: default to production backend
+  return explicit || PROD_API;
 })();
 
 export function dbg(...args) {

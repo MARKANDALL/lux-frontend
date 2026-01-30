@@ -33,10 +33,16 @@ export default defineConfig({
 
     proxy: {
       "^/api/(?!.*\\.js(?:\\?.*)?$)": {
-        target: "https://luxury-language-api.vercel.app",
+        target: "https://luxury-language-api.vercel.app/api",
         changeOrigin: true,
         secure: true,
         rewrite: (p) => p.replace(/^\/api/, ""),
+        configure: (proxy) => {
+          proxy.on("proxyReq", (proxyReq) => {
+            const t = process.env.LUX_ADMIN_TOKEN;
+            if (t) proxyReq.setHeader("x-admin-token", t);
+          });
+        },
       },
     },
   },
