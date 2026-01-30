@@ -35,11 +35,6 @@ export function buildUI() {
       <div id="spb-karaokeWrap">
         <div class="spb-karaokeTitle">Word Sync</div>
 
-        <!-- ✅ CENTER karaoke strip -->
-        <div id="spb-kCenterWrap" title="Karaoke strip • Click a word to seek">
-          <div id="spb-kCenterTrack"></div>
-        </div>
-
         <!-- ✅ Timeline lane -->
         <div id="spb-karaokeLaneWrap" title="Click a word to seek • Click the lane to jump">
           <div id="spb-karaokeLane"></div>
@@ -196,7 +191,5 @@ export function buildUI() {
     karaokeLaneWrap: host.querySelector("#spb-karaokeLaneWrap"),
     karaokeLane: host.querySelector("#spb-karaokeLane"),
     karaokeCursor: host.querySelector("#spb-karaokeCursor"),
-    kCenterWrap: host.querySelector("#spb-kCenterWrap"),
-    kCenterTrack: host.querySelector("#spb-kCenterTrack"),
   };
 }

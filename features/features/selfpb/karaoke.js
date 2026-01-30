@@ -14,9 +14,6 @@ export function initKaraoke({ ui, api, audio, syncTime, syncScrub }) {
   let kDur = 0;
   let kLinesUsed = 1;
 
-  let kCenterEls = [];
-  let _centerActiveIdx = -1;
-
   const isExpandedOpen = () => {
     const shade = document.getElementById("spb-modalShade");
     if (shade?.classList?.contains("is-open")) return true;
@@ -44,96 +41,6 @@ export function initKaraoke({ ui, api, audio, syncTime, syncScrub }) {
     audio.currentTime = api.clamp(sec, 0, dur);
     syncTime();
     syncScrub();
-  }
-
-  function renderKaraokeCenter(words) {
-    if (!ui.kCenterTrack) return;
-
-    ui.kCenterTrack.innerHTML = "";
-    kCenterEls = [];
-
-    for (let i = 0; i < words.length; i++) {
-      const w = words[i];
-
-      const el = document.createElement("span");
-      el.className = "spbKCWord";
-      el.textContent = w.word;
-
-      if (typeof w.acc === "number" && w.acc < 60) el.classList.add("is-bad");
-
-      el.style.setProperty("--p", "0");
-
-      el.addEventListener("click", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        seekTo((w.start || 0) + 0.001);
-      });
-
-      ui.kCenterTrack.appendChild(el);
-      kCenterEls.push(el);
-    }
-
-    // center at current time initially
-    _centerActiveIdx = -1;
-    updateKaraokeCenterAt(audio.currentTime || 0);
-  }
-
-  function centerToWord(idx) {
-    if (!ui.kCenterWrap || !ui.kCenterTrack) return;
-    const el = kCenterEls[idx];
-    if (!el) return;
-
-    const wrapW = ui.kCenterWrap.clientWidth;
-    const trackW = ui.kCenterTrack.scrollWidth;
-
-    if (trackW <= wrapW) {
-      // center whole track if short
-      const mid = (wrapW - trackW) / 2;
-      ui.kCenterTrack.style.transform = `translateX(${mid}px)`;
-      return;
-    }
-
-    const wordCenter = el.offsetLeft + el.offsetWidth / 2;
-    let target = wrapW / 2 - wordCenter;
-
-    const min = wrapW - trackW; // most negative
-    const max = 0;
-
-    if (target < min) target = min;
-    if (target > max) target = max;
-
-    ui.kCenterTrack.style.transform = `translateX(${target}px)`;
-  }
-
-  function updateKaraokeCenterAt(t) {
-    if (!kWords.length || !kCenterEls.length) return;
-
-    let activeIdx = -1;
-
-    for (let i = 0; i < kWords.length; i++) {
-      const w = kWords[i];
-      const el = kCenterEls[i];
-      if (!el) continue;
-
-      const span = Math.max(0.001, w.end - w.start);
-      const p = clamp01((t - w.start) / span);
-      el.style.setProperty("--p", String(p));
-
-      if (t >= w.start && t < w.end) activeIdx = i;
-    }
-
-    for (let i = 0; i < kCenterEls.length; i++) {
-      const el = kCenterEls[i];
-      el.classList.toggle("is-active", i === activeIdx);
-      el.classList.toggle("is-past", activeIdx !== -1 && i < activeIdx);
-      el.classList.toggle("is-future", activeIdx !== -1 && i > activeIdx);
-    }
-
-    // smooth auto-center only when active word changes
-    if (activeIdx !== -1 && activeIdx !== _centerActiveIdx) {
-      _centerActiveIdx = activeIdx;
-      centerToWord(activeIdx);
-    }
   }
 
   function renderKaraoke(words) {
@@ -175,7 +82,6 @@ export function initKaraoke({ ui, api, audio, syncTime, syncScrub }) {
 
     layoutKaraoke();
     updateKaraokeAt(audio.currentTime || 0);
-    renderKaraokeCenter(kWords);
   }
 
   function layoutKaraoke() {
@@ -252,7 +158,12 @@ export function initKaraoke({ ui, api, audio, syncTime, syncScrub }) {
     }
 
     for (let i = 0; i < kEls.length; i++) {
-      kEls[i].classList.toggle("is-active", i === active);
+      const el = kEls[i];
+      if (!el) continue;
+
+      el.classList.toggle("is-active", i === active);
+      el.classList.toggle("is-past", active !== -1 && i < active);
+      el.classList.toggle("is-future", active !== -1 && i > active);
     }
   }
 
@@ -283,15 +194,12 @@ export function initKaraoke({ ui, api, audio, syncTime, syncScrub }) {
   window.addEventListener("resize", () => {
     if (!isExpandedOpen()) return;
     layoutKaraoke();
-
-    if (isExpandedOpen() && _centerActiveIdx !== -1) centerToWord(_centerActiveIdx);
   });
 
   function update(t) {
     if (!isExpandedOpen()) return;
     updateKaraokeAt(t);
-    updateKaraokeCenterAt(t);
   }
 
-  return { update, updateKaraokeAt, updateKaraokeCenterAt, renderKaraoke };
+  return { update, updateKaraokeAt, renderKaraoke };
 }

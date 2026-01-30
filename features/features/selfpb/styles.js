@@ -325,111 +325,6 @@ export function ensureStyles() {
       margin: 2px 0 8px;
     }
 
-    /* ============================================================
-       ✅ Center Karaoke Strip (Expanded-only)
-       ============================================================ */
-
-    #spb-kCenterWrap{
-      position: relative;
-      height: 46px;
-      border-radius: 14px;
-      background: rgba(15,23,42,0.04);
-      border: 1px solid rgba(15,23,42,0.10);
-      overflow: hidden;
-      margin-bottom: 10px;
-    }
-
-    /* soft fade edges */
-    #spb-kCenterWrap::before,
-    #spb-kCenterWrap::after{
-      content:"";
-      position:absolute;
-      top:0; bottom:0;
-      width: 48px;
-      pointer-events:none;
-      z-index: 3;
-    }
-    #spb-kCenterWrap::before{
-      left:0;
-      background: linear-gradient(90deg, rgba(255,255,255,0.96), rgba(255,255,255,0));
-    }
-    #spb-kCenterWrap::after{
-      right:0;
-      background: linear-gradient(270deg, rgba(255,255,255,0.96), rgba(255,255,255,0));
-    }
-
-    /* track slides under the fades */
-    #spb-kCenterTrack{
-      position: absolute;
-      left: 0;
-      top: 0;
-      height: 100%;
-
-      display: flex;
-      align-items: center;
-      gap: 8px;
-
-      padding: 0 56px; /* room so the centered word can sit under fades */
-      will-change: transform;
-      transition: transform 260ms ease;
-    }
-
-    /* words in strip */
-    #spb-kCenterTrack .spbKCWord{
-      --p: 0;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-
-      height: 28px;
-      padding: 0 12px;
-      border-radius: 999px;
-      border: 1px solid rgba(15,23,42,0.12);
-
-      font-weight: 900;
-      font-size: 12px;
-      color: rgba(15,23,42,0.86);
-
-      background:
-        linear-gradient(
-          90deg,
-          rgba(47,111,228,0.22) calc(var(--p) * 100%),
-          rgba(255,255,255,0.78) 0
-        );
-
-      cursor: pointer;
-      transition: transform .10s ease, filter .12s ease, opacity .12s ease;
-    }
-
-    #spb-kCenterTrack .spbKCWord:hover{
-      transform: scale(1.04);
-      filter: brightness(1.04);
-    }
-
-    /* Past/future fading */
-    #spb-kCenterTrack .spbKCWord.is-past{ opacity: .48; }
-    #spb-kCenterTrack .spbKCWord.is-future{ opacity: .72; }
-
-    /* Active pops */
-    #spb-kCenterTrack .spbKCWord.is-active{
-      opacity: 1;
-      transform: scale(1.08);
-      border-color: rgba(47,111,228,0.40);
-      box-shadow: 0 12px 22px rgba(47,111,228,0.14);
-    }
-
-    /* Low accuracy */
-    #spb-kCenterTrack .spbKCWord.is-bad{
-      border-color: rgba(220,38,38,0.35);
-      box-shadow: 0 12px 22px rgba(220,38,38,0.14);
-      background:
-        linear-gradient(
-          90deg,
-          rgba(220,38,38,0.18) calc(var(--p) * 100%),
-          rgba(255,255,255,0.78) 0
-        );
-    }
-
     /* ✅ lane wrapper (timeline) */
     #spb-karaokeLaneWrap{
       position: relative;
@@ -509,9 +404,14 @@ export function ensureStyles() {
     }
 
     #spb-karaokeLane .spbKWord.is-active{
+      z-index: 2;
+      transform: scale(1.04);
       border-color: rgba(47,111,228,0.40);
       box-shadow: 0 10px 18px rgba(47,111,228,0.14);
     }
+
+    #spb-karaokeLane .spbKWord.is-past{ opacity: .50; }
+    #spb-karaokeLane .spbKWord.is-future{ opacity: .78; }
 
     /* ✅ error glow if word accuracy is low */
     #spb-karaokeLane .spbKWord.is-bad{
