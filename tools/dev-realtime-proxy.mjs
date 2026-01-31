@@ -44,7 +44,7 @@ const server = http.createServer(async (req, res) => {
   // CORS preflight
   if (req.method === "OPTIONS") return send(res, 204, "");
 
-  if (req.method === "POST" && req.url === "/realtime/webrtc/session") {
+  if (req.method === "POST" && (req.url === "/realtime/webrtc/session" || req.url === "/api/realtime/webrtc/session")) {
     try {
       const offerSdp = await readBody(req);
 
