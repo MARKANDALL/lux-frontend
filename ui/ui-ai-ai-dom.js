@@ -282,13 +282,23 @@ export function updateFooterButtons({
 export function showAIFeedbackError(msg) {
   const { box } = getSectionAndBox();
   const contentArea = ensureShell(box, null);
-  contentArea.innerHTML = `<div style="color:#c00; padding:20px;">Error: ${msg}</div>`;
+  const safeMsg = escapeHtml(msg);
+  contentArea.innerHTML = `<div style="color:#c00; padding:20px;">Error: ${safeMsg}</div>`;
 }
 
 export function clearAIFeedback() {
   const { box } = getSectionAndBox();
   const contentArea = ensureShell(box, null);
   contentArea.innerHTML = "";
+}
+
+function escapeHtml(s) {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 // RESTORED FUNCTION
@@ -302,7 +312,7 @@ export function renderAIFeedbackMarkdown(md) {
 // RESTORED HELPER
 function mdToHtml(md = "") {
   if (!md || !md.trim()) return "";
-  let html = md
+  let html = escapeHtml(md)
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
     .replace(/\*(.+?)\*/g, "<em>$1</em>");
 
