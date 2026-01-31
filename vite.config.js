@@ -39,7 +39,7 @@ export default defineConfig({
         rewrite: (p) => p.replace(/^\/api/, ""),
         configure: (proxy) => {
           proxy.on("proxyReq", (proxyReq) => {
-            const t = process.env.LUX_ADMIN_TOKEN;
+            const t = process.env.ADMIN_TOKEN;
             if (t) proxyReq.setHeader("x-admin-token", t);
           });
         },
