@@ -148,5 +148,18 @@ export function createTransportController({ store, route }) {
     }
   }
 
-  return { connect, disconnect, sendUserText, sendUserAudio };
+  async function stopSpeaking() {
+    // Streaming signature: cut audio NOW + cancel/clear so next reply is clean.
+    resetAssistantBuffer();
+    try {
+      if (typeof provider.stopSpeaking === "function") {
+        await provider.stopSpeaking();
+      }
+    } catch (err) {
+      console.error(err);
+      // Don’t mark connection error for an interrupt failure; it’s best-effort.
+    }
+  }
+
+  return { connect, disconnect, sendUserText, sendUserAudio, stopSpeaking };
 }

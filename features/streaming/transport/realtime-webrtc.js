@@ -8,6 +8,7 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
   let dc = null;
   let micStream = null;
   let audioEl = null;
+  let mutedByInterrupt = false;
 
   function emit(type, extra) {
     try { onEvent?.({ type, ...(extra || {}) }); } catch {}
@@ -71,6 +72,7 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
     pc = null;
     dc = null;
     micStream = null;
+    mutedByInterrupt = false;
 
     try {
       if (audioEl) {
@@ -90,8 +92,42 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
     return true;
   }
 
+  function unmuteIfNeeded() {
+    if (!audioEl) return;
+    if (!mutedByInterrupt) return;
+    try {
+      audioEl.muted = false;
+      // don’t force play()—autoplay should resume as new audio arrives
+    } catch {}
+    mutedByInterrupt = false;
+  }
+
+  // Streaming signature: instant local stop + canonical cancel→clear ordering.
+  // UI should feel instant even if the server takes a moment.
+  async function stopSpeaking() {
+    // 1) Instant UX: locally mute/stop playback immediately
+    if (audioEl) {
+      try {
+        audioEl.muted = true;
+        audioEl.pause();
+      } catch {}
+      mutedByInterrupt = true;
+    }
+
+    // 2) Canonical Realtime order: cancel generation, then clear queued audio.
+    // These are best-effort (don’t throw if not connected).
+    const okCancel = sendEvent({ type: "response.cancel" });
+    const okClear = sendEvent({ type: "output_audio_buffer.clear" });
+
+    emit("stop_speaking", { okCancel, okClear });
+    return okCancel && okClear;
+  }
+
   async function sendUserText(text) {
     if (!text) return;
+
+    // If user interrupted earlier, re-enable audio for the next reply.
+    unmuteIfNeeded();
 
     const ok1 = sendEvent({
       type: "conversation.item.create",
@@ -115,7 +151,7 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
     );
   }
 
-  return { connect, disconnect, sendUserText, sendUserAudio };
+  return { connect, disconnect, sendUserText, sendUserAudio, stopSpeaking };
 }
 
 function extractAssistantText(evt) {
