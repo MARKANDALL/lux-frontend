@@ -26,15 +26,28 @@ export function wireConvoFlow({
   convoReport,
   showConvoReportOverlay,
 }) {
-  function scenarioForTurn() {
-    const s = SCENARIOS[state.scenarioIdx];
-    const overlay = buildConvoTargetOverlay(state.nextActivity);
+function scenarioForTurn() {
+  const overlay = buildConvoTargetOverlay(state.nextActivity);
+
+  // ✅ If a custom scene was supplied (Life Journey), use it.
+  const custom = state.nextActivity?.scene;
+  if (custom && custom.title && custom.desc) {
     return {
-      id: s.id,
-      title: s.title,
-      desc: overlay ? `${s.desc}\n\n${overlay}` : s.desc,
+      id: custom.id || "custom",
+      title: custom.title,
+      desc: overlay ? `${custom.desc}\n\n${overlay}` : custom.desc,
     };
   }
+
+  // Default: regular scenario list
+  const s = SCENARIOS[state.scenarioIdx];
+  return {
+    id: s.id,
+    title: s.title,
+    desc: overlay ? `${s.desc}\n\n${overlay}` : s.desc,
+  };
+}
+
 
   function showNetErrorBubble(err) {
     const msg = err && err.message ? err.message : "Unknown error";
