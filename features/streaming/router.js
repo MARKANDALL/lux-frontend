@@ -4,7 +4,23 @@ import { SCENARIOS } from "../convo/scenarios.js";
 const DEFAULTS = {
   input: "ptt", // ptt | vad | duplex | text
   transport: "webrtc", // webrtc | websocket
+  model: "gpt-realtime-mini",
+  voice: "marin",
+  speed: 0.85,
+  maxOutputTokens: 250,
 };
+
+function clampNumber(v, fallback, min, max) {
+  const n = Number.parseFloat(v);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(max, Math.max(min, n));
+}
+
+function clampInt(v, fallback, min, max) {
+  const n = Number.parseInt(v, 10);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(max, Math.max(min, n));
+}
 
 function pickScenario(id) {
   const list = Array.isArray(SCENARIOS) ? SCENARIOS : [];
@@ -23,6 +39,16 @@ export function parseStreamRoute() {
   const input = (qs.get("input") || DEFAULTS.input).trim();
   const transport = (qs.get("transport") || DEFAULTS.transport).trim();
 
+  const model = (qs.get("model") || DEFAULTS.model).trim() || DEFAULTS.model;
+  const voice = (qs.get("voice") || DEFAULTS.voice).trim() || DEFAULTS.voice;
+  const speed = clampNumber(qs.get("speed"), DEFAULTS.speed, 0.25, 1.5);
+  const maxOutputTokens = clampInt(
+    qs.get("max_output_tokens") ?? qs.get("maxOutputTokens"),
+    DEFAULTS.maxOutputTokens,
+    1,
+    4096
+  );
+
   const scenario = pickScenario(scenarioId);
 
   return {
@@ -35,5 +61,9 @@ export function parseStreamRoute() {
     },
     input,
     transport,
+    model,
+    voice,
+    speed,
+    maxOutputTokens,
   };
 }
