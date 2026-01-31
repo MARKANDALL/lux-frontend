@@ -19,8 +19,8 @@ export function getColorConfig(s) {
 
 export function mdToHtml(md = "") {
   if (!md) return "";
-  return String(md)
-    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+ return esc(String(md))
+     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
     .replace(/\*(.+?)\*/g, "<em>$1</em>")
     .split("\n")
     .join("<br>");
