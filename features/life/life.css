@@ -1,7 +1,228 @@
-/* features/life/life.css (placeholder) */
+/* features/life/life.css */
+/* Minimal Lux-ish styling for Life Journey */
+
 #lux-life-root{
   min-height: 100vh;
+  padding: 22px;
+  box-sizing: border-box;
+
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color: #111;
   background: radial-gradient(1200px 520px at 20% 8%, rgba(124,77,255,0.10), transparent 60%),
               radial-gradient(900px 520px at 80% 12%, rgba(0,120,215,0.10), transparent 55%),
               #f7f8fb;
+}
+
+#lux-life-root .ll-wrap{
+  max-width: 920px;
+  margin: 0 auto;
+  display: grid;
+  gap: 14px;
+}
+
+#lux-life-root .ll-header{
+  display:flex;
+  align-items:flex-start;
+  justify-content: space-between;
+  gap: 12px;
+
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.78);
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.06);
+  backdrop-filter: blur(10px);
+}
+
+#lux-life-root .ll-title{
+  font-family: "Montserrat", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+#lux-life-root .ll-sub{
+  font-size: 13px;
+  color: rgba(0,0,0,0.62);
+  margin-top: 4px;
+}
+
+#lux-life-root .ll-actions{
+  display:flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+#lux-life-root .ll-pill{
+  text-decoration:none;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.86);
+  border: 1px solid rgba(0,0,0,0.10);
+  color: rgba(0,0,0,0.72);
+  font-weight: 900;
+  font-size: 12px;
+}
+
+#lux-life-root .ll-pill-btn{
+  cursor: pointer;
+}
+
+#lux-life-root .ll-card{
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.86);
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.08);
+}
+
+#lux-life-root .ll-big{
+  font-size: 18px;
+  font-weight: 900;
+}
+
+#lux-life-root .ll-row{
+  display:grid;
+  grid-template-columns: 120px 1fr;
+  gap: 12px;
+  align-items:center;
+  margin-bottom: 12px;
+}
+
+#lux-life-root .ll-lab{
+  font-weight: 900;
+  font-size: 12px;
+  color: rgba(0,0,0,0.62);
+}
+
+#lux-life-root .ll-in,
+#lux-life-root .ll-sel{
+  width: 100%;
+  padding: 10px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.12);
+  background: rgba(255,255,255,0.92);
+  font-weight: 800;
+}
+
+#lux-life-root .ll-footer{
+  display:flex;
+  justify-content:flex-end;
+  margin-top: 14px;
+}
+
+#lux-life-root .ll-footer2{
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+#lux-life-root .ll-start{
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,0.10);
+  background: rgba(255,255,255,0.90);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+#lux-life-root .ll-eventTitle{
+  font-size: 18px;
+  font-weight: 900;
+  margin-bottom: 6px;
+}
+
+#lux-life-root .ll-note{
+  font-size: 13px;
+  color: rgba(0,0,0,0.66);
+}
+
+#lux-life-root .ll-meta{
+  margin-top: 10px;
+  display:grid;
+  gap: 6px;
+  font-size: 13px;
+  color: rgba(0,0,0,0.70);
+}
+
+#lux-life-root .ll-choices{
+  display:grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+#lux-life-root .ll-choice{
+  padding: 12px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,0.10);
+  background: rgba(255,255,255,0.92);
+  font-weight: 900;
+  cursor:pointer;
+  text-align:left;
+}
+
+#lux-life-root .ll-wb{
+  margin-top: 12px;
+  border-top: 1px solid rgba(0,0,0,0.08);
+  padding-top: 12px;
+}
+
+#lux-life-root .ll-wbTitle{
+  font-size: 12px;
+  font-weight: 900;
+  color: rgba(0,0,0,0.62);
+  margin-bottom: 8px;
+}
+
+#lux-life-root .ll-wbRow{
+  display:flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+#lux-life-root .ll-chip{
+  display:inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,0.10);
+  background: rgba(255,255,255,0.92);
+  font-weight: 900;
+  font-size: 12px;
+}
+
+#lux-life-root .ll-history{
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.72);
+  border: 1px solid rgba(0,0,0,0.06);
+}
+
+#lux-life-root .ll-historyTitle{
+  font-weight: 900;
+  margin-bottom: 8px;
+}
+
+#lux-life-root .ll-hitem{
+  padding: 10px 0;
+  border-top: 1px solid rgba(0,0,0,0.06);
+}
+
+#lux-life-root .ll-hitem:first-child{
+  border-top: none;
+}
+
+#lux-life-root .ll-hmain{
+  font-weight: 900;
+  font-size: 13px;
+}
+
+#lux-life-root .ll-hsub{
+  font-size: 12px;
+  color: rgba(0,0,0,0.62);
+}
+
+#lux-life-root .ll-hempty{
+  font-size: 12px;
+  color: rgba(0,0,0,0.55);
 }
