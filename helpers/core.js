@@ -30,8 +30,18 @@ export function encouragingLine() {
 }
 
 /** Tiny MD → HTML tailored for the AI feedback */
+
+function escapeHtml(s) {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export function mdToHtml(md) {
-  md = String(md || "")
+  md = escapeHtml(md)
     .replace(/\r\n/g, "\n")
     .replace(/^(#{2,3} .+?)\s+(?=[^\n])/gm, "$1\n")
     .replace(/^#{2,3}\s+(.+)$/gm, "<h3>$1</h3>")
@@ -57,3 +67,4 @@ export function mdToHtml(md) {
     )
     .join("\n");
 }
+ 
