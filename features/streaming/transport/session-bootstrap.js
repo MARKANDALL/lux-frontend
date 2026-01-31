@@ -3,7 +3,7 @@
 import { API_BASE } from "../../../api/util.js";
 
 export async function getWebRTCAnswerSDP(offerSDP) {
-  const url = `${API_BASE}/realtime/webrtc/session`;
+const url = `${API_BASE}/api/realtime/webrtc/session`;
 
   const resp = await fetch(url, {
     method: "POST",
