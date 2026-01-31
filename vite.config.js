@@ -19,6 +19,10 @@ export default defineConfig({
         wordcloud: resolve(__dirname, "wordcloud.html"),
         stream: resolve(__dirname, "stream.html"),
 
+        // ✅ NEW
+        streamSetup: resolve(__dirname, "stream-setup.html"),
+        life: resolve(__dirname, "life.html"),
+
         // Admin pages
         adminIndex: resolve(__dirname, "admin/index.html"),
         adminOverview: resolve(__dirname, "admin/overview.html"),
