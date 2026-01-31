@@ -58,7 +58,9 @@ export function bootConvo() {
   const {
     atmo,
     intro,
-    heroNext,
+    guidedBtn,
+    streamLink,
+    lifeLink,
     deckActive,
     deckPreview,
     thumbs,
@@ -113,7 +115,7 @@ export function bootConvo() {
   });
 
   // ✅ Intro/picker/chat navigation wiring now lives in convo-nav.js
-  wireConvoNav({ state, intro, heroNext, scenBtn, setMode, warpSwap });
+  wireConvoNav({ state, guidedBtn, scenBtn, setMode, warpSwap });
 
   // ✅ Knobs drawer wiring now lives in convo-knobs-ui.js
   wireConvoKnobsUI({

@@ -48,8 +48,23 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
 
   hero.append(el("div", "lux-heroTitle", "AI Conversations"), heroSub);
 
-  const heroNext = el("button", "lux-heroNext", "Next");
-  hero.append(heroNext);
+  // --- Mode chooser (hub) ---
+  const heroModes = el("div", "lux-heroModes");
+
+  const guidedBtn = el("button", "lux-heroNext", "Guided (Decks)");
+  guidedBtn.type = "button";
+  guidedBtn.setAttribute("data-lux-ripple", "");
+
+  const streamLink = el("a", "lux-heroNext lux-heroNext--ghost", "Streaming (Real-time)");
+  streamLink.href = "./stream-setup.html";
+  streamLink.setAttribute("data-lux-ripple", "");
+
+  const lifeLink = el("a", "lux-heroNext lux-heroNext--ghost", "Life Journey (Game)");
+  lifeLink.href = "./life.html";
+  lifeLink.setAttribute("data-lux-ripple", "");
+
+  heroModes.append(guidedBtn, streamLink, lifeLink);
+  hero.append(heroModes);
   intro.append(hero);
 
   // Picker overlay (Edge deck)
@@ -200,7 +215,9 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
     atmo,
     ui,
     intro,
-    heroNext,
+    guidedBtn,
+    streamLink,
+    lifeLink,
     picker,
     deckActive,
     deckPreview,

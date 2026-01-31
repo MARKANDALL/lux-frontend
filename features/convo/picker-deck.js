@@ -313,26 +313,7 @@ export function wirePickerDeck({
         safeBeginScenario();
       });
 
-      // Streaming CTA (new)
-      const streamLink = el("a", "lux-deckCta is-stream", "Start Streaming");
-      streamLink.setAttribute("data-lux-ripple", "");
-
-      const k = getKnobs();
-      const qp = new URLSearchParams();
-      qp.set("scenario", scenario.id);
-      if (k?.tone) qp.set("tone", k.tone);
-      if (k?.stress) qp.set("stress", k.stress);
-      if (k?.pace) qp.set("pace", k.pace);
-
-      qp.set("input", "ptt");
-      qp.set("transport", "webrtc");
-
-      streamLink.href = `./stream.html?${qp.toString()}`;
-      streamLink.addEventListener("click", (e) => {
-        e.stopPropagation();
-      });
-
-      ctaRow.append(cta, streamLink);
+      ctaRow.append(cta);
       textWrap.append(ctaRow);
 
       // Knobs row (active card only) — ✅ declared ONCE

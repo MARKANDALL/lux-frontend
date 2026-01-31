@@ -49,6 +49,35 @@
   backdrop-filter: blur(18px) saturate(1.18);
 }
 
+/* Hub: intro card should NOT look like a single giant clickable button anymore */
+#convoApp[data-mode="intro"] .lux-heroCard{
+  cursor: default;
+}
+
+#convoApp[data-mode="intro"] .lux-heroModes{
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+#convoApp[data-mode="intro"] .lux-heroNext{
+  text-decoration: none; /* for <a> */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#convoApp[data-mode="intro"] .lux-heroNext--ghost{
+  background: rgba(255,255,255,0.55);
+  border-color: rgba(0,0,0,0.10);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.10);
+}
+
+#convoApp[data-mode="intro"] .lux-heroNext--ghost:hover{
+  background: rgba(255,255,255,0.86);
+}
+
 /* Ensure hero content stays above the glass pseudo-elements */
 #convoApp[data-mode="intro"] .lux-heroCard > *{
   position: relative;

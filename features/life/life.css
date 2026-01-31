@@ -1,0 +1,7 @@
+/* features/life/life.css (placeholder) */
+#lux-life-root{
+  min-height: 100vh;
+  background: radial-gradient(1200px 520px at 20% 8%, rgba(124,77,255,0.10), transparent 60%),
+              radial-gradient(900px 520px at 80% 12%, rgba(0,120,215,0.10), transparent 55%),
+              #f7f8fb;
+}
