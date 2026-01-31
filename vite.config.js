@@ -32,7 +32,8 @@ export default defineConfig({
   },
 
   server: {
-    port: 3000,
+    port: 3002,
+    strictPort: true,
     open: true,
 
     proxy: {
@@ -43,7 +44,7 @@ export default defineConfig({
         rewrite: (p) => p.replace(/^\/api/, ""),
         configure: (proxy) => {
           proxy.on("proxyReq", (proxyReq) => {
-            const t = process.env.ADMIN_TOKEN;
+            const t = process.env.LUX_ADMIN_TOKEN || process.env.ADMIN_TOKEN;
             if (t) proxyReq.setHeader("x-admin-token", t);
           });
         },
