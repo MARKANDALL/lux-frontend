@@ -1,75 +1,64 @@
 // features/streaming/transport/realtime-webrtc.js
+// Implements the TransportController contract: emits events via onEvent({type: ...})
 
 import { getWebRTCAnswerSDP } from "./session-bootstrap.js";
 
-export function createRealtimeWebRTCTransport({
-  onStatus,
-  onServerEvent,
-  onError,
-} = {}) {
+export function createRealtimeWebRTCTransport({ onEvent } = {}) {
   let pc = null;
   let dc = null;
   let micStream = null;
   let audioEl = null;
 
-  function emitStatus(s) {
-    try { onStatus?.(s); } catch {}
-  }
-  function emitEvent(evt) {
-    try { onServerEvent?.(evt); } catch {}
-  }
-  function emitError(err) {
-    try { onError?.(err); } catch {}
+  function emit(type, extra) {
+    try { onEvent?.({ type, ...(extra || {}) }); } catch {}
   }
 
   async function connect() {
     if (pc) return;
 
-    emitStatus("connecting");
-
     pc = new RTCPeerConnection();
 
-    // Remote audio playback (assistant voice)
+    // Remote audio playback
     audioEl = document.createElement("audio");
     audioEl.autoplay = true;
     audioEl.playsInline = true;
+
     pc.ontrack = (e) => {
-      audioEl.srcObject = e.streams[0];
+      try { audioEl.srcObject = e.streams[0]; } catch {}
     };
 
     pc.onconnectionstatechange = () => {
       const s = pc?.connectionState || "disconnected";
-      emitStatus(s === "connected" ? "live" : s);
+      if (s === "connected") emit("connected");
+      if (s === "failed" || s === "disconnected" || s === "closed") emit("disconnected");
     };
 
-    // Mic input (needed for true voice mode)
+    // Live mic track (always-on for now)
     micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
     for (const t of micStream.getTracks()) pc.addTrack(t, micStream);
 
-    // Data channel for events
+    // Data channel for events + text
     dc = pc.createDataChannel("oai-events");
-    dc.addEventListener("open", () => emitStatus("live"));
-    dc.addEventListener("close", () => emitStatus("disconnected"));
+    dc.addEventListener("open", () => emit("connected"));
+    dc.addEventListener("close", () => emit("disconnected"));
     dc.addEventListener("message", (e) => {
-      try {
-        const evt = JSON.parse(e.data);
-        emitEvent(evt);
-      } catch {
-        // ignore non-json
-      }
+      let evt = null;
+      try { evt = JSON.parse(e.data); } catch { return; }
+      const text = extractAssistantText(evt);
+      if (text) emit("assistant_text", { text });
     });
 
-    // SDP handshake via your server (no secrets in browser)
+    // SDP exchange via your backend
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
 
     const answerSDP = await getWebRTCAnswerSDP(offer.sdp);
     await pc.setRemoteDescription({ type: "answer", sdp: answerSDP });
 
-    emitStatus("live");
+    emit("connected"); // best-effort so UI doesn't hang
   }
 
-  function disconnect() {
+  async function disconnect() {
     try { dc?.close(); } catch {}
     try { pc?.close(); } catch {}
 
@@ -92,7 +81,7 @@ export function createRealtimeWebRTCTransport({
     } catch {}
     audioEl = null;
 
-    emitStatus("disconnected");
+    emit("disconnected");
   }
 
   function sendEvent(evt) {
@@ -101,8 +90,9 @@ export function createRealtimeWebRTCTransport({
     return true;
   }
 
-  // Text-only test helper (great for Milestone 1 validation)
-  function sendText(text) {
+  async function sendUserText(text) {
+    if (!text) return;
+
     const ok1 = sendEvent({
       type: "conversation.item.create",
       item: {
@@ -113,14 +103,33 @@ export function createRealtimeWebRTCTransport({
     });
 
     const ok2 = sendEvent({ type: "response.create" });
-    return ok1 && ok2;
+
+    if (!ok1 || !ok2) throw new Error("Transport not connected");
   }
 
-  return {
-    connect,
-    disconnect,
-    sendEvent,
-    sendText,
-    _debug: () => ({ pc, dc }),
-  };
+  // Your current PTT records blobs; WebRTC realtime uses live mic tracks instead.
+  async function sendUserAudio({ blob } = {}) {
+    const kb = blob ? Math.round(blob.size / 1024) : 0;
+    throw new Error(
+      `WebRTC transport uses live mic audio (tracks). sendUserAudio(blob) not supported (~${kb} KB).`
+    );
+  }
+
+  return { connect, disconnect, sendUserText, sendUserAudio };
+}
+
+function extractAssistantText(evt) {
+  if (!evt || typeof evt !== "object") return "";
+
+  if (typeof evt.delta === "string" && evt.delta) return evt.delta;
+  if (typeof evt.text === "string" && evt.text) return evt.text;
+
+  const content = evt?.item?.content;
+  if (Array.isArray(content)) {
+    for (const c of content) {
+      if (c && typeof c.text === "string" && c.text) return c.text;
+      if (c && typeof c.transcript === "string" && c.transcript) return c.transcript;
+    }
+  }
+  return "";
 }
