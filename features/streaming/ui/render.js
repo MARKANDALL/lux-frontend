@@ -59,5 +59,9 @@ export function renderStreaming({ state, refs }) {
   refs.connectBtn.textContent = state.connection.status === "live" ? "Disconnect" : "Connect";
   refs.hint.textContent = r.input === "ptt" ? "Hold Space to talk (Push-to-talk)." : `Input: ${r.input}`;
 
+  if (refs.stopBtn) {
+    refs.stopBtn.disabled = state.connection.status !== "live";
+  }
+
   renderTurns(refs.thread, state.thread.turns);
 }
