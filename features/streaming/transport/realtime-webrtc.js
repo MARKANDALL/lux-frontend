@@ -113,6 +113,7 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
     dc = null;
     micStream = null;
     mutedByInterrupt = false;
+    inputMode = "tap";
 
     try {
       if (audioEl) {
@@ -170,10 +171,15 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
       },
     });
 
-    // ✅ Only auto mode requests a response immediately
-    const ok2 = inputMode === "auto" ? sendEvent({ type: "response.create" }) : true;
+    // NEW: only auto-create a response in Auto mode
+    if (inputMode === "auto") {
+      const ok2 = sendEvent({ type: "response.create" });
+      if (!ok1 || !ok2) throw new Error("Transport not connected");
+      return;
+    }
 
-    if (!ok1 || !ok2) throw new Error("Transport not connected");
+    // Tap mode: user must click "Get reply"
+    if (!ok1) throw new Error("Transport not connected");
   }
 
   // Your current PTT records blobs; WebRTC realtime uses live mic tracks instead.
