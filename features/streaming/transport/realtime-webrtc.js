@@ -29,6 +29,9 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
 
     // VAD config: server_vad is default; we explicitly set create_response / interrupt_response
     // so Tap vs Auto is deterministic.
+    console.log(`[WebRTC] Switching Input Mode: ${inputMode.toUpperCase()} (create_response: ${isAuto})`);
+
+    // VAD config: server_vad is default; we explicitly set create_response
     return sendEvent({
       type: "session.update",
       session: {
@@ -37,8 +40,8 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
           threshold: 0.5,
           prefix_padding_ms: 300,
           silence_duration_ms: 500,
-          create_response: isAuto,
-          interrupt_response: isAuto,
+          create_response: isAuto,     // false = Tap, true = Auto
+          interrupt_response: isAuto,  // false = AI keeps talking even if you interrupt
         },
       },
     });
