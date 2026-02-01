@@ -44,11 +44,6 @@ export function mountStreamingApp({ rootId = "lux-stream-root" } = {}) {
     const val = (refs.textInput.value || "").trim();
     if (!val) return;
 
-    const id = `u_${Date.now()}_${Math.random().toString(16).slice(2)}`;
-    store.dispatch({
-      type: ACTIONS.THREAD_ADD_TURN,
-      turn: { id, role: "user", kind: "text", text: val, ts: Date.now() },
-    });
     refs.textInput.value = "";
 
     const st = store.getState().connection.status;
@@ -57,6 +52,11 @@ export function mountStreamingApp({ rootId = "lux-stream-root" } = {}) {
 
   refs.textInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") refs.sendBtn.click();
+  });
+
+  refs.stopBtn?.addEventListener("click", () => {
+    const st = store.getState().connection.status;
+    if (st === "live") transport.stopSpeaking?.();
   });
 
   // Start audio listeners (push-to-talk)

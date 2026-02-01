@@ -24,7 +24,23 @@ export function buildStreamingDOM({ root }) {
   statusPill.className = "ls-pill";
   statusPill.textContent = "Disconnected";
 
-  header.append(headerLeft, statusPill);
+  const getReplyBtn = document.createElement("button");
+  getReplyBtn.className = "ls-btn";
+  getReplyBtn.type = "button";
+  getReplyBtn.textContent = "Get reply";
+  getReplyBtn.disabled = true;
+
+  const stopBtn = document.createElement("button");
+  stopBtn.className = "ls-btn ghost";
+  stopBtn.type = "button";
+  stopBtn.textContent = "Stop speaking";
+  stopBtn.disabled = true;
+
+  const headerRight = document.createElement("div");
+  headerRight.className = "ls-headerRight";
+  headerRight.append(getReplyBtn, stopBtn, statusPill);
+
+  header.append(headerLeft, headerRight);
 
   const thread = document.createElement("main");
   thread.className = "ls-thread";
@@ -75,5 +91,5 @@ export function buildStreamingDOM({ root }) {
   wrap.append(header, thread, controls);
   root.append(wrap);
 
-  return { sub, statusPill, thread, connectBtn, clearBtn, textInput, sendBtn, hint };
+  return { sub, statusPill, thread, connectBtn, clearBtn, textInput, sendBtn, hint, stopBtn, getReplyBtn };
 }

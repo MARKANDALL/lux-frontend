@@ -2,7 +2,7 @@
 import { SCENARIOS } from "../convo/scenarios.js";
 
 const DEFAULTS = {
-  input: "ptt", // ptt | vad | duplex | text
+  input: "tap", // tap | auto  (legacy: ptt->tap, vad->auto)
   transport: "webrtc", // webrtc | websocket
   model: "gpt-realtime-mini",
   voice: "marin",
@@ -36,8 +36,14 @@ export function parseStreamRoute() {
   const stress = (qs.get("stress") || "").trim();
   const pace = (qs.get("pace") || "").trim();
 
-  const input = (qs.get("input") || DEFAULTS.input).trim();
   const transport = (qs.get("transport") || DEFAULTS.transport).trim();
+  const rawInput = (qs.get("input") || "").trim().toLowerCase();
+  const inputDefault = transport === "webrtc" ? "tap" : "ptt";
+  const input0 = rawInput || inputDefault || DEFAULTS.input;
+  const input =
+    input0 === "ptt" ? "tap" :
+    input0 === "vad" ? "auto" :
+    input0;
 
   const model = (qs.get("model") || DEFAULTS.model).trim() || DEFAULTS.model;
   const voice = (qs.get("voice") || DEFAULTS.voice).trim() || DEFAULTS.voice;
@@ -59,7 +65,7 @@ export function parseStreamRoute() {
       stress: stress || null,
       pace: pace || null,
     },
-    input,
+    input, // tap | auto (or legacy values for non-webrtc until we clean later)
     transport,
     model,
     voice,
