@@ -100,12 +100,12 @@ export function mountStreamingApp({ rootId = "lux-stream-root" } = {}) {
   refs.getReplyBtn?.addEventListener("click", () => {
     const st = store.getState().connection.status;
     const r = store.getState().route || {};
-    if (st === "live" && r.input === "tap") transport.requestReply?.();
+ if (st === "live" && r.replyMode === "tap") transport.requestReply?.();
   });
 
   function setMode(mode) {
     const m = mode === "auto" ? "auto" : "tap";
-    store.dispatch({ type: ACTIONS.ROUTE_PATCH, patch: { input: m } });
+  store.dispatch({ type: ACTIONS.ROUTE_PATCH, patch: { replyMode: m } });
     if (store.getState().connection.status === "live") {
       transport.setInputMode?.(m);
     }

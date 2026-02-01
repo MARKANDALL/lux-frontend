@@ -134,8 +134,9 @@ export function createTransportController({ store, route }) {
     resetAssistantBuffer();
 
     try {
-      await provider.sendUserText(t);
-    } catch (err) {
+ const r = store.getState().route || {};
+      const replyMode = String(r.replyMode || r.reply || "auto").toLowerCase();
+      await provider.sendUserText(t, { createResponse: replyMode !== "tap" });    } catch (err) {
       console.error(err);
       setConnection({ status: "error", error: err?.message || String(err) });
     }

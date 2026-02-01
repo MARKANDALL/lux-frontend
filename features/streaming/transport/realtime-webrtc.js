@@ -1,4 +1,3 @@
-// features/streaming/transport/realtime-webrtc.js
 // Implements the TransportController contract: emits events via onEvent({type: ...})
 
 import { getWebRTCAnswerSDP } from "./session-bootstrap.js";
@@ -158,7 +157,8 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
     return okCancel && okClear;
   }
 
-  async function sendUserText(text) {
+  // Patch: Modified sendUserText to accept options object and conditionally create response.
+  async function sendUserText(text, { createResponse = true } = {}) {
     if (!text) return;
     unmuteIfNeeded();
 
@@ -172,14 +172,9 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
     });
 
     // NEW: only auto-create a response in Auto mode
-    if (inputMode === "auto") {
-      const ok2 = sendEvent({ type: "response.create" });
-      if (!ok1 || !ok2) throw new Error("Transport not connected");
-      return;
-    }
+    const ok2 = createResponse ? sendEvent({ type: "response.create" }) : true;
 
-    // Tap mode: user must click "Get reply"
-    if (!ok1) throw new Error("Transport not connected");
+    if (!ok1 || !ok2) throw new Error("Transport not connected");
   }
 
   // Your current PTT records blobs; WebRTC realtime uses live mic tracks instead.
