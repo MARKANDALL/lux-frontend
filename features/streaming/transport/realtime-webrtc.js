@@ -14,6 +14,38 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
     try { onEvent?.({ type, ...(extra || {}) }); } catch {}
   }
 
+  function sendEvent(evt) {
+    if (!dc || dc.readyState !== "open") return false;
+    dc.send(JSON.stringify(evt));
+    return true;
+  }
+
+  function setTurnTaking({ mode } = {}) {
+    const m = String(mode || "tap").toLowerCase();
+    const isAuto = m === "auto";
+
+    // VAD config: server_vad is default; we explicitly set create_response / interrupt_response
+    // so Tap vs Auto is deterministic.
+    return sendEvent({
+      type: "session.update",
+      session: {
+        turn_detection: {
+          type: "server_vad",
+          threshold: 0.5,
+          prefix_padding_ms: 300,
+          silence_duration_ms: 500,
+          create_response: isAuto,
+          interrupt_response: isAuto,
+        },
+      },
+    });
+  }
+
+  function requestReply() {
+    const ok = sendEvent({ type: "response.create" });
+    if (!ok) throw new Error("Transport not connected");
+  }
+
   async function connect() {
     if (pc) return;
 
@@ -40,7 +72,11 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
 
     // Data channel for events + text
     dc = pc.createDataChannel("oai-events");
-    dc.addEventListener("open", () => emit("connected"));
+    dc.addEventListener("open", () => {
+      emit("connected");
+      // Default streaming contract: Tap mode unless UI switches it later.
+      setTurnTaking({ mode: "tap" });
+    });
     dc.addEventListener("close", () => emit("disconnected"));
     dc.addEventListener("message", (e) => {
       let evt = null;
@@ -84,12 +120,6 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
     audioEl = null;
 
     emit("disconnected");
-  }
-
-  function sendEvent(evt) {
-    if (!dc || dc.readyState !== "open") return false;
-    dc.send(JSON.stringify(evt));
-    return true;
   }
 
   function unmuteIfNeeded() {
@@ -151,7 +181,15 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
     );
   }
 
-  return { connect, disconnect, sendUserText, sendUserAudio, stopSpeaking };
+  return {
+    connect,
+    disconnect,
+    sendUserText,
+    sendUserAudio,
+    stopSpeaking,
+    setTurnTaking,
+    requestReply,
+  };
 }
 
 function extractAssistantText(evt) {
