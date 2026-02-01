@@ -10,6 +10,9 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
   let audioEl = null;
   let mutedByInterrupt = false;
 
+  // near top
+  let inputMode = "tap";
+
   function emit(type, extra) {
     try { onEvent?.({ type, ...(extra || {}) }); } catch {}
   }
@@ -22,7 +25,8 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
 
   function setTurnTaking({ mode } = {}) {
     const m = String(mode || "tap").toLowerCase();
-    const isAuto = m === "auto";
+    inputMode = m === "auto" ? "auto" : "tap";
+    const isAuto = inputMode === "auto";
 
     // VAD config: server_vad is default; we explicitly set create_response / interrupt_response
     // so Tap vs Auto is deterministic.
@@ -155,8 +159,6 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
 
   async function sendUserText(text) {
     if (!text) return;
-
-    // If user interrupted earlier, re-enable audio for the next reply.
     unmuteIfNeeded();
 
     const ok1 = sendEvent({
@@ -168,7 +170,8 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
       },
     });
 
-    const ok2 = sendEvent({ type: "response.create" });
+    // ✅ Only auto mode requests a response immediately
+    const ok2 = inputMode === "auto" ? sendEvent({ type: "response.create" }) : true;
 
     if (!ok1 || !ok2) throw new Error("Transport not connected");
   }
