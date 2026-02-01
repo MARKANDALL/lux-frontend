@@ -80,6 +80,9 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
     dc = pc.createDataChannel("oai-events");
     dc.addEventListener("open", () => {
       emit("connected");
+      // ✅ FIX: Immediately cancel any race-condition response
+      sendEvent({ type: "response.cancel" });
+
       // Default streaming contract: Tap mode unless UI switches it later.
       setTurnTaking({ mode: "tap" });
     });
@@ -170,7 +173,7 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
       item: {
         type: "message",
         role: "user",
-        content: [{ type: "input_text", text }],
+        content: [{ type: "input_text", text }], 
       },
     });
 
