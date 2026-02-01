@@ -8,6 +8,8 @@ import { renderStreaming } from "./ui/render.js";
 
 import { createTransportController } from "./transport/transport-controller.js";
 import { createAudioController } from "./audio/audio-controller.js";
+import { ensureUID } from "../../api/identity.js";
+import { saveAttempt } from "../../api/attempts.js";
 
 export function mountStreamingApp({ rootId = "lux-stream-root" } = {}) {
   const root = document.getElementById(rootId);
@@ -28,6 +30,48 @@ export function mountStreamingApp({ rootId = "lux-stream-root" } = {}) {
   // Controllers
   const transport = createTransportController({ store, route });
   const audio = createAudioController({ store, route, transport });
+
+  // Session runtime
+  let timerId = null;
+  let endAtMs = 0;
+
+  function presetToCaps(durationSec) {
+    const d = Number(durationSec || 300);
+    if (d <= 150) return { durationSec: 150, turnCap: 6 };
+    if (d >= 450) return { durationSec: 450, turnCap: 15 };
+    return { durationSec: 300, turnCap: 10 };
+  }
+
+  function stopTimer() {
+    if (timerId) window.clearInterval(timerId);
+    timerId = null;
+    endAtMs = 0;
+  }
+
+  function startTimer(durationSec) {
+    stopTimer();
+    const d = Number(durationSec || 300);
+    endAtMs = Date.now() + d * 1000;
+    store.dispatch({
+      type: ACTIONS.SESSION_SET,
+      session: {
+        running: true,
+        ended: false,
+        endReason: null,
+        modalOpen: false,
+        remainingSec: d,
+      },
+    });
+
+    timerId = window.setInterval(() => {
+      const remaining = Math.ceil((endAtMs - Date.now()) / 1000);
+      store.dispatch({ type: ACTIONS.SESSION_TICK, remainingSec: remaining });
+      if (remaining <= 0) {
+        stopTimer();
+        store.dispatch({ type: ACTIONS.SESSION_END, reason: "timer" });
+      }
+    }, 250);
+  }
 
   // --- wire UI intents ---
   refs.connectBtn.addEventListener("click", () => {
@@ -76,6 +120,60 @@ export function mountStreamingApp({ rootId = "lux-stream-root" } = {}) {
     if (st === "live") transport.stopSpeaking?.();
   });
 
+  // Duration preset (applies next session; disabled while live)
+  refs.durationSel?.addEventListener("change", () => {
+    const sec = Number(refs.durationSel.value || 300);
+    const caps = presetToCaps(sec);
+    store.dispatch({
+      type: ACTIONS.SESSION_SET,
+      session: { ...caps, remainingSec: caps.durationSec, turnsUsed: 0 },
+    });
+    store.dispatch({
+      type: ACTIONS.ROUTE_PATCH,
+      patch: { durationSec: caps.durationSec, turnCap: caps.turnCap },
+    });
+  });
+
+  // Modal buttons
+  refs.discardBtn?.addEventListener("click", () => {
+    store.dispatch({ type: ACTIONS.SESSION_MODAL_SET, open: false });
+    store.dispatch({ type: ACTIONS.THREAD_CLEAR });
+  });
+
+  refs.saveBtn?.addEventListener("click", async () => {
+    try {
+      const uid = ensureUID();
+      const st = store.getState();
+      const turns = Array.isArray(st.thread?.turns) ? st.thread.turns : [];
+      const transcript = turns
+        .filter((t) => t && t.kind === "text" && t.text)
+        .map((t) => `${t.role === "user" ? "User" : "Lux"}: ${t.text}`)
+        .join("\n");
+
+      const passageKey = `stream:${Date.now()}`;
+      await saveAttempt({
+        uid,
+        passageKey,
+        partIndex: 0,
+        text: transcript,
+        azureResult: null,
+        l1: null,
+        sessionId: passageKey,
+        summary: {
+          headline: "Streaming — Flow under time",
+          durationSec: st.session?.durationSec,
+          turnsUsed: st.session?.turnsUsed,
+          endReason: st.session?.endReason,
+          meta: { mode: "streaming" },
+        },
+      });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      store.dispatch({ type: ACTIONS.SESSION_MODAL_SET, open: false });
+    }
+  });
+
   // Start audio listeners (push-to-talk)
   audio.start();
 
@@ -84,6 +182,39 @@ export function mountStreamingApp({ rootId = "lux-stream-root" } = {}) {
   store.subscribe(render);
   render();
 
+  // Connection/session watcher: start/stop timer and enforce end flow
+  let lastConn = "disconnected";
+  store.subscribe(() => {
+    const st = store.getState();
+    const conn = st.connection.status;
+    const sess = st.session || {};
+
+    // On transition to live, initialize session caps and start timer
+    if (conn === "live" && lastConn !== "live") {
+      const caps = presetToCaps(Number(sess.durationSec || st.route?.durationSec || 300));
+      store.dispatch({
+        type: ACTIONS.SESSION_SET,
+        session: { ...caps, remainingSec: caps.durationSec, turnsUsed: 0 },
+      });
+      startTimer(caps.durationSec);
+    }
+
+    // On leaving live, stop timer
+    if (conn !== "live" && lastConn === "live") {
+      stopTimer();
+      store.dispatch({ type: ACTIONS.SESSION_SET, session: { running: false } });
+    }
+
+    // If session ended while live, disconnect and show modal (already opened by reducer)
+    if (conn === "live" && sess.ended) {
+      try {
+        transport.disconnect();
+      } catch (_) {}
+    }
+
+    lastConn = conn;
+  });
+
   // Safety: cleanup on hard navigation away
   window.addEventListener("beforeunload", () => {
     try {
@@ -91,6 +222,9 @@ export function mountStreamingApp({ rootId = "lux-stream-root" } = {}) {
     } catch (_) {}
     try {
       transport.disconnect();
+    } catch (_) {}
+    try {
+      stopTimer();
     } catch (_) {}
   });
 }

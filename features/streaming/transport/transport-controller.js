@@ -83,6 +83,8 @@ export function createTransportController({ store, route }) {
           type: ACTIONS.THREAD_ADD_TURN,
           turn: { id: asstId, role: "assistant", kind: "text", text: asstBuf, ts: now },
         });
+        // Count assistant replies as “turns used” for cap enforcement
+        store.dispatch({ type: ACTIONS.SESSION_TURN_INC });
         lastAt = now;
         return;
       }
@@ -161,5 +163,29 @@ export function createTransportController({ store, route }) {
     }
   }
 
-  return { connect, disconnect, sendUserText, sendUserAudio, stopSpeaking };
+  function setInputMode(mode) {
+    try {
+      if (typeof provider.setTurnTaking === "function") {
+        provider.setTurnTaking({ mode });
+      }
+    } catch (_) {}
+  }
+
+  function requestReply() {
+    try {
+      if (typeof provider.requestReply === "function") provider.requestReply();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  return {
+    connect,
+    disconnect,
+    sendUserText,
+    sendUserAudio,
+    stopSpeaking,
+    setInputMode,
+    requestReply,
+  };
 }

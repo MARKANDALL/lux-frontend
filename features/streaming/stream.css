@@ -171,3 +171,50 @@
   #lux-stream-root .ls-controls{ grid-template-columns: 1fr; }
   #lux-stream-root .ls-controlsRight{ justify-content:flex-start; }
 }
+
+#lux-stream-root .ls-headerRight{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+#lux-stream-root .ls-modalBackdrop{
+  position: fixed;
+  inset: 0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background: rgba(0,0,0,0.35);
+  z-index: 9999;
+}
+
+#lux-stream-root .ls-modalCard{
+  width: min(560px, calc(100vw - 40px));
+  border-radius: 18px;
+  background: rgba(255,255,255,0.92);
+  border: 1px solid rgba(0,0,0,0.12);
+  box-shadow: 0 18px 40px rgba(0,0,0,0.22);
+  padding: 16px;
+  backdrop-filter: blur(10px);
+}
+
+#lux-stream-root .ls-modalTitle{
+  font-weight: 900;
+  font-size: 16px;
+}
+
+#lux-stream-root .ls-modalBody{
+  margin-top: 8px;
+  color: rgba(0,0,0,0.68);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+#lux-stream-root .ls-modalBtns{
+  margin-top: 12px;
+  display:flex;
+  justify-content:flex-end;
+  gap: 10px;
+}

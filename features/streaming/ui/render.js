@@ -22,8 +22,7 @@ function renderTurns(container, turns) {
   if (!turns || !turns.length) {
     const empty = document.createElement("div");
     empty.className = "ls-empty";
-    empty.textContent =
-      "No turns yet. Click Connect, then hold Space to talk (or type a message).";
+    empty.textContent = "No turns yet. Click Connect, then talk naturally (or type a message).";
     container.append(empty);
     return;
   }
@@ -43,6 +42,13 @@ function renderTurns(container, turns) {
   }
 
   container.scrollTop = container.scrollHeight;
+}
+
+function fmtMMSS(sec) {
+  const s = Math.max(0, Math.floor(Number(sec || 0)));
+  const m = Math.floor(s / 60);
+  const r = String(s % 60).padStart(2, "0");
+  return `${m}:${r}`;
 }
 
 export function renderStreaming({ state, refs }) {
@@ -89,4 +95,26 @@ export function renderStreaming({ state, refs }) {
   }
 
   renderTurns(refs.thread, state.thread.turns);
+
+  // Timer pill + preset selector
+  if (refs.timerPill) {
+    const live = state.connection.status === "live";
+    refs.timerPill.textContent = live ? `⏱ ${fmtMMSS(state.session?.remainingSec)}` : "⏱ --:--";
+  }
+  if (refs.durationSel) {
+    const dur = String(state.session?.durationSec || 300);
+    if (refs.durationSel.value !== dur) refs.durationSel.value = dur;
+    refs.durationSel.disabled = state.connection.status === "live";
+  }
+
+  // End modal
+  if (refs.modalBackdrop) {
+    const open = !!state.session?.modalOpen;
+    refs.modalBackdrop.style.display = open ? "flex" : "none";
+    if (open && refs.modalBody) {
+      const reason = state.session?.endReason || "manual";
+      const turns = state.session?.turnsUsed || 0;
+      refs.modalBody.textContent = `Ended by ${reason}. Turns: ${turns}.`;
+    }
+  }
 }
