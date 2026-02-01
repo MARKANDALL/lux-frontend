@@ -5,6 +5,13 @@ function fmtKB(bytes) {
   return `${Math.max(0, Math.round(b / 1024))} KB`;
 }
 
+function fmtClock(sec) {
+  const s = Math.max(0, Number(sec || 0));
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return `${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`;
+}
+
 function setPill(el, { status, error }) {
   if (!el) return;
   el.dataset.status = status || "";
@@ -98,8 +105,7 @@ export function renderStreaming({ state, refs }) {
 
   // Timer pill + preset selector
   if (refs.timerPill) {
-    const live = state.connection.status === "live";
-    refs.timerPill.textContent = live ? `⏱ ${fmtMMSS(state.session?.remainingSec)}` : "⏱ --:--";
+    refs.timerPill.textContent = fmtClock(state.session?.remainingSec);
   }
   if (refs.durationSel) {
     const dur = String(state.session?.durationSec || 300);

@@ -29,11 +29,16 @@ export function mountStreamingApp({ rootId = "lux-stream-root" } = {}) {
 
   // Controllers
   const transport = createTransportController({ store, route });
-  const audio = createAudioController({ store, route, transport });
+
+  // Only use blob-based PTT audio in websocket mode.
+  const audio =
+    (route?.transport || "") === "websocket"
+      ? createAudioController({ store, route, transport })
+      : { start() {}, stop() {}, dispose() {} };
 
   // Session runtime
   let timerId = null;
-  let endAtMs = 0;
+  let remaining = 0;
 
   function presetToCaps(durationSec) {
     const d = Number(durationSec || 300);
@@ -43,34 +48,28 @@ export function mountStreamingApp({ rootId = "lux-stream-root" } = {}) {
   }
 
   function stopTimer() {
-    if (timerId) window.clearInterval(timerId);
+    if (timerId) clearInterval(timerId);
     timerId = null;
-    endAtMs = 0;
   }
 
-  function startTimer(durationSec) {
+  function startTimer(totalSec) {
     stopTimer();
-    const d = Number(durationSec || 300);
-    endAtMs = Date.now() + d * 1000;
+    remaining = Math.max(1, Number(totalSec || 150));
+
     store.dispatch({
       type: ACTIONS.SESSION_SET,
-      session: {
-        running: true,
-        ended: false,
-        endReason: null,
-        modalOpen: false,
-        remainingSec: d,
-      },
+      session: { durationSec: remaining, remainingSec: remaining, running: true },
     });
 
-    timerId = window.setInterval(() => {
-      const remaining = Math.ceil((endAtMs - Date.now()) / 1000);
+    timerId = setInterval(() => {
+      remaining = Math.max(0, remaining - 1);
       store.dispatch({ type: ACTIONS.SESSION_TICK, remainingSec: remaining });
+
       if (remaining <= 0) {
         stopTimer();
-        store.dispatch({ type: ACTIONS.SESSION_END, reason: "timer" });
+        store.dispatch({ type: ACTIONS.SESSION_SET, session: { running: false } });
       }
-    }, 250);
+    }, 1000);
   }
 
   // --- wire UI intents ---
@@ -182,37 +181,53 @@ export function mountStreamingApp({ rootId = "lux-stream-root" } = {}) {
   store.subscribe(render);
   render();
 
-  // Connection/session watcher: start/stop timer and enforce end flow
-  let lastConn = "disconnected";
+  // ---- SAFE connection watcher (prevents stack overflow) ----
+  let lastConn = store.getState().connection.status;
+  let connTaskQueued = false;
+
+  store.subscribe((state, action) => {
+    if (action?.type !== ACTIONS.CONNECTION_SET) return;
+
+    // coalesce: never dispatch inside the same call stack as the triggering dispatch
+    if (connTaskQueued) return;
+    connTaskQueued = true;
+
+    queueMicrotask(() => {
+      connTaskQueued = false;
+
+      const cur = store.getState().connection.status;
+      const prev = lastConn;
+      lastConn = cur;
+
+      if (cur === "live" && prev !== "live") {
+        const sess = store.getState().session || {};
+        const caps = presetToCaps(
+          Number(sess.durationSec || store.getState().route?.durationSec || 300)
+        );
+        store.dispatch({
+          type: ACTIONS.SESSION_SET,
+          session: { ...caps, remainingSec: caps.durationSec, turnsUsed: 0 },
+        });
+        startTimer(caps.durationSec);
+      }
+
+      if (cur !== "live" && prev === "live") {
+        stopTimer();
+        store.dispatch({ type: ACTIONS.SESSION_RESET });
+      }
+    });
+  });
+
+  // If session ended while live, disconnect and show modal (already opened by reducer)
   store.subscribe(() => {
     const st = store.getState();
     const conn = st.connection.status;
     const sess = st.session || {};
-
-    // On transition to live, initialize session caps and start timer
-    if (conn === "live" && lastConn !== "live") {
-      const caps = presetToCaps(Number(sess.durationSec || st.route?.durationSec || 300));
-      store.dispatch({
-        type: ACTIONS.SESSION_SET,
-        session: { ...caps, remainingSec: caps.durationSec, turnsUsed: 0 },
-      });
-      startTimer(caps.durationSec);
-    }
-
-    // On leaving live, stop timer
-    if (conn !== "live" && lastConn === "live") {
-      stopTimer();
-      store.dispatch({ type: ACTIONS.SESSION_SET, session: { running: false } });
-    }
-
-    // If session ended while live, disconnect and show modal (already opened by reducer)
     if (conn === "live" && sess.ended) {
       try {
         transport.disconnect();
       } catch (_) {}
     }
-
-    lastConn = conn;
   });
 
   // Safety: cleanup on hard navigation away

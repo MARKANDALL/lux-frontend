@@ -2,8 +2,8 @@
 import { SCENARIOS } from "../convo/scenarios.js";
 
 const DEFAULTS = {
-  input: "tap", // tap | auto  (legacy: ptt->tap, vad->auto)
-  transport: "webrtc", // webrtc | websocket
+  input: "tap",
+  transport: "webrtc",
   model: "gpt-realtime-mini",
   voice: "marin",
   speed: 0.85,

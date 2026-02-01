@@ -10,6 +10,7 @@ export const ACTIONS = {
 
   SESSION_SET: "session/set",
   SESSION_TICK: "session/tick",
+  SESSION_RESET: "session/reset",
   SESSION_TURN_INC: "session/turn/inc",
   SESSION_END: "session/end",
   SESSION_MODAL_SET: "session/modal/set",
@@ -117,6 +118,22 @@ export function reducer(state, action) {
       const remainingSec = Number(a.remainingSec);
       if (!Number.isFinite(remainingSec)) return state;
       return { ...state, session: { ...state.session, remainingSec } };
+    }
+
+    case ACTIONS.SESSION_RESET: {
+      const dur = state.session?.durationSec || 300;
+      return {
+        ...state,
+        session: {
+          ...state.session,
+          remainingSec: dur,
+          running: false,
+          ended: false,
+          endReason: null,
+          modalOpen: false,
+          turnsUsed: 0, // optional but usually what you want on reset
+        },
+      };
     }
 
     case ACTIONS.SESSION_TURN_INC: {

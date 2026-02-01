@@ -54,7 +54,11 @@ export function buildStreamingDOM({ root }) {
 
   modeWrap.append(tapBtn, autoBtn);
 
-  headerRight.append(modeWrap, getReplyBtn, stopBtn, statusPill);
+  const timerPill = document.createElement("div");
+  timerPill.className = "ls-pill ls-timerPill";
+  timerPill.textContent = "02:30";
+
+  headerRight.append(modeWrap, getReplyBtn, stopBtn, timerPill, statusPill);
 
   header.append(headerLeft, headerRight);
 
@@ -120,5 +124,6 @@ export function buildStreamingDOM({ root }) {
     getReplyBtn,
     tapBtn,
     autoBtn,
+    timerPill,
   };
 }

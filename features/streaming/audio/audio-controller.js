@@ -10,16 +10,13 @@ function makeMode({ input, handlers }) {
 }
 
 export function createAudioController({ store, route, transport }) {
-  // WebRTC transport uses live mic tracks (not recorded blobs).
-  // Until Tap/Auto (event-driven) is implemented, disable blob-based PTT to avoid errors.
-  if (String(route?.transport || "").toLowerCase() === "webrtc") {
-    return {
-      start() {
-        store.dispatch({ type: ACTIONS.TURN_PHASE_SET, turn: { phase: "idle" } });
-      },
-      stop() {},
-      dispose() {},
-    };
+  const t = String(route?.transport || "").toLowerCase();
+
+  // WebRTC Realtime uses live mic tracks + server VAD.
+  // Do NOT run MediaRecorder push-to-talk here.
+  if (t === "webrtc") {
+    store.dispatch({ type: ACTIONS.TURN_PHASE_SET, turn: { phase: "idle" } });
+    return { start() {}, stop() {}, dispose() {} };
   }
 
   const mode = makeMode({
