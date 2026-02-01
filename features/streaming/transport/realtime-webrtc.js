@@ -32,22 +32,22 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
     console.log(`[WebRTC] Switching Input Mode: ${inputMode.toUpperCase()} (create_response: ${isAuto})`);
 
     // Only send `turn_detection` if necessary
-    const sessionConfig = {
-      turn_detection: {
-        type: "server_vad",
-        threshold: 0.5,
-        prefix_padding_ms: 300,
-        silence_duration_ms: 500,
-        create_response: isAuto,     // false = Tap, true = Auto
-        interrupt_response: isAuto,  // false = AI keeps talking even if you interrupt
-      },
-    };
-
-    // Only send the update if the session is connected
     if (transport && transport.isConnected) {
       sendEvent({
         type: "session.update",
-        session: sessionConfig,
+        session: {
+          // Only send 'turn_detection' if isAuto is true
+          ...(isAuto ? {
+            turn_detection: {
+              type: "server_vad",
+              threshold: 0.5,
+              prefix_padding_ms: 300,
+              silence_duration_ms: 500,
+              create_response: true,
+              interrupt_response: true,
+            },
+          } : {}),
+        },
       });
     }
   }

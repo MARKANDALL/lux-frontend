@@ -71,6 +71,7 @@ export async function getWebRTCAnswerSDP(offerSDP, opts = {}) {
     throw new Error("No Admin Token provided. Cannot connect.");
   }
 
+  // ✅ FIX: Avoid sending `session.turn_detection`
   const resp = await fetch(url, {
     method: "POST",
     headers: { 
