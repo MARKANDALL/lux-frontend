@@ -10,10 +10,23 @@ function makeMode({ input, handlers }) {
 }
 
 export function createAudioController({ store, route, transport }) {
+  // WebRTC transport uses live mic tracks (not recorded blobs).
+  // Until Tap/Auto (event-driven) is implemented, disable blob-based PTT to avoid errors.
+  if (String(route?.transport || "").toLowerCase() === "webrtc") {
+    return {
+      start() {
+        store.dispatch({ type: ACTIONS.TURN_PHASE_SET, turn: { phase: "idle" } });
+      },
+      stop() {},
+      dispose() {},
+    };
+  }
+
   const mode = makeMode({
     input: route?.input,
     handlers: {
-      onState: (phase) => store.dispatch({ type: ACTIONS.TURN_PHASE_SET, turn: { phase } }),
+      onState: (phase) =>
+        store.dispatch({ type: ACTIONS.TURN_PHASE_SET, turn: { phase } }),
       onError: (err) => {
         console.error(err);
         store.dispatch({
@@ -32,23 +45,38 @@ export function createAudioController({ store, route, transport }) {
             kind: "audio",
             text: "",
             ts: Date.now(),
-            audio: { mimeType: meta?.mimeType || blob?.type || "audio/webm", size: blob?.size || 0 },
+            audio: {
+              mimeType: meta?.mimeType || blob?.type || "audio/webm",
+              size: blob?.size || 0,
+            },
           },
         });
 
         const status = store.getState().connection.status;
         if (status === "live") {
-          store.dispatch({ type: ACTIONS.TURN_PHASE_SET, turn: { phase: "sending", activeTurnId: id } });
+          store.dispatch({
+            type: ACTIONS.TURN_PHASE_SET,
+            turn: { phase: "sending", activeTurnId: id },
+          });
           await transport.sendUserAudio(blob);
-          store.dispatch({ type: ACTIONS.TURN_PHASE_SET, turn: { phase: "idle", activeTurnId: null } });
+          store.dispatch({
+            type: ACTIONS.TURN_PHASE_SET,
+            turn: { phase: "idle", activeTurnId: null },
+          });
         }
       },
     },
   });
 
-  function start() { mode.start(); }
-  function stop() { mode.stop(); }
-  function dispose() { mode.dispose?.(); }
+  function start() {
+    mode.start();
+  }
+  function stop() {
+    mode.stop();
+  }
+  function dispose() {
+    mode.dispose?.();
+  }
 
   return { start, stop, dispose };
 }
