@@ -2,6 +2,7 @@
 
 export const ACTIONS = {
   ROUTE_SET: "route/set",
+  ROUTE_PATCH: "route/patch",
 
   CONNECTION_SET: "connection/set",
 
@@ -39,6 +40,12 @@ export function reducer(state, action) {
   switch (a.type) {
     case ACTIONS.ROUTE_SET: {
       const route = a.route || state.route;
+      return { ...state, route, scenario: route?.scenario || state.scenario };
+    }
+
+    case ACTIONS.ROUTE_PATCH: {
+      const patch = a.patch || {};
+      const route = { ...(state.route || {}), ...patch };
       return { ...state, route, scenario: route?.scenario || state.scenario };
     }
 

@@ -54,6 +54,23 @@ export function mountStreamingApp({ rootId = "lux-stream-root" } = {}) {
     if (e.key === "Enter") refs.sendBtn.click();
   });
 
+  refs.getReplyBtn?.addEventListener("click", () => {
+    const st = store.getState().connection.status;
+    const r = store.getState().route || {};
+    if (st === "live" && r.input === "tap") transport.requestReply?.();
+  });
+
+  function setMode(mode) {
+    const m = mode === "auto" ? "auto" : "tap";
+    store.dispatch({ type: ACTIONS.ROUTE_PATCH, patch: { input: m } });
+    if (store.getState().connection.status === "live") {
+      transport.setInputMode?.(m);
+    }
+  }
+
+  refs.tapBtn?.addEventListener("click", () => setMode("tap"));
+  refs.autoBtn?.addEventListener("click", () => setMode("auto"));
+
   refs.stopBtn?.addEventListener("click", () => {
     const st = store.getState().connection.status;
     if (st === "live") transport.stopSpeaking?.();

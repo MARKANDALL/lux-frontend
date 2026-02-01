@@ -38,7 +38,23 @@ export function buildStreamingDOM({ root }) {
 
   const headerRight = document.createElement("div");
   headerRight.className = "ls-headerRight";
-  headerRight.append(getReplyBtn, stopBtn, statusPill);
+
+  const modeWrap = document.createElement("div");
+  modeWrap.className = "ls-modeWrap";
+
+  const tapBtn = document.createElement("button");
+  tapBtn.className = "ls-btn ghost";
+  tapBtn.type = "button";
+  tapBtn.textContent = "Tap";
+
+  const autoBtn = document.createElement("button");
+  autoBtn.className = "ls-btn ghost";
+  autoBtn.type = "button";
+  autoBtn.textContent = "Auto";
+
+  modeWrap.append(tapBtn, autoBtn);
+
+  headerRight.append(modeWrap, getReplyBtn, stopBtn, statusPill);
 
   header.append(headerLeft, headerRight);
 
@@ -91,5 +107,18 @@ export function buildStreamingDOM({ root }) {
   wrap.append(header, thread, controls);
   root.append(wrap);
 
-  return { sub, statusPill, thread, connectBtn, clearBtn, textInput, sendBtn, hint, stopBtn, getReplyBtn };
+  return {
+    sub,
+    statusPill,
+    thread,
+    connectBtn,
+    clearBtn,
+    textInput,
+    sendBtn,
+    hint,
+    stopBtn,
+    getReplyBtn,
+    tapBtn,
+    autoBtn,
+  };
 }

@@ -22,7 +22,8 @@ function renderTurns(container, turns) {
   if (!turns || !turns.length) {
     const empty = document.createElement("div");
     empty.className = "ls-empty";
-    empty.textContent = "No turns yet. Click Connect, then hold Space to talk (or type a message).";
+    empty.textContent =
+      "No turns yet. Click Connect, then hold Space to talk (or type a message).";
     container.append(empty);
     return;
   }
@@ -67,6 +68,24 @@ export function renderStreaming({ state, refs }) {
 
   if (refs.stopBtn) {
     refs.stopBtn.disabled = state.connection.status !== "live";
+  }
+
+  if (refs.getReplyBtn) {
+    const isLive = state.connection.status === "live";
+    const isTap = (r.input || "") === "tap";
+    refs.getReplyBtn.disabled = !(isLive && isTap);
+    refs.getReplyBtn.style.display = isTap ? "" : "none";
+  }
+
+  // Mode toggle (Tap vs Auto)
+  const mode = r.input || "tap";
+  if (refs.tapBtn) {
+    refs.tapBtn.dataset.active = mode === "tap" ? "1" : "0";
+    refs.tapBtn.disabled = state.connection.status !== "live" ? false : mode === "tap";
+  }
+  if (refs.autoBtn) {
+    refs.autoBtn.dataset.active = mode === "auto" ? "1" : "0";
+    refs.autoBtn.disabled = state.connection.status !== "live" ? false : mode === "auto";
   }
 
   renderTurns(refs.thread, state.thread.turns);
