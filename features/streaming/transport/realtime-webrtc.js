@@ -31,20 +31,44 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
     // so Tap vs Auto is deterministic.
     console.log(`[WebRTC] Switching Input Mode: ${inputMode.toUpperCase()} (create_response: ${isAuto})`);
 
-    // VAD config: server_vad is default; we explicitly set create_response
-    return sendEvent({
-      type: "session.update",
-      session: {
-        turn_detection: {
-          type: "server_vad",
-          threshold: 0.5,
-          prefix_padding_ms: 300,
-          silence_duration_ms: 500,
-          create_response: isAuto,     // false = Tap, true = Auto
-          interrupt_response: isAuto,  // false = AI keeps talking even if you interrupt
-        },
+    // Only send `turn_detection` if necessary
+    const sessionConfig = {
+      turn_detection: {
+        type: "server_vad",
+        threshold: 0.5,
+        prefix_padding_ms: 300,
+        silence_duration_ms: 500,
+        create_response: isAuto,     // false = Tap, true = Auto
+        interrupt_response: isAuto,  // false = AI keeps talking even if you interrupt
       },
-    });
+    };
+
+    // Only send the update if the session is connected
+    if (transport && transport.isConnected) {
+      sendEvent({
+        type: "session.update",
+        session: sessionConfig,
+      });
+    }
+  }
+
+  /**
+   * Updates the session configuration live over the data channel.
+   * @param {Object} sessionParams - The session object parameters to update.
+   */
+  function updateSession(sessionParams) {
+    if (!dc || dc.readyState !== 'open') {
+      console.warn("[WebRTC] Data channel not ready for update.");
+      return;
+    }
+
+    const event = {
+      type: "session.update",
+      session: sessionParams
+    };
+
+    console.log("[WebRTC] Sending session.update:", event);
+    dc.send(JSON.stringify(event));
   }
 
   function requestReply() {
@@ -199,6 +223,7 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
     stopSpeaking,
     setTurnTaking,
     requestReply,
+    updateSession, // Added to expose the updateSession method
   };
 }
 
