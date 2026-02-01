@@ -47,6 +47,23 @@ export default defineConfig({
         target: API_ORIGIN,
         changeOrigin: true,
         secure: true,
+        // ✅ AGGRESSIVE BYPASS
+        bypass: (req, res, options) => {
+          const url = req.url;
+          // If it asks for a static file extension, DO NOT PROXY.
+          // This forces Vite to serve the file from your disk.
+          if (
+            url.includes(".js") || 
+            url.includes(".json") || 
+            url.includes(".css") || 
+            url.includes(".html") ||
+            url.includes("@vite") ||
+            url.includes("node_modules")
+          ) {
+            console.log(`[Vite Proxy] Bypassing: ${url}`); // 👀 Check your terminal for this
+            return url;
+          }
+        },
         configure: (proxy) => {
           proxy.on("proxyReq", (proxyReq) => {
             const t = getAdminToken();

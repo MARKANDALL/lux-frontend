@@ -1,5 +1,3 @@
-// features/streaming/transport/session-bootstrap.js
-
 import { API_BASE } from "../../../api/util.js";
 
 function clampNumber(v, fallback, min, max) {
@@ -12,6 +10,25 @@ function clampInt(v, fallback, min, max) {
   const n = Number.parseInt(v, 10);
   if (!Number.isFinite(n)) return fallback;
   return Math.min(max, Math.max(min, n));
+}
+
+// ✅ 1. ROBUST TOKEN GETTER
+function getClientToken() {
+  if (typeof window === "undefined") return "";
+  
+  // Try storage first
+  let t = sessionStorage.getItem("lux_admin_token") || localStorage.getItem("lux_admin_token");
+  
+  // If missing, ASK the user and save it
+  if (!t) {
+    t = prompt("⚠️ Admin Token required for Streaming. Please paste it here:");
+    if (t) {
+      t = t.trim();
+      sessionStorage.setItem("lux_admin_token", t); // Save for this session
+      localStorage.setItem("lux_admin_token", t);   // Save forever
+    }
+  }
+  return t || "";
 }
 
 export async function getWebRTCAnswerSDP(offerSDP, opts = {}) {
@@ -32,7 +49,7 @@ export async function getWebRTCAnswerSDP(offerSDP, opts = {}) {
   const maxOutputTokens = clampInt(
     opts.maxOutputTokens ??
       opts.max_output_tokens ??
-      qs.get("max_output_tokens") ??
+      qs.get("max_output_tokens") ?? 
       qs.get("maxOutputTokens"),
     250,
     1,
@@ -47,9 +64,19 @@ export async function getWebRTCAnswerSDP(offerSDP, opts = {}) {
 
   const url = `${API_BASE}/api/realtime/webrtc/session?${params.toString()}`;
 
+  // ✅ 2. CALL GETTER
+  const token = getClientToken();
+
+  if (!token) {
+    throw new Error("No Admin Token provided. Cannot connect.");
+  }
+
   const resp = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/sdp" },
+    headers: { 
+      "Content-Type": "application/sdp",
+      "x-admin-token": token 
+    },
     body: offerSDP,
   });
 
