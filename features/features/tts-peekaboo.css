@@ -1,298 +1,315 @@
 /* ==========================================================================
-   Text-to-Speech “Peekaboo” Panel (top-right corner drawer)
-   File: features/features/tts-peekaboo.css
-   Scope: only layout/UX chrome for the panel + tab
-   ========================================================================== */
+    Text-to-Speech “Peekaboo” Panel (top-right corner drawer)
+    File: features/features/tts-peekaboo.css
+    Scope: only layout/UX chrome for the panel + tab
+    ========================================================================== */
 
-/* ---- Safety: if inline guard fails, keep the host hidden until adopted ---- */
-#tts-controls[data-luxHidden="1"] {
-  display: none !important;
-}
-
-:root {
-  --lux-tts-panel-w: 360px;
-  --lux-tts-panel-max-w: min(92vw, 380px);
-  --lux-tts-panel-max-h: min(520px, 70vh);
-  --lux-tts-radius: 14px;
-  --lux-tts-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
-  --lux-tts-border: 1px solid rgba(0, 0, 0, 0.06);
-  --lux-tts-tab-bg: #1082ff;
-  --lux-tts-tab-bg-hover: #0d6ad1;
-  --lux-tts-tab-ink: #ffffff;
-
-  --lux-drawer-dur: 440ms;
-  --lux-tab-dur: 420ms;
-  --lux-arrow-dur: 420ms;
-  --lux-arrow-delay: 90ms;
-
-  --lux-ease-drawer: cubic-bezier(0.18, 0.9, 0.2, 1);
-  --lux-ease-pop: cubic-bezier(0.18, 1.25, 0.2, 1);
-
-  /* ==========================================================================
-     FIX 2 — Closed “white card stub” reveal
-     - Matches Self Playback behavior
-     ========================================================================== */
-  --lux-tts-shell-h: 420px;        /* makes the blank card tall */
-  --lux-tts-shell-reveal: 88px;    /* makes the visible stub feel intentional */
-
-  --lux-tts-top-gap: 64px;        /* leaves space for Save Progress */
-  --lux-tts-tab-h: 34px;
-  --lux-tts-tab-protrude: 150px;  /* how far the tab sticks into the page */
-}
-
-/* ==========================================================================
-   CORNER DRAWER PANEL
-   ========================================================================== */
-.lux-tts-panel {
-  position: fixed;
-  top: calc(env(safe-area-inset-top, 0) + var(--lux-tts-top-gap)) !important;
-  right: env(safe-area-inset-right, 0) !important;
-  left: auto !important;
-  bottom: auto !important;
-  z-index: 9999;
-
-  height: var(--lux-tts-shell-h);
-  max-height: var(--lux-tts-panel-max-h);
-
-  width: var(--lux-tts-panel-w);
-  max-width: var(--lux-tts-panel-max-w);
-
-  background: #fff;
-  border-left: var(--lux-tts-border);
-  border-bottom: var(--lux-tts-border);
-  border-top-left-radius: var(--lux-tts-radius);
-  border-bottom-left-radius: var(--lux-tts-radius);
-  box-shadow: var(--lux-tts-shadow);
-
-  overflow: visible;
-
-  /* CLOSED: slide out, but leave a visible “stub” behind */
-  transform: translate3d(calc(100% - var(--lux-tts-shell-reveal)), 0, 0);
-
-  transition: transform var(--lux-drawer-dur) var(--lux-ease-drawer);
-  will-change: transform;
-}
-
-.lux-tts-open .lux-tts-panel {
-  transform: translate3d(0, 0, 0);
-}
-
-/* --- CLOSED peek must have physical presence (blank white card) --- */
-html:not(.lux-tts-open) .lux-tts-panel{
-  min-height: 340px; /* tune: 300–420 depending on your open height */
-}
-
-.lux-tts-shell{
-  height: 100%;
-  overflow: hidden;
-  position: relative;
-  z-index: 1;
-}
-
-.lux-tts-panel #tts-controls {
-  display: block;
-
-  /* ✅ match SPB: tab height + 10px, and symmetric bezel */
-  padding: calc(var(--lux-tts-tab-h) + 10px) 6px 6px;
-
-  max-height: calc(var(--lux-tts-panel-max-h) - 8px);
-  overflow: auto;
-}
-
-
-
-/* Inner card gets its own shadow (stacked effect like Self Playback) */
-.lux-tts-panel #tts-controls .tts-box{
-  margin: 0;
-  border-radius: 14px;
-  box-shadow: 0 10px 24px rgba(0,0,0,0.14);
-  border: 1px solid rgba(0,0,0,0.05);
-}
-
-.lux-tts-panel .tts-box { gap: 10px; }
-.lux-tts-panel,
-.lux-tts-panel * { box-sizing: border-box; }
-
-/* ==========================================================================
-   FLOATING “PEEKABOO” TAB (Matched to SPB 0.18s)
-   ========================================================================== */
-.lux-tts-tab{
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  left: auto;
-
-  /* ✅ BAR like self-playback — but mirrored (extends LEFT into page) */
-  width: calc(100% + var(--lux-tts-tab-protrude));
-  height: var(--lux-tts-tab-h);
-  z-index: 2;
-
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  padding: 0 14px;
-  border: 0;
-  border-radius: 999px;
-  background: var(--lux-tts-tab-bg);
-  color: var(--lux-tts-tab-ink);
-
-  /* match SPB feel */
-  font: 600 0.92rem/1 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  cursor: pointer;
-
-  box-shadow: 0 8px 22px rgba(16, 130, 255, 0.30);
-  transition: transform 0.18s ease, filter 0.18s ease;
-
-  transform: translateZ(0);
-  will-change: transform;
-
-  overflow: hidden;
-}
-
-.lux-tts-tab-inner{
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  justify-content: center;
-
-  width: 100%;
-  white-space: nowrap;
-
-  transition: transform var(--lux-tab-dur) var(--lux-ease-pop);
-  will-change: transform;
-  box-sizing: border-box;
-
-  /* like SPB */
-  padding: 0 22px;
-}
-
-/* ✅ MIRROR ordering: arrow goes on OUTSIDE cap for right-side drawer */
-.lux-tts-tab-icon { order: 1; }
-.lux-tts-tab-label{ order: 2; }
-
-/* OPEN => centered */
-html.lux-tts-open .lux-tts-tab-inner{
-  transform: translateX(0);
-}
-
-/* CLOSED => shift content toward the visible side (LEFT for right drawer) */
-html:not(.lux-tts-open) .lux-tts-tab-inner{
-  transform: translateX(calc(-44% + 22px));
-}
-
-
-.lux-tts-tab-icon {
-  display: inline-block;
-  will-change: transform;
-  transform-origin: 50% 50%;
-}
-
-@keyframes luxTTSArrowOpen {
-  0%   { transform: rotate(0deg); }
-  60%  { transform: rotate(220deg); }  /* tiny overshoot */
-  100% { transform: rotate(180deg); }
-}
-
-@keyframes luxTTSArrowClose {
-  0%   { transform: rotate(180deg); }
-  60%  { transform: rotate(-40deg); }  /* tiny overshoot */
-  100% { transform: rotate(0deg); }
-}
-
-/* Right-side drawer:
-   CLOSED = ◀ (0deg), OPEN = ▶ (180deg)
-   Force both directions to animate (wins against other rules). */
-html.lux-tts-open .lux-tts-tab .lux-tts-tab-icon,
-.lux-tts-tab[aria-expanded="true"] .lux-tts-tab-icon {
-  transform: rotate(180deg) !important;
-  animation: luxTTSArrowOpen var(--lux-arrow-dur) var(--lux-ease-pop) both !important;
-  animation-delay: var(--lux-arrow-delay) !important;
-}
-
-html:not(.lux-tts-open) .lux-tts-tab .lux-tts-tab-icon,
-.lux-tts-tab[aria-expanded="false"] .lux-tts-tab-icon {
-  transform: rotate(0deg) !important;
-  animation: luxTTSArrowClose var(--lux-arrow-dur) var(--lux-ease-pop) both !important;
-  animation-delay: var(--lux-arrow-delay) !important;
-}
-
-.lux-tts-tab:hover,
-.lux-tts-tab:focus-visible {
-  transform: translateX(-1px);
-  filter: brightness(1.05); /* Match SPB brightness */
-  outline: none;
-}
-
-.lux-tts-tab:active {
-  transform: translateX(0);
-  filter: brightness(0.98);
-}
-
-.lux-tts-open .lux-tts-tab[aria-expanded="true"] {
-  opacity: 0.95;
-}
-
-/* ==========================================================================
-   NUDGE ANIMATION
-   ========================================================================== */
-@keyframes luxTTSGlow {
-  0%, 40%, 100% { box-shadow: 0 0 0 0 rgba(16,130,255,0); }
-  20%, 60% { box-shadow: 0 0 0 10px rgba(16,130,255,0.12), 0 0 22px rgba(16,130,255,0.45); }
-}
-
-@keyframes luxTTSWiggle {
-  0%, 100% { transform: translateX(0) rotate(0); }
-  15% { transform: translateX(-3px) rotate(-2deg); }
-  30% { transform: translateX(2px) rotate(1.5deg); }
-  45% { transform: translateX(-2px) rotate(-1.2deg); }
-  60% { transform: translateX(1px) rotate(0.8deg); }
-  75% { transform: translateX(-1px) rotate(-0.6deg); }
-}
-
-.lux-tts-tab.lux-tts-nudge {
-  animation: luxTTSGlow 1.4s ease-in-out, luxTTSWiggle 0.7s ease-in-out;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .lux-tts-panel, .lux-sp-panel,
-  .lux-tts-tab-inner, .lux-sp-tab-inner {
-    transition: none !important;
-  }
-  .lux-tts-tab-icon, .lux-sp-tab-icon {
-    animation: none !important;
-  }
-}
-
-/* Closed peek size: only before the user ever opens TTS */
-html:not(.lux-tts-booted) .lux-tts-panel{
-  height: var(--lux-tts-shell-h);
-}
-
-/* After first open, keep the full-size drawer always */
-html.lux-tts-booted .lux-tts-panel{
-  height: auto;
-  min-height: 0;
-}
-
-/* Responsive */
-@media (max-width: 480px) {
-  :root {
-    --lux-tts-panel-w: 92vw;
-    --lux-tts-panel-max-w: 92vw;
-    --lux-tts-panel-max-h: min(82vh, 640px);
-  }
-  .lux-tts-tab {
-    right: 12px;
-    top: 10px;
-    padding: 8px 12px;
-    font-size: 0.95rem;
-  }
-}
-
-@media print {
-  .lux-tts-panel,
-  .lux-tts-tab {
+  /* ---- Safety: if inline guard fails, keep the host hidden until adopted ---- */
+  #tts-controls[data-luxHidden="1"] {
     display: none !important;
   }
-}
+
+  :root {
+    --lux-tts-panel-w: 360px;
+    --lux-tts-panel-max-w: min(92vw, 380px);
+    --lux-tts-panel-max-h: min(520px, 70vh);
+    --lux-tts-radius: 14px;
+    --lux-tts-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+    --lux-tts-border: 1px solid rgba(0, 0, 0, 0.06);
+    --lux-tts-tab-bg: #1082ff;
+    --lux-tts-tab-bg-hover: #0d6ad1;
+    --lux-tts-tab-ink: #ffffff;
+
+    --lux-drawer-dur: 440ms;
+    --lux-tab-dur: 420ms;
+    --lux-arrow-dur: 420ms;
+    --lux-arrow-delay: 90ms;
+
+    --lux-ease-drawer: cubic-bezier(0.18, 0.9, 0.2, 1);
+    --lux-ease-pop: cubic-bezier(0.18, 1.25, 0.2, 1);
+
+    /* ==========================================================================
+      FIX 2 — Closed “white card stub” reveal
+      - Matches Self Playback behavior
+      ========================================================================== */
+    --lux-tts-shell-h: 420px;        /* makes the blank card tall */
+    --lux-tts-shell-reveal: 88px;    /* makes the visible stub feel intentional */
+
+    --lux-tts-top-gap: 64px;        /* leaves space for Save Progress */
+    --lux-tts-tab-h: 34px;
+    --lux-tts-tab-protrude: 150px;  /* how far the tab sticks into the page */
+  }
+
+  /* ==========================================================================
+    CORNER DRAWER PANEL
+    ========================================================================== */
+  .lux-tts-panel {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0) + var(--lux-tts-top-gap)) !important;
+    right: env(safe-area-inset-right, 0) !important;
+    left: auto !important;
+    bottom: auto !important;
+    z-index: 9999;
+
+    height: var(--lux-tts-shell-h);
+    max-height: var(--lux-tts-panel-max-h);
+
+    width: var(--lux-tts-panel-w);
+    max-width: var(--lux-tts-panel-max-w);
+
+    background: #fff;
+    border-left: var(--lux-tts-border);
+    border-bottom: var(--lux-tts-border);
+    border-top-left-radius: var(--lux-tts-radius);
+    border-bottom-left-radius: var(--lux-tts-radius);
+    box-shadow: var(--lux-tts-shadow);
+
+    overflow: visible;
+
+    /* CLOSED: slide out, but leave a visible “stub” behind */
+    transform: translate3d(calc(100% - var(--lux-tts-shell-reveal)), 0, 0);
+
+    transition: transform var(--lux-drawer-dur) var(--lux-ease-drawer), box-shadow 160ms ease, filter 160ms ease, border-color 160ms ease;
+    will-change: transform;
+  }
+
+  .lux-tts-open .lux-tts-panel {
+    transform: translate3d(0, 0, 0);
+  }
+
+  /* --- CLOSED peek must have physical presence (blank white card) --- */
+  html:not(.lux-tts-open) .lux-tts-panel{
+    min-height: 340px; /* tune: 300–420 depending on your open height */
+  }
+
+  /* Closed state: stub/card is clickable — cursor should be a hand anywhere over it */
+  html:not(.lux-tts-open) .lux-tts-shell,
+  html:not(.lux-tts-open) .lux-tts-panel,
+  html:not(.lux-tts-open) .lux-tts-panel *{ cursor: pointer; }
+
+  html:not(.lux-tts-open) .lux-tts-panel:hover{
+    /* Match the ultra-subtle “clickable card” cue from progress drawers */
+    box-shadow: 0 14px 30px rgba(15,23,42,0.08);
+    filter: brightness(1.01);
+    border-color: rgba(15,23,42,0.16);
+  }
+
+  html:not(.lux-tts-open) .lux-tts-panel:active{
+    box-shadow: 0 10px 24px rgba(15,23,42,0.06);
+    filter: brightness(1.00);
+  }
+
+  .lux-tts-shell{
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+  }
+
+  .lux-tts-panel #tts-controls {
+    display: block;
+
+    /* ✅ match SPB: tab height + 10px, and symmetric bezel */
+    padding: calc(var(--lux-tts-tab-h) + 10px) 6px 6px;
+
+    max-height: calc(var(--lux-tts-panel-max-h) - 8px);
+    overflow: auto;
+  }
+
+
+
+  /* Inner card gets its own shadow (stacked effect like Self Playback) */
+  .lux-tts-panel #tts-controls .tts-box{
+    margin: 0;
+    border-radius: 14px;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.14);
+    border: 1px solid rgba(0,0,0,0.05);
+  }
+
+  .lux-tts-panel .tts-box { gap: 10px; }
+  .lux-tts-panel,
+  .lux-tts-panel * { box-sizing: border-box; }
+
+  /* ==========================================================================
+    FLOATING “PEEKABOO” TAB (Matched to SPB 0.18s)
+    ========================================================================== */
+  .lux-tts-tab{
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    left: auto;
+
+    /* ✅ BAR like self-playback — but mirrored (extends LEFT into page) */
+    width: calc(100% + var(--lux-tts-tab-protrude));
+    height: var(--lux-tts-tab-h);
+    z-index: 2;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 14px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--lux-tts-tab-bg);
+    color: var(--lux-tts-tab-ink);
+
+    /* match SPB feel */
+    font: 600 0.92rem/1 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    cursor: pointer;
+
+    box-shadow: 0 8px 22px rgba(16, 130, 255, 0.30);
+    transition: transform 0.18s ease, filter 0.18s ease;
+
+    transform: translateZ(0);
+    will-change: transform;
+
+    overflow: hidden;
+  }
+
+  .lux-tts-tab-inner{
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+
+    width: 100%;
+    white-space: nowrap;
+
+    transition: transform var(--lux-tab-dur) var(--lux-ease-pop);
+    will-change: transform;
+    box-sizing: border-box;
+
+    /* like SPB */
+    padding: 0 22px;
+  }
+
+  /* ✅ MIRROR ordering: arrow goes on OUTSIDE cap for right-side drawer */
+  .lux-tts-tab-icon { order: 1; }
+  .lux-tts-tab-label{ order: 2; }
+
+  /* OPEN => centered */
+  html.lux-tts-open .lux-tts-tab-inner{
+    transform: translateX(0);
+  }
+
+  /* CLOSED => shift content toward the visible side (LEFT for right drawer) */
+  html:not(.lux-tts-open) .lux-tts-tab-inner{
+    transform: translateX(calc(-44% + 22px));
+  }
+
+
+  .lux-tts-tab-icon {
+    display: inline-block;
+    will-change: transform;
+    transform-origin: 50% 50%;
+  }
+
+  @keyframes luxTTSArrowOpen {
+    0%   { transform: rotate(0deg); }
+    60%  { transform: rotate(220deg); }  /* tiny overshoot */
+    100% { transform: rotate(180deg); }
+  }
+
+  @keyframes luxTTSArrowClose {
+    0%   { transform: rotate(180deg); }
+    60%  { transform: rotate(-40deg); }  /* tiny overshoot */
+    100% { transform: rotate(0deg); }
+  }
+
+  /* Right-side drawer:
+    CLOSED = ◀ (0deg), OPEN = ▶ (180deg)
+    Force both directions to animate (wins against other rules). */
+  html.lux-tts-open .lux-tts-tab .lux-tts-tab-icon,
+  .lux-tts-tab[aria-expanded="true"] .lux-tts-tab-icon {
+    transform: rotate(180deg) !important;
+    animation: luxTTSArrowOpen var(--lux-arrow-dur) var(--lux-ease-pop) both !important;
+    animation-delay: var(--lux-arrow-delay) !important;
+  }
+
+  html:not(.lux-tts-open) .lux-tts-tab .lux-tts-tab-icon,
+  .lux-tts-tab[aria-expanded="false"] .lux-tts-tab-icon {
+    transform: rotate(0deg) !important;
+    animation: luxTTSArrowClose var(--lux-arrow-dur) var(--lux-ease-pop) both !important;
+    animation-delay: var(--lux-arrow-delay) !important;
+  }
+
+  .lux-tts-tab:hover,
+  .lux-tts-tab:focus-visible {
+    transform: translateX(-1px);
+    filter: brightness(1.05); /* Match SPB brightness */
+    outline: none;
+  }
+
+  .lux-tts-tab:active {
+    transform: translateX(0);
+    filter: brightness(0.98);
+  }
+
+  .lux-tts-open .lux-tts-tab[aria-expanded="true"] {
+    opacity: 0.95;
+  }
+
+  /* ==========================================================================
+    NUDGE ANIMATION
+    ========================================================================== */
+  @keyframes luxTTSGlow {
+    0%, 40%, 100% { box-shadow: 0 0 0 0 rgba(16,130,255,0); }
+    20%, 60% { box-shadow: 0 0 0 10px rgba(16,130,255,0.12), 0 0 22px rgba(16,130,255,0.45); }
+  }
+
+  @keyframes luxTTSWiggle {
+    0%, 100% { transform: translateX(0) rotate(0); }
+    15% { transform: translateX(-3px) rotate(-2deg); }
+    30% { transform: translateX(2px) rotate(1.5deg); }
+    45% { transform: translateX(-2px) rotate(-1.2deg); }
+    60% { transform: translateX(1px) rotate(0.8deg); }
+    75% { transform: translateX(-1px) rotate(-0.6deg); }
+  }
+
+  .lux-tts-tab.lux-tts-nudge {
+    animation: luxTTSGlow 1.4s ease-in-out, luxTTSWiggle 0.7s ease-in-out;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lux-tts-panel, .lux-sp-panel,
+    .lux-tts-tab-inner, .lux-sp-tab-inner {
+      transition: none !important;
+    }
+    .lux-tts-tab-icon, .lux-sp-tab-icon {
+      animation: none !important;
+    }
+  }
+
+  /* Closed peek size: only before the user ever opens TTS */
+  html:not(.lux-tts-booted) .lux-tts-panel{
+    height: var(--lux-tts-shell-h);
+  }
+
+  /* After first open, keep the full-size drawer always */
+  html.lux-tts-booted .lux-tts-panel{
+    height: auto;
+    min-height: 0;
+  }
+
+  /* Responsive */
+  @media (max-width: 480px) {
+    :root {
+      --lux-tts-panel-w: 92vw;
+      --lux-tts-panel-max-w: 92vw;
+      --lux-tts-panel-max-h: min(82vh, 640px);
+    }
+    .lux-tts-tab {
+      right: 12px;
+      top: 10px;
+      padding: 8px 12px;
+      font-size: 0.95rem;
+    }
+  }
+
+  @media print {
+    .lux-tts-panel,
+    .lux-tts-tab {
+      display: none !important;
+    }
+  }

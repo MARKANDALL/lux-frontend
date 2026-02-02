@@ -54,19 +54,22 @@
 
   /* Closed State: Tucked left, but leaving 'peek' pixels visible */
   transform: translate3d(calc(-100% + var(--lux-sp-tab-peek)), 0, 0);
-  transition: transform var(--lux-drawer-dur) var(--lux-ease-drawer), box-shadow 160ms ease, filter 160ms ease;
+  transition: transform var(--lux-drawer-dur) var(--lux-ease-drawer), box-shadow 160ms ease, filter 160ms ease, border-color 160ms ease;
 }
 
-/* Closed state: the visible stub/card is clickable */
-html:not(.lux-sp-open) .lux-sp-panel{ cursor: pointer; }
+/* Closed state: stub/card is clickable — cursor should be a hand anywhere over it */
+html:not(.lux-sp-open) .lux-sp-panel,
+html:not(.lux-sp-open) .lux-sp-panel *{ cursor: pointer; }
 
 html:not(.lux-sp-open) .lux-sp-panel:hover{
-  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.20);
+  /* Match the ultra-subtle “clickable card” cue from progress drawers */
+  box-shadow: 0 14px 30px rgba(15,23,42,0.08);
   filter: brightness(1.01);
+  border-color: rgba(15,23,42,0.16);
 }
 
 html:not(.lux-sp-open) .lux-sp-panel:active{
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 10px 24px rgba(15,23,42,0.06);
   filter: brightness(1.00);
 }
 
