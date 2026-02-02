@@ -27,26 +27,26 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
     inputMode = m === "auto" ? "auto" : "tap";
     const isAuto = inputMode === "auto";
 
-    // VAD config: keep server_vad on both modes, but control auto-response via create_response.
-    // - auto => create_response true (AI replies when you stop talking)
-    // - tap  => create_response false (AI stays silent until you send response.create)
     console.log(
       `[WebRTC] Switching Input Mode: ${inputMode.toUpperCase()} (create_response: ${isAuto})`
     );
 
-    // Only send updates once the data channel is open.
+    // Update session turn detection every time (Auto=true, Tap=false)
     if (!dc || dc.readyState !== "open") return;
-
     sendEvent({
       type: "session.update",
       session: {
-        turn_detection: {
-          type: "server_vad",
-          threshold: 0.5,
-          prefix_padding_ms: 300,
-          silence_duration_ms: 500,
-          create_response: isAuto,
-          interrupt_response: true,
+        audio: {
+          input: {
+            turn_detection: {
+              type: "server_vad",
+              threshold: 0.5,
+              prefix_padding_ms: 300,
+              silence_duration_ms: 500,
+              create_response: isAuto,
+              interrupt_response: true,
+            },
+          },
         },
       },
     });
