@@ -145,6 +145,18 @@ export function wireHarvardPicker() {
     const last = localStorage.getItem("LUX_HARVARD_LAST");
     if (last) num.value = String(clamp(parseInt(last, 10) || 1, 1, 72));
   } catch {}
+    // show top phoneme immediately (even before Load)
+  try {
+    const cur = clamp(parseInt(num.value, 10) || 1, 1, 72);
+    updateTopPhChip(cur);
+  } catch {}
+
+  // keep chip in sync while typing
+  num.addEventListener("input", () => {
+    const cur = clamp(parseInt(num.value, 10) || 1, 1, 72);
+    updateTopPhChip(cur);
+  });
+
 
   load.addEventListener("click", () => apply(num.value));
   num.addEventListener("keydown", (e) => {
