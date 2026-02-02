@@ -1,6 +1,8 @@
 // features/harvard/index.js
 import { setPassage, updatePartsInfoTip } from "../passages/index.js";
 import { ensureHarvardPassages } from "../../src/data/index.js";
+import { HARVARD_PHONEME_META } from "../../src/data/harvard-phoneme-meta.js";
+import { createHarvardLibraryModal } from "./modal.js";
 
 function pad2(n) {
   return String(n).padStart(2, "0");
@@ -19,8 +21,64 @@ export function wireHarvardPicker() {
   const load = document.getElementById("harvardLoad");
   const rnd = document.getElementById("harvardRandom");
   const out = document.getElementById("harvardLoaded");
+  const browse = document.getElementById("harvardBrowse");
 
   if (!num || !prev || !next || !load || !rnd) return;
+
+  if (out) {
+    out.textContent = "";
+    out.style.display = "none";
+  }
+
+  let topPhEl = document.getElementById("harvardTopPh");
+  if (!topPhEl) {
+    topPhEl = document.createElement("span");
+    topPhEl.id = "harvardTopPh";
+    topPhEl.className = "lux-harvard-topph";
+    topPhEl.textContent = "";
+    num?.insertAdjacentElement?.("afterend", topPhEl);
+  }
+
+  function getFocusPhoneme(n) {
+    const top = HARVARD_PHONEME_META?.[n]?.top3?.[0];
+    return top?.ph || "";
+  }
+
+  function updateTopPhChip(n) {
+    if (!topPhEl) return;
+    const ph = getFocusPhoneme(n);
+    topPhEl.textContent = ph ? `Top: ${ph}` : "";
+  }
+
+  let randBag = [];
+
+  function cryptoUint32() {
+    if (globalThis.crypto?.getRandomValues) {
+      const a = new Uint32Array(1);
+      globalThis.crypto.getRandomValues(a);
+      return a[0];
+    }
+    // fallback
+    return Math.floor(Math.random() * 0xFFFFFFFF) >>> 0;
+  }
+
+  function shuffleInPlace(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const r = cryptoUint32();
+      const j = r % (i + 1);
+      const t = arr[i];
+      arr[i] = arr[j];
+      arr[j] = t;
+    }
+  }
+
+  function nextRandomList() {
+    if (randBag.length === 0) {
+      randBag = Array.from({ length: 72 }, (_, i) => i + 1);
+      shuffleInPlace(randBag);
+    }
+    return randBag.pop();
+  }
 
   const loadLabel = load?.textContent || "Load";
 
@@ -28,6 +86,7 @@ export function wireHarvardPicker() {
     const n = clamp(parseInt(raw, 10) || 1, 1, 72);
 
     if (num) num.value = String(n);
+    updateTopPhChip(n);
     try {
       localStorage.setItem("LUX_HARVARD_LAST", String(n));
     } catch {}
@@ -51,8 +110,26 @@ export function wireHarvardPicker() {
 
     setPassage(harvardKey(n));
     updatePartsInfoTip();
+  }
 
-    if (out) out.textContent = `Loaded: Harvard List ${pad2(n)}`;
+  // Modal: browse all 72 lists (first sentence), hover preview, click select, practice -> apply()
+  let modal = null;
+  if (browse) {
+    modal = createHarvardLibraryModal({
+      onPractice: async (n) => {
+        await apply(n);
+        try { document.getElementById("referenceText")?.focus(); } catch {}
+      },
+    });
+
+    const openBrowse = () => modal?.open?.();
+    browse.addEventListener("click", openBrowse);
+    browse.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        openBrowse();
+      }
+    });
   }
 
   // restore last used
@@ -73,8 +150,9 @@ export function wireHarvardPicker() {
     apply((parseInt(num.value, 10) || 1) + 1)
   );
 
-  rnd.addEventListener("click", () => {
-    const n = Math.floor(Math.random() * 72) + 1;
-    apply(n);
+  rnd.addEventListener("click", async () => {
+    const n = nextRandomList();
+    await apply(n);
   });
 }
+ 

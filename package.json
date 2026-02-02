@@ -28,6 +28,7 @@
     "vite": "^6.0.0"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.87.1"
+    "@supabase/supabase-js": "^2.87.1",
+    "cmu-pronouncing-dictionary": "^3.0.0"
   }
 }

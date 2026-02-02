@@ -48,3 +48,421 @@
   white-space: nowrap;
   border: 0;
 }
+
+/* --- Harvard List Browser (clickable label + modal) --- */
+
+.lux-harvard-browse{
+  cursor: pointer;
+  user-select: none;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 6px 10px;
+  border-radius: 999px;
+
+  border: 1px solid rgba(0,0,0,.10);
+  background: rgba(255,255,255,.55);
+
+  transition:
+    transform 140ms ease,
+    box-shadow 140ms ease,
+    background 140ms ease,
+    color 140ms ease,
+    border-color 140ms ease;
+}
+
+.lux-harvard-browse:hover{
+  text-decoration: none;
+  transform: translateY(-1px) scale(1.03);
+  background: rgba(255,255,255,.92);
+  color: rgba(2,6,23,.92);
+  border-color: rgba(2,6,23,.18);
+  box-shadow: 0 14px 34px rgba(2, 6, 23, 0.16);
+}
+
+.lux-harvard-browse:active{
+  transform: translateY(0) scale(1.01);
+  box-shadow: 0 10px 24px rgba(2, 6, 23, 0.14);
+}
+
+.lux-harvard-browse:focus{
+  outline: 2px solid rgba(2,6,23,.25);
+  outline-offset: 3px;
+}
+
+/* Overlay */
+.lux-harvard-modal{
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.48);
+}
+
+.lux-harvard-modal.is-open{
+  display: flex;
+  animation: luxHarvardOverlayIn 160ms ease;
+}
+
+@keyframes luxHarvardOverlayIn{
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Card */
+.lux-harvard-modal-card{
+  position: relative;
+  width: min(1120px, 94vw);
+  height: 86vh;
+  border-radius: 18px;
+  background: rgba(255,255,255,.96);
+  box-shadow: 0 20px 60px rgba(2, 6, 23, 0.25);
+  overflow: hidden;
+  padding: 12px;
+
+  display: flex;
+  flex-direction: column;
+
+  animation: luxHarvardCardIn 180ms ease;
+}
+
+@keyframes luxHarvardCardIn{
+  from { opacity: 0; transform: translateY(10px) scale(0.99); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.lux-harvard-modal-head{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 4px 10px;
+}
+
+.lux-harvard-modal-title{
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: .2px;
+}
+
+.lux-harvard-modal-x{
+  border: 1px solid rgba(0,0,0,.12);
+  background: rgba(255,255,255,.92);
+  border-radius: 10px;
+  padding: 8px 10px;
+  cursor: pointer;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.lux-harvard-modal-x:hover{
+  background: rgba(255,255,255,1);
+}
+
+/* Two-panel body */
+.lux-harvard-modal-body{
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  min-height: 0; /* allows children to scroll */
+}
+
+/* Left panel */
+.lux-harvard-left{
+  border: 1px solid rgba(0,0,0,.10);
+  border-radius: 16px;
+  background: rgba(255,255,255,.92);
+  overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.lux-harvard-explain{
+  padding: 12px 12px 10px;
+  border-bottom: 1px solid rgba(0,0,0,.08);
+  font-size: 13px;
+  line-height: 1.25;
+  color: rgba(2,6,23,.80);
+}
+
+.lux-harvard-list{
+  flex: 1;
+  overflow: auto;
+  padding: 8px;
+}
+
+/* List items */
+.lux-harvard-item{
+  width: 100%;
+  text-align: left;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+
+  padding: 10px 10px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  background: transparent;
+
+  cursor: pointer;
+  user-select: none;
+}
+
+.lux-harvard-item:hover{
+  background: rgba(2,6,23,.04);
+}
+
+.lux-harvard-item.is-selected{
+  border-color: rgba(2,6,23,.18);
+  background: rgba(2,6,23,.06);
+}
+
+.lux-harvard-item-num{
+  flex: 0 0 34px;
+  font-weight: 800;
+  opacity: .75;
+}
+
+.lux-harvard-item-first{
+  flex: 1;
+  font-size: 13px;
+  line-height: 1.25;
+  opacity: .92;
+}
+
+/* Right panel */
+.lux-harvard-right{
+  border: 1px solid rgba(0,0,0,.10);
+  border-radius: 16px;
+  background: rgba(255,255,255,.92);
+  overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+
+  padding: 12px;
+}
+
+.lux-harvard-selected-title{
+  font-weight: 800;
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+.lux-harvard-selected-lines{
+  flex: 1;
+  overflow: auto;
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,.08);
+  background: rgba(255,255,255,.88);
+  padding: 10px 12px;
+}
+
+.lux-harvard-line{
+  font-size: 15px;
+  line-height: 1.45;
+  padding: 2px 0;
+}
+
+.lux-harvard-status{
+  margin-top: 8px;
+  min-height: 16px;
+  font-size: 12px;
+  opacity: .75;
+}
+
+.lux-harvard-selected-footer{
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 10px;
+}
+
+.lux-harvard-practice{
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,.12);
+  background: rgba(255,255,255,.94);
+  box-shadow: 0 8px 18px rgba(2,6,23,.12);
+  padding: 10px 14px;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.lux-harvard-practice:disabled{
+  opacity: .55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.lux-harvard-practice:hover:enabled{
+  background: rgba(255,255,255,1);
+}
+
+/* Right-side explanation (moved from left) */
+.lux-harvard-explain-right{
+  margin-bottom: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,.08);
+  background: rgba(255,255,255,.92);
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.25;
+  color: rgba(2,6,23,.80);
+}
+
+/* Phoneme stats block under the 10 lines */
+.lux-harvard-phoneme-block{
+  margin-top: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,.08);
+  background: rgba(255,255,255,.88);
+  padding: 10px 12px;
+}
+
+.lux-harvard-phoneme-title{
+  font-weight: 800;
+  font-size: 13px;
+  margin-bottom: 8px;
+  opacity: .9;
+}
+
+.lux-harvard-phoneme-row{
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  padding: 4px 0;
+  font-size: 13px;
+}
+
+.lux-harvard-phoneme-chip{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 42px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,.10);
+  background: rgba(2,6,23,.04);
+  font-weight: 900;
+  letter-spacing: .3px;
+}
+
+.lux-harvard-phoneme-meta{
+  opacity: .78;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Tiny chip shown next to the Harvard number control */
+.lux-harvard-topph{
+  margin-left: 10px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,.10);
+  background: rgba(255,255,255,.70);
+  font-weight: 900;
+  letter-spacing: .3px;
+  font-size: 12px;
+  line-height: 1;
+  color: rgba(2,6,23,.85);
+}
+
+/* Hover preview (shows on list hover; does NOT select) */
+.lux-harvard-hovercard{
+  position: absolute;
+  display: none;
+  pointer-events: none;
+
+  width: min(440px, 44vw);
+  max-width: calc(100% - 24px);
+  max-height: 70vh;
+  overflow: hidden;
+
+  border-radius: 16px;
+  border: 1px solid rgba(0,0,0,.12);
+  background: rgba(255,255,255,.98);
+  box-shadow: 0 18px 50px rgba(2,6,23,.18);
+
+  padding: 12px;
+}
+
+.lux-harvard-hovercard-title{
+  font-weight: 800;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.lux-harvard-hovercard-lines{
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+/* Left-row phoneme chips */
+.lux-harvard-item-chips{
+  display: flex;
+  gap: 6px;
+  flex: 0 0 auto;
+  margin-left: 10px;
+  padding-top: 1px;
+}
+
+.lux-harvard-item-chip{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,.10);
+  background: rgba(2,6,23,.04);
+  font-weight: 900;
+  font-size: 11px;
+  letter-spacing: .2px;
+  opacity: .85;
+  cursor: pointer;
+}
+
+.lux-harvard-item-chip:hover{
+  opacity: 1;
+  background: rgba(2,6,23,.07);
+}
+
+.lux-harvard-item-chip.is-active{
+  border-color: rgba(2,6,23,.22);
+  background: rgba(2,6,23,.10);
+}
+
+/* Small filter bar above the list */
+.lux-harvard-filterbar{
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(0,0,0,.08);
+  font-size: 12px;
+  opacity: .85;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.lux-harvard-filterbar b{
+  font-weight: 900;
+}
+
+.lux-harvard-filterclear{
+  border: 1px solid rgba(0,0,0,.12);
+  background: rgba(255,255,255,.92);
+  border-radius: 10px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 12px;
+}
+
+.lux-harvard-filterclear:disabled{
+  opacity: .5;
+  cursor: not-allowed;
+}
