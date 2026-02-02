@@ -10,6 +10,14 @@ function harvardKey(n) {
   return `harvard${pad2(n)}`;
 }
 
+function getHarvardMeta(n) {
+  return (
+    HARVARD_PHONEME_META?.[n] ??
+    HARVARD_PHONEME_META?.[String(n)] ??
+    HARVARD_PHONEME_META?.[String(n).padStart(2, "0")]
+  );
+}
+
 const EXPLAIN_HTML = `
   <strong>What is the Harvard List?</strong><br/>
   The Harvard Sentences are a classic set of <b>72 lists × 10 short sentences</b>
@@ -271,7 +279,10 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
   function renderPhonemeRows(n, phonRowsEl) {
     while (phonRowsEl.firstChild) phonRowsEl.removeChild(phonRowsEl.firstChild);
 
-    const meta = HARVARD_PHONEME_META?.[n];
+const meta =
+  HARVARD_PHONEME_META?.[n] ??
+  HARVARD_PHONEME_META?.[String(n)] ??
+  HARVARD_PHONEME_META?.[String(n).padStart(2, "0")];
     const top3 = meta?.top3;
 
     if (!Array.isArray(top3) || top3.length === 0) {
@@ -371,7 +382,7 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
 
     const rows = activePh
       ? data.filter((rec) => {
-          const top3 = HARVARD_PHONEME_META?.[rec.n]?.top3 || [];
+          const top3 = getHarvardMeta(rec.n)?.top3 || [];
           return top3.some((p) => p?.ph === activePh);
         })
       : data;
@@ -398,7 +409,7 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
       // phoneme chips (top 3 distinctive)
       const chipWrap = document.createElement("div");
       chipWrap.className = "lux-harvard-item-chips";
-      const top3 = HARVARD_PHONEME_META?.[rec.n]?.top3 || [];
+      const top3 = getHarvardMeta(rec.n)?.top3 || [];
       top3.forEach((p) => {
         const chip = document.createElement("span");
         chip.className = "lux-harvard-item-chip" + (activePh === p.ph ? " is-active" : "");

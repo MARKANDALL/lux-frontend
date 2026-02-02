@@ -3,9 +3,66 @@ import path from "path";
 import { createRequire } from "module";
 
 const require = createRequire(import.meta.url);
-const cmuRaw = require("cmu-pronouncing-dictionary");
+const cmuPkg = require("cmu-pronouncing-dictionary");
+// Package returns { dictionary: { WORD: "W ER1 D", ... } }
+const cmuDict =
+  (cmuPkg && typeof cmuPkg === "object" && cmuPkg.dictionary && typeof cmuPkg.dictionary === "object")
+    ? cmuPkg.dictionary
+    : cmuPkg;
+const cmu = (cmuDict && typeof cmuDict === "object") ? cmuDict : {};
 
-const cmu = cmuRaw && typeof cmuRaw === "object" ? cmuRaw : {};
+// ✅ Build a { word -> "PH ON ES" | ["...", "..."] } map no matter how the package is shaped
+function parseCmuDictionaryString(txt) {
+  const map = {};
+  const lines = String(txt || "").split(/\r?\n/);
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith(";;;")) continue;
+
+    // Format: WORD  W ER1 D
+    const m = line.match(/^(\S+)\s+(.+)$/);
+    if (!m) continue;
+
+    const key = m[1].toLowerCase();     // keep "(1)" variants
+    const pron = m[2].trim();
+
+    if (!map[key]) map[key] = pron;
+    else map[key] = Array.isArray(map[key]) ? [...map[key], pron] : [map[key], pron];
+  }
+
+  return map;
+}
+
+function buildCmuMap(pkg) {
+  // Many versions export { dictionary: "<big text>" }
+  const raw = (pkg && pkg.dictionary != null) ? pkg.dictionary : pkg;
+
+  // If it's already a mapping object with lots of word keys, just use it
+  if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+    const keys = Object.keys(raw);
+    if (keys.length > 1) return raw;
+    if (keys.length === 1 && keys[0] !== "dictionary") return raw;
+  }
+
+  // If it’s a dictionary text blob (or array of lines), parse it
+  if (typeof raw === "string") return parseCmuDictionaryString(raw);
+  if (Array.isArray(raw)) return parseCmuDictionaryString(raw.join("\n"));
+
+  console.warn("[build-harvard-phonemes] Unrecognized CMU dict shape; counts will be empty.");
+  return {};
+}
+
+const cmuFromBuilder = buildCmuMap(cmuPkg);
+if (cmuFromBuilder && typeof cmuFromBuilder === "object") {
+  // Prefer the builder result if it produced something usable
+  const k = Object.keys(cmuFromBuilder);
+  if (k.length > 0) {
+    // overwrite cmu with parsed/built map
+    // (keeps behavior consistent if pkg ships as a text blob)
+    Object.assign(cmu, cmuFromBuilder);
+  }
+}
 
 const ROOT = process.cwd();
 const HARVARD = path.join(ROOT, "src", "data", "harvard-lists.js");
@@ -32,19 +89,14 @@ function pickPron(v) {
 function wordToPhones(word) {
   const w0 = word.toLowerCase();
   const w1 = w0.replace(/'/g, "");
-
   const u0 = w0.toUpperCase();
   const u1 = w1.toUpperCase();
 
   const v =
-    pickPron(cmu[w0]) ||
-    pickPron(cmu[w1]) ||
-    pickPron(cmu[w1 + "(1)"]) ||
-    pickPron(cmu[w0 + "(1)"]) ||
-    pickPron(cmu[u0]) ||
-    pickPron(cmu[u1]) ||
-    pickPron(cmu[u1 + "(1)"]) ||
-    pickPron(cmu[u0 + "(1)"]);
+    pickPron(cmu[w0]) || pickPron(cmu[u0]) ||
+    pickPron(cmu[w1]) || pickPron(cmu[u1]) ||
+    pickPron(cmu[w1 + "(1)"]) || pickPron(cmu[u1 + "(1)"]) ||
+    pickPron(cmu[w0 + "(1)"]) || pickPron(cmu[u0 + "(1)"]);
 
   if (!v) return null;
 
@@ -53,7 +105,6 @@ function wordToPhones(word) {
     .split(/\s+/)
     .map((p) => p.replace(/[0-2]$/, ""));
 }
-
 
 function readHarvardSource() {
   const txt = fs.readFileSync(HARVARD, "utf8");
@@ -133,6 +184,12 @@ function main() {
       globalCounts.set(ph, (globalCounts.get(ph) || 0) + c);
     }
     globalTotal += totalPhones;
+  }
+
+  if (!globalTotal) {
+    throw new Error(
+      "CMU lookup produced 0 phonemes. Dictionary parsing failed (package shape mismatch)."
+    );
   }
 
   const out = {};

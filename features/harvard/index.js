@@ -14,6 +14,14 @@ function harvardKey(n) {
   return `harvard${pad2(n)}`;
 }
 
+function getHarvardMeta(n) {
+  return (
+    HARVARD_PHONEME_META?.[n] ??
+    HARVARD_PHONEME_META?.[String(n)] ??
+    HARVARD_PHONEME_META?.[String(n).padStart(2, "0")]
+  );
+}
+
 export function wireHarvardPicker() {
   const num = document.getElementById("harvardNum");
   const prev = document.getElementById("harvardPrev");
@@ -40,7 +48,7 @@ export function wireHarvardPicker() {
   }
 
   function getFocusPhoneme(n) {
-    const top = HARVARD_PHONEME_META?.[n]?.top3?.[0];
+    const top = getHarvardMeta(n)?.top3?.[0];
     return top?.ph || "";
   }
 
@@ -155,4 +163,3 @@ export function wireHarvardPicker() {
     await apply(n);
   });
 }
- 
