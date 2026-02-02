@@ -63,13 +63,9 @@ function ensurePanel() {
     // Put tab BEFORE shell
     panel.insertBefore(tab, shell);
 
-    tab.addEventListener("click", async () => {
-      const willOpen = !document.documentElement.classList.contains("lux-tts-open");
-      document.documentElement.classList.toggle("lux-tts-open", willOpen);
-      tab.setAttribute("aria-expanded", String(willOpen));
-
+    async function lazyBootPlayer() {
       // ✅ Lazy boot ONLY on first open
-      if (!willOpen || _playerBooted) return;
+      if (_playerBooted) return;
       _playerBooted = true;
 
       // Load inner control styling (NOT overlay positioning CSS)
@@ -87,7 +83,25 @@ function ensurePanel() {
         console.warn("[Lux] TTS lazy mount failed:", e);
         _playerBooted = false; // allow retry
       }
+    }
+
+    tab.addEventListener("click", async () => {
+      const willOpen = !document.documentElement.classList.contains("lux-tts-open");
+      document.documentElement.classList.toggle("lux-tts-open", willOpen);
+      tab.setAttribute("aria-expanded", String(willOpen));
+      if (willOpen) await lazyBootPlayer();
     });
+
+    // Allow clicking the CLOSED white “stub/card” to open (but never close).
+    if (shell && !shell.dataset.luxStubClickBound) {
+      shell.dataset.luxStubClickBound = "1";
+      shell.addEventListener("click", async () => {
+        if (document.documentElement.classList.contains("lux-tts-open")) return;
+        document.documentElement.classList.add("lux-tts-open");
+        tab.setAttribute("aria-expanded", "true");
+        await lazyBootPlayer();
+      });
+    }
   }
 
   // Ensure host lives inside the shell (this gives you the blank card when closed)

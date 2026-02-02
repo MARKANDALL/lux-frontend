@@ -54,7 +54,20 @@
 
   /* Closed State: Tucked left, but leaving 'peek' pixels visible */
   transform: translate3d(calc(-100% + var(--lux-sp-tab-peek)), 0, 0);
-  transition: transform var(--lux-drawer-dur) var(--lux-ease-drawer);
+  transition: transform var(--lux-drawer-dur) var(--lux-ease-drawer), box-shadow 160ms ease, filter 160ms ease;
+}
+
+/* Closed state: the visible stub/card is clickable */
+html:not(.lux-sp-open) .lux-sp-panel{ cursor: pointer; }
+
+html:not(.lux-sp-open) .lux-sp-panel:hover{
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.20);
+  filter: brightness(1.01);
+}
+
+html:not(.lux-sp-open) .lux-sp-panel:active{
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  filter: brightness(1.00);
 }
 
 /* Open State */

@@ -51,6 +51,18 @@
     // Wire the click to the Lazy Loader
     const tab = panel.querySelector(".lux-sp-tab");
     tab.addEventListener("click", handleToggle);
+
+    // Closed panel/card click opens (never closes).
+    // NOTE: We ignore clicks on the tab here only to prevent a double-trigger
+    // (panel click + tab click) which would instantly open then close.
+    if (!panel.dataset.luxStubClickBound) {
+      panel.dataset.luxStubClickBound = "1";
+      panel.addEventListener("click", (e) => {
+        if (document.documentElement.classList.contains(OPEN_CLASS)) return;
+        if (e && e.target && e.target.closest && e.target.closest(".lux-sp-tab")) return;
+        try { handleToggle(); } catch {}
+      });
+    }
   }
 
   // 3) The Lazy Load Handler
