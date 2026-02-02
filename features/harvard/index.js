@@ -47,8 +47,17 @@ export function wireHarvardPicker() {
     num?.insertAdjacentElement?.("afterend", topPhEl);
   }
 
+  function metaFor(n) {
+    return (
+      HARVARD_PHONEME_META?.[n] ??
+      HARVARD_PHONEME_META?.[String(n)] ??
+      HARVARD_PHONEME_META?.[String(n).padStart(2, "0")] ??
+      null
+    );
+  }
+
   function getFocusPhoneme(n) {
-    const top = getHarvardMeta(n)?.top3?.[0];
+    const top = metaFor(n)?.top3?.[0];
     return top?.ph || "";
   }
 
@@ -145,18 +154,14 @@ export function wireHarvardPicker() {
     const last = localStorage.getItem("LUX_HARVARD_LAST");
     if (last) num.value = String(clamp(parseInt(last, 10) || 1, 1, 72));
   } catch {}
-    // show top phoneme immediately (even before Load)
-  try {
-    const cur = clamp(parseInt(num.value, 10) || 1, 1, 72);
-    updateTopPhChip(cur);
-  } catch {}
+
+  updateTopPhChip(parseInt(num.value, 10) || 1);
 
   // keep chip in sync while typing
   num.addEventListener("input", () => {
-    const cur = clamp(parseInt(num.value, 10) || 1, 1, 72);
-    updateTopPhChip(cur);
+    const n = clamp(parseInt(num.value, 10) || 1, 1, 72);
+    updateTopPhChip(n);
   });
-
 
   load.addEventListener("click", () => apply(num.value));
   num.addEventListener("keydown", (e) => {

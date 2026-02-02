@@ -54,6 +54,77 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
   let filterBar = null;
   let filterClearBtn = null;
 
+  let focusMode = "sort"; // "sort" | "only"
+  let searchQ = "";
+  let favs = new Set(); // list numbers
+  let focusSel = null;
+  let searchInput = null;
+  let modeSortBtn = null;
+  let modeOnlyBtn = null;
+
+  function metaFor(n) {
+    return (
+      HARVARD_PHONEME_META?.[n] ??
+      HARVARD_PHONEME_META?.[String(n)] ??
+      HARVARD_PHONEME_META?.[String(n).padStart(2, "0")] ??
+      null
+    );
+  }
+
+  function countFor(n, ph) {
+    if (!ph) return 0;
+    const m = metaFor(n);
+    const c = m?.phCounts?.[ph];
+    return Number(c || 0);
+  }
+
+  function totalFor(n) {
+    const m = metaFor(n);
+    return Number(m?.totalPhones || 0);
+  }
+
+  function loadFavs() {
+    try {
+      const raw = localStorage.getItem("LUX_HARVARD_FAVS");
+      const arr = raw ? JSON.parse(raw) : [];
+      favs = new Set((Array.isArray(arr) ? arr : []).map((x) => Number(x)).filter(Boolean));
+    } catch {
+      favs = new Set();
+    }
+  }
+
+  function saveFavs() {
+    try {
+      localStorage.setItem("LUX_HARVARD_FAVS", JSON.stringify(Array.from(favs)));
+    } catch {}
+  }
+
+  function ensurePhonemeOptions() {
+    if (!focusSel || focusSel.dataset.populated === "1") return;
+
+    const set = new Set();
+    for (const m of Object.values(HARVARD_PHONEME_META || {})) {
+      const keys = Object.keys(m?.phCounts || {});
+      for (const ph of keys) set.add(ph);
+    }
+    const list = Array.from(set).sort((a, b) => a.localeCompare(b));
+
+    focusSel.innerHTML = "";
+    const opt0 = document.createElement("option");
+    opt0.value = "";
+    opt0.textContent = "None";
+    focusSel.appendChild(opt0);
+
+    for (const ph of list) {
+      const opt = document.createElement("option");
+      opt.value = ph;
+      opt.textContent = ph;
+      focusSel.appendChild(opt);
+    }
+
+    focusSel.dataset.populated = "1";
+  }
+
   function ensureDOM() {
     if (overlay) return;
 
@@ -96,8 +167,50 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
 
     filterBar = document.createElement("div");
     filterBar.className = "lux-harvard-filterbar";
-    filterBar.innerHTML = `Filter: <b>None</b>`;
     left.appendChild(filterBar);
+
+    const leftGroup = document.createElement("div");
+    leftGroup.className = "lux-harvard-filterleft";
+    filterBar.appendChild(leftGroup);
+
+    const label = document.createElement("span");
+    label.className = "lux-harvard-filterlabel";
+    label.textContent = "Focus phoneme:";
+    leftGroup.appendChild(label);
+
+    focusSel = document.createElement("select");
+    focusSel.className = "lux-harvard-phsel";
+    leftGroup.appendChild(focusSel);
+
+    modeSortBtn = document.createElement("button");
+    modeSortBtn.type = "button";
+    modeSortBtn.className = "lux-harvard-modetab";
+    modeSortBtn.textContent = "Sort";
+    modeSortBtn.addEventListener("click", () => {
+      focusMode = "sort";
+      renderList();
+    });
+    leftGroup.appendChild(modeSortBtn);
+
+    modeOnlyBtn = document.createElement("button");
+    modeOnlyBtn.type = "button";
+    modeOnlyBtn.className = "lux-harvard-modetab";
+    modeOnlyBtn.textContent = "Only";
+    modeOnlyBtn.addEventListener("click", () => {
+      focusMode = "only";
+      renderList();
+    });
+    leftGroup.appendChild(modeOnlyBtn);
+
+    searchInput = document.createElement("input");
+    searchInput.className = "lux-harvard-search";
+    searchInput.type = "text";
+    searchInput.placeholder = "Search…";
+    searchInput.addEventListener("input", () => {
+      searchQ = String(searchInput.value || "").trim().toLowerCase();
+      renderList();
+    });
+    filterBar.appendChild(searchInput);
 
     filterClearBtn = document.createElement("button");
     filterClearBtn.type = "button";
@@ -106,9 +219,15 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
     filterClearBtn.disabled = true;
     filterClearBtn.addEventListener("click", () => {
       activePh = null;
+      if (focusSel) focusSel.value = "";
       renderList();
     });
     filterBar.appendChild(filterClearBtn);
+
+    focusSel.addEventListener("change", () => {
+      activePh = focusSel.value ? String(focusSel.value) : null;
+      renderList();
+    });
 
     listEl = document.createElement("div");
     listEl.className = "lux-harvard-list";
@@ -242,6 +361,7 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
         name: p?.name || `Harvard List ${pad2(n)}`,
         parts,
         first: parts[0] || "",
+        searchText: parts.join(" ").toLowerCase(),
       });
     }
 
@@ -270,10 +390,12 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
   }
 
   function updateFilterUI() {
-    if (!filterBar) return;
-    const label = activePh ? activePh : "None";
-    filterBar.querySelector("b")?.replaceWith(Object.assign(document.createElement("b"), { textContent: label }));
     if (filterClearBtn) filterClearBtn.disabled = !activePh;
+
+    if (modeSortBtn) modeSortBtn.classList.toggle("is-active", focusMode === "sort");
+    if (modeOnlyBtn) modeOnlyBtn.classList.toggle("is-active", focusMode === "only");
+
+    if (focusSel) focusSel.value = activePh || "";
   }
 
   function renderPhonemeRows(n, phonRowsEl) {
@@ -378,14 +500,34 @@ const meta =
 
     clearNode(listEl);
 
-    updateFilterUI();
+    let rows = data.slice();
 
-    const rows = activePh
-      ? data.filter((rec) => {
-          const top3 = getHarvardMeta(rec.n)?.top3 || [];
-          return top3.some((p) => p?.ph === activePh);
-        })
-      : data;
+    if (searchQ) {
+      rows = rows.filter((rec) => rec.searchText?.includes(searchQ));
+    }
+
+    if (activePh) {
+      // Sort ALL lists by how much the focus phoneme appears
+      rows.sort((a, b) => {
+        const cb = countFor(b.n, activePh);
+        const ca = countFor(a.n, activePh);
+        if (cb !== ca) return cb - ca;
+        return a.n - b.n;
+      });
+
+      if (focusMode === "only") {
+        rows = rows.filter((rec) => countFor(rec.n, activePh) > 0);
+      }
+    }
+
+    // Favorites: pin to top (preserve existing order within each group)
+    if (favs && favs.size) {
+      const favRows = rows.filter((r) => favs.has(r.n));
+      const otherRows = rows.filter((r) => !favs.has(r.n));
+      rows = favRows.concat(otherRows);
+    }
+
+    updateFilterUI();
 
     rows.forEach((rec) => {
       const btn = document.createElement("button");
@@ -405,6 +547,35 @@ const meta =
 
       btn.appendChild(num);
       btn.appendChild(first);
+
+      // Favorite star (doesn't trigger selection)
+      const favBtn = document.createElement("button");
+      favBtn.type = "button";
+      favBtn.className = "lux-harvard-fav";
+      favBtn.textContent = favs.has(rec.n) ? "★" : "☆";
+      favBtn.title = favs.has(rec.n) ? "Unfavorite" : "Favorite";
+      favBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (favs.has(rec.n)) favs.delete(rec.n);
+        else favs.add(rec.n);
+        saveFavs();
+        renderList();
+      });
+      btn.appendChild(favBtn);
+
+      // Focus score (count + %), shown when a phoneme is selected
+      if (activePh) {
+        const c = countFor(rec.n, activePh);
+        const t = totalFor(rec.n);
+        const pct = t ? (c / t) : 0;
+
+        const badge = document.createElement("span");
+        badge.className = "lux-harvard-focusbadge" + (c ? "" : " is-zero");
+        badge.textContent = c ? `${c} • ${(pct * 100).toFixed(1)}%` : "—";
+        badge.title = c ? `${activePh} appears ${c} times in this list` : `${activePh} not present`;
+        btn.appendChild(badge);
+      }
 
       // phoneme chips (top 3 distinctive)
       const chipWrap = document.createElement("div");
@@ -443,6 +614,9 @@ const meta =
   function open() {
     ensureDOM();
     overlay.classList.add("is-open");
+
+    loadFavs();
+    ensurePhonemeOptions();
 
     // only build the list once, but allow re-open
     if (!lists) renderList();

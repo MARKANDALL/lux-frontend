@@ -466,3 +466,85 @@
   opacity: .5;
   cursor: not-allowed;
 }
+
+/* --- Harvard modal: focus phoneme + search + favorites --- */
+
+.lux-harvard-filterbar{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 10px;
+  border-bottom:1px solid rgba(0,0,0,.08);
+}
+
+.lux-harvard-filterleft{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  white-space:nowrap;
+}
+
+.lux-harvard-filterlabel{
+  font-size:12px;
+  opacity:.8;
+}
+
+.lux-harvard-phsel{
+  height:28px;
+  border-radius:999px;
+  padding:0 10px;
+  border:1px solid rgba(0,0,0,.12);
+  background:rgba(255,255,255,.9);
+  font-size:12px;
+}
+
+.lux-harvard-modetab{
+  height:28px;
+  border-radius:999px;
+  padding:0 10px;
+  border:1px solid rgba(0,0,0,.12);
+  background:rgba(255,255,255,.75);
+  font-size:12px;
+  cursor:pointer;
+}
+.lux-harvard-modetab.is-active{
+  background:rgba(0,0,0,.08);
+  border-color:rgba(0,0,0,.2);
+}
+
+.lux-harvard-search{
+  margin-left:auto;
+  height:28px;
+  width:170px;
+  border-radius:999px;
+  padding:0 12px;
+  border:1px solid rgba(0,0,0,.12);
+  background:rgba(255,255,255,.9);
+  font-size:12px;
+}
+
+.lux-harvard-fav{
+  margin-left:8px;
+  height:26px;
+  width:34px;
+  border-radius:999px;
+  border:1px solid rgba(0,0,0,.10);
+  background:rgba(255,255,255,.65);
+  cursor:pointer;
+  line-height:1;
+  font-size:14px;
+}
+
+.lux-harvard-focusbadge{
+  margin-left:auto;
+  margin-right:8px;
+  font-size:12px;
+  opacity:.8;
+  padding:4px 10px;
+  border-radius:999px;
+  border:1px solid rgba(0,0,0,.10);
+  background:rgba(255,255,255,.55);
+}
+.lux-harvard-focusbadge.is-zero{
+  opacity:.45;
+}

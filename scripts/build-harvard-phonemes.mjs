@@ -1,212 +1,177 @@
-import fs from "fs";
-import path from "path";
-import { createRequire } from "module";
+// scripts/build-harvard-phonemes.mjs
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
 
+import { ensureHarvardPassages, passages } from "../src/data/index.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+function pad2(n) {
+  return String(n).padStart(2, "0");
+}
+function harvardKey(n) {
+  return `harvard${pad2(n)}`;
+}
+
+// ---------- CMU dict loading (handles multiple export shapes) ----------
 const require = createRequire(import.meta.url);
-const cmuPkg = require("cmu-pronouncing-dictionary");
-// Package returns { dictionary: { WORD: "W ER1 D", ... } }
-const cmuDict =
-  (cmuPkg && typeof cmuPkg === "object" && cmuPkg.dictionary && typeof cmuPkg.dictionary === "object")
-    ? cmuPkg.dictionary
-    : cmuPkg;
-const cmu = (cmuDict && typeof cmuDict === "object") ? cmuDict : {};
+const cmuRaw = require("cmu-pronouncing-dictionary");
 
-// ✅ Build a { word -> "PH ON ES" | ["...", "..."] } map no matter how the package is shaped
-function parseCmuDictionaryString(txt) {
-  const map = {};
-  const lines = String(txt || "").split(/\r?\n/);
+function parseCmuTextToMap(text) {
+  const map = Object.create(null);
+  const lines = String(text || "").split(/\r?\n/);
+  for (const line of lines) {
+    const s = line.trim();
+    if (!s || s.startsWith(";;;")) continue;
 
-  for (const rawLine of lines) {
-    const line = rawLine.trim();
-    if (!line || line.startsWith(";;;")) continue;
-
-    // Format: WORD  W ER1 D
-    const m = line.match(/^(\S+)\s+(.+)$/);
+    // Example: WORD  W ER1 D
+    // Example alt: WORD(1)  W ER1 D
+    const m = s.match(/^([A-Z0-9'_-]+)(\(\d+\))?\s+(.+)$/);
     if (!m) continue;
 
-    const key = m[1].toLowerCase();     // keep "(1)" variants
-    const pron = m[2].trim();
-
-    if (!map[key]) map[key] = pron;
-    else map[key] = Array.isArray(map[key]) ? [...map[key], pron] : [map[key], pron];
+    const base = m[1];
+    const variant = m[2] || "";
+    const phones = m[3].trim();
+    const key = (base + variant).toLowerCase();
+    if (!map[key]) map[key] = [];
+    map[key].push(phones);
   }
-
   return map;
 }
 
-function buildCmuMap(pkg) {
-  // Many versions export { dictionary: "<big text>" }
-  const raw = (pkg && pkg.dictionary != null) ? pkg.dictionary : pkg;
+function loadCmuMap(raw) {
+  const dict = raw?.dictionary ?? raw;
+  if (!dict) return Object.create(null);
 
-  // If it's already a mapping object with lots of word keys, just use it
-  if (raw && typeof raw === "object" && !Array.isArray(raw)) {
-    const keys = Object.keys(raw);
-    if (keys.length > 1) return raw;
-    if (keys.length === 1 && keys[0] !== "dictionary") return raw;
+  // Case A: dictionary is a raw CMU text blob
+  if (typeof dict === "string") return parseCmuTextToMap(dict);
+
+  // Case B: dictionary is already an object map
+  if (typeof dict === "object") {
+    // normalize to lowercase keys, array-of-prons
+    const out = Object.create(null);
+    for (const [k, v] of Object.entries(dict)) {
+      const key = String(k || "").toLowerCase();
+      if (!key) continue;
+      if (Array.isArray(v)) out[key] = v.map(String);
+      else out[key] = [String(v)];
+    }
+    return out;
   }
 
-  // If it’s a dictionary text blob (or array of lines), parse it
-  if (typeof raw === "string") return parseCmuDictionaryString(raw);
-  if (Array.isArray(raw)) return parseCmuDictionaryString(raw.join("\n"));
-
-  console.warn("[build-harvard-phonemes] Unrecognized CMU dict shape; counts will be empty.");
-  return {};
+  return Object.create(null);
 }
 
-const cmuFromBuilder = buildCmuMap(cmuPkg);
-if (cmuFromBuilder && typeof cmuFromBuilder === "object") {
-  // Prefer the builder result if it produced something usable
-  const k = Object.keys(cmuFromBuilder);
-  if (k.length > 0) {
-    // overwrite cmu with parsed/built map
-    // (keeps behavior consistent if pkg ships as a text blob)
-    Object.assign(cmu, cmuFromBuilder);
+const CMU = loadCmuMap(cmuRaw);
+
+// ---------- phoneme extraction ----------
+function tokenizeWords(text) {
+  // Keep apostrophes inside words.
+  return String(text || "").match(/[A-Za-z']+/g) || [];
+}
+
+function stripStress(phone) {
+  return String(phone || "").replace(/[0-9]/g, "");
+}
+
+function phonesForWord(word) {
+  const w = String(word || "").toLowerCase();
+  if (!w) return [];
+
+  // Try base and a few common alternates
+  const tries = [w, `${w}(1)`, `${w}(2)`, `${w}(3)`];
+  let prons = null;
+
+  for (const t of tries) {
+    prons = CMU[t];
+    if (prons && prons.length) break;
   }
-}
+  if (!prons || !prons.length) return [];
 
-const ROOT = process.cwd();
-const HARVARD = path.join(ROOT, "src", "data", "harvard-lists.js");
-const OUT = path.join(ROOT, "src", "data", "harvard-phoneme-meta.js");
+  const first = String(prons[0] || "");
+  if (!first) return [];
 
-function normalizeWord(w) {
-  return w.toLowerCase().replace(/[^a-z']/g, "");
-}
-
-function tokenize(text) {
-  return text
+  return first
     .split(/\s+/)
-    .map(normalizeWord)
+    .map(stripStress)
     .filter(Boolean);
 }
 
-function pickPron(v) {
-  if (!v) return null;
-  if (Array.isArray(v)) return v[0] || null;
-  if (typeof v === "string") return v;
-  return null;
-}
+// ---------- build meta ----------
+async function main() {
+  await ensureHarvardPassages();
 
-function wordToPhones(word) {
-  const w0 = word.toLowerCase();
-  const w1 = w0.replace(/'/g, "");
-  const u0 = w0.toUpperCase();
-  const u1 = w1.toUpperCase();
-
-  const v =
-    pickPron(cmu[w0]) || pickPron(cmu[u0]) ||
-    pickPron(cmu[w1]) || pickPron(cmu[u1]) ||
-    pickPron(cmu[w1 + "(1)"]) || pickPron(cmu[u1 + "(1)"]) ||
-    pickPron(cmu[w0 + "(1)"]) || pickPron(cmu[u0 + "(1)"]);
-
-  if (!v) return null;
-
-  return String(v)
-    .trim()
-    .split(/\s+/)
-    .map((p) => p.replace(/[0-2]$/, ""));
-}
-
-function readHarvardSource() {
-  const txt = fs.readFileSync(HARVARD, "utf8");
-  const lists = [];
-
-  for (let n = 1; n <= 72; n++) {
-    const nn = String(n).padStart(2, "0");
-    const re = new RegExp(
-      `export\\s+const\\s+harvardList${nn}Parts\\s*=\\s*\\[([\\s\\S]*?)\\];`,
-      "m"
-    );
-    const m = txt.match(re);
-    if (!m) throw new Error(`Missing harvardList${nn}Parts`);
-
-    const body = m[1];
-    const lines = [];
-    const lineRe = /"([^"]+)"/g;
-
-    let lm;
-    while ((lm = lineRe.exec(body))) lines.push(lm[1]);
-
-    lists.push({ n, lines });
-  }
-
-  return lists;
-}
-
-function countPhonesForLines(lines) {
-  const counts = new Map();
-  let totalPhones = 0;
-
-  for (const line of lines) {
-    const words = tokenize(line);
-    for (const w of words) {
-      const phones = wordToPhones(w);
-      if (!phones) continue;
-      for (const ph of phones) {
-        counts.set(ph, (counts.get(ph) || 0) + 1);
-        totalPhones++;
-      }
-    }
-  }
-
-  return { counts, totalPhones };
-}
-
-function topDistinctive(listCounts, listTotal, globalCounts, globalTotal, k = 3) {
-  const items = [];
-
-  for (const [ph, c] of listCounts.entries()) {
-    const pct = listTotal ? c / listTotal : 0;
-
-    const g = globalCounts.get(ph) || 0;
-    const gpct = globalTotal ? g / globalTotal : 0;
-
-    const lift = gpct > 0 ? pct / gpct : 0;
-
-    items.push({ ph, count: c, pct, lift });
-  }
-
-  items.sort((a, b) => (b.lift - a.lift) || (b.count - a.count));
-  return items.slice(0, k);
-}
-
-function main() {
-  const lists = readHarvardSource();
-
-  const globalCounts = new Map();
+  // 1) collect list counts + global counts
+  const perList = Object.create(null); // n -> { counts, total }
+  const globalCounts = Object.create(null);
   let globalTotal = 0;
 
-  const listData = [];
-  for (const L of lists) {
-    const { counts, totalPhones } = countPhonesForLines(L.lines);
-    listData.push({ n: L.n, counts, totalPhones });
+  for (let n = 1; n <= 72; n++) {
+    const key = harvardKey(n);
+    const p = passages?.[key];
+    const parts = Array.isArray(p?.parts) ? p.parts.slice(0, 10) : [];
+    const text = parts.join(" ");
+    const words = tokenizeWords(text);
 
-    for (const [ph, c] of counts.entries()) {
-      globalCounts.set(ph, (globalCounts.get(ph) || 0) + c);
+    const counts = Object.create(null);
+    let total = 0;
+
+    for (const w of words) {
+      const phones = phonesForWord(w);
+      for (const ph of phones) {
+        counts[ph] = (counts[ph] || 0) + 1;
+        globalCounts[ph] = (globalCounts[ph] || 0) + 1;
+        total += 1;
+        globalTotal += 1;
+      }
     }
-    globalTotal += totalPhones;
+
+    perList[n] = { counts, total };
   }
 
-  if (!globalTotal) {
-    throw new Error(
-      "CMU lookup produced 0 phonemes. Dictionary parsing failed (package shape mismatch)."
-    );
-  }
+  // 2) compute top3 “distinctive” by lift vs global
+  const out = Object.create(null);
 
-  const out = {};
-  for (const L of listData) {
-    out[L.n] = {
-      top3: topDistinctive(L.counts, L.totalPhones, globalCounts, globalTotal, 3),
-      totalPhones: L.totalPhones
+  for (let n = 1; n <= 72; n++) {
+    const { counts, total } = perList[n];
+    const rows = [];
+
+    for (const [ph, count] of Object.entries(counts)) {
+      const pct = total ? count / total : 0;
+      const gCount = globalCounts[ph] || 0;
+      const gPct = globalTotal ? gCount / globalTotal : 0;
+      const lift = gPct ? pct / gPct : 0;
+
+      rows.push({ ph, count, pct, lift });
+    }
+
+    rows.sort((a, b) => (b.lift - a.lift) || (b.count - a.count) || a.ph.localeCompare(b.ph));
+
+    out[String(n)] = {
+      top3: rows.slice(0, 3),
+      totalPhones: total,
+      // NEW: full counts so the UI can sort by a chosen phoneme
+      phCounts: counts,
     };
   }
 
-  const js = `// AUTO-GENERATED by scripts/build-harvard-phonemes.mjs
-// Do not hand-edit.
-export const HARVARD_PHONEME_META = ${JSON.stringify(out, null, 2)};
-`;
+  const header =
+    `// AUTO-GENERATED by scripts/build-harvard-phonemes.mjs\n` +
+    `// Do not hand-edit.\n`;
 
-  fs.writeFileSync(OUT, js, "utf8");
-  console.log("Wrote:", OUT);
+  const body = `export const HARVARD_PHONEME_META = ${JSON.stringify(out, null, 2)};\n`;
+
+  const outFile = path.resolve(__dirname, "../src/data/harvard-phoneme-meta.js");
+  fs.mkdirSync(path.dirname(outFile), { recursive: true });
+  fs.writeFileSync(outFile, header + body, "utf8");
+
+  console.log("Wrote:", outFile);
 }
 
-main();
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
