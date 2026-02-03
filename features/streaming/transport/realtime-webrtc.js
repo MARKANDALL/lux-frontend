@@ -24,34 +24,29 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
 
   function setTurnTaking({ mode } = {}) {
     const m = String(mode || "tap").toLowerCase();
-    inputMode = m === "auto" ? "auto" : "tap";
+    inputMode = (m === "auto") ? "auto" : "tap";
     const isAuto = inputMode === "auto";
 
     console.log(
-      `[WebRTC] Switching Input Mode: ${inputMode.toUpperCase()} (create_response: ${isAuto})`
+      `[WebRTC] Switching Input Mode: ${isAuto ? "AUTO" : "TAP"} (create_response: ${isAuto})`
     );
 
-    // Must be connected (data channel open) to update session
-    if (!dc || dc.readyState !== "open") return;
-
-    // IMPORTANT: turn_detection belongs under audio.input
-    sendEvent({
-      type: "session.update",
-      session: {
-        audio: {
-          input: {
-            turn_detection: {
-              type: "server_vad",
-              threshold: 0.5,
-              prefix_padding_ms: 300,
-              silence_duration_ms: 500,
-              create_response: isAuto,          // ✅ true in AUTO, false in TAP
-              interrupt_response: true,
-            },
+    const sessionParams = {
+      audio: {
+        input: {
+          turn_detection: {
+            type: "server_vad",
+            threshold: 0.5,
+            prefix_padding_ms: 300,
+            silence_duration_ms: 500,
+            create_response: isAuto,
+            interrupt_response: true,
           },
         },
       },
-    });
+    };
+
+    updateSession(sessionParams);
   }
 
   /**
@@ -88,6 +83,7 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
     audioEl.autoplay = true;
     audioEl.playsInline = true;
     audioEl.id = "lux-remote-audio";
+    audioEl.setAttribute("data-lux-audio", "realtime");
     audioEl.style.display = "none";
     document.body.appendChild(audioEl);
 
@@ -131,6 +127,9 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
           t.includes("input_audio") ||
           t.includes("error")
         ) {
+          if (t === "error" && msg?.error?.code === "response_cancel_not_active") {
+            return;
+          }
           console.log("[oai-events]", t, msg);
         }
       } catch {}
