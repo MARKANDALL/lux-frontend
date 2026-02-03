@@ -44,6 +44,17 @@ export function wireHarvardPicker() {
     topPhEl.id = "harvardTopPh";
     topPhEl.className = "lux-harvard-topph";
     topPhEl.textContent = "";
+    // accessibility: treat as button
+    topPhEl.setAttribute("role", "button");
+    topPhEl.tabIndex = 0;
+  }
+
+  // Prefer the dedicated row between Select Passage and Harvard controls
+  const topPhRow = document.getElementById("harvardTopPhRow");
+  if (topPhRow && !topPhRow.contains(topPhEl)) {
+    topPhRow.appendChild(topPhEl);
+  } else if (!topPhRow && !topPhEl.isConnected) {
+    // fallback (older layouts): keep it near the Harvard number
     num?.insertAdjacentElement?.("afterend", topPhEl);
   }
 
@@ -65,6 +76,11 @@ export function wireHarvardPicker() {
     if (!topPhEl) return;
     const ph = getFocusPhoneme(n);
     topPhEl.textContent = ph ? `Top: ${ph}` : "";
+    if (ph) {
+      topPhEl.setAttribute("aria-label", `Top phoneme: ${ph}`);
+    } else {
+      topPhEl.removeAttribute("aria-label");
+    }
   }
 
   let randBag = [];

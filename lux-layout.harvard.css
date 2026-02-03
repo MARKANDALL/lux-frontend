@@ -548,3 +548,30 @@
 .lux-harvard-focusbadge.is-zero{
   opacity:.45;
 }
+
+/* Harvard: Top phoneme row (between Select Passage and Harvard controls) */
+.lux-harvard-topph-row{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  margin: 8px 0 6px;
+  min-height: 26px; /* avoids layout jump when empty */
+}
+
+.lux-harvard-topph{
+  display:inline-flex;
+  align-items:center;
+  gap: 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,0.12);
+  background: rgba(0,0,0,0.05);
+  font-size: 0.92rem;
+  line-height: 1;
+  user-select:none;
+  cursor:pointer;
+}
+
+.lux-harvard-topph:empty{
+  display:none;
+}

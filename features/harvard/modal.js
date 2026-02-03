@@ -83,6 +83,26 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
     return Number(m?.totalPhones || 0);
   }
 
+  function getMetaForN(n) {
+    return (
+      HARVARD_PHONEME_META?.[n] ??
+      HARVARD_PHONEME_META?.[String(n)] ??
+      HARVARD_PHONEME_META?.[String(n).padStart(2, "0")]
+    );
+  }
+
+  function getCountFor(n, ph) {
+    const m = getMetaForN(n);
+    const counts = m?.counts;
+    if (counts && typeof counts === "object") {
+      return Number(counts[String(ph || "").toUpperCase()] || 0);
+    }
+    // fallback if counts missing
+    const top3 = m?.top3 || [];
+    const hit = top3.find((p) => p?.ph === ph);
+    return hit ? Number(hit.count || 0) : 0;
+  }
+
   function loadFavs() {
     try {
       const raw = localStorage.getItem("LUX_HARVARD_FAVS");
@@ -507,17 +527,11 @@ const meta =
     }
 
     if (activePh) {
-      // Sort ALL lists by how much the focus phoneme appears
-      rows.sort((a, b) => {
-        const cb = countFor(b.n, activePh);
-        const ca = countFor(a.n, activePh);
-        if (cb !== ca) return cb - ca;
-        return a.n - b.n;
-      });
-
-      if (focusMode === "only") {
-        rows = rows.filter((rec) => countFor(rec.n, activePh) > 0);
-      }
+      rows = rows
+        .map((rec) => ({ rec, score: getCountFor(rec.n, activePh) }))
+        .filter((x) => x.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .map((x) => x.rec);
     }
 
     // Favorites: pin to top (preserve existing order within each group)

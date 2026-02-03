@@ -1,13 +1,8 @@
 // scripts/build-harvard-phonemes.mjs
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
-import { createRequire } from "node:module";
-
-import { ensureHarvardPassages, passages } from "../src/data/index.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import cmuPkg from "cmu-pronouncing-dictionary";
+import { harvardPassages } from "../src/data/harvard.js";
 
 function pad2(n) {
   return String(n).padStart(2, "0");
@@ -16,162 +11,137 @@ function harvardKey(n) {
   return `harvard${pad2(n)}`;
 }
 
-// ---------- CMU dict loading (handles multiple export shapes) ----------
-const require = createRequire(import.meta.url);
-const cmuRaw = require("cmu-pronouncing-dictionary");
+const dict = cmuPkg?.dictionary || {};
 
-function parseCmuTextToMap(text) {
-  const map = Object.create(null);
-  const lines = String(text || "").split(/\r?\n/);
-  for (const line of lines) {
-    const s = line.trim();
-    if (!s || s.startsWith(";;;")) continue;
-
-    // Example: WORD  W ER1 D
-    // Example alt: WORD(1)  W ER1 D
-    const m = s.match(/^([A-Z0-9'_-]+)(\(\d+\))?\s+(.+)$/);
-    if (!m) continue;
-
-    const base = m[1];
-    const variant = m[2] || "";
-    const phones = m[3].trim();
-    const key = (base + variant).toLowerCase();
-    if (!map[key]) map[key] = [];
-    map[key].push(phones);
-  }
-  return map;
+function cleanWord(raw) {
+  // keep apostrophes for possessives; strip other punctuation
+  return String(raw || "")
+    .toUpperCase()
+    .replace(/[^A-Z']/g, "")
+    .replace(/^'+|'+$/g, "");
 }
 
-function loadCmuMap(raw) {
-  const dict = raw?.dictionary ?? raw;
-  if (!dict) return Object.create(null);
+function phonesForWord(raw) {
+  const w0 = cleanWord(raw);
+  if (!w0) return [];
 
-  // Case A: dictionary is a raw CMU text blob
-  if (typeof dict === "string") return parseCmuTextToMap(dict);
+  // try a few fallbacks
+  const tries = [
+    w0,
+    w0.endsWith("'S") ? w0.slice(0, -2) : "",
+    w0.includes("'") ? w0.replace(/'/g, "") : "",
+  ].filter(Boolean);
 
-  // Case B: dictionary is already an object map
-  if (typeof dict === "object") {
-    // normalize to lowercase keys, array-of-prons
-    const out = Object.create(null);
-    for (const [k, v] of Object.entries(dict)) {
-      const key = String(k || "").toLowerCase();
-      if (!key) continue;
-      if (Array.isArray(v)) out[key] = v.map(String);
-      else out[key] = [String(v)];
+  let pron = null;
+  for (const w of tries) {
+    if (dict[w]) {
+      pron = dict[w];
+      break;
     }
-    return out;
   }
+  if (!pron) return [];
 
-  return Object.create(null);
-}
-
-const CMU = loadCmuMap(cmuRaw);
-
-// ---------- phoneme extraction ----------
-function tokenizeWords(text) {
-  // Keep apostrophes inside words.
-  return String(text || "").match(/[A-Za-z']+/g) || [];
-}
-
-function stripStress(phone) {
-  return String(phone || "").replace(/[0-9]/g, "");
-}
-
-function phonesForWord(word) {
-  const w = String(word || "").toLowerCase();
-  if (!w) return [];
-
-  // Try base and a few common alternates
-  const tries = [w, `${w}(1)`, `${w}(2)`, `${w}(3)`];
-  let prons = null;
-
-  for (const t of tries) {
-    prons = CMU[t];
-    if (prons && prons.length) break;
-  }
-  if (!prons || !prons.length) return [];
-
-  const first = String(prons[0] || "");
-  if (!first) return [];
-
-  return first
+  const s = Array.isArray(pron) ? pron[0] : pron;
+  return String(s)
+    .trim()
     .split(/\s+/)
-    .map(stripStress)
+    .map((p) => p.replace(/[0-9]/g, "")) // strip stress digits
     .filter(Boolean);
 }
 
-// ---------- build meta ----------
-async function main() {
-  await ensureHarvardPassages();
+function inc(obj, k, by = 1) {
+  obj[k] = (obj[k] || 0) + by;
+}
 
-  // 1) collect list counts + global counts
-  const perList = Object.create(null); // n -> { counts, total }
-  const globalCounts = Object.create(null);
-  let globalTotal = 0;
+function computeCountsForParts(parts) {
+  const counts = {};
+  let total = 0;
 
-  for (let n = 1; n <= 72; n++) {
-    const key = harvardKey(n);
-    const p = passages?.[key];
-    const parts = Array.isArray(p?.parts) ? p.parts.slice(0, 10) : [];
-    const text = parts.join(" ");
-    const words = tokenizeWords(text);
-
-    const counts = Object.create(null);
-    let total = 0;
+  for (const line of parts || []) {
+    const words = String(line)
+      .split(/\s+/)
+      .map(cleanWord)
+      .filter(Boolean);
 
     for (const w of words) {
       const phones = phonesForWord(w);
       for (const ph of phones) {
-        counts[ph] = (counts[ph] || 0) + 1;
-        globalCounts[ph] = (globalCounts[ph] || 0) + 1;
+        inc(counts, ph, 1);
         total += 1;
-        globalTotal += 1;
       }
     }
-
-    perList[n] = { counts, total };
   }
 
-  // 2) compute top3 “distinctive” by lift vs global
-  const out = Object.create(null);
-
-  for (let n = 1; n <= 72; n++) {
-    const { counts, total } = perList[n];
-    const rows = [];
-
-    for (const [ph, count] of Object.entries(counts)) {
-      const pct = total ? count / total : 0;
-      const gCount = globalCounts[ph] || 0;
-      const gPct = globalTotal ? gCount / globalTotal : 0;
-      const lift = gPct ? pct / gPct : 0;
-
-      rows.push({ ph, count, pct, lift });
-    }
-
-    rows.sort((a, b) => (b.lift - a.lift) || (b.count - a.count) || a.ph.localeCompare(b.ph));
-
-    out[String(n)] = {
-      top3: rows.slice(0, 3),
-      totalPhones: total,
-      // NEW: full counts so the UI can sort by a chosen phoneme
-      phCounts: counts,
-    };
-  }
-
-  const header =
-    `// AUTO-GENERATED by scripts/build-harvard-phonemes.mjs\n` +
-    `// Do not hand-edit.\n`;
-
-  const body = `export const HARVARD_PHONEME_META = ${JSON.stringify(out, null, 2)};\n`;
-
-  const outFile = path.resolve(__dirname, "../src/data/harvard-phoneme-meta.js");
-  fs.mkdirSync(path.dirname(outFile), { recursive: true });
-  fs.writeFileSync(outFile, header + body, "utf8");
-
-  console.log("Wrote:", outFile);
+  return { counts, totalPhones: total };
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
+// 1) per-list counts + global counts
+const perList = {};
+const globalCounts = {};
+let globalTotal = 0;
+
+for (let n = 1; n <= 72; n++) {
+  const key = harvardKey(n);
+  const parts = harvardPassages?.[key]?.parts || [];
+  const { counts, totalPhones } = computeCountsForParts(parts);
+
+  perList[String(n)] = { counts, totalPhones };
+
+  for (const [ph, c] of Object.entries(counts)) {
+    inc(globalCounts, ph, c);
+    globalTotal += c;
+  }
+}
+
+// 2) top3 distinctive by lift vs global baseline
+function top3ForList(nStr) {
+  const rec = perList[nStr];
+  const counts = rec?.counts || {};
+  const total = rec?.totalPhones || 0;
+
+  if (!total) return [];
+
+  const scored = Object.entries(counts).map(([ph, count]) => {
+    const pct = count / total;
+    const base = (globalCounts[ph] || 0) / (globalTotal || 1);
+    const lift = base > 0 ? pct / base : 0;
+    return { ph, count, pct, lift };
+  });
+
+  scored.sort((a, b) => {
+    if (b.lift !== a.lift) return b.lift - a.lift;
+    if (b.count !== a.count) return b.count - a.count;
+    return a.ph.localeCompare(b.ph);
+  });
+
+  return scored.slice(0, 3);
+}
+
+// 3) emit meta + phoneme list
+const metaOut = {};
+for (let n = 1; n <= 72; n++) {
+  const nStr = String(n);
+  metaOut[nStr] = {
+    top3: top3ForList(nStr),
+    totalPhones: perList[nStr]?.totalPhones || 0,
+    counts: perList[nStr]?.counts || {},
+  };
+}
+
+const phonemes = Object.keys(globalCounts).sort((a, b) => {
+  // sort by global frequency desc
+  const da = globalCounts[a] || 0;
+  const db = globalCounts[b] || 0;
+  if (db !== da) return db - da;
+  return a.localeCompare(b);
 });
+
+const outPath = path.join(process.cwd(), "src", "data", "harvard-phoneme-meta.js");
+const outJs =
+  `// AUTO-GENERATED by scripts/build-harvard-phonemes.mjs\n` +
+  `// Do not hand-edit.\n` +
+  `export const HARVARD_PHONEME_META = ${JSON.stringify(metaOut, null, 2)};\n\n` +
+  `export const HARVARD_PHONEMES = ${JSON.stringify(phonemes, null, 2)};\n`;
+
+fs.writeFileSync(outPath, outJs, "utf8");
+console.log("Wrote:", outPath);
