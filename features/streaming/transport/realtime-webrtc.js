@@ -24,20 +24,17 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
 
   function setTurnTaking({ mode } = {}) {
     const m = String(mode || "tap").toLowerCase();
-    const next = m === "auto" ? "auto" : "tap";
-    if (next === inputMode) return; // ✅ prevents duplicate toggles
-
-    inputMode = next;
+    inputMode = m === "auto" ? "auto" : "tap";
     const isAuto = inputMode === "auto";
 
     console.log(
       `[WebRTC] Switching Input Mode: ${inputMode.toUpperCase()} (create_response: ${isAuto})`
     );
 
-    // ✅ Use the data channel state (transport variable does not exist here)
+    // Must be connected (data channel open) to update session
     if (!dc || dc.readyState !== "open") return;
 
-    // ✅ Match the same nesting your backend uses: audio.input.turn_detection
+    // IMPORTANT: turn_detection belongs under audio.input
     sendEvent({
       type: "session.update",
       session: {
@@ -48,7 +45,7 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
               threshold: 0.5,
               prefix_padding_ms: 300,
               silence_duration_ms: 500,
-              create_response: isAuto,
+              create_response: isAuto,          // ✅ true in AUTO, false in TAP
               interrupt_response: true,
             },
           },
@@ -86,13 +83,20 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
 
     pc = new RTCPeerConnection();
 
-    // Remote audio playback
+    // Remote audio playback (element created lazily on first track)
     audioEl = document.createElement("audio");
     audioEl.autoplay = true;
     audioEl.playsInline = true;
+    audioEl.id = "lux-remote-audio";
+    audioEl.style.display = "none";
+    document.body.appendChild(audioEl);
+
+    // Try to "unlock" playback during the user gesture that triggered connect()
+    audioEl.play().catch(() => {});
 
     pc.ontrack = (e) => {
       try { audioEl.srcObject = e.streams[0]; } catch {}
+      audioEl?.play?.().catch(() => {});
     };
 
     pc.onconnectionstatechange = () => {
@@ -181,6 +185,7 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
     try {
       audioEl.muted = false;
       // don’t force play()—autoplay should resume as new audio arrives
+      audioEl.play?.().catch(() => {});
     } catch {}
     mutedByInterrupt = false;
   }
