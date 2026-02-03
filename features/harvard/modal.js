@@ -1,6 +1,8 @@
 // features/harvard/modal.js
 import { ensureHarvardPassages, passages } from "../../src/data/index.js";
 import { HARVARD_PHONEME_META } from "../../src/data/harvard-phoneme-meta.js";
+import { PASSAGE_PHONEME_META } from "../../src/data/passage-phoneme-meta.js";
+
 
 function pad2(n) {
   return String(n).padStart(2, "0");
@@ -14,7 +16,8 @@ function getHarvardMeta(n) {
   return (
     HARVARD_PHONEME_META?.[n] ??
     HARVARD_PHONEME_META?.[String(n)] ??
-    HARVARD_PHONEME_META?.[String(n).padStart(2, "0")]
+    HARVARD_PHONEME_META?.[String(n).padStart(2, "0")] ??
+    null
   );
 }
 
@@ -63,18 +66,13 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
   let modeOnlyBtn = null;
 
   function metaFor(n) {
-    return (
-      HARVARD_PHONEME_META?.[n] ??
-      HARVARD_PHONEME_META?.[String(n)] ??
-      HARVARD_PHONEME_META?.[String(n).padStart(2, "0")] ??
-      null
-    );
+    return PASSAGE_PHONEME_META?.[harvardKey(n)] ?? null;
   }
 
   function countFor(n, ph) {
     if (!ph) return 0;
     const m = metaFor(n);
-    const c = m?.phCounts?.[ph];
+    const c = m?.counts?.[String(ph || "").toUpperCase()];
     return Number(c || 0);
   }
 
@@ -84,11 +82,7 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
   }
 
   function getMetaForN(n) {
-    return (
-      HARVARD_PHONEME_META?.[n] ??
-      HARVARD_PHONEME_META?.[String(n)] ??
-      HARVARD_PHONEME_META?.[String(n).padStart(2, "0")]
-    );
+    return PASSAGE_PHONEME_META?.[harvardKey(n)] ?? null;
   }
 
   function getCountFor(n, ph) {
@@ -101,6 +95,18 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
     const top3 = m?.top3 || [];
     const hit = top3.find((p) => p?.ph === ph);
     return hit ? Number(hit.count || 0) : 0;
+  }
+
+  function getAllTopPhonemes() {
+    const set = new Set();
+    const meta = HARVARD_PHONEME_META || {};
+    for (const m of Object.values(meta)) {
+      const top3 = m?.top3 || [];
+      for (const p of top3) {
+        if (p?.ph) set.add(String(p.ph).toUpperCase());
+      }
+    }
+    return Array.from(set).sort();
   }
 
   function loadFavs() {
@@ -122,12 +128,7 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
   function ensurePhonemeOptions() {
     if (!focusSel || focusSel.dataset.populated === "1") return;
 
-    const set = new Set();
-    for (const m of Object.values(HARVARD_PHONEME_META || {})) {
-      const keys = Object.keys(m?.phCounts || {});
-      for (const ph of keys) set.add(ph);
-    }
-    const list = Array.from(set).sort((a, b) => a.localeCompare(b));
+    const list = getAllTopPhonemes();
 
     focusSel.innerHTML = "";
     const opt0 = document.createElement("option");
@@ -421,10 +422,7 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
   function renderPhonemeRows(n, phonRowsEl) {
     while (phonRowsEl.firstChild) phonRowsEl.removeChild(phonRowsEl.firstChild);
 
-const meta =
-  HARVARD_PHONEME_META?.[n] ??
-  HARVARD_PHONEME_META?.[String(n)] ??
-  HARVARD_PHONEME_META?.[String(n).padStart(2, "0")];
+    const meta = getHarvardMeta(n);
     const top3 = meta?.top3;
 
     if (!Array.isArray(top3) || top3.length === 0) {

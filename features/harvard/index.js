@@ -2,6 +2,7 @@
 import { setPassage, updatePartsInfoTip } from "../passages/index.js";
 import { ensureHarvardPassages } from "../../src/data/index.js";
 import { HARVARD_PHONEME_META } from "../../src/data/harvard-phoneme-meta.js";
+import { PASSAGE_PHONEME_META } from "../../src/data/passage-phoneme-meta.js";
 import { createHarvardLibraryModal } from "./modal.js";
 
 function pad2(n) {
@@ -15,11 +16,7 @@ function harvardKey(n) {
 }
 
 function getHarvardMeta(n) {
-  return (
-    HARVARD_PHONEME_META?.[n] ??
-    HARVARD_PHONEME_META?.[String(n)] ??
-    HARVARD_PHONEME_META?.[String(n).padStart(2, "0")]
-  );
+  return PASSAGE_PHONEME_META?.[harvardKey(n)] ?? null;
 }
 
 export function wireHarvardPicker() {
@@ -59,16 +56,19 @@ export function wireHarvardPicker() {
   }
 
   function metaFor(n) {
+    return PASSAGE_PHONEME_META?.[harvardKey(n)] ?? null;
+  }
+
+  function getMetaForN(n) {
     return (
       HARVARD_PHONEME_META?.[n] ??
       HARVARD_PHONEME_META?.[String(n)] ??
-      HARVARD_PHONEME_META?.[String(n).padStart(2, "0")] ??
-      null
+      HARVARD_PHONEME_META?.[String(n).padStart(2, "0")]
     );
   }
 
   function getFocusPhoneme(n) {
-    const top = metaFor(n)?.top3?.[0];
+    const top = getMetaForN(n)?.top3?.[0];
     return top?.ph || "";
   }
 

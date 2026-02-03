@@ -12,7 +12,9 @@
     "lux:snapshot": "powershell -ExecutionPolicy Bypass -File scripts/lux-snapshot.ps1",
     "lux:release": "powershell -ExecutionPolicy Bypass -File scripts/lux-release.ps1",
     "lint": "eslint . --ext .js,.mjs",
-    "lint:fix": "eslint . --ext .js,.mjs --fix"
+    "lint:fix": "eslint . --ext .js,.mjs --fix",
+    "build:harvard:phonemes": "node scripts/build-harvard-phonemes.mjs",
+    "build:passages:phonemes": "node scripts/build-passage-phonemes.mjs"
   },
   "keywords": [
     "pronunciation",
