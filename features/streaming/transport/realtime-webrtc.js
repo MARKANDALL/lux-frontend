@@ -24,7 +24,10 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
 
   function setTurnTaking({ mode } = {}) {
     const m = String(mode || "tap").toLowerCase();
-    inputMode = m === "auto" ? "auto" : "tap";
+    const next = m === "auto" ? "auto" : "tap";
+    if (next === inputMode) return; // ✅ prevents duplicate toggles
+
+    inputMode = next;
     const isAuto = inputMode === "auto";
 
     console.log(
@@ -114,6 +117,20 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
     });
     dc.addEventListener("close", () => emit("disconnected"));
     dc.addEventListener("message", (e) => {
+      try {
+        const msg = JSON.parse(e.data);
+        const t = msg?.type || "(no type)";
+        if (
+          t.includes("turn") ||
+          t.includes("speech") ||
+          t.includes("response") ||
+          t.includes("input_audio") ||
+          t.includes("error")
+        ) {
+          console.log("[oai-events]", t, msg);
+        }
+      } catch {}
+
       let evt = null;
       try { evt = JSON.parse(e.data); } catch { return; }
       const text = extractAssistantText(evt);
@@ -199,7 +216,7 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
       item: {
         type: "message",
         role: "user",
-        content: [{ type: "input_text", text }], 
+        content: [{ type: "input_text", text }],
       },
     });
 
