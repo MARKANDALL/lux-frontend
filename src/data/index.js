@@ -37,3 +37,5 @@ export {
   phonemeDetailsByIPA,
   ytLink,
 } from "./phonemes/details.js";
+
+export { PASSAGE_PHONEME_META } from "./passage-phoneme-meta.js";
