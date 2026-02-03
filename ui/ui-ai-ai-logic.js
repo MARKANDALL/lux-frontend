@@ -67,6 +67,13 @@ export function promptUserForAI(azureResult, referenceText, firstLang) {
  *   { azureResult, referenceText, firstLang }
  */
 export function mountAICoachAlwaysOn(getContext) {
+  // ✅ HARD GUARD: only pages that *explicitly* include the AI coach drawer
+  // should ever mount/wire it. If the drawer isn't present in the HTML,
+  // do nothing (prevents AI Coach "leaking" onto other pages).
+  const drawer = document.getElementById("aiCoachDrawer");
+  const host = document.getElementById("aiFeedbackSection");
+  if (!drawer || !host) return;
+
   const section = document.getElementById("aiFeedbackSection");
   if (!section) return;
 

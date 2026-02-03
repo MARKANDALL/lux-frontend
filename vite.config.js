@@ -10,6 +10,8 @@ export default defineConfig(({ mode }) => {
     env.VITE_LUX_API_ORIGIN ||
     "https://luxury-language-api.vercel.app";
 
+  console.log("[vite] API_ORIGIN =", API_ORIGIN);
+
   // Only used for dev proxy header injection (optional)
   const ADMIN_TOKEN = env.LUX_ADMIN_TOKEN || env.ADMIN_TOKEN || "";
 
@@ -52,6 +54,24 @@ export default defineConfig(({ mode }) => {
           target: API_ORIGIN,
           changeOrigin: true,
           secure: true,
+
+          // ✅ Do NOT proxy module/static asset requests under /api (those are frontend files)
+          bypass: (req) => {
+            const url = req.url || "";
+            if (
+              url.endsWith(".js") ||
+              url.endsWith(".css") ||
+              url.endsWith(".map") ||
+              url.endsWith(".ico") ||
+              url.endsWith(".png") ||
+              url.endsWith(".jpg") ||
+              url.endsWith(".jpeg") ||
+              url.endsWith(".svg") ||
+              url.endsWith(".webp")
+            ) {
+              return url; // let Vite serve it locally
+            }
+          },
 
           // Add admin token header (if set). Safe no-op if empty.
           configure: (proxy) => {

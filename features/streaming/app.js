@@ -100,12 +100,12 @@ export function mountStreamingApp({ rootId = "lux-stream-root" } = {}) {
   refs.getReplyBtn?.addEventListener("click", () => {
     const st = store.getState().connection.status;
     const r = store.getState().route || {};
- if (st === "live" && r.replyMode === "tap") transport.requestReply?.();
+    if (st === "live" && (r.input || "tap") === "tap") transport.requestReply?.();
   });
 
   function setMode(mode) {
     const m = mode === "auto" ? "auto" : "tap";
-  store.dispatch({ type: ACTIONS.ROUTE_PATCH, patch: { replyMode: m } });
+    store.dispatch({ type: ACTIONS.ROUTE_PATCH, patch: { input: m } });
     if (store.getState().connection.status === "live") {
       transport.setInputMode?.(m);
     }
@@ -209,6 +209,7 @@ export function mountStreamingApp({ rootId = "lux-stream-root" } = {}) {
           session: { ...caps, remainingSec: caps.durationSec, turnsUsed: 0 },
         });
         startTimer(caps.durationSec);
+        transport.setInputMode?.(store.getState().route?.input || "tap");
       }
 
       if (cur !== "live" && prev === "live") {

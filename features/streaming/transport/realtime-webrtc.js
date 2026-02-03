@@ -31,8 +31,10 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
       `[WebRTC] Switching Input Mode: ${inputMode.toUpperCase()} (create_response: ${isAuto})`
     );
 
-    // Update session turn detection every time (Auto=true, Tap=false)
+    // ✅ Use the data channel state (transport variable does not exist here)
     if (!dc || dc.readyState !== "open") return;
+
+    // ✅ Match the same nesting your backend uses: audio.input.turn_detection
     sendEvent({
       type: "session.update",
       session: {
