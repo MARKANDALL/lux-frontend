@@ -17,7 +17,7 @@ import { assessPronunciation, saveAttempt, getUID, fetchHistory } from "/src/api
 import { showPrettyResults } from "../results/index.js";
 import { markPartCompleted } from "../passages/index.js";
 import { bringInputToTop } from "../../helpers/index.js";
-import { promptUserForAI } from "../../ui/ui-ai-ai-logic.js";
+import { promptUserForAI, mountAICoachAlwaysOn } from "../../ui/ui-ai-ai-logic.js";
 
 import { mountAudioModeSwitch } from "./audio-mode-switch.js";
 import { getAudioMode, initAudioModeDataset } from "./audio-mode-core.js";
@@ -244,6 +244,10 @@ export function initLuxRecorder() {
   initAudioModeDataset(getAudioMode());
 
   DOM.ensureRefs();
+
+  // ✅ Always-on AI Coach shell (so it can open/close immediately on first load)
+  // For Practice Skills, no context exists yet — the shell handles that gracefully.
+  mountAICoachAlwaysOn(() => null);
 
   // ✅ Audio Mode Switch (Normal / Pro)
   mountAudioModeSwitch({ scope: "practice" });

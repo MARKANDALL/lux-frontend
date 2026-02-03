@@ -1,76 +1,66 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import { resolve } from "path";
 
-const API_ORIGIN =
-  process.env.LUX_API_ORIGIN ||
-  process.env.VITE_LUX_API_ORIGIN ||
-  "https://luxury-language-api.vercel.app";
+export default defineConfig(({ mode }) => {
+  // Load env from .env, .env.local, .env.[mode], etc.
+  const env = loadEnv(mode, process.cwd(), "");
 
-function getAdminToken() {
-  return process.env.LUX_ADMIN_TOKEN || process.env.ADMIN_TOKEN || "";
-}
+  const API_ORIGIN =
+    env.LUX_API_ORIGIN ||
+    env.VITE_LUX_API_ORIGIN ||
+    "https://luxury-language-api.vercel.app";
 
-export default defineConfig({
-  base: "./",
+  // Only used for dev proxy header injection (optional)
+  const ADMIN_TOKEN = env.LUX_ADMIN_TOKEN || env.ADMIN_TOKEN || "";
 
-  build: {
-    outDir: "dist",
-    assetsDir: "assets",
-    sourcemap: true,
-    emptyOutDir: true,
+  return {
+    base: "./",
 
-    rollupOptions: {
-      input: {
-        main: resolve(__dirname, "index.html"),
-        convo: resolve(__dirname, "convo.html"),
-        progress: resolve(__dirname, "progress.html"),
-        wordcloud: resolve(__dirname, "wordcloud.html"),
-        stream: resolve(__dirname, "stream.html"),
-        streamSetup: resolve(__dirname, "stream-setup.html"),
-        life: resolve(__dirname, "life.html"),
+    build: {
+      outDir: "dist",
+      assetsDir: "assets",
+      sourcemap: true,
+      emptyOutDir: true,
 
-        // Admin pages
-        adminIndex: resolve(__dirname, "admin/index.html"),
-        adminOverview: resolve(__dirname, "admin/overview.html"),
-        adminUser: resolve(__dirname, "admin/user.html"),
-      },
-    },
-  },
+      rollupOptions: {
+        input: {
+          main: resolve(__dirname, "index.html"),
+          convo: resolve(__dirname, "convo.html"),
+          progress: resolve(__dirname, "progress.html"),
+          wordcloud: resolve(__dirname, "wordcloud.html"),
+          stream: resolve(__dirname, "stream.html"),
+          streamSetup: resolve(__dirname, "stream-setup.html"),
+          life: resolve(__dirname, "life.html"),
 
-  server: {
-    port: 3000,
-    strictPort: false,
-    open: true,
-
-    proxy: {
-      "/api": {
-        target: API_ORIGIN,
-        changeOrigin: true,
-        secure: true,
-        // ✅ AGGRESSIVE BYPASS
-        bypass: (req, res, options) => {
-          const url = req.url;
-          // If it asks for a static file extension, DO NOT PROXY.
-          // This forces Vite to serve the file from your disk.
-          if (
-            url.includes(".js") || 
-            url.includes(".json") || 
-            url.includes(".css") || 
-            url.includes(".html") ||
-            url.includes("@vite") ||
-            url.includes("node_modules")
-          ) {
-            console.log(`[Vite Proxy] Bypassing: ${url}`); // 👀 Check your terminal for this
-            return url;
-          }
-        },
-        configure: (proxy) => {
-          proxy.on("proxyReq", (proxyReq) => {
-            const t = getAdminToken();
-            if (t) proxyReq.setHeader("x-admin-token", t);
-          });
+          // Admin pages
+          adminIndex: resolve(__dirname, "admin/index.html"),
+          adminOverview: resolve(__dirname, "admin/overview.html"),
+          adminUser: resolve(__dirname, "admin/user.html"),
         },
       },
     },
-  },
+
+    server: {
+      // Prefer 3000, but allow Vite to auto-pick 3001/3002/etc if taken.
+      port: 3000,
+      strictPort: false, // ✅ Option A: do NOT fail just because 3000 is occupied
+
+      open: true,
+
+      proxy: {
+        "/api": {
+          target: API_ORIGIN,
+          changeOrigin: true,
+          secure: true,
+
+          // Add admin token header (if set). Safe no-op if empty.
+          configure: (proxy) => {
+            proxy.on("proxyReq", (proxyReq) => {
+              if (ADMIN_TOKEN) proxyReq.setHeader("x-admin-token", ADMIN_TOKEN);
+            });
+          },
+        },
+      },
+    },
+  };
 });
