@@ -31,22 +31,30 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
       `[WebRTC] Switching Input Mode: ${isAuto ? "AUTO" : "TAP"} (create_response: ${isAuto})`
     );
 
-    const sessionParams = {
-      audio: {
-        input: {
-          turn_detection: {
-            type: "server_vad",
-            threshold: 0.5,
-            prefix_padding_ms: 300,
-            silence_duration_ms: 500,
-            create_response: isAuto,
-            interrupt_response: true,
+    if (isAuto) {
+      updateSession({
+        audio: {
+          input: {
+            turn_detection: {
+              type: "server_vad",
+              threshold: 0.5,
+              prefix_padding_ms: 300,
+              silence_duration_ms: 500,
+              create_response: true,
+              interrupt_response: true,
+            },
           },
         },
-      },
-    };
-
-    updateSession(sessionParams);
+      });
+    } else {
+      updateSession({
+        audio: {
+          input: {
+            turn_detection: null, // ✅ explicitly disables auto turn-taking
+          },
+        },
+      });
+    }
   }
 
   /**
@@ -54,14 +62,17 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
    * @param {Object} sessionParams - The session object parameters to update.
    */
   function updateSession(sessionParams) {
-    if (!dc || dc.readyState !== 'open') {
+    if (!dc || dc.readyState !== "open") {
       console.warn("[WebRTC] Data channel not ready for update.");
       return;
     }
 
     const event = {
       type: "session.update",
-      session: sessionParams
+      session: {
+        type: "realtime",     // ✅ REQUIRED (fixes your console error)
+        ...sessionParams,
+      },
     };
 
     console.log("[WebRTC] Sending session.update:", event);
@@ -82,8 +93,9 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
     audioEl = document.createElement("audio");
     audioEl.autoplay = true;
     audioEl.playsInline = true;
+
+    // ✅ make it discoverable for devtools + debugging
     audioEl.id = "lux-remote-audio";
-    audioEl.setAttribute("data-lux-audio", "realtime");
     audioEl.style.display = "none";
     document.body.appendChild(audioEl);
 
