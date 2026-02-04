@@ -525,10 +525,15 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
     }
 
     if (activePh) {
-      rows = rows
-        .map((rec) => ({ rec, score: getCountFor(rec.n, activePh) }))
-        .filter((x) => x.score > 0)
-        .sort((a, b) => b.score - a.score)
+      const scored = rows
+        .map((rec) => ({ rec, score: countFor(rec.n, activePh) }));
+
+      const filtered = focusMode === "only"
+        ? scored.filter((x) => x.score > 0)
+        : scored;
+
+      rows = filtered
+        .sort((a, b) => (b.score - a.score) || (a.rec.n - b.rec.n))
         .map((x) => x.rec);
     }
 
