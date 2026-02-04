@@ -57,12 +57,18 @@ function pickPron(v) {
 function wordToPhones(word) {
   const w0 = word.toLowerCase();
   const w1 = w0.replace(/'/g, "");
+  const U0 = w0.toUpperCase();
+  const U1 = w1.toUpperCase();
 
   const v =
     pickPron(CMU[w0]) ||
     pickPron(CMU[w1]) ||
     pickPron(CMU[w1 + "(1)"]) ||
-    pickPron(CMU[w0 + "(1)"]);
+    pickPron(CMU[w0 + "(1)"]) ||
+    pickPron(CMU[U0]) ||
+    pickPron(CMU[U1]) ||
+    pickPron(CMU[U1 + "(1)"]) ||
+    pickPron(CMU[U0 + "(1)"]);
 
   if (!v) return null;
 

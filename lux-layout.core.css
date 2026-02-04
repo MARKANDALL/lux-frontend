@@ -141,6 +141,44 @@ label {
   width: 100%;
 }
 
+/* --- Passage focus phoneme row (Select Passage) --- */
+.lux-passage-focusphrow {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 12px 0 6px;
+  flex-wrap: wrap;
+}
+
+.lux-passage-focusphlabel {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #444;
+}
+
+.lux-passage-focusphsel {
+  padding: 10px 18px;
+  border-radius: 12px;
+  border: 1px solid #ccc;
+  background: #fff;
+  font-size: 1.05rem;
+}
+
+.lux-passage-focusmode {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid #d1d1d1;
+  background: #fff;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.lux-passage-focusmode.is-active {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
 #referenceText {
   width: 95vw;
   max-width: 880px;

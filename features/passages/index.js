@@ -2,7 +2,7 @@
 // Controller: Manages passage state and orchestrates DOM updates.
 // UPDATED: Universal Balloon Support + Confetti Pop on Summary.
 
-import { passages } from "../../src/data/index.js"; 
+import { passages, PASSAGE_PHONEME_META } from "../../src/data/index.js"; 
 import {
   setCustom,
   setPassageKey,
@@ -203,9 +203,216 @@ export function markPartCompleted() {
   }
 }
 
+/* ---------------- Focus Phoneme (Select Passage) ---------------- */
+
+function getPhCountForKey(key, ph) {
+  if (!key || !ph) return 0;
+  const m = PASSAGE_PHONEME_META?.[String(key)] || null;
+  const c = m?.counts?.[String(ph || "").toUpperCase()];
+  return Number(c || 0);
+}
+
+function getTotalPhonesForKey(key) {
+  const m = PASSAGE_PHONEME_META?.[String(key)] || null;
+  return Number(m?.totalPhones || 0);
+}
+
+function getAllPhonemesFromPassageMeta() {
+  const set = new Set();
+  const meta = PASSAGE_PHONEME_META || {};
+  for (const m of Object.values(meta)) {
+    const counts = m?.counts;
+    if (!counts || typeof counts !== "object") continue;
+    for (const ph of Object.keys(counts)) set.add(String(ph).toUpperCase());
+  }
+  return Array.from(set).sort();
+}
+
+// Given your existing “passage options” list:
+// options = [{ key, label, ... }, ...]
+function applyFocusPhonemeToOptions(options, activePh, mode) {
+  if (!activePh) return options;
+
+  const scored = options
+    .map((opt) => ({
+      opt,
+      score: getPhCountForKey(opt.key, activePh),
+      total: getTotalPhonesForKey(opt.key),
+    }))
+    .filter((x) => (mode === "only" ? x.score > 0 : true))
+    .sort((a, b) => {
+      // primary: count desc
+      if (b.score !== a.score) return b.score - a.score;
+      // secondary: percent desc
+      const ap = a.total ? a.score / a.total : 0;
+      const bp = b.total ? b.score / b.total : 0;
+      if (bp !== ap) return bp - ap;
+      // stable fallback: label
+      return String(a.opt.label).localeCompare(String(b.opt.label));
+    })
+    .map((x) => x.opt);
+
+  return scored;
+}
+
+function buildPassageFocusUI() {
+  // Anchor points:
+  const harvardNum = document.getElementById("harvardNum");
+  const harvardRow = harvardNum?.closest?.(".lux-row") || harvardNum?.parentElement || null;
+
+  // The Select Passage <select> (best-effort)
+  const selectEl =
+    document.getElementById("passageSelect") ||
+    document.getElementById("passagePicker") ||
+    document.querySelector('select[name="passage"]') ||
+    document.querySelector("select");
+
+  if (!selectEl) return;
+
+  let row = document.getElementById("passageFocusPhRow");
+  if (!row) {
+    row = document.createElement("div");
+    row.id = "passageFocusPhRow";
+    row.className = "lux-passage-focusphrow";
+
+    const label = document.createElement("span");
+    label.className = "lux-passage-focusphlabel";
+    label.textContent = "Focus phoneme:";
+    row.appendChild(label);
+
+    const sel = document.createElement("select");
+    sel.id = "passageFocusPhSel";
+    sel.className = "lux-passage-focusphsel";
+    row.appendChild(sel);
+
+    const btnSort = document.createElement("button");
+    btnSort.type = "button";
+    btnSort.id = "passageFocusModeSort";
+    btnSort.className = "lux-passage-focusmode is-active";
+    btnSort.textContent = "Sort";
+    row.appendChild(btnSort);
+
+    const btnOnly = document.createElement("button");
+    btnOnly.type = "button";
+    btnOnly.id = "passageFocusModeOnly";
+    btnOnly.className = "lux-passage-focusmode";
+    btnOnly.textContent = "Only";
+    row.appendChild(btnOnly);
+  }
+
+  // Insert between Select Passage row and Harvard row (best-effort)
+  if (harvardRow && harvardRow.parentElement && !row.isConnected) {
+    harvardRow.parentElement.insertBefore(row, harvardRow);
+  } else if (!row.isConnected) {
+    selectEl.insertAdjacentElement("afterend", row);
+  }
+
+  // Populate phoneme select once
+  const focusSel = document.getElementById("passageFocusPhSel");
+  if (focusSel && focusSel.dataset.populated !== "1") {
+    focusSel.innerHTML = "";
+    const opt0 = document.createElement("option");
+    opt0.value = "";
+    opt0.textContent = "None";
+    focusSel.appendChild(opt0);
+
+    const list = getAllPhonemesFromPassageMeta();
+    for (const ph of list) {
+      const opt = document.createElement("option");
+      opt.value = ph;
+      opt.textContent = ph;
+      focusSel.appendChild(opt);
+    }
+
+    focusSel.dataset.populated = "1";
+  }
+}
+
+function reorderPassageSelect({ activePh, mode }) {
+  const selectEl =
+    document.getElementById("passageSelect") ||
+    document.getElementById("passagePicker") ||
+    document.querySelector('select[name="passage"]') ||
+    document.querySelector("select");
+
+  if (!selectEl) return;
+
+  const prevSelected = String(selectEl.value || "");
+
+  const opts = Array.from(selectEl.options || []).map((o) => ({
+    key: String(o.value || ""),
+    label: String(o.textContent || ""),
+    disabled: !!o.disabled,
+  }));
+
+  const head = [];
+  const rest = [];
+
+  // Keep "custom" at the very top if present
+  for (const o of opts) {
+    if (o.key === "custom") head.push(o);
+    else rest.push(o);
+  }
+
+  const nextRest = applyFocusPhonemeToOptions(rest, activePh, mode);
+
+  // Rebuild options in-place (do NOT auto-change current selection)
+  selectEl.innerHTML = "";
+  for (const o of head.concat(nextRest)) {
+    const opt = document.createElement("option");
+    opt.value = o.key;
+    opt.textContent = o.label;
+    opt.disabled = !!o.disabled;
+    selectEl.appendChild(opt);
+  }
+
+  // Restore selection if still present; otherwise leave whatever browser chooses
+  const stillExists = Array.from(selectEl.options).some((o) => String(o.value) === prevSelected);
+  if (stillExists) selectEl.value = prevSelected;
+}
+
 /* ---------------- Wiring ---------------- */
 
 export function wirePassageSelect() {
+  // Build the UI row between Select Passage and Harvard row
+  buildPassageFocusUI();
+
+  let focusActivePh = null;
+  let focusMode = "sort"; // "sort" | "only"
+
+  const focusSel = document.getElementById("passageFocusPhSel");
+  const modeSortBtn = document.getElementById("passageFocusModeSort");
+  const modeOnlyBtn = document.getElementById("passageFocusModeOnly");
+
+  const syncFocusModeUI = () => {
+    if (modeSortBtn) modeSortBtn.classList.toggle("is-active", focusMode === "sort");
+    if (modeOnlyBtn) modeOnlyBtn.classList.toggle("is-active", focusMode === "only");
+  };
+
+  if (focusSel) {
+    focusSel.addEventListener("change", () => {
+      focusActivePh = focusSel.value ? String(focusSel.value).toUpperCase() : null;
+      reorderPassageSelect({ activePh: focusActivePh, mode: focusMode });
+      syncFocusModeUI();
+    });
+  }
+
+  if (modeSortBtn) {
+    modeSortBtn.addEventListener("click", () => {
+      focusMode = "sort";
+      reorderPassageSelect({ activePh: focusActivePh, mode: focusMode });
+      syncFocusModeUI();
+    });
+  }
+
+  if (modeOnlyBtn) {
+    modeOnlyBtn.addEventListener("click", () => {
+      focusMode = "only";
+      reorderPassageSelect({ activePh: focusActivePh, mode: focusMode });
+      syncFocusModeUI();
+    });
+  }
+
   DOM.wireSelectEvents({
     onChange: (val) => {
       setPassage(val, { clearInputForCustom: val === "custom" });
