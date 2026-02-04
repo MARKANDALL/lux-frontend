@@ -11,6 +11,7 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
 
   // near top
   let inputMode = "tap";
+  let pendingSessionUpdate = null;
 
   function emit(type, extra) {
     try { onEvent?.({ type, ...(extra || {}) }); } catch {}
@@ -22,6 +23,37 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
     return true;
   }
 
+  /**
+   * Updates the session configuration live over the data channel.
+   * @param {Object} sessionParams - The session object parameters to update.
+   */
+  function updateSession(sessionParams = {}) {
+    if (!dc || dc.readyState !== "open") {
+      pendingSessionUpdate = sessionParams; // keep only the latest patch
+      console.log("[WebRTC] Queuing session.update (data channel not ready yet).");
+      return false;
+    }
+
+    // ✅ Current Realtime schema requires session.type
+    const payload = {
+      type: "session.update",
+      session: {
+        type: "realtime",
+        ...sessionParams,
+      },
+    };
+
+    console.log("[WebRTC] Sending session.update:", payload);
+    return sendEvent(payload);
+  }
+
+  function flushPendingSessionUpdate() {
+    if (!pendingSessionUpdate) return;
+    const patch = pendingSessionUpdate;
+    pendingSessionUpdate = null;
+    updateSession(patch);
+  }
+
   function setTurnTaking({ mode } = {}) {
     const m = String(mode || "tap").toLowerCase();
     inputMode = (m === "auto") ? "auto" : "tap";
@@ -31,57 +63,28 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
       `[WebRTC] Switching Input Mode: ${isAuto ? "AUTO" : "TAP"} (create_response: ${isAuto})`
     );
 
-    if (isAuto) {
-      updateSession({
-        audio: {
-          input: {
-            turn_detection: {
-              type: "server_vad",
-              threshold: 0.5,
-              prefix_padding_ms: 300,
-              silence_duration_ms: 500,
-              create_response: true,
-              interrupt_response: true,
-            },
-          },
-        },
-      });
-    } else {
-      updateSession({
-        audio: {
-          input: {
-            turn_detection: null, // ✅ explicitly disables auto turn-taking
-          },
-        },
-      });
-    }
-  }
-
-  /**
-   * Updates the session configuration live over the data channel.
-   * @param {Object} sessionParams - The session object parameters to update.
-   */
-  function updateSession(sessionParams) {
-    if (!dc || dc.readyState !== "open") {
-      console.warn("[WebRTC] Data channel not ready for update.");
-      return;
-    }
-
-    const event = {
-      type: "session.update",
-      session: {
-        type: "realtime",     // ✅ REQUIRED (fixes your console error)
-        ...sessionParams,
-      },
+    // ✅ Updated schema: audio.input.turn_detection (NOT session.turn_detection)
+    const turnDetection = {
+      type: "server_vad",
+      threshold: 0.5,
+      prefix_padding_ms: 300,
+      silence_duration_ms: 500,
+      create_response: isAuto,
+      interrupt_response: true,
     };
 
-    console.log("[WebRTC] Sending session.update:", event);
-    dc.send(JSON.stringify(event));
+    updateSession({
+      audio: {
+        input: { turn_detection: turnDetection },
+      },
+    });
   }
 
   function requestReply() {
-    const ok = sendEvent({ type: "response.create" });
-    if (!ok) throw new Error("Transport not connected");
+    console.log("[WebRTC] requestReply() -> committing + response.create");
+    // Helps avoid the “one turn behind” feel in TAP.
+    sendEvent({ type: "input_audio_buffer.commit" });
+    sendEvent({ type: "response.create" });
   }
 
   async function connect() {
@@ -120,12 +123,17 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
     // Data channel for events + text
     dc = pc.createDataChannel("oai-events");
     dc.addEventListener("open", () => {
-      emit("connected");
-      // ✅ FIX: Immediately cancel any race-condition response
       sendEvent({ type: "response.cancel" });
 
-      // Default streaming contract: Tap mode unless UI switches it later.
-      setTurnTaking({ mode: "tap" });
+      // ✅ Apply whatever session.update was requested before dc opened
+      const hadQueued = !!pendingSessionUpdate;
+      flushPendingSessionUpdate();
+      if (!hadQueued) {
+        // Ensure we at least apply the current mode (defaults to "tap")
+        setTurnTaking({ mode: inputMode });
+      }
+
+      emit("connected");
     });
     dc.addEventListener("close", () => emit("disconnected"));
     dc.addEventListener("message", (e) => {
@@ -148,6 +156,10 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
 
       let evt = null;
       try { evt = JSON.parse(e.data); } catch { return; }
+      if (evt?.type === "error" && evt?.error?.code === "response_cancel_not_active") {
+        // ignore or console.debug
+        return;
+      }
       const text = extractAssistantText(evt);
       if (text) emit("assistant_text", { text });
     });

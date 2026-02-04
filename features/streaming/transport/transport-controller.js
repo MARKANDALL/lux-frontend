@@ -106,6 +106,12 @@ export function createTransportController({ store, route }) {
     if (cur === "connecting" || cur === "live") return;
     setConnection({ status: "connecting", error: null });
     try {
+      // Ensure provider knows desired mode BEFORE connect finishes.
+      // realtime-webrtc.js will queue this until dc opens.
+      const s = store.getState();
+      const mode = s.route?.input || "tap";
+      provider?.setTurnTaking?.({ mode });
+
       await provider.connect();
     } catch (err) {
       console.error(err);
@@ -134,9 +140,10 @@ export function createTransportController({ store, route }) {
     resetAssistantBuffer();
 
     try {
- const r = store.getState().route || {};
+      const r = store.getState().route || {};
       const replyMode = String(r.replyMode || r.reply || "auto").toLowerCase();
-      await provider.sendUserText(t, { createResponse: replyMode !== "tap" });    } catch (err) {
+      await provider.sendUserText(t, { createResponse: replyMode !== "tap" });
+    } catch (err) {
       console.error(err);
       setConnection({ status: "error", error: err?.message || String(err) });
     }
