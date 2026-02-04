@@ -1,5 +1,5 @@
 // api/convo.js
-import { API_BASE, dbg, jsonOrThrow } from "./util.js";
+import { API_BASE, dbg, jsonOrThrow, getAdminToken } from "./util.js";
 
 const API_URL = import.meta.env.VITE_API_URL || "";
 const CONVO_URL = `${API_URL}${API_BASE}/api/convo-turn`;
@@ -16,9 +16,17 @@ function isValidConvoTurn(x) {
 }
 
 async function postConvoTurn(payload, { signal } = {}) {
+  const token = getAdminToken({
+    promptIfMissing: true,
+    promptLabel: "Admin Token required for AI Conversation",
+  });
+
   const resp = await fetch(CONVO_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "x-admin-token": token,
+    },
     body: JSON.stringify(payload),
     signal,
   });

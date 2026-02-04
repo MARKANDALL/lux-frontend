@@ -38,3 +38,28 @@ export async function jsonOrThrow(resp) {
   }
   return data;
 }
+
+// Reuse the same admin token storage Streaming uses.
+// (Streaming saves to sessionStorage/localStorage key: "lux_admin_token")
+export function getAdminToken({
+  promptIfMissing = false,
+  promptLabel = "Admin Token required.",
+} = {}) {
+  if (typeof window === "undefined") return "";
+
+  let t =
+    sessionStorage.getItem("lux_admin_token") ||
+    localStorage.getItem("lux_admin_token") ||
+    "";
+
+  if (!t && promptIfMissing) {
+    t = prompt(`⚠️ ${promptLabel} Please paste it here:`) || "";
+    t = t.trim();
+    if (t) {
+      sessionStorage.setItem("lux_admin_token", t);
+      localStorage.setItem("lux_admin_token", t);
+    }
+  }
+
+  return t || "";
+}
