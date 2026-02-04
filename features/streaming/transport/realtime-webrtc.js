@@ -13,6 +13,10 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
   let inputMode = "tap";
   let pendingSessionUpdate = null;
 
+  // TAP determinism: wait for input_audio_buffer.committed before response.create
+  let _tapAwaitingCommit = false;
+  let _tapCommitTimeout = null;
+
   function emit(type, extra) {
     try { onEvent?.({ type, ...(extra || {}) }); } catch {}
   }
@@ -81,10 +85,35 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
   }
 
   function requestReply() {
-    console.log("[WebRTC] requestReply() -> committing + response.create");
-    // Helps avoid the “one turn behind” feel in TAP.
-    sendEvent({ type: "input_audio_buffer.commit" });
-    sendEvent({ type: "response.create" });
+    if (inputMode !== "tap") {
+      console.warn("[WebRTC] requestReply() ignored (not in TAP mode).");
+      return;
+    }
+
+    if (_tapAwaitingCommit) {
+      console.log("[WebRTC] requestReply() already awaiting commit; ignoring extra tap.");
+      return;
+    }
+
+    console.log("[WebRTC] requestReply() -> commit, then wait for input_audio_buffer.committed");
+
+    _tapAwaitingCommit = true;
+
+    const ok = sendEvent({ type: "input_audio_buffer.commit" });
+    if (!ok) {
+      _tapAwaitingCommit = false;
+      console.warn("[WebRTC] Data channel not ready; could not commit audio buffer.");
+      return;
+    }
+
+    // Fallback: if we never receive the committed event, still attempt a response.
+    if (_tapCommitTimeout) clearTimeout(_tapCommitTimeout);
+    _tapCommitTimeout = setTimeout(() => {
+      if (!_tapAwaitingCommit) return;
+      console.warn("[WebRTC] No committed event observed; falling back to response.create.");
+      _tapAwaitingCommit = false;
+      sendEvent({ type: "response.create" });
+    }, 1200);
   }
 
   async function connect() {
@@ -159,6 +188,15 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
       if (evt?.type === "error" && evt?.error?.code === "response_cancel_not_active") {
         // ignore or console.debug
         return;
+      }
+      if (evt?.type === "input_audio_buffer.committed") {
+        if (_tapAwaitingCommit) {
+          if (_tapCommitTimeout) clearTimeout(_tapCommitTimeout);
+          _tapCommitTimeout = null;
+          _tapAwaitingCommit = false;
+          console.log("[WebRTC] input_audio_buffer.committed -> response.create (TAP)");
+          sendEvent({ type: "response.create" });
+        }
       }
       const text = extractAssistantText(evt);
       if (text) emit("assistant_text", { text });
