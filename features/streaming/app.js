@@ -27,8 +27,67 @@ export function mountStreamingApp({ rootId = "lux-stream-root" } = {}) {
 
   const refs = buildStreamingDOM({ root });
 
+  // Debug toggle (query param ?debug=1 or persisted localStorage)
+  function readDebugFlag() {
+    try {
+      if (/[?&]debug=1(?:&|$)/.test(window.location.search)) return true;
+      return window.localStorage.getItem("LUX_STREAM_DEBUG") === "1";
+    } catch {
+      return false;
+    }
+  }
+
+  const IS_DEV = !!import.meta.env.DEV;
+  let debugEnabled = readDebugFlag();
+
+  // ✅ Health visible in dev; hidden in prod unless debug is enabled
+  const showHealth = IS_DEV || debugEnabled;
+  if (refs.healthDetails) refs.healthDetails.hidden = !showHealth;
+  if (refs.debugToggle) refs.debugToggle.checked = debugEnabled;
+
   // Controllers
   const transport = createTransportController({ store, route });
+
+  // Apply debug to provider now that transport exists
+  transport.setDebug?.(debugEnabled);
+
+  function applyDebug(enabled) {
+    debugEnabled = !!enabled;
+    try {
+      window.localStorage.setItem("LUX_STREAM_DEBUG", debugEnabled ? "1" : "0");
+    } catch {}
+
+    // keep store in sync (health.debug)
+    const prev = store.getState()?.connection?.health || {};
+    store.dispatch({
+      type: ACTIONS.CONNECTION_SET,
+      connection: { health: { ...prev, debug: debugEnabled } },
+    });
+
+    transport.setDebug?.(debugEnabled);
+
+    // Prod gating: hide Health unless debug is on
+    const show = IS_DEV || debugEnabled;
+    if (refs.healthDetails) refs.healthDetails.hidden = !show;
+    if (refs.debugToggle) refs.debugToggle.checked = debugEnabled;
+  }
+
+  if (refs.debugToggle) {
+    refs.debugToggle.addEventListener("change", () => {
+      applyDebug(!!refs.debugToggle.checked);
+    });
+  }
+
+  // ✅ Secret admin hotkey (works in prod): Ctrl+Alt+D toggles debug + reveals Health
+  window.addEventListener("keydown", (e) => {
+    if (!e.ctrlKey || !e.altKey) return;
+    const k = String(e.key || "").toLowerCase();
+    if (k !== "d") return;
+    applyDebug(!debugEnabled);
+    if (refs.healthDetails && (IS_DEV || !refs.healthDetails.hidden)) {
+      refs.healthDetails.open = true;
+    }
+  });
 
   // Only use blob-based PTT audio in websocket mode.
   const audio =
