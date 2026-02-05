@@ -23,11 +23,17 @@ function fmtAge(ts) {
   return `${m}m ago`;
 }
 
-function setPill(el, { status, error }) {
+function setPill(el, { status, error, health } = {}) {
   if (!el) return;
   el.dataset.status = status || "";
 
-  if (status === "live") el.textContent = "Live";
+  if (status === "live") {
+    const phase = health?.phase || "";
+    if (phase === "speaking") el.textContent = "Speaking";
+    else if (phase === "thinking") el.textContent = "Thinking…";
+    else if (phase === "listening") el.textContent = "Listening";
+    else el.textContent = "Live";
+  }
   else if (status === "connecting") el.textContent = "Connecting…";
   else if (status === "error") el.textContent = error ? `Error: ${error}` : "Error";
   else el.textContent = "Disconnected";
@@ -79,7 +85,7 @@ export function renderStreaming({ state, refs }) {
     ? `${s.title} • input=${r.input} • transport=${r.transport}`
     : `input=${r.input} • transport=${r.transport}`;
 
-  setPill(refs.statusPill, state.connection);
+  setPill(refs.statusPill, { ...state.connection, health: state.connection?.health });
 
   // Health panel
   const h = state.connection?.health || {};
@@ -109,13 +115,16 @@ export function renderStreaming({ state, refs }) {
   }
 
   if (refs.stopBtn) {
-    refs.stopBtn.disabled = state.connection.status !== "live";
+    const isLive = state.connection.status === "live";
+    refs.stopBtn.disabled = !(isLive && !!h.activeResponse);
   }
 
   if (refs.getReplyBtn) {
     const isLive = state.connection.status === "live";
     const isTap = (r.input || "") === "tap";
-    refs.getReplyBtn.disabled = !(isLive && isTap);
+    // TAP truth: only enable if we have a fresh commit since the last reply
+    const hasFreshCommit = (h.lastCommitAt || 0) > (h.lastReplyAt || 0);
+    refs.getReplyBtn.disabled = !(isLive && isTap && hasFreshCommit);
     refs.getReplyBtn.style.display = isTap ? "" : "none";
   }
 

@@ -21,9 +21,11 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
     dc: "—",
     mode: "tap",
     lastCommitAt: 0,
+    lastReplyAt: 0,
     activeResponse: false,
     activeResponseId: null,
     debug: false,
+    phase: "disconnected", // connecting | listening | thinking | speaking | disconnected
   };
 
   function debugLog(...args) {
@@ -34,6 +36,12 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
   function pushHealth(patch = {}) {
     Object.assign(health, patch);
     emit("health", { health: { ...health } });
+  }
+
+  function setPhase(phase) {
+    if (!phase) return;
+    if (health.phase === phase) return;
+    pushHealth({ phase });
   }
 
   // TAP determinism: wait for committed before response.create
@@ -124,6 +132,7 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
     debugLog("[WebRTC] requestReply() -> commit, then wait for input_audio_buffer.committed");
 
     _tapAwaitingCommit = true;
+    setPhase("thinking");
 
     const ok = sendEvent({ type: "input_audio_buffer.commit" });
     if (!ok) {
@@ -145,7 +154,14 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
     if (pc) return;
 
     pc = new RTCPeerConnection();
-    pushHealth({ pc: "new", ice: pc.iceConnectionState || "new", dc: "connecting", mode: inputMode, debug: DEBUG });
+    pushHealth({
+      pc: "new",
+      ice: pc.iceConnectionState || "new",
+      dc: "connecting",
+      mode: inputMode,
+      debug: DEBUG,
+    });
+    setPhase("connecting");
 
     pc.addEventListener("connectionstatechange", () => {
       pushHealth({ pc: pc.connectionState || "—" });
@@ -197,10 +213,13 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
         setTurnTaking({ mode: inputMode });
       }
 
+      // Once channel is open, we’re ready to listen.
+      setPhase("listening");
       emit("connected");
     });
     dc.addEventListener("close", () => {
       pushHealth({ dc: "closed" });
+      setPhase("disconnected");
       emit("disconnected");
     });
     dc.addEventListener("message", (e) => {
@@ -227,23 +246,42 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
         // ignore or console.debug
         return;
       }
+
+      // --- Turn-phase signals (AUTO + general) ---
+      if (evt?.type === "input_audio_buffer.speech_started") {
+        // user began talking; we are “listening”
+        setPhase("listening");
+      }
+      if (evt?.type === "input_audio_buffer.speech_stopped") {
+        // in AUTO, the system is about to think/respond; in TAP it stays listening until you tap
+        if (inputMode === "auto") setPhase("thinking");
+      }
+
       if (evt?.type === "input_audio_buffer.committed") {
         pushHealth({ lastCommitAt: Date.now() });
+        // In AUTO, commit implies we should be thinking until response starts.
+        if (inputMode === "auto") setPhase("thinking");
         if (_tapAwaitingCommit) {
           if (_tapCommitTimeout) clearTimeout(_tapCommitTimeout);
           _tapCommitTimeout = null;
           _tapAwaitingCommit = false;
           debugLog("[WebRTC] input_audio_buffer.committed -> response.create (TAP)");
-          sendEvent({ type: "response.create" });
+          const ok = sendEvent({ type: "response.create" });
+          // This “reply requested” timestamp gates the TAP button (fresh commit required again)
+          if (ok) pushHealth({ lastReplyAt: Date.now() });
+          setPhase("thinking");
         }
       }
 
       if (evt?.type === "response.created") {
         const id = evt?.response?.id || evt?.response_id || null;
         pushHealth({ activeResponse: true, activeResponseId: id });
+        setPhase("speaking");
       }
       if (evt?.type === "response.done") {
         pushHealth({ activeResponse: false, activeResponseId: null });
+        // When a response completes, we’re ready for next user input.
+        setPhase("listening");
       }
 
       const text = extractAssistantText(evt);
@@ -275,6 +313,7 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
     micStream = null;
     mutedByInterrupt = false;
     inputMode = "tap";
+    setPhase("disconnected");
 
     try {
       if (audioEl) {
