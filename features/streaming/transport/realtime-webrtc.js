@@ -13,7 +13,30 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
   let inputMode = "tap";
   let pendingSessionUpdate = null;
 
-  // TAP determinism: wait for input_audio_buffer.committed before response.create
+  // Debug + health state
+  let DEBUG = false;
+  const health = {
+    pc: "—",
+    ice: "—",
+    dc: "—",
+    mode: "tap",
+    lastCommitAt: 0,
+    activeResponse: false,
+    activeResponseId: null,
+    debug: false,
+  };
+
+  function debugLog(...args) {
+    if (!DEBUG) return;
+    console.log(...args);
+  }
+
+  function pushHealth(patch = {}) {
+    Object.assign(health, patch);
+    emit("health", { health: { ...health } });
+  }
+
+  // TAP determinism: wait for committed before response.create
   let _tapAwaitingCommit = false;
   let _tapCommitTimeout = null;
 
@@ -34,7 +57,8 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
   function updateSession(sessionParams = {}) {
     if (!dc || dc.readyState !== "open") {
       pendingSessionUpdate = sessionParams; // keep only the latest patch
-      console.log("[WebRTC] Queuing session.update (data channel not ready yet).");
+      debugLog("[WebRTC] Queuing session.update (data channel not ready yet).");
+      pushHealth({ dc: dc?.readyState || "—" });
       return false;
     }
 
@@ -47,7 +71,8 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
       },
     };
 
-    console.log("[WebRTC] Sending session.update:", payload);
+    debugLog("[WebRTC] Sending session.update:", payload);
+    pushHealth({ mode: inputMode });
     return sendEvent(payload);
   }
 
@@ -61,9 +86,10 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
   function setTurnTaking({ mode } = {}) {
     const m = String(mode || "tap").toLowerCase();
     inputMode = (m === "auto") ? "auto" : "tap";
+    pushHealth({ mode: inputMode });
     const isAuto = inputMode === "auto";
 
-    console.log(
+    debugLog(
       `[WebRTC] Switching Input Mode: ${isAuto ? "AUTO" : "TAP"} (create_response: ${isAuto})`
     );
 
@@ -91,11 +117,11 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
     }
 
     if (_tapAwaitingCommit) {
-      console.log("[WebRTC] requestReply() already awaiting commit; ignoring extra tap.");
+      debugLog("[WebRTC] requestReply() already awaiting commit; ignoring extra tap.");
       return;
     }
 
-    console.log("[WebRTC] requestReply() -> commit, then wait for input_audio_buffer.committed");
+    debugLog("[WebRTC] requestReply() -> commit, then wait for input_audio_buffer.committed");
 
     _tapAwaitingCommit = true;
 
@@ -106,7 +132,6 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
       return;
     }
 
-    // Fallback: if we never receive the committed event, still attempt a response.
     if (_tapCommitTimeout) clearTimeout(_tapCommitTimeout);
     _tapCommitTimeout = setTimeout(() => {
       if (!_tapAwaitingCommit) return;
@@ -120,6 +145,14 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
     if (pc) return;
 
     pc = new RTCPeerConnection();
+    pushHealth({ pc: "new", ice: pc.iceConnectionState || "new", dc: "connecting", mode: inputMode, debug: DEBUG });
+
+    pc.addEventListener("connectionstatechange", () => {
+      pushHealth({ pc: pc.connectionState || "—" });
+    });
+    pc.addEventListener("iceconnectionstatechange", () => {
+      pushHealth({ ice: pc.iceConnectionState || "—" });
+    });
 
     // Remote audio playback (element created lazily on first track)
     audioEl = document.createElement("audio");
@@ -152,6 +185,8 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
     // Data channel for events + text
     dc = pc.createDataChannel("oai-events");
     dc.addEventListener("open", () => {
+      pushHealth({ dc: "open" });
+      // best-effort cleanup
       sendEvent({ type: "response.cancel" });
 
       // ✅ Apply whatever session.update was requested before dc opened
@@ -164,7 +199,10 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
 
       emit("connected");
     });
-    dc.addEventListener("close", () => emit("disconnected"));
+    dc.addEventListener("close", () => {
+      pushHealth({ dc: "closed" });
+      emit("disconnected");
+    });
     dc.addEventListener("message", (e) => {
       try {
         const msg = JSON.parse(e.data);
@@ -179,7 +217,7 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
           if (t === "error" && msg?.error?.code === "response_cancel_not_active") {
             return;
           }
-          console.log("[oai-events]", t, msg);
+          if (DEBUG || t === "error") console.log("[oai-events]", t, msg);
         }
       } catch {}
 
@@ -190,14 +228,24 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
         return;
       }
       if (evt?.type === "input_audio_buffer.committed") {
+        pushHealth({ lastCommitAt: Date.now() });
         if (_tapAwaitingCommit) {
           if (_tapCommitTimeout) clearTimeout(_tapCommitTimeout);
           _tapCommitTimeout = null;
           _tapAwaitingCommit = false;
-          console.log("[WebRTC] input_audio_buffer.committed -> response.create (TAP)");
+          debugLog("[WebRTC] input_audio_buffer.committed -> response.create (TAP)");
           sendEvent({ type: "response.create" });
         }
       }
+
+      if (evt?.type === "response.created") {
+        const id = evt?.response?.id || evt?.response_id || null;
+        pushHealth({ activeResponse: true, activeResponseId: id });
+      }
+      if (evt?.type === "response.done") {
+        pushHealth({ activeResponse: false, activeResponseId: null });
+      }
+
       const text = extractAssistantText(evt);
       if (text) emit("assistant_text", { text });
     });
@@ -300,6 +348,11 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
     );
   }
 
+  function setDebug(enabled) {
+    DEBUG = !!enabled;
+    pushHealth({ debug: DEBUG });
+  }
+
   return {
     connect,
     disconnect,
@@ -307,6 +360,7 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
     sendUserAudio,
     stopSpeaking,
     setTurnTaking,
+    setDebug,
     requestReply,
     updateSession, // Added to expose the updateSession method
   };

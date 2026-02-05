@@ -12,6 +12,17 @@ function fmtClock(sec) {
   return `${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`;
 }
 
+function fmtAge(ts) {
+  const t = Number(ts || 0);
+  if (!t) return "—";
+  const ms = Date.now() - t;
+  if (ms < 0) return "0s";
+  const s = Math.round(ms / 1000);
+  if (s < 60) return `${s}s ago`;
+  const m = Math.round(s / 60);
+  return `${m}m ago`;
+}
+
 function setPill(el, { status, error }) {
   if (!el) return;
   el.dataset.status = status || "";
@@ -69,6 +80,24 @@ export function renderStreaming({ state, refs }) {
     : `input=${r.input} • transport=${r.transport}`;
 
   setPill(refs.statusPill, state.connection);
+
+  // Health panel
+  const h = state.connection?.health || {};
+  if (refs.debugToggle) {
+    const want = !!h.debug;
+    if (refs.debugToggle.checked !== want) refs.debugToggle.checked = want;
+  }
+  if (refs.healthVals) {
+    if (refs.healthVals.pc) refs.healthVals.pc.textContent = h.pc || "—";
+    if (refs.healthVals.ice) refs.healthVals.ice.textContent = h.ice || "—";
+    if (refs.healthVals.dc) refs.healthVals.dc.textContent = h.dc || "—";
+    if (refs.healthVals.mode)
+      refs.healthVals.mode.textContent = h.mode || (r.input || "tap");
+    if (refs.healthVals.commit) refs.healthVals.commit.textContent = fmtAge(h.lastCommitAt);
+    if (refs.healthVals.response) {
+      refs.healthVals.response.textContent = h.activeResponse ? "active" : "—";
+    }
+  }
 
   refs.connectBtn.textContent = state.connection.status === "live" ? "Disconnect" : "Connect";
 

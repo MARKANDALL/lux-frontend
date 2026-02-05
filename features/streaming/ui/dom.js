@@ -58,7 +58,63 @@ export function buildStreamingDOM({ root }) {
   timerPill.className = "ls-pill ls-timerPill";
   timerPill.textContent = "02:30";
 
-  headerRight.append(modeWrap, getReplyBtn, stopBtn, timerPill, statusPill);
+  // Health panel (collapsible)
+  const healthDetails = document.createElement("details");
+  healthDetails.className = "ls-health";
+  healthDetails.open = false;
+
+  const healthSummary = document.createElement("summary");
+  healthSummary.className = "ls-healthSummary";
+  healthSummary.textContent = "Health";
+
+  const healthBody = document.createElement("div");
+  healthBody.className = "ls-healthBody";
+
+  const debugWrap = document.createElement("label");
+  debugWrap.className = "ls-debugWrap";
+  const debugToggle = document.createElement("input");
+  debugToggle.type = "checkbox";
+  debugToggle.className = "ls-debugToggle";
+  const debugText = document.createElement("span");
+  debugText.textContent = "Debug";
+  debugWrap.append(debugToggle, debugText);
+
+  const healthGrid = document.createElement("div");
+  healthGrid.className = "ls-healthGrid";
+
+  function mkRow(label) {
+    const row = document.createElement("div");
+    row.className = "ls-healthRow";
+    const k = document.createElement("div");
+    k.className = "ls-healthKey";
+    k.textContent = label;
+    const v = document.createElement("div");
+    v.className = "ls-healthVal";
+    v.textContent = "—";
+    row.append(k, v);
+    return { row, v };
+  }
+
+  const pcRow = mkRow("PC");
+  const iceRow = mkRow("ICE");
+  const dcRow = mkRow("DC");
+  const modeRow = mkRow("Mode");
+  const commitRow = mkRow("Last commit");
+  const respRow = mkRow("Response");
+
+  healthGrid.append(
+    pcRow.row,
+    iceRow.row,
+    dcRow.row,
+    modeRow.row,
+    commitRow.row,
+    respRow.row
+  );
+
+  healthBody.append(debugWrap, healthGrid);
+  healthDetails.append(healthSummary, healthBody);
+
+  headerRight.append(modeWrap, getReplyBtn, stopBtn, timerPill, healthDetails, statusPill);
 
   header.append(headerLeft, headerRight);
 
@@ -125,5 +181,15 @@ export function buildStreamingDOM({ root }) {
     tapBtn,
     autoBtn,
     timerPill,
+    healthDetails,
+    debugToggle,
+    healthVals: {
+      pc: pcRow.v,
+      ice: iceRow.v,
+      dc: dcRow.v,
+      mode: modeRow.v,
+      commit: commitRow.v,
+      response: respRow.v,
+    },
   };
 }

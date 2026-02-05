@@ -54,6 +54,10 @@ export function createTransportController({ store, route }) {
 
   function handleProviderEvent(evt) {
     const e = evt || {};
+    if (e.type === "health") {
+      setConnection({ health: e.health || {} });
+      return;
+    }
     if (e.type === "connected") {
       setConnection({ status: "live", error: null });
       resetAssistantBuffer();
@@ -179,6 +183,12 @@ export function createTransportController({ store, route }) {
     } catch (_) {}
   }
 
+  function setDebug(enabled) {
+    try {
+      if (typeof provider.setDebug === "function") provider.setDebug(!!enabled);
+    } catch (_) {}
+  }
+
   function requestReply() {
     try {
       if (typeof provider.requestReply === "function") provider.requestReply();
@@ -194,6 +204,7 @@ export function createTransportController({ store, route }) {
     sendUserAudio,
     stopSpeaking,
     setInputMode,
+    setDebug,
     requestReply,
   };
 }
