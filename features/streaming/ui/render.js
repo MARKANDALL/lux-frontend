@@ -123,6 +123,14 @@ export function renderStreaming({ state, refs }) {
 
   refs.connectBtn.textContent = state.connection.status === "live" ? "Disconnect" : "Connect";
 
+  // Reconnect button: only show when not live (esp. error) to recover without refresh
+  if (refs.reconnectBtn) {
+    const st = state.connection.status;
+    const show = st === "error" || st === "disconnected";
+    refs.reconnectBtn.style.display = show ? "" : "none";
+    refs.reconnectBtn.disabled = st === "connecting";
+  }
+
   // Mic meter (0..1)
   if (refs.micBars && refs.micBars.length) {
     const live = state.connection.status === "live";

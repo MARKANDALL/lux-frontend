@@ -180,7 +180,6 @@
   flex-wrap: wrap;
 }
 
-/* Mic meter (compact, premium) */
 #lux-stream-root .ls-micMeter{
   display:flex;
   align-items:flex-end;

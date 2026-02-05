@@ -27,6 +27,13 @@ export function mountStreamingApp({ rootId = "lux-stream-root" } = {}) {
 
   const refs = buildStreamingDOM({ root });
 
+  // Dev-only diagnostics (Health panel visible in dev, hidden in prod)
+  try {
+    if (import.meta?.env?.PROD && refs.healthDetails) {
+      refs.healthDetails.style.display = "none";
+    }
+  } catch (_) {}
+
   // Debug toggle (query param ?debug=1 or persisted localStorage)
   function readDebugFlag() {
     try {
@@ -132,10 +139,40 @@ export function mountStreamingApp({ rootId = "lux-stream-root" } = {}) {
   }
 
   // --- wire UI intents ---
-  refs.connectBtn.addEventListener("click", () => {
+  async function softResetConnect({ retryOnce = true } = {}) {
+    try { await transport.disconnect(); } catch (_) {}
+    await new Promise((r) => setTimeout(r, 150));
+    try {
+      await transport.connect();
+    } catch (e1) {
+      if (!retryOnce) throw e1;
+      await new Promise((r) => setTimeout(r, 400));
+      await transport.connect();
+    }
+  }
+
+  refs.connectBtn.addEventListener("click", async () => {
     const st = store.getState().connection.status;
-    if (st === "live") transport.disconnect();
-    else transport.connect();
+    if (st === "live") {
+      transport.disconnect();
+      return;
+    }
+    if (st === "connecting") return;
+    try {
+      await softResetConnect({ retryOnce: true });
+    } catch (err) {
+      console.error(err);
+    }
+  });
+
+  refs.reconnectBtn?.addEventListener("click", async () => {
+    const st = store.getState().connection.status;
+    if (st === "connecting") return;
+    try {
+      await softResetConnect({ retryOnce: true });
+    } catch (err) {
+      console.error(err);
+    }
   });
 
   refs.clearBtn.addEventListener("click", () => {

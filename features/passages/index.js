@@ -15,7 +15,6 @@ import {
 } from "../../app-core/state.js"; 
 import * as DOM from "./dom.js"; 
 import { updateBalloon, popBalloon } from "../balloon/index.js";
-import { createPassageLibraryModal } from "./library-modal.js";
 
 /* ---------------- Logic / Helpers ---------------- */
 
@@ -377,29 +376,6 @@ function reorderPassageSelect({ activePh, mode }) {
 export function wirePassageSelect() {
   // Build the UI row between Select Passage and Harvard row
   buildPassageFocusUI();
-
-  // Passage Library modal (Browse label next to Select Passage)
-  const browse = document.getElementById("passageBrowse");
-  if (browse && browse.dataset.wired !== "1") {
-    const modal = createPassageLibraryModal({
-      onPractice: async (key) => {
-        setPassage(key, { clearInputForCustom: key === "custom" });
-        updatePartsInfoTip();
-        try { document.getElementById("referenceText")?.focus?.(); } catch {}
-      },
-    });
-
-    const open = () => modal?.open?.();
-    browse.addEventListener("click", open);
-    browse.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        open();
-      }
-    });
-
-    browse.dataset.wired = "1";
-  }
 
   let focusActivePh = null;
   let focusMode = "sort"; // "sort" | "only"

@@ -128,7 +128,15 @@ export function buildStreamingDOM({ root }) {
   healthBody.append(debugWrap, healthGrid);
   healthDetails.append(healthSummary, healthBody);
 
-  headerRight.append(modeWrap, getReplyBtn, stopBtn, timerPill, micMeter, healthDetails, statusPill);
+  headerRight.append(
+    modeWrap,
+    getReplyBtn,
+    stopBtn,
+    timerPill,
+    micMeter,
+    healthDetails,
+    statusPill
+  );
 
   header.append(headerLeft, headerRight);
 
@@ -147,6 +155,12 @@ export function buildStreamingDOM({ root }) {
   clearBtn.className = "ls-btn ghost";
   clearBtn.type = "button";
   clearBtn.textContent = "Clear";
+
+  const reconnectBtn = document.createElement("button");
+  reconnectBtn.className = "ls-btn ghost";
+  reconnectBtn.type = "button";
+  reconnectBtn.textContent = "Reconnect";
+  reconnectBtn.style.display = "none";
 
   const hint = document.createElement("div");
   hint.className = "ls-hint";
@@ -170,7 +184,7 @@ export function buildStreamingDOM({ root }) {
 
   const left = document.createElement("div");
   left.className = "ls-controlsLeft";
-  left.append(connectBtn, clearBtn);
+  left.append(connectBtn, clearBtn, reconnectBtn);
 
   const right = document.createElement("div");
   right.className = "ls-controlsRight";
@@ -187,6 +201,7 @@ export function buildStreamingDOM({ root }) {
     thread,
     connectBtn,
     clearBtn,
+    reconnectBtn,
     textInput,
     sendBtn,
     hint,
