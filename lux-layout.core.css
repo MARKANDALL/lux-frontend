@@ -200,6 +200,53 @@ label {
   margin: 0 !important;
 }
 
+/* --- Next Practice (compact, centered, never overwhelming) --- */
+.lux-nextpractice-row{
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0 6px;
+}
+.lux-nextpractice-btn{
+  padding: 10px 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(0,0,0,0.14);
+  background: rgba(255,255,255,0.85);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  font-weight: 800;
+  cursor: pointer;
+}
+.lux-nextpractice-btn:disabled{
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.lux-nextpractice-out{
+  width: min(820px, 92vw);
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.65);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.lux-nextpractice-actions{
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.lux-nextpractice-actions button{
+  padding: 9px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(0,0,0,0.14);
+  background: rgba(255,255,255,0.9);
+  font-weight: 800;
+  cursor: pointer;
+}
+
 #referenceText {
   width: 95vw;
   max-width: 880px;
@@ -237,4 +284,3 @@ select {
   background: #f8f8f8;
   margin: 0.3rem auto 1rem;
 }
- 

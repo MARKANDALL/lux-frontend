@@ -15,6 +15,22 @@ function harvardKey(n) {
   return `harvard${pad2(n)}`;
 }
 
+export async function loadHarvardList(raw) {
+  const n = clamp(parseInt(raw, 10) || 1, 1, 72);
+
+  // ✅ Lazy-load only when needed
+  try {
+    await ensureHarvardPassages();
+  } catch (e) {
+    console.error("[Harvard] Failed to lazy-load Harvard lists", e);
+    return;
+  }
+
+  setPassage(harvardKey(n));
+  updatePartsInfoTip();
+  return n;
+}
+
 function getHarvardMeta(n) {
   return PASSAGE_PHONEME_META?.[harvardKey(n)] ?? null;
 }
@@ -124,25 +140,19 @@ export function wireHarvardPicker() {
       localStorage.setItem("LUX_HARVARD_LAST", String(n));
     } catch {}
 
-    // ✅ Lazy-load the big dataset ONLY when Harvard is actually requested
+    // ✅ Delegate actual loading to exported helper (keeps behavior consistent)
     try {
       if (load) {
         load.disabled = true;
         load.textContent = "Loading…";
       }
-      await ensureHarvardPassages();
-    } catch (e) {
-      console.error("[Harvard] Failed to lazy-load Harvard lists", e);
-      return;
+      await loadHarvardList(n);
     } finally {
       if (load) {
         load.disabled = false;
         load.textContent = loadLabel;
       }
     }
-
-    setPassage(harvardKey(n));
-    updatePartsInfoTip();
   }
 
   // Modal: browse all 72 lists (first sentence), hover preview, click select, practice -> apply()

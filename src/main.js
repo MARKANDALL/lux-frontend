@@ -4,6 +4,7 @@
 import { wirePassageSelect, wireNextBtn } from "../features/passages/index.js";
 
 import { wireHarvardPicker } from "../features/harvard/index.js";
+import { wireGenerateNextPractice } from "../features/next-activity/next-practice.js";
 
 import { initLuxRecorder, wireRecordingButtons } from "../features/recorder/index.js";
 
@@ -150,6 +151,7 @@ async function bootApp() {
   applyMyWordsWarpPrefill();
 
   wireHarvardPicker(); // ✅ new
+  wireGenerateNextPractice();
 
   // 3. Setup Dropdown Logic
   const passageSelect = document.getElementById("passageSelect");
