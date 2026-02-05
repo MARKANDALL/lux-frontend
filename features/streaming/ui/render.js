@@ -39,7 +39,7 @@ function setPill(el, { status, error, health } = {}) {
   else el.textContent = "Disconnected";
 }
 
-function renderTurns(container, turns) {
+function renderTurns(container, turns, { phase } = {}) {
   if (!container) return;
   container.innerHTML = "";
 
@@ -63,6 +63,22 @@ function renderTurns(container, turns) {
 
     row.append(bubble);
     container.append(row);
+  }
+
+  // Live assistant “…” bubble (UI-only) while thinking/speaking
+  const p = String(phase || "");
+  if ((p === "thinking" || p === "speaking") && turns && turns.length) {
+    const last = turns[turns.length - 1];
+    const lastRole = last?.role || "";
+    if (lastRole !== "assistant") {
+      const row = document.createElement("div");
+      row.className = "ls-bubbleRow is-assistant";
+      const bubble = document.createElement("div");
+      bubble.className = "ls-bubble";
+      bubble.textContent = "…";
+      row.append(bubble);
+      container.append(row);
+    }
   }
 
   container.scrollTop = container.scrollHeight;
@@ -107,6 +123,28 @@ export function renderStreaming({ state, refs }) {
 
   refs.connectBtn.textContent = state.connection.status === "live" ? "Disconnect" : "Connect";
 
+  // Mic meter (0..1)
+  if (refs.micBars && refs.micBars.length) {
+    const live = state.connection.status === "live";
+    const lvl = Math.max(0, Math.min(1, Number(h.micLevel || 0)));
+    // If not live, keep it calm.
+    const base = live ? lvl : 0;
+    // 4 bars, each with an increasing threshold
+    const amps = [
+      Math.max(0, (base - 0.00) / 0.35),
+      Math.max(0, (base - 0.12) / 0.40),
+      Math.max(0, (base - 0.24) / 0.45),
+      Math.max(0, (base - 0.36) / 0.50),
+    ].map((x) => Math.max(0, Math.min(1, x)));
+
+    for (let i = 0; i < refs.micBars.length; i++) {
+      const a = amps[i] || 0;
+      // scaleY gives a nice “meter” effect without needing custom CSS math
+      refs.micBars[i].style.transform = `scaleY(${0.15 + a * 0.85})`;
+      refs.micBars[i].style.opacity = live ? String(0.35 + a * 0.65) : "0.25";
+    }
+  }
+
   if (r.transport === "webrtc") {
     refs.hint.textContent = `Input: ${r.input}`;
   } else {
@@ -139,7 +177,7 @@ export function renderStreaming({ state, refs }) {
     refs.autoBtn.disabled = state.connection.status !== "live" ? false : mode === "auto";
   }
 
-  renderTurns(refs.thread, state.thread.turns);
+  renderTurns(refs.thread, state.thread.turns, { phase: h.phase });
 
   // Timer pill + preset selector
   if (refs.timerPill) {

@@ -24,6 +24,20 @@ export function buildStreamingDOM({ root }) {
   statusPill.className = "ls-pill";
   statusPill.textContent = "Disconnected";
 
+  // Mic activity meter (premium “alive” signal)
+  const micMeter = document.createElement("div");
+  micMeter.className = "ls-micMeter";
+  micMeter.title = "Mic level";
+
+  function mkBar() {
+    const b = document.createElement("div");
+    b.className = "ls-micBar";
+    return b;
+  }
+
+  const micBars = [mkBar(), mkBar(), mkBar(), mkBar()];
+  micMeter.append(...micBars);
+
   const getReplyBtn = document.createElement("button");
   getReplyBtn.className = "ls-btn";
   getReplyBtn.type = "button";
@@ -114,7 +128,7 @@ export function buildStreamingDOM({ root }) {
   healthBody.append(debugWrap, healthGrid);
   healthDetails.append(healthSummary, healthBody);
 
-  headerRight.append(modeWrap, getReplyBtn, stopBtn, timerPill, healthDetails, statusPill);
+  headerRight.append(modeWrap, getReplyBtn, stopBtn, timerPill, micMeter, healthDetails, statusPill);
 
   header.append(headerLeft, headerRight);
 
@@ -181,6 +195,8 @@ export function buildStreamingDOM({ root }) {
     tapBtn,
     autoBtn,
     timerPill,
+    micMeter,
+    micBars,
     healthDetails,
     debugToggle,
     healthVals: {

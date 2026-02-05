@@ -9,6 +9,12 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
   let audioEl = null;
   let mutedByInterrupt = false;
 
+  // Mic meter (WebAudio)
+  let micAC = null;          // AudioContext
+  let micAnalyser = null;    // AnalyserNode
+  let micSrc = null;         // MediaStreamAudioSourceNode
+  let micTick = null;        // interval id
+
   // near top
   let inputMode = "tap";
   let pendingSessionUpdate = null;
@@ -26,6 +32,7 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
     activeResponseId: null,
     debug: false,
     phase: "disconnected", // connecting | listening | thinking | speaking | disconnected
+    micLevel: 0,           // 0..1 (UI meter)
   };
 
   function debugLog(...args) {
@@ -42,6 +49,65 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
     if (!phase) return;
     if (health.phase === phase) return;
     pushHealth({ phase });
+  }
+
+  function startMicMeter() {
+    try {
+      if (!micStream) return;
+      stopMicMeter();
+
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+
+      micAC = new AC();
+      // Attempt to resume immediately (connect is user gesture)
+      micAC.resume?.().catch(() => {});
+
+      micAnalyser = micAC.createAnalyser();
+      micAnalyser.fftSize = 512;
+      micAnalyser.smoothingTimeConstant = 0.6;
+
+      micSrc = micAC.createMediaStreamSource(micStream);
+      micSrc.connect(micAnalyser);
+
+      const buf = new Uint8Array(micAnalyser.fftSize);
+
+      micTick = window.setInterval(() => {
+        if (!micAnalyser) return;
+        micAnalyser.getByteTimeDomainData(buf);
+
+        // RMS on centered [-1..1]
+        let sum = 0;
+        for (let i = 0; i < buf.length; i++) {
+          const v = (buf[i] - 128) / 128;
+          sum += v * v;
+        }
+        const rms = Math.sqrt(sum / buf.length);
+
+        // Map to a friendly 0..1 range (tweakable)
+        const level = Math.max(0, Math.min(1, rms * 3.2));
+        pushHealth({ micLevel: level });
+      }, 100);
+    } catch {
+      // never fail connect because of a meter
+    }
+  }
+
+  function stopMicMeter() {
+    try { if (micTick) window.clearInterval(micTick); } catch {}
+    micTick = null;
+
+    try { micSrc?.disconnect?.(); } catch {}
+    micSrc = null;
+
+    try { micAnalyser?.disconnect?.(); } catch {}
+    micAnalyser = null;
+
+    try { micAC?.close?.(); } catch {}
+    micAC = null;
+
+    // reset UI calm
+    pushHealth({ micLevel: 0 });
   }
 
   // TAP determinism: wait for committed before response.create
@@ -198,6 +264,9 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
     micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
     for (const t of micStream.getTracks()) pc.addTrack(t, micStream);
 
+    // Start mic meter (UI-only; best-effort)
+    startMicMeter();
+
     // Data channel for events + text
     dc = pc.createDataChannel("oai-events");
     dc.addEventListener("open", () => {
@@ -307,6 +376,8 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
         try { t.stop(); } catch {}
       }
     }
+
+    stopMicMeter();
 
     pc = null;
     dc = null;
