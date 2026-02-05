@@ -39,7 +39,7 @@ function setPill(el, { status, error, health } = {}) {
   else el.textContent = "Disconnected";
 }
 
-function renderTurns(container, turns, { phase } = {}) {
+function renderTurns(container, turns, { typing } = {}) {
   if (!container) return;
   container.innerHTML = "";
 
@@ -65,20 +65,15 @@ function renderTurns(container, turns, { phase } = {}) {
     container.append(row);
   }
 
-  // Live assistant “…” bubble (UI-only) while thinking/speaking
-  const p = String(phase || "");
-  if ((p === "thinking" || p === "speaking") && turns && turns.length) {
-    const last = turns[turns.length - 1];
-    const lastRole = last?.role || "";
-    if (lastRole !== "assistant") {
-      const row = document.createElement("div");
-      row.className = "ls-bubbleRow is-assistant";
-      const bubble = document.createElement("div");
-      bubble.className = "ls-bubble";
-      bubble.textContent = "…";
-      row.append(bubble);
-      container.append(row);
-    }
+  // Render-time “typing” bubble (thinking)
+  if (typing) {
+    const row = document.createElement("div");
+    row.className = "ls-bubbleRow is-assistant";
+    const bubble = document.createElement("div");
+    bubble.className = "ls-bubble";
+    bubble.textContent = "…";
+    row.append(bubble);
+    container.append(row);
   }
 
   container.scrollTop = container.scrollHeight;
@@ -185,7 +180,9 @@ export function renderStreaming({ state, refs }) {
     refs.autoBtn.disabled = state.connection.status !== "live" ? false : mode === "auto";
   }
 
-  renderTurns(refs.thread, state.thread.turns, { phase: h.phase });
+  const isLive = state.connection.status === "live";
+  const typing = isLive && (h.phase === "thinking");
+  renderTurns(refs.thread, state.thread.turns, { typing });
 
   // Timer pill + preset selector
   if (refs.timerPill) {

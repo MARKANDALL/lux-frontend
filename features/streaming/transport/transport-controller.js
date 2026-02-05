@@ -197,6 +197,14 @@ export function createTransportController({ store, route }) {
     }
   }
 
+  function updateSession(sessionParams) {
+    try {
+      if (typeof provider.updateSession === "function") {
+        provider.updateSession(sessionParams || {});
+      }
+    } catch (_) {}
+  }
+
   return {
     connect,
     disconnect,
@@ -206,5 +214,6 @@ export function createTransportController({ store, route }) {
     setInputMode,
     setDebug,
     requestReply,
+    updateSession,
   };
 }

@@ -10,6 +10,7 @@ import { createTransportController } from "./transport/transport-controller.js";
 import { createAudioController } from "./audio/audio-controller.js";
 import { ensureUID } from "../../api/identity.js";
 import { saveAttempt } from "../../api/attempts.js";
+import { buildStreamingInstructions } from "./prompt/contract.js";
 
 export function mountStreamingApp({ rootId = "lux-stream-root" } = {}) {
   const root = document.getElementById(rootId);
@@ -246,6 +247,7 @@ export function mountStreamingApp({ rootId = "lux-stream-root" } = {}) {
         .join("\n");
 
       const passageKey = `stream:${Date.now()}`;
+      const r = st.route || {};
       await saveAttempt({
         uid,
         passageKey,
@@ -259,7 +261,18 @@ export function mountStreamingApp({ rootId = "lux-stream-root" } = {}) {
           durationSec: st.session?.durationSec,
           turnsUsed: st.session?.turnsUsed,
           endReason: st.session?.endReason,
-          meta: { mode: "streaming" },
+          meta: {
+            mode: "streaming",
+            input: r.input,
+            transport: r.transport,
+            scenarioId: r.scenarioId,
+            scenarioTitle: r.scenario?.title || null,
+            knobs: r.knobs || {},
+            model: r.model,
+            voice: r.voice,
+            speed: r.speed,
+            maxOutputTokens: r.maxOutputTokens,
+          },
         },
       });
     } catch (e) {
@@ -306,6 +319,14 @@ export function mountStreamingApp({ rootId = "lux-stream-root" } = {}) {
         });
         startTimer(caps.durationSec);
         transport.setInputMode?.(store.getState().route?.input || "tap");
+
+        // Starter prompt contract (no phantom first response: instructions only)
+        const r = store.getState().route || {};
+        const instructions = buildStreamingInstructions({
+          scenario: r.scenario,
+          knobs: r.knobs,
+        });
+        transport.updateSession?.({ instructions });
       }
 
       if (cur !== "live" && prev === "live") {
