@@ -180,6 +180,30 @@
   flex-wrap: wrap;
 }
 
+/* Mic meter (compact, premium) */
+#lux-stream-root .ls-micMeter{
+  display:flex;
+  align-items:flex-end;
+  gap:4px;
+  height:18px;
+  padding:6px 8px;
+  border-radius:12px;
+  background: rgba(255,255,255,0.55);
+  border: 1px solid rgba(0,0,0,0.08);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+#lux-stream-root .ls-micBar{
+  width:4px;
+  height:18px;
+  border-radius:3px;
+  background: rgba(0,0,0,0.55);
+  transform-origin: bottom;
+  transform: scaleY(0.2);
+  opacity: 0.35;
+}
+
 /* --- Streaming health + debug (collapsible, never overwhelming) --- */
 #lux-stream-root .ls-health {
   border: 1px solid rgba(0,0,0,0.08);
