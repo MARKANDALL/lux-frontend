@@ -149,8 +149,17 @@ export function wireHarvardPicker() {
   let modal = null;
   if (browse) {
     modal = createHarvardLibraryModal({
-      onPractice: async (n) => {
-        await apply(n);
+      onPractice: async (sel) => {
+        // sel = { kind: "harvard", n } OR { kind: "passage", key }
+        if (sel?.kind === "harvard") {
+          await apply(sel.n);
+        } else if (sel?.kind === "passage") {
+          setPassage(sel.key);
+          updatePartsInfoTip();
+        } else {
+          return;
+        }
+
         try { document.getElementById("referenceText")?.focus(); } catch {}
       },
     });

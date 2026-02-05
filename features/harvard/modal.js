@@ -3,7 +3,6 @@ import { ensureHarvardPassages, passages } from "../../src/data/index.js";
 import { HARVARD_PHONEME_META } from "../../src/data/harvard-phoneme-meta.js";
 import { PASSAGE_PHONEME_META } from "../../src/data/passage-phoneme-meta.js";
 
-
 function pad2(n) {
   return String(n).padStart(2, "0");
 }
@@ -28,9 +27,20 @@ const EXPLAIN_HTML = `
   practice baseline.
 `;
 
+const PASSAGES_EXPLAIN_HTML = `
+  <strong>What are these passages?</strong><br/>
+  These are curated practice passages, drills, and phoneme tests already included in Lux.
+  Use them to target specific sounds and build fluency.
+`;
+
 export function createHarvardLibraryModal({ onPractice } = {}) {
   let overlay = null;
   let card = null;
+
+  // header
+  let tabHarvardBtn = null;
+  let tabPassagesBtn = null;
+  let explainRight = null;
 
   // left side
   let listEl = null;
@@ -42,6 +52,7 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
   let statusMsg = null;
 
   // right-side phoneme block
+  let phonTitleEl = null;
   let phonRows = null;
 
   // hover preview
@@ -50,9 +61,14 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
   let hoverLines = null;
 
   // data
-  let lists = null; // [{ n, key, name, parts, first }]
+  let lists = null; // [{ n, key, name, parts, first, searchText }]
+  let passRecs = null; // [{ key, name, parts, first, searchText }]
   let selectedN = null;
+  let selectedKey = null;
   let hoverN = null;
+  let hoverKey = null;
+  let activeTab = "harvard"; // "harvard" | "passages"
+
   let activePh = null;
   let filterBar = null;
   let filterClearBtn = null;
@@ -60,41 +76,54 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
   let focusMode = "sort"; // "sort" | "only"
   let searchQ = "";
   let favs = new Set(); // list numbers
+  let favKeys = new Set(); // passage keys
   let focusSel = null;
   let searchInput = null;
   let modeSortBtn = null;
   let modeOnlyBtn = null;
 
-  function metaFor(n) {
+  function isHarvardKey(k) {
+    return /^harvard\d{2}$/i.test(String(k || ""));
+  }
+
+  function metaForHarvard(n) {
     return PASSAGE_PHONEME_META?.[harvardKey(n)] ?? null;
   }
 
-  function countFor(n, ph) {
+  function metaForKey(key) {
+    return PASSAGE_PHONEME_META?.[String(key)] ?? null;
+  }
+
+  function countForHarvard(n, ph) {
     if (!ph) return 0;
-    const m = metaFor(n);
+    const m = metaForHarvard(n);
+    const c = m?.counts?.[String(ph || "").toUpperCase()];
+    if (c) return Number(c || 0);
+
+    // fallback if counts missing: Harvard distinctive meta (top3 only)
+    const top3 = getHarvardMeta(n)?.top3 || [];
+    const hit = top3.find(
+      (p) =>
+        String(p?.ph || "").toUpperCase() === String(ph || "").toUpperCase()
+    );
+    return hit ? Number(hit.count || 0) : 0;
+  }
+
+  function totalForHarvard(n) {
+    const m = metaForHarvard(n);
+    return Number(m?.totalPhones || 0);
+  }
+
+  function countForKey(key, ph) {
+    if (!key || !ph) return 0;
+    const m = metaForKey(key);
     const c = m?.counts?.[String(ph || "").toUpperCase()];
     return Number(c || 0);
   }
 
-  function totalFor(n) {
-    const m = metaFor(n);
+  function totalForKey(key) {
+    const m = metaForKey(key);
     return Number(m?.totalPhones || 0);
-  }
-
-  function getMetaForN(n) {
-    return PASSAGE_PHONEME_META?.[harvardKey(n)] ?? null;
-  }
-
-  function getCountFor(n, ph) {
-    const m = getMetaForN(n);
-    const counts = m?.counts;
-    if (counts && typeof counts === "object") {
-      return Number(counts[String(ph || "").toUpperCase()] || 0);
-    }
-    // fallback if counts missing
-    const top3 = m?.top3 || [];
-    const hit = top3.find((p) => p?.ph === ph);
-    return hit ? Number(hit.count || 0) : 0;
   }
 
   function getAllTopPhonemes() {
@@ -109,13 +138,36 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
     return Array.from(set).sort();
   }
 
+  function getAllPhonemesFromPassageMeta() {
+    const set = new Set();
+    const meta = PASSAGE_PHONEME_META || {};
+    for (const m of Object.values(meta)) {
+      const counts = m?.counts;
+      if (!counts || typeof counts !== "object") continue;
+      for (const ph of Object.keys(counts)) set.add(String(ph).toUpperCase());
+    }
+    return Array.from(set).sort();
+  }
+
   function loadFavs() {
     try {
       const raw = localStorage.getItem("LUX_HARVARD_FAVS");
       const arr = raw ? JSON.parse(raw) : [];
-      favs = new Set((Array.isArray(arr) ? arr : []).map((x) => Number(x)).filter(Boolean));
+      favs = new Set(
+        (Array.isArray(arr) ? arr : []).map((x) => Number(x)).filter(Boolean)
+      );
     } catch {
       favs = new Set();
+    }
+
+    try {
+      const raw = localStorage.getItem("LUX_PASSAGES_FAVS");
+      const arr = raw ? JSON.parse(raw) : [];
+      favKeys = new Set(
+        (Array.isArray(arr) ? arr : []).map((x) => String(x)).filter(Boolean)
+      );
+    } catch {
+      favKeys = new Set();
     }
   }
 
@@ -123,12 +175,21 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
     try {
       localStorage.setItem("LUX_HARVARD_FAVS", JSON.stringify(Array.from(favs)));
     } catch {}
+    try {
+      localStorage.setItem(
+        "LUX_PASSAGES_FAVS",
+        JSON.stringify(Array.from(favKeys))
+      );
+    } catch {}
   }
 
   function ensurePhonemeOptions() {
     if (!focusSel || focusSel.dataset.populated === "1") return;
 
-    const list = getAllTopPhonemes();
+    const set = new Set();
+    getAllTopPhonemes().forEach((ph) => set.add(ph));
+    getAllPhonemesFromPassageMeta().forEach((ph) => set.add(ph));
+    const list = Array.from(set).sort();
 
     focusSel.innerHTML = "";
     const opt0 = document.createElement("option");
@@ -164,10 +225,37 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
     head.className = "lux-harvard-modal-head";
     card.appendChild(head);
 
+    // title + tabs
+    const headLeft = document.createElement("div");
+    headLeft.style.display = "flex";
+    headLeft.style.alignItems = "center";
+    headLeft.style.gap = "12px";
+    head.appendChild(headLeft);
+
     const title = document.createElement("div");
     title.className = "lux-harvard-modal-title";
-    title.textContent = "Harvard List Library";
-    head.appendChild(title);
+    title.textContent = "Library";
+    headLeft.appendChild(title);
+
+    const tabWrap = document.createElement("div");
+    tabWrap.style.display = "flex";
+    tabWrap.style.gap = "8px";
+    tabWrap.style.alignItems = "center";
+    headLeft.appendChild(tabWrap);
+
+    tabHarvardBtn = document.createElement("button");
+    tabHarvardBtn.type = "button";
+    tabHarvardBtn.className = "lux-harvard-modetab is-active";
+    tabHarvardBtn.textContent = "Harvard";
+    tabHarvardBtn.addEventListener("click", () => switchTab("harvard"));
+    tabWrap.appendChild(tabHarvardBtn);
+
+    tabPassagesBtn = document.createElement("button");
+    tabPassagesBtn.type = "button";
+    tabPassagesBtn.className = "lux-harvard-modetab";
+    tabPassagesBtn.textContent = "Passages";
+    tabPassagesBtn.addEventListener("click", () => switchTab("passages"));
+    tabWrap.appendChild(tabPassagesBtn);
 
     const closeBtn = document.createElement("button");
     closeBtn.type = "button";
@@ -261,7 +349,7 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
     right.className = "lux-harvard-right";
     body.appendChild(right);
 
-    const explainRight = document.createElement("div");
+    explainRight = document.createElement("div");
     explainRight.className = "lux-harvard-explain-right";
     explainRight.innerHTML = EXPLAIN_HTML;
     right.appendChild(explainRight);
@@ -279,10 +367,10 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
     phonBlock.className = "lux-harvard-phoneme-block";
     right.appendChild(phonBlock);
 
-    const phonTitle = document.createElement("div");
-    phonTitle.className = "lux-harvard-phoneme-title";
-    phonTitle.textContent = "Top distinctive phonemes (this list vs Harvard set)";
-    phonBlock.appendChild(phonTitle);
+    phonTitleEl = document.createElement("div");
+    phonTitleEl.className = "lux-harvard-phoneme-title";
+    phonTitleEl.textContent = "Top distinctive phonemes (this list vs Harvard set)";
+    phonBlock.appendChild(phonTitleEl);
 
     phonRows = document.createElement("div");
     phonBlock.appendChild(phonRows);
@@ -302,15 +390,21 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
     practiceBtn.textContent = "Practice this list";
     practiceBtn.disabled = true;
     practiceBtn.addEventListener("click", async () => {
-      if (!selectedN) return;
-
       statusMsg.textContent = "";
       const prevLabel = practiceBtn.textContent;
 
       try {
         practiceBtn.disabled = true;
         practiceBtn.textContent = "Loading…";
-        await onPractice?.(selectedN);
+
+        if (activeTab === "harvard") {
+          if (!selectedN) return;
+          await onPractice?.({ kind: "harvard", n: selectedN });
+        } else {
+          if (!selectedKey) return;
+          await onPractice?.({ kind: "passage", key: selectedKey });
+        }
+
         close();
       } catch (err) {
         console.error("[Harvard] Practice action failed", err);
@@ -349,8 +443,12 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
 
     // keep hover card positioned if list scrolls
     listEl.addEventListener("scroll", () => {
-      if (!hoverN) return;
-      const btn = listEl.querySelector(`.lux-harvard-item[data-n="${hoverN}"]`);
+      if (!hoverCard) return;
+
+      let btn = null;
+      if (hoverN) btn = listEl.querySelector(`.lux-harvard-item[data-n="${hoverN}"]`);
+      else if (hoverKey) btn = listEl.querySelector(`.lux-harvard-item[data-key="${hoverKey}"]`);
+
       if (btn) positionHoverCard(btn);
     });
 
@@ -390,6 +488,32 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
     return lists;
   }
 
+  async function ensurePassages() {
+    if (passRecs) return passRecs;
+
+    const next = [];
+    const allKeys = Object.keys(passages || {});
+    for (const key of allKeys) {
+      if (isHarvardKey(key)) continue;
+      const p = passages?.[key];
+      const parts = Array.isArray(p?.parts) ? p.parts.slice() : null;
+      if (!parts || parts.length === 0) continue;
+
+      next.push({
+        key,
+        name: p?.name || String(key),
+        parts,
+        first: parts[0] || "",
+        searchText: parts.join(" ").toLowerCase(),
+      });
+    }
+
+    next.sort((a, b) => String(a.name).localeCompare(String(b.name)));
+
+    passRecs = next;
+    return passRecs;
+  }
+
   function clearNode(el) {
     while (el && el.firstChild) el.removeChild(el.firstChild);
   }
@@ -406,7 +530,7 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
 
   function setFilterPh(ph) {
     // toggle
-    activePh = (activePh === ph) ? null : ph;
+    activePh = activePh === ph ? null : ph;
     renderList();
   }
 
@@ -416,10 +540,13 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
     if (modeSortBtn) modeSortBtn.classList.toggle("is-active", focusMode === "sort");
     if (modeOnlyBtn) modeOnlyBtn.classList.toggle("is-active", focusMode === "only");
 
+    if (tabHarvardBtn) tabHarvardBtn.classList.toggle("is-active", activeTab === "harvard");
+    if (tabPassagesBtn) tabPassagesBtn.classList.toggle("is-active", activeTab === "passages");
+
     if (focusSel) focusSel.value = activePh || "";
   }
 
-  function renderPhonemeRows(n, phonRowsEl) {
+  function renderHarvardPhonemeRows(n, phonRowsEl) {
     while (phonRowsEl.firstChild) phonRowsEl.removeChild(phonRowsEl.firstChild);
 
     const meta = getHarvardMeta(n);
@@ -451,11 +578,58 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
     });
   }
 
+  function renderPassagePhonemeRows(key, phonRowsEl) {
+    while (phonRowsEl.firstChild) phonRowsEl.removeChild(phonRowsEl.firstChild);
+
+    const m = metaForKey(key);
+    const counts = m?.counts;
+
+    if (!counts || typeof counts !== "object") {
+      const empty = document.createElement("div");
+      empty.className = "lux-harvard-status";
+      empty.textContent = "Phoneme stats not available yet.";
+      phonRowsEl.appendChild(empty);
+      return;
+    }
+
+    const total = Number(m?.totalPhones || 0);
+    const rows = Object.entries(counts)
+      .map(([ph, c]) => ({ ph: String(ph).toUpperCase(), c: Number(c || 0) }))
+      .filter((x) => x.c > 0)
+      .sort((a, b) => b.c - a.c)
+      .slice(0, 6);
+
+    if (!rows.length) {
+      const empty = document.createElement("div");
+      empty.className = "lux-harvard-status";
+      empty.textContent = "Phoneme stats not available yet.";
+      phonRowsEl.appendChild(empty);
+      return;
+    }
+
+    rows.forEach((p) => {
+      const row = document.createElement("div");
+      row.className = "lux-harvard-phoneme-row";
+
+      const chip = document.createElement("span");
+      chip.className = "lux-harvard-phoneme-chip";
+      chip.textContent = p.ph;
+
+      const metaTxt = document.createElement("span");
+      metaTxt.className = "lux-harvard-phoneme-meta";
+      if (total) metaTxt.textContent = `${p.c} • ${((p.c / total) * 100).toFixed(1)}%`;
+      else metaTxt.textContent = `${p.c}`;
+
+      row.appendChild(chip);
+      row.appendChild(metaTxt);
+      phonRowsEl.appendChild(row);
+    });
+  }
+
   function setSelected(n) {
     selectedN = n;
 
-    // highlight list selection
-    listEl.querySelectorAll(".lux-harvard-item").forEach((btn) => {
+    listEl.querySelectorAll(".lux-harvard-item[data-n]").forEach((btn) => {
       const isSel = Number(btn.dataset.n) === Number(n);
       btn.classList.toggle("is-selected", isSel);
       btn.setAttribute("aria-selected", isSel ? "true" : "false");
@@ -467,13 +641,46 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
     selTitle.textContent = rec.name;
     renderLines(selLines, rec.parts);
 
-    renderPhonemeRows(n, phonRows);
+    if (phonTitleEl) phonTitleEl.textContent = "Top distinctive phonemes (this list vs Harvard set)";
+    renderHarvardPhonemeRows(n, phonRows);
 
+    practiceBtn.textContent = "Practice this list";
     practiceBtn.disabled = false;
+
+    try {
+      localStorage.setItem("LUX_HARVARD_LAST", String(n));
+    } catch {}
   }
 
-  function showHover(n, btn) {
+  function setSelectedPassage(key) {
+    selectedKey = key;
+
+    listEl.querySelectorAll(".lux-harvard-item[data-key]").forEach((btn) => {
+      const isSel = String(btn.dataset.key) === String(key);
+      btn.classList.toggle("is-selected", isSel);
+      btn.setAttribute("aria-selected", isSel ? "true" : "false");
+    });
+
+    const rec = passRecs?.find((x) => x.key === key);
+    if (!rec) return;
+
+    selTitle.textContent = rec.name;
+    renderLines(selLines, rec.parts);
+
+    if (phonTitleEl) phonTitleEl.textContent = "Top phonemes (this passage)";
+    renderPassagePhonemeRows(key, phonRows);
+
+    practiceBtn.textContent = "Practice this passage";
+    practiceBtn.disabled = false;
+
+    try {
+      localStorage.setItem("LUX_PASSAGES_LAST", String(key));
+    } catch {}
+  }
+
+  function showHoverHarvard(n, btn) {
     hoverN = n;
+    hoverKey = null;
 
     const rec = lists?.find((x) => x.n === n);
     if (!rec) return;
@@ -485,8 +692,23 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
     positionHoverCard(btn);
   }
 
+  function showHoverPassage(key, btn) {
+    hoverKey = key;
+    hoverN = null;
+
+    const rec = passRecs?.find((x) => x.key === key);
+    if (!rec) return;
+
+    hoverTitle.textContent = rec.name;
+    renderLines(hoverLines, rec.parts);
+
+    hoverCard.style.display = "block";
+    positionHoverCard(btn);
+  }
+
   function hideHover() {
     hoverN = null;
+    hoverKey = null;
     if (hoverCard) hoverCard.style.display = "none";
   }
 
@@ -498,8 +720,8 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
     const listRect = listEl.getBoundingClientRect();
 
     // base: to the right of the list panel, aligned with the hovered row
-    const left = Math.max(12, (listRect.right - cardRect.left) + 12);
-    let top = Math.max(12, (btnRect.top - cardRect.top) - 6);
+    const left = Math.max(12, listRect.right - cardRect.left + 12);
+    let top = Math.max(12, btnRect.top - cardRect.top - 6);
 
     hoverCard.style.left = `${left}px`;
     hoverCard.style.top = `${top}px`;
@@ -513,8 +735,39 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
     }
   }
 
+  function switchTab(next) {
+    if (next !== "harvard" && next !== "passages") return;
+    if (activeTab === next) return;
+
+    activeTab = next;
+
+    if (explainRight) {
+      explainRight.innerHTML = activeTab === "harvard" ? EXPLAIN_HTML : PASSAGES_EXPLAIN_HTML;
+    }
+
+    if (activeTab === "harvard") {
+      selTitle.textContent = selectedN ? selTitle.textContent : "Select a list";
+      practiceBtn.textContent = "Practice this list";
+      practiceBtn.disabled = !selectedN;
+      listEl.setAttribute("aria-label", "Harvard lists");
+      if (phonTitleEl) phonTitleEl.textContent = "Top distinctive phonemes (this list vs Harvard set)";
+      if (selectedN) renderHarvardPhonemeRows(selectedN, phonRows);
+    } else {
+      selTitle.textContent = selectedKey ? selTitle.textContent : "Select an item";
+      practiceBtn.textContent = "Practice this passage";
+      practiceBtn.disabled = !selectedKey;
+      listEl.setAttribute("aria-label", "Passages");
+      if (phonTitleEl) phonTitleEl.textContent = "Top phonemes (this passage)";
+      if (selectedKey) renderPassagePhonemeRows(selectedKey, phonRows);
+    }
+
+    hideHover();
+    renderList();
+  }
+
   async function renderList() {
-    const data = await ensureLists();
+    const isHarvard = activeTab === "harvard";
+    const data = isHarvard ? await ensureLists() : await ensurePassages();
 
     clearNode(listEl);
 
@@ -525,23 +778,46 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
     }
 
     if (activePh) {
-      const scored = rows
-        .map((rec) => ({ rec, score: countFor(rec.n, activePh) }));
+      const scored = rows.map((rec) => {
+        const score = isHarvard
+          ? countForHarvard(rec.n, activePh)
+          : countForKey(rec.key, activePh);
 
-      const filtered = focusMode === "only"
-        ? scored.filter((x) => x.score > 0)
-        : scored;
+        const total = isHarvard
+          ? totalForHarvard(rec.n)
+          : totalForKey(rec.key);
+
+        const pct = total ? score / total : 0;
+
+        return { rec, score, pct };
+      });
+
+      const filtered = focusMode === "only" ? scored.filter((x) => x.score > 0) : scored;
 
       rows = filtered
-        .sort((a, b) => (b.score - a.score) || (a.rec.n - b.rec.n))
+        .sort((a, b) => {
+          if (b.score !== a.score) return b.score - a.score;
+          if (b.pct !== a.pct) return b.pct - a.pct;
+          return isHarvard
+            ? a.rec.n - b.rec.n
+            : String(a.rec.name).localeCompare(String(b.rec.name));
+        })
         .map((x) => x.rec);
     }
 
     // Favorites: pin to top (preserve existing order within each group)
-    if (favs && favs.size) {
-      const favRows = rows.filter((r) => favs.has(r.n));
-      const otherRows = rows.filter((r) => !favs.has(r.n));
-      rows = favRows.concat(otherRows);
+    if (isHarvard) {
+      if (favs && favs.size) {
+        const favRows = rows.filter((r) => favs.has(r.n));
+        const otherRows = rows.filter((r) => !favs.has(r.n));
+        rows = favRows.concat(otherRows);
+      }
+    } else {
+      if (favKeys && favKeys.size) {
+        const favRows = rows.filter((r) => favKeys.has(r.key));
+        const otherRows = rows.filter((r) => !favKeys.has(r.key));
+        rows = favRows.concat(otherRows);
+      }
     }
 
     updateFilterUI();
@@ -550,82 +826,173 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "lux-harvard-item";
-      btn.dataset.n = String(rec.n);
       btn.setAttribute("role", "option");
       btn.setAttribute("aria-selected", "false");
 
-      const num = document.createElement("span");
-      num.className = "lux-harvard-item-num";
-      num.textContent = pad2(rec.n);
+      if (isHarvard) {
+        btn.dataset.n = String(rec.n);
 
-      const first = document.createElement("span");
-      first.className = "lux-harvard-item-first";
-      first.textContent = rec.first;
+        const num = document.createElement("span");
+        num.className = "lux-harvard-item-num";
+        num.textContent = pad2(rec.n);
 
-      btn.appendChild(num);
-      btn.appendChild(first);
+        const first = document.createElement("span");
+        first.className = "lux-harvard-item-first";
+        first.textContent = rec.first;
 
-      // Favorite star (doesn't trigger selection)
-      const favBtn = document.createElement("button");
-      favBtn.type = "button";
-      favBtn.className = "lux-harvard-fav";
-      favBtn.textContent = favs.has(rec.n) ? "★" : "☆";
-      favBtn.title = favs.has(rec.n) ? "Unfavorite" : "Favorite";
-      favBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (favs.has(rec.n)) favs.delete(rec.n);
-        else favs.add(rec.n);
-        saveFavs();
-        renderList();
-      });
-      btn.appendChild(favBtn);
+        btn.appendChild(num);
+        btn.appendChild(first);
 
-      // Focus score (count + %), shown when a phoneme is selected
-      if (activePh) {
-        const c = countFor(rec.n, activePh);
-        const t = totalFor(rec.n);
-        const pct = t ? (c / t) : 0;
-
-        const badge = document.createElement("span");
-        badge.className = "lux-harvard-focusbadge" + (c ? "" : " is-zero");
-        badge.textContent = c ? `${c} • ${(pct * 100).toFixed(1)}%` : "—";
-        badge.title = c ? `${activePh} appears ${c} times in this list` : `${activePh} not present`;
-        btn.appendChild(badge);
-      }
-
-      // phoneme chips (top 3 distinctive)
-      const chipWrap = document.createElement("div");
-      chipWrap.className = "lux-harvard-item-chips";
-      const top3 = getHarvardMeta(rec.n)?.top3 || [];
-      top3.forEach((p) => {
-        const chip = document.createElement("span");
-        chip.className = "lux-harvard-item-chip" + (activePh === p.ph ? " is-active" : "");
-        chip.textContent = p.ph;
-        chip.title = `×${Number(p.lift || 0).toFixed(2)} • ${(Number(p.pct || 0) * 100).toFixed(1)}%`;
-        chip.addEventListener("click", (e) => {
+        // Favorite star (doesn't trigger selection)
+        const favBtn = document.createElement("button");
+        favBtn.type = "button";
+        favBtn.className = "lux-harvard-fav";
+        favBtn.textContent = favs.has(rec.n) ? "★" : "☆";
+        favBtn.title = favs.has(rec.n) ? "Unfavorite" : "Favorite";
+        favBtn.addEventListener("click", (e) => {
           e.preventDefault();
           e.stopPropagation();
-          setFilterPh(p.ph);
+          if (favs.has(rec.n)) favs.delete(rec.n);
+          else favs.add(rec.n);
+          saveFavs();
+          renderList();
         });
-        chipWrap.appendChild(chip);
-      });
-      btn.appendChild(chipWrap);
+        btn.appendChild(favBtn);
 
-      btn.addEventListener("mouseenter", () => showHover(rec.n, btn));
-      btn.addEventListener("mouseleave", hideHover);
+        // Focus score (count + %), shown when a phoneme is selected
+        if (activePh) {
+          const c = countForHarvard(rec.n, activePh);
+          const t = totalForHarvard(rec.n);
+          const pct = t ? c / t : 0;
 
-      btn.addEventListener("click", () => setSelected(rec.n));
+          const badge = document.createElement("span");
+          badge.className = "lux-harvard-focusbadge" + (c ? "" : " is-zero");
+          badge.textContent = c ? (t ? `${c} • ${(pct * 100).toFixed(1)}%` : `${c}`) : "—";
+          badge.title = c ? `${activePh} appears ${c} times in this list` : `${activePh} not present`;
+          btn.appendChild(badge);
+        }
+
+        // phoneme chips (top 3 distinctive)
+        const chipWrap = document.createElement("div");
+        chipWrap.className = "lux-harvard-item-chips";
+        const top3 = getHarvardMeta(rec.n)?.top3 || [];
+        top3.forEach((p) => {
+          const chip = document.createElement("span");
+          chip.className =
+            "lux-harvard-item-chip" + (activePh === p.ph ? " is-active" : "");
+          chip.textContent = p.ph;
+          chip.title = `×${Number(p.lift || 0).toFixed(2)} • ${(
+            Number(p.pct || 0) * 100
+          ).toFixed(1)}%`;
+          chip.addEventListener("click", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setFilterPh(p.ph);
+          });
+          chipWrap.appendChild(chip);
+        });
+        btn.appendChild(chipWrap);
+
+        btn.classList.toggle("is-selected", Number(rec.n) === Number(selectedN));
+        btn.setAttribute(
+          "aria-selected",
+          Number(rec.n) === Number(selectedN) ? "true" : "false"
+        );
+
+        btn.addEventListener("mouseenter", () => showHoverHarvard(rec.n, btn));
+        btn.addEventListener("mouseleave", hideHover);
+        btn.addEventListener("click", () => setSelected(rec.n));
+      } else {
+        btn.dataset.key = String(rec.key);
+
+        const first = document.createElement("span");
+        first.className = "lux-harvard-item-first";
+        first.textContent = rec.name;
+        btn.appendChild(first);
+
+        const favBtn = document.createElement("button");
+        favBtn.type = "button";
+        favBtn.className = "lux-harvard-fav";
+        favBtn.textContent = favKeys.has(rec.key) ? "★" : "☆";
+        favBtn.title = favKeys.has(rec.key) ? "Unfavorite" : "Favorite";
+        favBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (favKeys.has(rec.key)) favKeys.delete(rec.key);
+          else favKeys.add(rec.key);
+          saveFavs();
+          renderList();
+        });
+        btn.appendChild(favBtn);
+
+        if (activePh) {
+          const c = countForKey(rec.key, activePh);
+          const t = totalForKey(rec.key);
+          const pct = t ? c / t : 0;
+
+          const badge = document.createElement("span");
+          badge.className = "lux-harvard-focusbadge" + (c ? "" : " is-zero");
+          badge.textContent = c ? `${c} • ${(pct * 100).toFixed(1)}%` : "—";
+          badge.title = c ? `${activePh} appears ${c} times in this passage` : `${activePh} not present`;
+          btn.appendChild(badge);
+        }
+
+        const chipWrap = document.createElement("div");
+        chipWrap.className = "lux-harvard-item-chips";
+
+        const m = metaForKey(rec.key);
+        const counts = m?.counts;
+        if (counts && typeof counts === "object") {
+          const top = Object.entries(counts)
+            .map(([ph, c]) => ({ ph: String(ph).toUpperCase(), c: Number(c || 0) }))
+            .filter((x) => x.c > 0)
+            .sort((a, b) => b.c - a.c)
+            .slice(0, 3);
+
+          top.forEach((p) => {
+            const chip = document.createElement("span");
+            chip.className =
+              "lux-harvard-item-chip" + (activePh === p.ph ? " is-active" : "");
+            chip.textContent = p.ph;
+            chip.title = `${p.c} occurrences`;
+            chip.addEventListener("click", (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setFilterPh(p.ph);
+            });
+            chipWrap.appendChild(chip);
+          });
+        }
+        btn.appendChild(chipWrap);
+
+        btn.classList.toggle("is-selected", String(rec.key) === String(selectedKey));
+        btn.setAttribute(
+          "aria-selected",
+          String(rec.key) === String(selectedKey) ? "true" : "false"
+        );
+
+        btn.addEventListener("mouseenter", () => showHoverPassage(rec.key, btn));
+        btn.addEventListener("mouseleave", hideHover);
+        btn.addEventListener("click", () => setSelectedPassage(rec.key));
+      }
 
       listEl.appendChild(btn);
     });
 
     // pre-select last used, but don't auto-practice
-    try {
-      const last = localStorage.getItem("LUX_HARVARD_LAST");
-      const n = last ? Number.parseInt(last, 10) : null;
-      if (n && n >= 1 && n <= 72) setSelected(n);
-    } catch {}
+    if (isHarvard) {
+      try {
+        const last = localStorage.getItem("LUX_HARVARD_LAST");
+        const n = last ? Number.parseInt(last, 10) : null;
+        if (n && n >= 1 && n <= 72) setSelected(n);
+      } catch {}
+    } else {
+      try {
+        const last = localStorage.getItem("LUX_PASSAGES_LAST");
+        const key = last ? String(last) : "";
+        if (key && passRecs?.some((r) => r.key === key)) setSelectedPassage(key);
+      } catch {}
+    }
   }
 
   function open() {
@@ -635,8 +1002,12 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
     loadFavs();
     ensurePhonemeOptions();
 
-    // only build the list once, but allow re-open
-    if (!lists) renderList();
+    if (explainRight) {
+      explainRight.innerHTML =
+        activeTab === "harvard" ? EXPLAIN_HTML : PASSAGES_EXPLAIN_HTML;
+    }
+
+    renderList();
 
     // reset hover
     hideHover();
