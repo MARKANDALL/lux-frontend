@@ -15,6 +15,7 @@ import {
 } from "./modal-phoneme-metrics.js";
 import { loadFavs, saveFavs } from "./modal-favs.js";
 import { clearNode, renderLines } from "./modal-dom-helpers.js";
+import { loadHarvardListRecords, loadPassageRecords } from "./modal-data.js";
 
 const EXPLAIN_HTML = `
   <strong>What is the Harvard List?</strong><br/>
@@ -355,59 +356,20 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
 
   async function ensureLists() {
     if (lists) return lists;
-
-    listEl.textContent = "Loading Harvard lists…";
-
-    try {
-      await ensureHarvardPassages();
-    } catch (err) {
-      console.error("[Harvard] ensureHarvardPassages failed", err);
-      listEl.textContent = "Could not load Harvard lists.";
-      return (lists = []);
-    }
-
-    const next = [];
-    for (let n = 1; n <= 72; n++) {
-      const key = harvardKey(n);
-      const p = passages?.[key];
-      const parts = Array.isArray(p?.parts) ? p.parts.slice(0, 10) : null;
-      if (!parts || parts.length === 0) continue;
-      next.push({
-        n,
-        key,
-        name: p?.name || `Harvard List ${pad2(n)}`,
-        parts,
-        first: parts[0] || "",
-        searchText: parts.join(" ").toLowerCase(),
-      });
-    }
-
+    const next = await loadHarvardListRecords({
+      listEl,
+      ensureHarvardPassages,
+      passages,
+      pad2,
+      harvardKey,
+    });
     lists = next;
     return lists;
   }
 
   async function ensurePassages() {
     if (passRecs) return passRecs;
-
-    const next = [];
-    const allKeys = Object.keys(passages || {});
-    for (const key of allKeys) {
-      if (isHarvardKey(key)) continue;
-      const p = passages?.[key];
-      const parts = Array.isArray(p?.parts) ? p.parts.slice() : null;
-      if (!parts || parts.length === 0) continue;
-
-      next.push({
-        key,
-        name: p?.name || String(key),
-        parts,
-        first: parts[0] || "",
-        searchText: parts.join(" ").toLowerCase(),
-      });
-    }
-
-    next.sort((a, b) => String(a.name).localeCompare(String(b.name)));
-
+    const next = loadPassageRecords({ passages, isHarvardKey });
     passRecs = next;
     return passRecs;
   }
