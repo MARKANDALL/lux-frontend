@@ -127,6 +127,24 @@ export function openDetailsModal(attempt, overallScore, dateStr, ctx = {}) {
 
   card.appendChild(header);
 
+  // "Next conversation" (session-based): uses THIS session’s trouble list
+  const nextBtn = header?.querySelector?.('[data-lux-generate-next="1"]');
+  if (nextBtn && nextBtn.dataset.wired !== "1") {
+    nextBtn.dataset.wired = "1";
+    nextBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const plan = buildNextActivityPlanFromModel(
+        { trouble: sessionModel?.trouble || trouble },
+        { source: "session", confidence }
+      );
+      if (!plan) return;
+      saveNextActivityPlan(plan);
+      window.location.href = "./convo.html#chat";
+    });
+  }
+
   // Trouble Sounds
   card.appendChild(buildTroubleSoundsSection(phItems));
 

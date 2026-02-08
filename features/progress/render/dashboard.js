@@ -87,7 +87,7 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
             ? `
           <div class="lux-progress-actions">
 <button class="lux-pbtn" id="luxGenerateNextPractice" data-lux-generate-next>
-  ✨ Generate my next practice
+  ✨ Next conversation
 </button>
 <button class="lux-pbtn lux-pbtn--ghost" id="luxOpenWordCloud">
   ☁️ Cloud Visuals
@@ -363,7 +363,7 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
 
     if (pron != null) pills.push(`Pron ${Math.round(Number(pron))}`);
     if (acc != null) pills.push(`Acc ${Math.round(Number(acc))}`);
-    if (flu != null) pills.push(`Flu ${Math.round(Number(flu))}`);
+    if (flu !=null) pills.push(`Flu ${Math.round(Number(flu))}`);
     if (pro != null) pills.push(`Pro ${Math.round(Number(pro))}`);
 
     return pills.map((t) => `<span class="lux-mini-pill">${esc(t)}</span>`).join("");

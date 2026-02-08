@@ -1,14 +1,14 @@
 // features/next-activity/next-practice.js
 import { fetchHistory } from "../../api/attempts.js";
+import { ensureUID } from "../../api/identity.js";
 import { computeRollups } from "../progress/rollups.js";
-import { getAuthedUID } from "../my-words/service.js";
 import { getCodesForIPA } from "../../src/data/phonemes/core.js";
 import { PASSAGE_PHONEME_META } from "../../src/data/index.js";
 import { setPassage, updatePartsInfoTip } from "../passages/index.js";
 import { loadHarvardList } from "../harvard/index.js";
 
 function pickFocusPhFromRollups(rollups) {
-  const top = rollups?.troublePhonemes?.[0];
+  const top = rollups?.trouble?.phonemesAll?.[0];
   const ipa = top?.ipa || "";
   if (!ipa) return { ipa: "", code: "" };
 
@@ -122,9 +122,10 @@ export function wireGenerateNextPractice() {
       btn.textContent = "Generating…";
       if (out) out.textContent = "Checking your progress…";
 
-      const uid = await getAuthedUID();
+      // ✅ Use UID-based history (works without “Save Progress” login)
+      const uid = ensureUID();
       if (!uid) {
-        if (out) out.textContent = "Please sign in (Save Progress) to generate recommendations from your history.";
+        if (out) out.textContent = "Couldn’t determine your UID for history.";
         return;
       }
 
@@ -133,7 +134,7 @@ export function wireGenerateNextPractice() {
       const { ipa, code } = pickFocusPhFromRollups(rollups);
 
       if (!code) {
-        if (out) out.textContent = "Not enough progress yet to generate a recommendation.";
+        if (out) out.textContent = "Not enough saved attempts yet—do one more practice run, then try again.";
         return;
       }
 
