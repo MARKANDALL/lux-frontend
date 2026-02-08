@@ -16,6 +16,11 @@ import {
 import { loadFavs, saveFavs } from "./modal-favs.js";
 import { clearNode, renderLines } from "./modal-dom-helpers.js";
 import { loadHarvardListRecords, loadPassageRecords } from "./modal-data.js";
+import {
+  renderHarvardPhonemeRows,
+  renderPassagePhonemeRows,
+} from "./modal-phoneme-rows.js";
+import { createHarvardModalDOM } from "./modal-dom.js";
 
 const EXPLAIN_HTML = `
   <strong>What is the Harvard List?</strong><br/>
@@ -106,252 +111,97 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
   function ensureDOM() {
     if (overlay) return;
 
-    overlay = document.createElement("div");
-    overlay.className = "lux-harvard-modal";
+    const dom = createHarvardModalDOM({
+      EXPLAIN_HTML,
+      onSwitchTab: (t) => switchTab(t),
+      onClose: () => close(),
+      onModeSort: () => {
+        focusMode = "sort";
+        renderList();
+      },
+      onModeOnly: () => {
+        focusMode = "only";
+        renderList();
+      },
+      onSearchInput: (val) => {
+        searchQ = String(val || "").trim().toLowerCase();
+        renderList();
+      },
+      onClearFilter: () => {
+        activePh = null;
+        if (focusSel) focusSel.value = "";
+        renderList();
+      },
+      onFocusChange: (val) => {
+        activePh = val ? String(val) : null;
+        renderList();
+      },
+      onPracticeClick: async () => {
+        statusMsg.textContent = "";
+        const prevLabel = practiceBtn.textContent;
 
-    card = document.createElement("div");
-    card.className = "lux-harvard-modal-card";
-    card.setAttribute("role", "dialog");
-    card.setAttribute("aria-modal", "true");
-    card.setAttribute("aria-label", "Harvard list browser");
-    overlay.appendChild(card);
+        try {
+          practiceBtn.disabled = true;
+          practiceBtn.textContent = "Loading…";
 
-    // header
-    const head = document.createElement("div");
-    head.className = "lux-harvard-modal-head";
-    card.appendChild(head);
+          if (activeTab === "harvard") {
+            if (!selectedN) return;
+            await onPractice?.({ kind: "harvard", n: selectedN });
+          } else {
+            if (!selectedKey) return;
+            await onPractice?.({ kind: "passage", key: selectedKey });
+          }
 
-    // title + tabs
-    const headLeft = document.createElement("div");
-    headLeft.style.display = "flex";
-    headLeft.style.alignItems = "center";
-    headLeft.style.gap = "12px";
-    head.appendChild(headLeft);
-
-    const title = document.createElement("div");
-    title.className = "lux-harvard-modal-title";
-    title.textContent = "Library";
-    headLeft.appendChild(title);
-
-    const tabWrap = document.createElement("div");
-    tabWrap.style.display = "flex";
-    tabWrap.style.gap = "8px";
-    tabWrap.style.alignItems = "center";
-    headLeft.appendChild(tabWrap);
-
-    tabHarvardBtn = document.createElement("button");
-    tabHarvardBtn.type = "button";
-    tabHarvardBtn.className = "lux-harvard-modetab is-active";
-    tabHarvardBtn.textContent = "Harvard";
-    tabHarvardBtn.addEventListener("click", () => switchTab("harvard"));
-    tabWrap.appendChild(tabHarvardBtn);
-
-    tabPassagesBtn = document.createElement("button");
-    tabPassagesBtn.type = "button";
-    tabPassagesBtn.className = "lux-harvard-modetab";
-    tabPassagesBtn.textContent = "Passages";
-    tabPassagesBtn.addEventListener("click", () => switchTab("passages"));
-    tabWrap.appendChild(tabPassagesBtn);
-
-    const closeBtn = document.createElement("button");
-    closeBtn.type = "button";
-    closeBtn.className = "lux-harvard-modal-x";
-    closeBtn.textContent = "✕";
-    closeBtn.addEventListener("click", close);
-    head.appendChild(closeBtn);
-
-    // body
-    const body = document.createElement("div");
-    body.className = "lux-harvard-modal-body";
-    card.appendChild(body);
-
-    // left panel
-    const left = document.createElement("div");
-    left.className = "lux-harvard-left";
-    body.appendChild(left);
-
-    filterBar = document.createElement("div");
-    filterBar.className = "lux-harvard-filterbar";
-    left.appendChild(filterBar);
-
-    const leftGroup = document.createElement("div");
-    leftGroup.className = "lux-harvard-filterleft";
-    filterBar.appendChild(leftGroup);
-
-    const label = document.createElement("span");
-    label.className = "lux-harvard-filterlabel";
-    label.textContent = "Focus phoneme:";
-    leftGroup.appendChild(label);
-
-    focusSel = document.createElement("select");
-    focusSel.className = "lux-harvard-phsel";
-    leftGroup.appendChild(focusSel);
-
-    modeSortBtn = document.createElement("button");
-    modeSortBtn.type = "button";
-    modeSortBtn.className = "lux-harvard-modetab";
-    modeSortBtn.textContent = "Sort";
-    modeSortBtn.addEventListener("click", () => {
-      focusMode = "sort";
-      renderList();
-    });
-    leftGroup.appendChild(modeSortBtn);
-
-    modeOnlyBtn = document.createElement("button");
-    modeOnlyBtn.type = "button";
-    modeOnlyBtn.className = "lux-harvard-modetab";
-    modeOnlyBtn.textContent = "Only";
-    modeOnlyBtn.addEventListener("click", () => {
-      focusMode = "only";
-      renderList();
-    });
-    leftGroup.appendChild(modeOnlyBtn);
-
-    searchInput = document.createElement("input");
-    searchInput.className = "lux-harvard-search";
-    searchInput.type = "text";
-    searchInput.placeholder = "Search…";
-    searchInput.addEventListener("input", () => {
-      searchQ = String(searchInput.value || "").trim().toLowerCase();
-      renderList();
-    });
-    filterBar.appendChild(searchInput);
-
-    filterClearBtn = document.createElement("button");
-    filterClearBtn.type = "button";
-    filterClearBtn.className = "lux-harvard-filterclear";
-    filterClearBtn.textContent = "Clear";
-    filterClearBtn.disabled = true;
-    filterClearBtn.addEventListener("click", () => {
-      activePh = null;
-      if (focusSel) focusSel.value = "";
-      renderList();
-    });
-    filterBar.appendChild(filterClearBtn);
-
-    focusSel.addEventListener("change", () => {
-      activePh = focusSel.value ? String(focusSel.value) : null;
-      renderList();
-    });
-
-    listEl = document.createElement("div");
-    listEl.className = "lux-harvard-list";
-    listEl.setAttribute("role", "listbox");
-    listEl.setAttribute("aria-label", "Harvard lists");
-    left.appendChild(listEl);
-
-    // right panel
-    const right = document.createElement("div");
-    right.className = "lux-harvard-right";
-    body.appendChild(right);
-
-    explainRight = document.createElement("div");
-    explainRight.className = "lux-harvard-explain-right";
-    explainRight.innerHTML = EXPLAIN_HTML;
-    right.appendChild(explainRight);
-
-    selTitle = document.createElement("div");
-    selTitle.className = "lux-harvard-selected-title";
-    selTitle.textContent = "Select a list";
-    right.appendChild(selTitle);
-
-    selLines = document.createElement("div");
-    selLines.className = "lux-harvard-selected-lines";
-    right.appendChild(selLines);
-
-    const phonBlock = document.createElement("div");
-    phonBlock.className = "lux-harvard-phoneme-block";
-    right.appendChild(phonBlock);
-
-    phonTitleEl = document.createElement("div");
-    phonTitleEl.className = "lux-harvard-phoneme-title";
-    phonTitleEl.textContent = "Top distinctive phonemes (this list vs Harvard set)";
-    phonBlock.appendChild(phonTitleEl);
-
-    phonRows = document.createElement("div");
-    phonBlock.appendChild(phonRows);
-
-    statusMsg = document.createElement("div");
-    statusMsg.className = "lux-harvard-status";
-    statusMsg.textContent = "";
-    right.appendChild(statusMsg);
-
-    const footer = document.createElement("div");
-    footer.className = "lux-harvard-selected-footer";
-    right.appendChild(footer);
-
-    practiceBtn = document.createElement("button");
-    practiceBtn.type = "button";
-    practiceBtn.className = "lux-harvard-practice";
-    practiceBtn.textContent = "Practice this list";
-    practiceBtn.disabled = true;
-    practiceBtn.addEventListener("click", async () => {
-      statusMsg.textContent = "";
-      const prevLabel = practiceBtn.textContent;
-
-      try {
-        practiceBtn.disabled = true;
-        practiceBtn.textContent = "Loading…";
-
-        if (activeTab === "harvard") {
-          if (!selectedN) return;
-          await onPractice?.({ kind: "harvard", n: selectedN });
-        } else {
-          if (!selectedKey) return;
-          await onPractice?.({ kind: "passage", key: selectedKey });
+          close();
+        } catch (err) {
+          console.error("[Harvard] Practice action failed", err);
+          statusMsg.textContent =
+            "Could not start practice. See console for details.";
+          practiceBtn.disabled = false;
+        } finally {
+          practiceBtn.textContent = prevLabel;
         }
+      },
+      onListScrollReposition: () => {
+        if (!hoverCard) return;
 
-        close();
-      } catch (err) {
-        console.error("[Harvard] Practice action failed", err);
-        statusMsg.textContent =
-          "Could not start practice. See console for details.";
-        practiceBtn.disabled = false;
-      } finally {
-        practiceBtn.textContent = prevLabel;
-      }
-    });
-    footer.appendChild(practiceBtn);
+        let btn = null;
+        if (hoverN)
+          btn = listEl.querySelector(`.lux-harvard-item[data-n="${hoverN}"]`);
+        else if (hoverKey)
+          btn = listEl.querySelector(`.lux-harvard-item[data-key="${hoverKey}"]`);
 
-    // hover preview card (absolute inside modal)
-    hoverCard = document.createElement("div");
-    hoverCard.className = "lux-harvard-hovercard";
-    hoverCard.setAttribute("aria-hidden", "true");
-
-    hoverTitle = document.createElement("div");
-    hoverTitle.className = "lux-harvard-hovercard-title";
-    hoverCard.appendChild(hoverTitle);
-
-    hoverLines = document.createElement("div");
-    hoverLines.className = "lux-harvard-hovercard-lines";
-    hoverCard.appendChild(hoverLines);
-
-    card.appendChild(hoverCard);
-
-    // close on overlay click (outside the card)
-    overlay.addEventListener("click", (e) => {
-      if (e.target === overlay) close();
+        if (btn) positionHoverCard(btn);
+      },
     });
 
-    // close on escape
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && overlay?.classList?.contains("is-open")) close();
-    });
+    overlay = dom.overlay;
+    card = dom.card;
 
-    // keep hover card positioned if list scrolls
-    listEl.addEventListener("scroll", () => {
-      if (!hoverCard) return;
+    tabHarvardBtn = dom.tabHarvardBtn;
+    tabPassagesBtn = dom.tabPassagesBtn;
+    explainRight = dom.explainRight;
 
-      let btn = null;
-      if (hoverN)
-        btn = listEl.querySelector(`.lux-harvard-item[data-n="${hoverN}"]`);
-      else if (hoverKey)
-        btn = listEl.querySelector(`.lux-harvard-item[data-key="${hoverKey}"]`);
+    listEl = dom.listEl;
 
-      if (btn) positionHoverCard(btn);
-    });
+    selTitle = dom.selTitle;
+    selLines = dom.selLines;
+    practiceBtn = dom.practiceBtn;
+    statusMsg = dom.statusMsg;
 
-    document.body.appendChild(overlay);
+    phonTitleEl = dom.phonTitleEl;
+    phonRows = dom.phonRows;
+
+    hoverCard = dom.hoverCard;
+    hoverTitle = dom.hoverTitle;
+    hoverLines = dom.hoverLines;
+
+    filterBar = dom.filterBar;
+    filterClearBtn = dom.filterClearBtn;
+    focusSel = dom.focusSel;
+    searchInput = dom.searchInput;
+    modeSortBtn = dom.modeSortBtn;
+    modeOnlyBtn = dom.modeOnlyBtn;
   }
 
   async function ensureLists() {
@@ -396,88 +246,7 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
     if (focusSel) focusSel.value = activePh || "";
   }
 
-  function renderHarvardPhonemeRows(n, phonRowsEl) {
-    while (phonRowsEl.firstChild) phonRowsEl.removeChild(phonRowsEl.firstChild);
-
-    const meta = getHarvardMeta(n);
-    const top3 = meta?.top3;
-
-    if (!Array.isArray(top3) || top3.length === 0) {
-      const empty = document.createElement("div");
-      empty.className = "lux-harvard-status";
-      empty.textContent = "Phoneme stats not available yet.";
-      phonRowsEl.appendChild(empty);
-      return;
-    }
-
-    top3.forEach((p) => {
-      const row = document.createElement("div");
-      row.className = "lux-harvard-phoneme-row";
-
-      const chip = document.createElement("span");
-      chip.className = "lux-harvard-phoneme-chip";
-      chip.textContent = p.ph;
-
-      const metaTxt = document.createElement("span");
-      metaTxt.className = "lux-harvard-phoneme-meta";
-      metaTxt.textContent = `${p.count} • ${(p.pct * 100).toFixed(
-        1
-      )}% • ×${p.lift.toFixed(2)}`;
-
-      row.appendChild(chip);
-      row.appendChild(metaTxt);
-      phonRowsEl.appendChild(row);
-    });
-  }
-
-  function renderPassagePhonemeRows(key, phonRowsEl) {
-    while (phonRowsEl.firstChild) phonRowsEl.removeChild(phonRowsEl.firstChild);
-
-    const m = metaForKey(key);
-    const counts = m?.counts;
-
-    if (!counts || typeof counts !== "object") {
-      const empty = document.createElement("div");
-      empty.className = "lux-harvard-status";
-      empty.textContent = "Phoneme stats not available yet.";
-      phonRowsEl.appendChild(empty);
-      return;
-    }
-
-    const total = Number(m?.totalPhones || 0);
-    const rows = Object.entries(counts)
-      .map(([ph, c]) => ({ ph: String(ph).toUpperCase(), c: Number(c || 0) }))
-      .filter((x) => x.c > 0)
-      .sort((a, b) => b.c - a.c)
-      .slice(0, 6);
-
-    if (!rows.length) {
-      const empty = document.createElement("div");
-      empty.className = "lux-harvard-status";
-      empty.textContent = "Phoneme stats not available yet.";
-      phonRowsEl.appendChild(empty);
-      return;
-    }
-
-    rows.forEach((p) => {
-      const row = document.createElement("div");
-      row.className = "lux-harvard-phoneme-row";
-
-      const chip = document.createElement("span");
-      chip.className = "lux-harvard-phoneme-chip";
-      chip.textContent = p.ph;
-
-      const metaTxt = document.createElement("span");
-      metaTxt.className = "lux-harvard-phoneme-meta";
-      if (total)
-        metaTxt.textContent = `${p.c} • ${((p.c / total) * 100).toFixed(1)}%`;
-      else metaTxt.textContent = `${p.c}`;
-
-      row.appendChild(chip);
-      row.appendChild(metaTxt);
-      phonRowsEl.appendChild(row);
-    });
-  }
+  // (moved) renderHarvardPhonemeRows + renderPassagePhonemeRows
 
   function setSelected(n) {
     selectedN = n;
@@ -611,7 +380,9 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
           "Top distinctive phonemes (this list vs Harvard set)";
       if (selectedN) renderHarvardPhonemeRows(selectedN, phonRows);
     } else {
-      selTitle.textContent = selectedKey ? selTitle.textContent : "Select an item";
+      selTitle.textContent = selectedKey
+        ? selTitle.textContent
+        : "Select an item";
       practiceBtn.textContent = "Practice this passage";
       practiceBtn.disabled = !selectedKey;
       listEl.setAttribute("aria-label", "Passages");
