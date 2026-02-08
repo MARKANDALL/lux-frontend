@@ -66,3 +66,4 @@ _ARCHIVE/
 
 # Local secrets (keep out of git)
 scripts/KEY.txt
+*.GOLD
