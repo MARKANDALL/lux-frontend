@@ -13,6 +13,8 @@ import {
   getAllTopPhonemes,
   getAllPhonemesFromPassageMeta,
 } from "./modal-phoneme-metrics.js";
+import { loadFavs, saveFavs } from "./modal-favs.js";
+import { clearNode, renderLines } from "./modal-dom-helpers.js";
 
 const EXPLAIN_HTML = `
   <strong>What is the Harvard List?</strong><br/>
@@ -75,40 +77,6 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
   let searchInput = null;
   let modeSortBtn = null;
   let modeOnlyBtn = null;
-
-  function loadFavs() {
-    try {
-      const raw = localStorage.getItem("LUX_HARVARD_FAVS");
-      const arr = raw ? JSON.parse(raw) : [];
-      favs = new Set(
-        (Array.isArray(arr) ? arr : []).map((x) => Number(x)).filter(Boolean)
-      );
-    } catch {
-      favs = new Set();
-    }
-
-    try {
-      const raw = localStorage.getItem("LUX_PASSAGES_FAVS");
-      const arr = raw ? JSON.parse(raw) : [];
-      favKeys = new Set(
-        (Array.isArray(arr) ? arr : []).map((x) => String(x)).filter(Boolean)
-      );
-    } catch {
-      favKeys = new Set();
-    }
-  }
-
-  function saveFavs() {
-    try {
-      localStorage.setItem("LUX_HARVARD_FAVS", JSON.stringify(Array.from(favs)));
-    } catch {}
-    try {
-      localStorage.setItem(
-        "LUX_PASSAGES_FAVS",
-        JSON.stringify(Array.from(favKeys))
-      );
-    } catch {}
-  }
 
   function ensurePhonemeOptions() {
     if (!focusSel || focusSel.dataset.populated === "1") return;
@@ -442,20 +410,6 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
 
     passRecs = next;
     return passRecs;
-  }
-
-  function clearNode(el) {
-    while (el && el.firstChild) el.removeChild(el.firstChild);
-  }
-
-  function renderLines(target, parts) {
-    clearNode(target);
-    (parts || []).forEach((line) => {
-      const div = document.createElement("div");
-      div.className = "lux-harvard-line";
-      div.textContent = line;
-      target.appendChild(div);
-    });
   }
 
   function setFilterPh(ph) {
@@ -795,7 +749,7 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
           e.stopPropagation();
           if (favs.has(rec.n)) favs.delete(rec.n);
           else favs.add(rec.n);
-          saveFavs();
+          saveFavs(favs, favKeys);
           renderList();
         });
         btn.appendChild(favBtn);
@@ -867,7 +821,7 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
           e.stopPropagation();
           if (favKeys.has(rec.key)) favKeys.delete(rec.key);
           else favKeys.add(rec.key);
-          saveFavs();
+          saveFavs(favs, favKeys);
           renderList();
         });
         btn.appendChild(favBtn);
@@ -893,7 +847,10 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
         const counts = m?.counts;
         if (counts && typeof counts === "object") {
           const top = Object.entries(counts)
-            .map(([ph, c]) => ({ ph: String(ph).toUpperCase(), c: Number(c || 0) }))
+            .map(([ph, c]) => ({
+              ph: String(ph).toUpperCase(),
+              c: Number(c || 0),
+            }))
             .filter((x) => x.c > 0)
             .sort((a, b) => b.c - a.c)
             .slice(0, 3);
@@ -942,7 +899,8 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
       try {
         const last = localStorage.getItem("LUX_PASSAGES_LAST");
         const key = last ? String(last) : "";
-        if (key && passRecs?.some((r) => r.key === key)) setSelectedPassage(key);
+        if (key && passRecs?.some((r) => r.key === key))
+          setSelectedPassage(key);
       } catch {}
     }
   }
@@ -951,7 +909,11 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
     ensureDOM();
     overlay.classList.add("is-open");
 
-    loadFavs();
+    {
+      const loaded = loadFavs();
+      favs = loaded.favs;
+      favKeys = loaded.favKeys;
+    }
     ensurePhonemeOptions();
 
     if (explainRight) {
