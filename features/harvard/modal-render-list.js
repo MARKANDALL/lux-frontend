@@ -69,7 +69,8 @@ export async function renderHarvardModalList(ctx = {}) {
       return { rec, score, pct };
     });
 
-    const filtered = focusMode === "only" ? scored.filter((x) => x.score > 0) : scored;
+    const filtered =
+      focusMode === "only" ? scored.filter((x) => x.score > 0) : scored;
 
     rows = filtered
       .sort((a, b) => {
@@ -100,11 +101,11 @@ export async function renderHarvardModalList(ctx = {}) {
   updateFilterUI();
 
   rows.forEach((rec) => {
-    const btn = document.createElement("button");
-    btn.type = "button";
+    const btn = document.createElement("div");
     btn.className = "lux-harvard-item";
     btn.setAttribute("role", "option");
     btn.setAttribute("aria-selected", "false");
+    btn.tabIndex = 0;
 
     if (isHarvard) {
       btn.dataset.n = String(rec.n);
@@ -185,6 +186,12 @@ export async function renderHarvardModalList(ctx = {}) {
       btn.addEventListener("mouseenter", () => showHoverHarvard(rec.n, btn));
       btn.addEventListener("mouseleave", hideHover);
       btn.addEventListener("click", () => setSelected(rec.n));
+      btn.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          setSelected(rec.n);
+        }
+      });
     } else {
       btn.dataset.key = String(rec.key);
 
@@ -253,7 +260,10 @@ export async function renderHarvardModalList(ctx = {}) {
       }
       btn.appendChild(chipWrap);
 
-      btn.classList.toggle("is-selected", String(rec.key) === String(selectedKey));
+      btn.classList.toggle(
+        "is-selected",
+        String(rec.key) === String(selectedKey)
+      );
       btn.setAttribute(
         "aria-selected",
         String(rec.key) === String(selectedKey) ? "true" : "false"
@@ -262,6 +272,12 @@ export async function renderHarvardModalList(ctx = {}) {
       btn.addEventListener("mouseenter", () => showHoverPassage(rec.key, btn));
       btn.addEventListener("mouseleave", hideHover);
       btn.addEventListener("click", () => setSelectedPassage(rec.key));
+      btn.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          setSelectedPassage(rec.key);
+        }
+      });
     }
 
     listEl.appendChild(btn);
@@ -278,7 +294,8 @@ export async function renderHarvardModalList(ctx = {}) {
     try {
       const last = localStorage.getItem("LUX_PASSAGES_LAST");
       const key = last ? String(last) : "";
-      if (key && data?.some?.((r) => String(r.key) === String(key))) setSelectedPassage(key);
+      if (key && data?.some?.((r) => String(r.key) === String(key)))
+        setSelectedPassage(key);
     } catch {}
   }
 }
