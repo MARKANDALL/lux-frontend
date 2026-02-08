@@ -1,5 +1,5 @@
 // features/features/tts/player-core.js
-import { API_BASE } from "../../../api/util.js";
+import { API_BASE, getAdminToken } from "../../../api/util.js";
 
 // Core: networking, constants, voice caps (no DOM writes)
 export const TTS_URL = `${API_BASE}/api/tts`;
@@ -25,7 +25,13 @@ export const DEFAULT_PITCH_ST = 0;
 // ---- Voice capabilities (US-only) ----
 export async function getVoiceCaps() {
   try {
-    const res = await fetch(`${TTS_URL}?voices=1`);
+    // If we don't have a token, skip the caps call entirely (avoid noisy 401s on mount)
+    const token = getAdminToken({ promptIfMissing: false });
+    if (!token) return {};
+
+    const res = await fetch(`${TTS_URL}?voices=1`, {
+      headers: { "x-admin-token": token },
+    });
     if (!res.ok) return {};
     const data = await res.json();
     const out = {};
@@ -43,11 +49,33 @@ export async function getVoiceCaps() {
 
 // ---- TTS synthesis (returns Blob with _meta) ----
 export async function synthesize(payload) {
-  const res = await fetch(TTS_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+  const doFetch = (token) =>
+    fetch(TTS_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { "x-admin-token": token } : {}),
+      },
+      body: JSON.stringify(payload),
+    });
+
+  // Only prompt when the user actually tries to synthesize.
+  let token = getAdminToken({
+    promptIfMissing: true,
+    promptLabel: "Admin Token required for TTS",
   });
+
+  let res = await doFetch(token);
+
+  // If token was missing/expired/wrong, allow one reprompt + retry.
+  if (res.status === 401) {
+    token = getAdminToken({
+      promptIfMissing: true,
+      promptLabel: "TTS token rejected (401). Paste a valid Admin Token",
+    });
+    if (token) res = await doFetch(token);
+  }
+
   const hdr = (k) => res.headers.get(k) || "";
   const meta = {
     styleUsed: hdr("X-Style-Used"),
