@@ -14,7 +14,12 @@ import { wireAttemptDetailChipExplainers } from "./attempt-detail/chip-explainer
 import { buildAttemptDetailHeader } from "./attempt-detail/header.js";
 import { buildTroubleSoundsSection, buildTroubleWordsSection } from "./attempt-detail/trouble-sections.js";
 import { esc, getColorConfig, mdToHtml, mean } from "./progress-utils.js";
-import { pickTS, pickPassageKey, pickSessionId, pickSummary } from "./attempt-pickers.js";
+import { pickTS, pickPassageKey, pickSessionId, pickSummary, pickAzure } from "./attempt-pickers.js";
+
+import {
+  initMetricScoreModals,
+  setMetricModalData,
+} from "../interactions/metric-modal.js";
 
 import {
   buildNextActivityPlanFromModel,
@@ -126,6 +131,14 @@ export function openDetailsModal(attempt, overallScore, dateStr, ctx = {}) {
   });
 
   card.appendChild(header);
+
+  // Enable clickable score tiles inside this modal (same behavior as main Results page)
+  // Uses latest attempt's Azure result as context (best available in this modal).
+  try {
+    const az = pickAzure(list?.[0] || attempt);
+    setMetricModalData?.({ azureResult: az, referenceText: "" });
+    initMetricScoreModals?.();
+  } catch {}
 
   // "Next conversation" (session-based): uses THIS session’s trouble list
   const nextBtn = header?.querySelector?.('[data-lux-generate-next="1"]');

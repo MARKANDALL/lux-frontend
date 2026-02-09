@@ -63,6 +63,12 @@
   gap: 8px;
 }
 
+/* Attempt Details / Rollups modal: prevent horizontal scroll by constraining pyramid */
+#lux-detail-modal .lux-scorePyramid{
+  width: 100%;
+  max-width: 100%;
+}
+
 /* rows */
 .lux-scoreRow{
   display:flex;

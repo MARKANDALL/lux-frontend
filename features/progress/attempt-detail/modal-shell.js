@@ -16,7 +16,7 @@ export function createAttemptDetailModalShell() {
     background: white; width: 94%; max-width: 640px;
     border-radius: 16px; padding: 22px;
     box-shadow: 0 20px 25px -5px rgba(0,0,0,0.18);
-    position: relative; max-height: 90vh; overflow-y: auto;
+    position: relative; max-height: 90vh; overflow-y: auto; overflow-x: hidden;
   `;
 
   const closeBtn = document.createElement("button");
