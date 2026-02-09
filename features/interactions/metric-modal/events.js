@@ -224,17 +224,24 @@ function buildSummaryOnlyHtml(metricKey, ctx) {
   const score = summaryScoreFor(metricKey, ctx?.summary);
 
   const scoreTxt = Number.isFinite(score) ? `${Math.round(score)}%` : "—";
+  const fill = Number.isFinite(score) ? Math.max(0, Math.min(100, Number(score) || 0)) : 0;
 
-  // Minimal UI: be honest about limited depth (avoid inner close button to prevent "double X").
   return `
-    <div class="mm-title" style="font-weight:900; font-size:1.05rem; color:#0f172a;">
-      ${esc(meta.title || metricKey)}
+    <div class="lux-metricTop">
+      <div class="lux-metricTitle">${esc(meta.title || metricKey)}</div>
+      <div class="lux-metricScore">${esc(scoreTxt)}</div>
+      <div class="lux-metricMeter" aria-hidden="true">
+        <div class="lux-metricMeterFill" style="width:${fill}%"></div>
+      </div>
+      <div class="lux-metricBlurb">${esc(meta.blurb || "")}</div>
     </div>
-    <div class="mm-score">${scoreTxt}</div>
 
-    <div class="mm-note">
-      This attempt was saved without raw word/phoneme detail, so Lux can show the score + explanation,
-      but not the deeper per-word/per-phoneme breakdown here.
+    <div class="lux-metricSection">
+      <div class="lux-metricSectionTitle">Note</div>
+      <div class="lux-metricDetailsBody" style="margin-top:6px;">
+        This attempt was saved without raw word/phoneme detail, so Lux can show the score + explanation,
+        but not the deeper per-word/per-phoneme breakdown here.
+      </div>
     </div>
   `;
 }
