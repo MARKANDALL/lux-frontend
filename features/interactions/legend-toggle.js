@@ -16,6 +16,13 @@ export function initProsodyLegendToggle() {
     legend.classList.remove("hidden");
     legend.setAttribute("aria-hidden", "true");
     wrap.classList.remove("legend-open");
+
+    // Keep accessibility state in sync even if markup changes.
+    try {
+      tip.setAttribute("aria-controls", "prosodyLegend");
+      tip.setAttribute("aria-expanded", "false");
+    } catch (_) {}
+
     legend._legendReady = 1;
   }
 
@@ -60,6 +67,7 @@ export function initProsodyLegendToggle() {
       const open = !wrap.classList.contains("legend-open");
       wrap.classList.toggle("legend-open", open);
       legend.setAttribute("aria-hidden", String(!open));
+      try { tip.setAttribute("aria-expanded", String(open)); } catch (_) {}
       if (open) {
         tip.classList.remove("cue-legend");
         try {

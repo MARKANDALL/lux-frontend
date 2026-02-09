@@ -69,13 +69,7 @@ export function renderResultsHeaderModern(data) {
   const overallRingColor = getRingColor(overallAgg);
 
   const renderMetricTile = (label, val, key, meta = "") => {
-    const labelHtml =
-      key === "Prosody"
-        ? `<span id="prosodyLegendToggle"
-                tabindex="0"
-                role="button"
-                title="Show/hide prosody bars key">${label}</span>`
-        : label;
+    const labelHtml = label;
 
     return `
       <div class="lux-scoreTile" data-score-key="${key}">
@@ -201,6 +195,7 @@ export function renderResultsHeaderModern(data) {
       </summary>
 
       <div class="results-flex">
+        <button type="button" id="prosodyLegendToggle" class="prosody-legend-toggleBtn" aria-controls="prosodyLegend" aria-expanded="false" title="Show/hide prosody bars key">Key</button>
         ${legendHtml}
 
         <div class="table-scroll-container custom-scrollbar">
