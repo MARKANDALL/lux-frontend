@@ -2,9 +2,14 @@
 // DOM wiring + open/close + click/keyboard handlers.
 
 import { buildModalHtml, esc } from "./render.js";
+import { METRIC_META } from "./render.js";
 
 let installed = false;
-let currentCtx = { azureResult: null, referenceText: "" };
+let currentCtx = {
+  azureResult: null,
+  summary: null,
+  referenceText: "",
+};
 
 function resolveMetricKeyFromEl(el) {
   if (!el) return null;
@@ -86,9 +91,9 @@ function openMetricModal(metricKey, ctx) {
 
   card.appendChild(closeBtn);
 
-  const azureResult = ctx?.azureResult || null;
+  const hasData = !!(currentCtx.azureResult || currentCtx.summary);
 
-  if (!azureResult) {
+  if (!hasData) {
     card.insertAdjacentHTML(
       "beforeend",
       `
@@ -101,7 +106,10 @@ function openMetricModal(metricKey, ctx) {
     `
     );
   } else {
-    card.insertAdjacentHTML("beforeend", buildModalHtml(metricKey, ctx));
+    const html = currentCtx.azureResult
+      ? buildModalHtml(metricKey, currentCtx)
+      : buildSummaryOnlyHtml(metricKey, currentCtx);
+    card.insertAdjacentHTML("beforeend", html);
   }
 
   modal.appendChild(card);
@@ -150,10 +158,11 @@ export function setMetricModalData(data) {
   if (data && typeof data === "object" && "azureResult" in data) {
     currentCtx = {
       azureResult: data.azureResult || null,
+      summary: data?.summary || null,
       referenceText: data.referenceText || "",
     };
   } else {
-    currentCtx = { azureResult: data || null, referenceText: "" };
+    currentCtx = { azureResult: data || null, summary: null, referenceText: "" };
   }
 
   decorateTiles();
@@ -161,6 +170,61 @@ export function setMetricModalData(data) {
 
 export function getMetricModalData() {
   return currentCtx;
+}
+
+function summaryScoreFor(metricKey, summary) {
+  if (!summary) return null;
+
+  const k = String(metricKey || "").toLowerCase();
+
+  // Summary keys we already use in rollups: acc/flu/comp/pron (and sometimes pros/prosody)
+  const map = {
+    accuracy: "acc",
+    fluency: "flu",
+    completeness: "comp",
+    pronunciation: "pron",
+    prosody: "pros", // if present
+  };
+
+  if (k === "overall") {
+    // Prefer pron; otherwise average of known metrics
+    const vPron = Number(summary.pron);
+    if (Number.isFinite(vPron)) return vPron;
+
+    const vals = ["acc", "flu", "comp", "pron", "pros"]
+      .map((kk) => Number(summary[kk]))
+      .filter((v) => Number.isFinite(v));
+    if (!vals.length) return null;
+    return vals.reduce((a, b) => a + b, 0) / vals.length;
+  }
+
+  const field = map[k];
+  if (!field) return null;
+
+  const v = Number(summary[field]);
+  return Number.isFinite(v) ? v : null;
+}
+
+function buildSummaryOnlyHtml(metricKey, ctx) {
+  const meta = METRIC_META?.[metricKey] || { title: metricKey || "Score" };
+  const score = summaryScoreFor(metricKey, ctx?.summary);
+
+  const scoreTxt = Number.isFinite(score) ? `${Math.round(score)}%` : "—";
+
+  // Minimal UI: keep the real modal look, but be honest about limited depth.
+  return `
+    <div class="mm-head">
+      <div class="mm-title">${meta.title || metricKey}</div>
+      <button class="mm-x" data-mm-close="1" aria-label="Close">×</button>
+    </div>
+
+    <div class="mm-score">${scoreTxt}</div>
+
+    <div class="mm-note">
+      This attempt was saved without raw word/phoneme detail, so Lux can show the score + explanation,
+      but not the deeper per-word/per-phoneme breakdown here.
+    </div>
+  `;
 }
 
 export function initMetricScoreModals() {

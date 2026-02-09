@@ -22,6 +22,7 @@ import { promptUserForAI, mountAICoachAlwaysOn } from "../../ui/ui-ai-ai-logic.j
 import { mountAudioModeSwitch } from "./audio-mode-switch.js";
 import { getAudioMode, initAudioModeDataset } from "./audio-mode-core.js";
 import { setLastAttemptId, setLastRecording } from "../../app-core/runtime.js";
+import { initMetricScoreModals, setMetricModalData } from "../interactions/metric-modal.js";
 
 let isInitialized = false;
 let recordingStartTime = 0; // NEW: Track duration
@@ -119,6 +120,12 @@ async function handleRecordingComplete(audioBlob) {
     });
 
     logDebug("AZURE RESULT RECEIVED", result);
+
+    // Enable score-click details (main page + any embedded score tiles)
+    try {
+      setMetricModalData({ azureResult: result, referenceText: text });
+      initMetricScoreModals();
+    } catch {}
 
     // ✅ expose word timings for SelfPB Expanded "karaoke"
     try {
