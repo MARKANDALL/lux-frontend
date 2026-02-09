@@ -52,7 +52,7 @@ const STEPS = [
       </ul>
     `,
     primary: { label: "Start practicing", action: "startPracticing" },
-    secondary: { label: "Generate my next practice", action: "generateNext", kind: "link" },
+    secondary: { label: "View recommendation in My Progress", action: "generateNext", kind: "link" },
   },
 ];
 
@@ -434,7 +434,7 @@ function tryStartPracticing() {
 
 function tryGenerateNextPractice() {
   // Your app already has this button — easiest is tag it with data-lux-generate-next
-  document.querySelector("[data-lux-generate-next]")?.click();
+  document.querySelector("[data-lux-view-reco]")?.click();
 }
 
 function escapeHtml(s) {

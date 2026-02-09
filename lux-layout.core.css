@@ -222,6 +222,20 @@ label {
   opacity: 0.55;
   cursor: not-allowed;
 }
+.lux-nextpractice-link{
+  padding: 8px 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(0,0,0,0.10);
+  background: rgba(255,255,255,0.70);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  font-weight: 800;
+  cursor: pointer;
+  font-size: 13px;
+  opacity: 0.9;
+}
+.lux-nextpractice-link:hover{
+  opacity: 1;
+}
 .lux-nextpractice-out{
   width: min(820px, 92vw);
   border: 1px solid rgba(0,0,0,0.08);

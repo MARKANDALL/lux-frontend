@@ -10,6 +10,12 @@ import {
   saveNextActivityPlan,
 } from "../../next-activity/next-activity.js";
 
+import {
+  buildNextPracticePlanFromModel,
+  saveNextPracticePlan,
+  applyNextPracticePlan,
+} from "../../next-activity/next-practice.js";
+
 import { scoreClass, fmtScore, fmtDate, titleFromPassageKey, esc } from "./format.js";
 import { sparklineSvg } from "./sparkline.js";
 import { downloadBlob } from "./export.js";
@@ -24,6 +30,9 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
   const subtitle = opts.subtitle || "All practice (Pronunciation + AI Conversations)";
   const showActions = opts.showActions !== false; // default true
   const showCoach = !!opts.showCoach;
+  const showNextPractice = !!opts.showNextPractice;
+  const nextPracticeBehavior = opts.nextPracticeBehavior || "apply";
+  const nextPracticePlan = showNextPractice ? buildNextPracticePlanFromModel(model) : null;
 
   // ✅ NEW (All Data-only): metric trends section (acc/flu/comp/pron)
   const showMetricTrends = !!opts.showMetricTrends && !!model?.metrics;
@@ -169,6 +178,65 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
         </div>
       </details>
 
+      ${
+        showNextPractice
+          ? `
+      <details class="lux-progress-sec" open id="lux-next-practice" data-lux-next-practice>
+        <summary>✨ Next practice</summary>
+        <div class="lux-sec-body">
+          ${
+            nextPracticePlan
+              ? `
+          <div class="lux-kv" style="margin-bottom:10px;">
+            <div class="lux-k">Focus phoneme</div>
+            <div class="lux-v">
+              <b>${esc(nextPracticePlan.focusPh)}</b>
+              ${
+                nextPracticePlan.focusIpa
+                  ? `<span style="opacity:0.7;"> (from /${esc(nextPracticePlan.focusIpa)}/)</span>`
+                  : ``
+              }
+            </div>
+          </div>
+
+          <div class="lux-grid2" style="margin-bottom:10px;">
+            <div class="lux-kv">
+              <div class="lux-k">Best Harvard</div>
+              <div class="lux-v">
+                <b>${
+                  nextPracticePlan.harvardN
+                    ? `List ${String(nextPracticePlan.harvardN).padStart(2, "0")}`
+                    : "—"
+                }</b>
+                <span style="opacity:0.75;">(${nextPracticePlan.harvardScore || 0})</span>
+              </div>
+            </div>
+            <div class="lux-kv">
+              <div class="lux-k">Best Passage/Drill</div>
+              <div class="lux-v">
+                <b>${esc(nextPracticePlan.passageLabel || nextPracticePlan.passageKey || "—")}</b>
+                <span style="opacity:0.75;">(${nextPracticePlan.passageScore || 0})</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="lux-nextpractice-actions">
+            <button class="lux-pbtn" type="button" id="luxNextPracticeStartHarvard" ${
+              nextPracticePlan.harvardN ? "" : "disabled"
+            }>Start Harvard</button>
+            <button class="lux-pbtn lux-pbtn--ghost" type="button" id="luxNextPracticeStartPassage" ${
+              nextPracticePlan.passageKey ? "" : "disabled"
+            }>Start Passage/Drill</button>
+          </div>
+          `
+              : `<div style="color:#64748b">Not enough progress yet — do one more practice run.</div>`
+          }
+        </div>
+      </details>
+      `
+          : ``
+      }
+
       <details class="lux-progress-sec">
         <summary>⚠️ Trouble Sounds <span style="color:#94a3b8; font-weight:800">${
           (trouble.phonemesAll || []).length
@@ -308,6 +376,40 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
   // ✅ Enable “click trouble chip -> show details” on the main dashboard too
   wireAttemptDetailChipExplainers(host, { phItems: topPh, wdItems: topWd });
 
+  // ✅ Next Practice actions (apply in-place or navigate to Practice page)
+  if (showNextPractice && nextPracticePlan) {
+    const bH = document.getElementById("luxNextPracticeStartHarvard");
+    const bP = document.getElementById("luxNextPracticeStartPassage");
+
+    if (bH) {
+      bH.addEventListener("click", () => {
+        if (!nextPracticePlan.harvardN) return;
+
+        if (nextPracticeBehavior === "navigate") {
+          saveNextPracticePlan({ ...nextPracticePlan, start: "harvard" });
+          window.location.assign("./index.html#next-practice");
+          return;
+        }
+
+        applyNextPracticePlan({ ...nextPracticePlan, start: "harvard" });
+      });
+    }
+
+    if (bP) {
+      bP.addEventListener("click", () => {
+        if (!nextPracticePlan.passageKey) return;
+
+        if (nextPracticeBehavior === "navigate") {
+          saveNextPracticePlan({ ...nextPracticePlan, start: "passage" });
+          window.location.assign("./index.html#next-practice");
+          return;
+        }
+
+        applyNextPracticePlan({ ...nextPracticePlan, start: "passage" });
+      });
+    }
+  }
+
   function renderAiFeedback(sum) {
     const secs =
       sum?.ai_feedback?.sections ||
@@ -363,7 +465,7 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
 
     if (pron != null) pills.push(`Pron ${Math.round(Number(pron))}`);
     if (acc != null) pills.push(`Acc ${Math.round(Number(acc))}`);
-    if (flu !=null) pills.push(`Flu ${Math.round(Number(flu))}`);
+    if (flu != null) pills.push(`Flu ${Math.round(Number(flu))}`);
     if (pro != null) pills.push(`Pro ${Math.round(Number(pro))}`);
 
     return pills.map((t) => `<span class="lux-mini-pill">${esc(t)}</span>`).join("");
