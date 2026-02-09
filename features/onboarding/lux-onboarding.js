@@ -52,7 +52,6 @@ const STEPS = [
       </ul>
     `,
     primary: { label: "Start practicing", action: "startPracticing" },
-    secondary: { label: "View recommendation in My Progress", action: "generateNext", kind: "link" },
   },
 ];
 
@@ -203,11 +202,6 @@ function showOnboarding() {
       case "startPracticing":
         close(true);
         tryStartPracticing();
-        break;
-
-      case "generateNext":
-        close(true);
-        tryGenerateNextPractice();
         break;
 
       default:
@@ -430,11 +424,6 @@ function tryStartPracticing() {
     );
 
   btn?.focus?.();
-}
-
-function tryGenerateNextPractice() {
-  // Your app already has this button — easiest is tag it with data-lux-generate-next
-  document.querySelector("[data-lux-view-reco]")?.click();
 }
 
 function escapeHtml(s) {

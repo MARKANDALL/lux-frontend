@@ -1,8 +1,6 @@
 // features/harvard/index.js
 import { setPassage, updatePartsInfoTip } from "../passages/index.js";
 import { ensureHarvardPassages } from "../../src/data/index.js";
-import { HARVARD_PHONEME_META } from "../../src/data/harvard-phoneme-meta.js";
-import { PASSAGE_PHONEME_META } from "../../src/data/passage-phoneme-meta.js";
 import { createHarvardLibraryModal } from "./modal.js";
 
 function pad2(n) {
@@ -31,10 +29,6 @@ export async function loadHarvardList(raw) {
   return n;
 }
 
-function getHarvardMeta(n) {
-  return PASSAGE_PHONEME_META?.[harvardKey(n)] ?? null;
-}
-
 export function wireHarvardPicker() {
   const num = document.getElementById("harvardNum");
   const prev = document.getElementById("harvardPrev");
@@ -49,54 +43,6 @@ export function wireHarvardPicker() {
   if (out) {
     out.textContent = "";
     out.style.display = "none";
-  }
-
-  let topPhEl = document.getElementById("harvardTopPh");
-  if (!topPhEl) {
-    topPhEl = document.createElement("span");
-    topPhEl.id = "harvardTopPh";
-    topPhEl.className = "lux-harvard-topph";
-    topPhEl.textContent = "";
-    // accessibility: treat as button
-    topPhEl.setAttribute("role", "button");
-    topPhEl.tabIndex = 0;
-  }
-
-  // Prefer the dedicated row between Select Passage and Harvard controls
-  const topPhRow = document.getElementById("harvardTopPhRow");
-  if (topPhRow && !topPhRow.contains(topPhEl)) {
-    topPhRow.appendChild(topPhEl);
-  } else if (!topPhRow && !topPhEl.isConnected) {
-    // fallback (older layouts): keep it near the Harvard number
-    num?.insertAdjacentElement?.("afterend", topPhEl);
-  }
-
-  function metaFor(n) {
-    return PASSAGE_PHONEME_META?.[harvardKey(n)] ?? null;
-  }
-
-  function getMetaForN(n) {
-    return (
-      HARVARD_PHONEME_META?.[n] ??
-      HARVARD_PHONEME_META?.[String(n)] ??
-      HARVARD_PHONEME_META?.[String(n).padStart(2, "0")]
-    );
-  }
-
-  function getFocusPhoneme(n) {
-    const top = getMetaForN(n)?.top3?.[0];
-    return top?.ph || "";
-  }
-
-  function updateTopPhChip(n) {
-    if (!topPhEl) return;
-    const ph = getFocusPhoneme(n);
-    topPhEl.textContent = ph ? `Top: ${ph}` : "";
-    if (ph) {
-      topPhEl.setAttribute("aria-label", `Top phoneme: ${ph}`);
-    } else {
-      topPhEl.removeAttribute("aria-label");
-    }
   }
 
   let randBag = [];
@@ -135,7 +81,6 @@ export function wireHarvardPicker() {
     const n = clamp(parseInt(raw, 10) || 1, 1, 72);
 
     if (num) num.value = String(n);
-    updateTopPhChip(n);
     try {
       localStorage.setItem("LUX_HARVARD_LAST", String(n));
     } catch {}
@@ -189,14 +134,6 @@ export function wireHarvardPicker() {
     const last = localStorage.getItem("LUX_HARVARD_LAST");
     if (last) num.value = String(clamp(parseInt(last, 10) || 1, 1, 72));
   } catch {}
-
-  updateTopPhChip(parseInt(num.value, 10) || 1);
-
-  // keep chip in sync while typing
-  num.addEventListener("input", () => {
-    const n = clamp(parseInt(num.value, 10) || 1, 1, 72);
-    updateTopPhChip(n);
-  });
 
   load.addEventListener("click", () => apply(num.value));
   num.addEventListener("keydown", (e) => {

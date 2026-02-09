@@ -140,39 +140,3 @@ export async function maybeApplyStoredNextPracticePlan() {
   if (!plan) return;
   await applyNextPracticePlan(plan);
 }
-
-export function wireViewRecommendationLink() {
-  const btn =
-    document.getElementById("luxViewRecommendationBtn") ||
-    document.querySelector("[data-lux-view-reco]");
-
-  if (!btn || btn.dataset.wired === "1") return;
-  btn.dataset.wired = "1";
-
-  btn.addEventListener("click", (e) => {
-    e.preventDefault();
-
-    // If the progress drawer exists on this page, open it.
-    const drawer = document.querySelector(
-      "#dashboard-root details.lux-progress-drawer"
-    );
-
-    if (drawer) {
-      drawer.open = true;
-
-      // Attempt to scroll to the Next Practice block (once it exists).
-      setTimeout(() => {
-        const anchor =
-          document.getElementById("lux-next-practice") ||
-          document.querySelector("[data-lux-next-practice]");
-        if (anchor?.scrollIntoView) {
-          anchor.scrollIntoView({ block: "start", behavior: "smooth" });
-        }
-      }, 120);
-      return;
-    }
-
-    // Fallback: go to All Data page and jump to section
-    window.location.assign("./progress.html#lux-next-practice");
-  });
-}
