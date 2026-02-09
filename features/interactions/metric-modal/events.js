@@ -1,8 +1,7 @@
 // features/interactions/metric-modal/events.js
 // DOM wiring + open/close + click/keyboard handlers.
 
-import { buildModalHtml, esc } from "./render.js";
-import { METRIC_META } from "./render.js";
+import { buildModalHtml, esc, METRIC_META } from "./render.js";
 
 let installed = false;
 let currentCtx = {
@@ -38,8 +37,8 @@ function resolveMetricKeyFromEl(el) {
   return null;
 }
 
-function decorateTiles() {
-  const tiles = document.querySelectorAll(".lux-scoreTile, .lux-scoreRing");
+function decorateTiles(root = document) {
+  const tiles = root.querySelectorAll(".lux-scoreTile, .lux-scoreRing");
   tiles.forEach((t) => {
     if (!t.hasAttribute("tabindex")) t.setAttribute("tabindex", "0");
     if (!t.hasAttribute("role")) t.setAttribute("role", "button");
@@ -91,7 +90,7 @@ function openMetricModal(metricKey, ctx) {
 
   card.appendChild(closeBtn);
 
-  const hasData = !!(currentCtx.azureResult || currentCtx.summary);
+  const hasData = !!(ctx?.azureResult || ctx?.summary);
 
   if (!hasData) {
     card.insertAdjacentHTML(
@@ -106,9 +105,9 @@ function openMetricModal(metricKey, ctx) {
     `
     );
   } else {
-    const html = currentCtx.azureResult
-      ? buildModalHtml(metricKey, currentCtx)
-      : buildSummaryOnlyHtml(metricKey, currentCtx);
+    const html = ctx.azureResult
+      ? buildModalHtml(metricKey, ctx)
+      : buildSummaryOnlyHtml(metricKey, ctx);
     card.insertAdjacentHTML("beforeend", html);
   }
 
@@ -126,6 +125,13 @@ function shouldIgnoreClick(target) {
   return false;
 }
 
+function resolveCtxForTarget(target) {
+  // Prefer a *local* scope (session report modal / rollups) if present:
+  const scopeEl = target?.closest?.('[data-lux-metric-scope="1"]');
+  const scoped = scopeEl?.__luxMetricCtx;
+  return scoped || currentCtx;
+}
+
 function onDocClick(e) {
   const t = e.target;
   if (shouldIgnoreClick(t)) return;
@@ -136,7 +142,7 @@ function onDocClick(e) {
   const metricKey = resolveMetricKeyFromEl(hit);
   if (!metricKey) return;
 
-  openMetricModal(metricKey, currentCtx);
+  openMetricModal(metricKey, resolveCtxForTarget(hit));
 }
 
 function onDocKeyDown(e) {
@@ -150,22 +156,30 @@ function onDocKeyDown(e) {
   if (!metricKey) return;
 
   e.preventDefault();
-  openMetricModal(metricKey, currentCtx);
+  openMetricModal(metricKey, resolveCtxForTarget(hit));
 }
 
-export function setMetricModalData(data) {
+export function setMetricModalData(data, scopeEl = null) {
   // Accept either raw Azure payload or the richer ctx object
-  if (data && typeof data === "object" && "azureResult" in data) {
-    currentCtx = {
-      azureResult: data.azureResult || null,
-      summary: data?.summary || null,
-      referenceText: data.referenceText || "",
-    };
-  } else {
-    currentCtx = { azureResult: data || null, summary: null, referenceText: "" };
-  }
+  const ctx =
+    data && typeof data === "object" && "azureResult" in data
+      ? {
+          azureResult: data.azureResult || null,
+          summary: data?.summary || null,
+          referenceText: data.referenceText || "",
+        }
+      : { azureResult: data || null, summary: null, referenceText: "" };
 
-  decorateTiles();
+  if (scopeEl) {
+    try {
+      scopeEl.dataset.luxMetricScope = "1";
+      scopeEl.__luxMetricCtx = ctx;
+    } catch {}
+    decorateTiles(scopeEl);
+  } else {
+    currentCtx = ctx;
+    decorateTiles(document);
+  }
 }
 
 export function getMetricModalData() {
@@ -211,13 +225,11 @@ function buildSummaryOnlyHtml(metricKey, ctx) {
 
   const scoreTxt = Number.isFinite(score) ? `${Math.round(score)}%` : "—";
 
-  // Minimal UI: keep the real modal look, but be honest about limited depth.
+  // Minimal UI: be honest about limited depth (avoid inner close button to prevent "double X").
   return `
-    <div class="mm-head">
-      <div class="mm-title">${meta.title || metricKey}</div>
-      <button class="mm-x" data-mm-close="1" aria-label="Close">×</button>
+    <div class="mm-title" style="font-weight:900; font-size:1.05rem; color:#0f172a;">
+      ${esc(meta.title || metricKey)}
     </div>
-
     <div class="mm-score">${scoreTxt}</div>
 
     <div class="mm-note">

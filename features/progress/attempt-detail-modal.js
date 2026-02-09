@@ -136,24 +136,16 @@ export function openDetailsModal(attempt, overallScore, dateStr, ctx = {}) {
   // Uses latest attempt's Azure result as context (best available in this modal).
   // Enable clickable score tiles (Overall / Accuracy / Fluency / etc.)
   try {
-    const attempt0 = list?.[0] || null;
-    const az = attempt0
-      ? (attempt0.azureResult ||
-        attempt0.azure_result ||
-        attempt0.azure ||
-        attempt0.result ||
-        null)
-      : null;
+    const az = pickAzure(list?.[0] || attempt);
+    const sum = pickSummary(list?.[0] || attempt) || null;
 
-    const summary =
-      attempt0?.summary || attempt0?.summary_json || attempt0?.sum || null;
+    // Scope it to THIS modal so rollups + main page don’t stomp each other
+    setMetricModalData?.(
+      { azureResult: az || null, summary: sum, referenceText: "" },
+      card
+    );
 
-    // ✅ pass summary too (rollups often only has summary)
-    setMetricModalData({
-      azureResult: az,
-      summary,
-      referenceText: "",
-    });
+    initMetricScoreModals?.();
   } catch {}
 
   // "Next conversation" (session-based): uses THIS session’s trouble list
