@@ -72,7 +72,7 @@ export function ensureHeader(data) {
   if (!html) {
     html = `
       <div id="resultHeader"></div>
-      <table class="score-table collapsed-syllable collapsed-score collapsed-error">
+<table class="score-table collapsed-score collapsed-error">
         <thead>
           <tr>
             <th id="wordHeader">

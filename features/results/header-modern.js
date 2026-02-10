@@ -160,7 +160,7 @@ export function renderResultsHeaderModern(data) {
               </span>
             </div>
 
-            <div class="lux-scoreRing" style="--lux-score-ring:${overallRingColor};">
+            <div class="lux-scoreRing lux-scoreRing--overall" style="--lux-score-ring:${overallRingColor};">
               ${fmtRoundPct(overallAgg)}
             </div>
           </div>
@@ -199,7 +199,7 @@ export function renderResultsHeaderModern(data) {
         ${legendHtml}
 
         <div class="table-scroll-container custom-scrollbar">
-          <table class="score-table collapsed-syllable collapsed-score collapsed-error">
+<table class="score-table collapsed-score collapsed-error">
             <thead style="position: sticky; top: 0; z-index: 20; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
               <tr>
                 <th id="wordHeader">

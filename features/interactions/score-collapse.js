@@ -42,13 +42,6 @@ export function initScoreErrorCollapse() {
     const hasSyllables = !!table.querySelector("#syllableHeader");
     const scoreIdx = hasSyllables ? 2 : 1;
     const errorIdx = hasSyllables ? 3 : 2;
-    const syllIdx = hasSyllables ? 1 : -1;
-
-    if (cell.cellIndex === syllIdx) {
-      table.classList.toggle("collapsed-syllable");
-      if (!table.classList.contains("collapsed-syllable")) ensureSyllablesMounted(table);
-      return;
-    }
 
     if (cell.cellIndex === scoreIdx) table.classList.toggle("collapsed-score");
     else if (cell.cellIndex === errorIdx) table.classList.toggle("collapsed-error");
