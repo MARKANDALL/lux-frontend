@@ -81,11 +81,11 @@ overflow-x: hidden;
 
 .results-flex.legend-open { gap: 12px; }
 
-#prosodyLegendToggle { position: absolute; left: -18px; top: -14px; isolation: isolate; cursor: pointer; }
+#prosodyLegendToggle { position: absolute; left: 10px; top: 10px; isolation: isolate; cursor: pointer; z-index: 99999 !important; }
 
 /* Small toggle button pinned near the Word & Phoneme chart (left edge) */
 #prosodyLegendToggle.prosody-legend-toggleBtn{
-  z-index: 3; /* default: let chart edge sit slightly above it */
+  z-index: 99999 !important;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -187,4 +187,9 @@ overflow-x: hidden;
 }
 #prosodyLegendToggle.prosody-legend-toggleBtn{
   z-index: 9999 !important;
+}
+
+/* Allow the Prosody Key to protrude without getting clipped */
+#prettyResult .results-flex > .table-scroll-container{
+  overflow-y: visible !important;
 }
