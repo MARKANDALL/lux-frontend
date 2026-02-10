@@ -102,7 +102,7 @@ export function buildAttemptDetailHeader({
     <div class="lux-scoreSummary lux-scoreSummary--pyramid" style="margin-bottom:14px;">
       <div class="lux-scoreMain">
         <div class="lux-scoreMainLabel">Overall</div>
-        <div class="lux-scoreRing" style="--lux-score-ring:${overallColor};">
+<div class="lux-scoreRing lux-scoreRing--overall" style="--lux-score-ring:${overallColor};">
           ${fmtRoundPct(overallAgg)}
         </div>
       </div>

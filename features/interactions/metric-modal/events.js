@@ -1,7 +1,7 @@
 // features/interactions/metric-modal/events.js
 // DOM wiring + open/close + click/keyboard handlers.
 
-import { buildModalHtml, esc, METRIC_META } from "./render.js";
+import { buildModalHtml, esc } from "./render.js";
 
 let installed = false;
 let currentCtx = {
@@ -105,9 +105,7 @@ function openMetricModal(metricKey, ctx) {
     `
     );
   } else {
-    const html = ctx.azureResult
-      ? buildModalHtml(metricKey, ctx)
-      : buildSummaryOnlyHtml(metricKey, ctx);
+    const html = buildModalHtml(metricKey, ctx);
     card.insertAdjacentHTML("beforeend", html);
   }
 
@@ -184,66 +182,6 @@ export function setMetricModalData(data, scopeEl = null) {
 
 export function getMetricModalData() {
   return currentCtx;
-}
-
-function summaryScoreFor(metricKey, summary) {
-  if (!summary) return null;
-
-  const k = String(metricKey || "").toLowerCase();
-
-  // Summary keys we already use in rollups: acc/flu/comp/pron (and sometimes pros/prosody)
-  const map = {
-    accuracy: "acc",
-    fluency: "flu",
-    completeness: "comp",
-    pronunciation: "pron",
-    prosody: "pros", // if present
-  };
-
-  if (k === "overall") {
-    // Prefer pron; otherwise average of known metrics
-    const vPron = Number(summary.pron);
-    if (Number.isFinite(vPron)) return vPron;
-
-    const vals = ["acc", "flu", "comp", "pron", "pros"]
-      .map((kk) => Number(summary[kk]))
-      .filter((v) => Number.isFinite(v));
-    if (!vals.length) return null;
-    return vals.reduce((a, b) => a + b, 0) / vals.length;
-  }
-
-  const field = map[k];
-  if (!field) return null;
-
-  const v = Number(summary[field]);
-  return Number.isFinite(v) ? v : null;
-}
-
-function buildSummaryOnlyHtml(metricKey, ctx) {
-  const meta = METRIC_META?.[metricKey] || { title: metricKey || "Score" };
-  const score = summaryScoreFor(metricKey, ctx?.summary);
-
-  const scoreTxt = Number.isFinite(score) ? `${Math.round(score)}%` : "—";
-  const fill = Number.isFinite(score) ? Math.max(0, Math.min(100, Number(score) || 0)) : 0;
-
-  return `
-    <div class="lux-metricTop">
-      <div class="lux-metricTitle">${esc(meta.title || metricKey)}</div>
-      <div class="lux-metricScore">${esc(scoreTxt)}</div>
-      <div class="lux-metricMeter" aria-hidden="true">
-        <div class="lux-metricMeterFill" style="width:${fill}%"></div>
-      </div>
-      <div class="lux-metricBlurb">${esc(meta.blurb || "")}</div>
-    </div>
-
-    <div class="lux-metricSection">
-      <div class="lux-metricSectionTitle">Note</div>
-      <div class="lux-metricDetailsBody" style="margin-top:6px;">
-        This attempt was saved without raw word/phoneme detail, so Lux can show the score + explanation,
-        but not the deeper per-word/per-phoneme breakdown here.
-      </div>
-    </div>
-  `;
 }
 
 export function initMetricScoreModals() {

@@ -56,6 +56,13 @@
   box-shadow: 0 4px 6px -1px rgba(0,0,0,0.06);
 }
 
+/* Slightly larger “Overall” ring (hair bigger than others) */
+.lux-scoreRing--overall{
+  width: 86px;
+  height: 86px;
+  font-size: 1.52rem;
+}
+
 .lux-scorePyramid{
   width: min(920px, 94vw);
   display:flex;

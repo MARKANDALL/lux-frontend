@@ -75,6 +75,25 @@
   line-height: 1.35;
 }
 
+/* Note block: shown when we only have summary-level attempt data */
+.lux-metricNote{
+  margin-top: 14px;
+  border: 1px dashed rgba(0,0,0,0.16);
+  background: rgba(248,250,252,0.65);
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+.lux-metricNoteTitle{
+  font-weight: 950;
+  color:#0f172a;
+  margin-bottom: 6px;
+}
+.lux-metricNoteBody{
+  color:#334155;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
 /* Keep legacy in case any older modal uses it */
 .lux-metricBig{
   font-weight: 1000;
@@ -278,6 +297,34 @@
   font-weight: 900;
   margin-top: 4px;
   color:#0f172a;
+}
+
+/* ============================= */
+/*  Mini reveal (weak sounds/words) */
+/* ============================= */
+.lux-miniReveal{
+  margin-top: 10px;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 14px;
+  padding: 8px 10px;
+  background: rgba(248,250,252,0.70);
+}
+.lux-miniRevealTitle{
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 950;
+  color:#0f172a;
+}
+.lux-miniRevealTitle::-webkit-details-marker{ display:none; }
+.lux-miniRevealBody{
+  margin-top: 8px;
+}
+.lux-miniReveal[open] .lux-metricSummaryCaret{
+  transform: rotate(90deg) translateX(-1px);
 }
 
 /* ============================= */
