@@ -32,6 +32,10 @@ export function renderPrettyResultsCore({ $out, data, nbest }) {
     median
   );
 
+  // Expose words for lazy syllable rendering (no globals; store on host node)
+  const host = document.getElementById("prettyResult");
+  if (host) host._luxLastWords = words;
+
   // Paint rows
   const body = document.getElementById("resultBody");
   if (body) body.innerHTML = buildRows(words, timings, med);
@@ -49,6 +53,9 @@ export function renderDetailedAnalysisCore({ $out, data, nbest }) {
     computeTimings,
     median
   );
+
+  const host = document.getElementById("prettyResult");
+  if (host) host._luxLastWords = words;
 
   const body = document.getElementById("resultBody");
   if (body) body.innerHTML = buildRows(words, timings, med);

@@ -12,7 +12,6 @@ import { scoreClass } from "../../core/scoring/index.js";
 
 // Logic import
 import { calculateWordStats } from "./rows-logic.js";
-import { renderSyllableStrip } from "./syllables.js";
 
 // View helper imports
 import { renderProsodyRibbon } from "./deps.js";
@@ -34,7 +33,7 @@ export function buildRows(words, timings, med) {
           ? renderProsodyRibbon(i, words, timings, med)
           : "";
 
-      const syllablesHtml = renderSyllableStrip(word);
+      const syllablesHtml = `<div class="lux-sylMount" data-word-idx="${i}"></div>`;
 
       // 3. Render Phonemes (CLEAN VERSION)
       // We do NOT render .tooltiptext or <video> here anymore.

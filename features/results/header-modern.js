@@ -199,7 +199,7 @@ export function renderResultsHeaderModern(data) {
         ${legendHtml}
 
         <div class="table-scroll-container custom-scrollbar">
-          <table class="score-table collapsed-score collapsed-error">
+          <table class="score-table collapsed-syllable collapsed-score collapsed-error">
             <thead style="position: sticky; top: 0; z-index: 20; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
               <tr>
                 <th id="wordHeader">
@@ -208,6 +208,7 @@ export function renderResultsHeaderModern(data) {
                 </th>
 
                 <th id="syllableHeader">
+                  <button class="lux-col-toggle" type="button" data-col="syllable" aria-label="Collapse/expand Syllable column" title="Collapse/expand Syllable column">▸</button>
                   <span class="word-chip syllable-chip">Syllable</span>
                 </th>
 

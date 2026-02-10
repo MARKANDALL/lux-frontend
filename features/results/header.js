@@ -72,7 +72,7 @@ export function ensureHeader(data) {
   if (!html) {
     html = `
       <div id="resultHeader"></div>
-      <table class="score-table collapsed-score collapsed-error">
+      <table class="score-table collapsed-syllable collapsed-score collapsed-error">
         <thead>
           <tr>
             <th id="wordHeader">
@@ -80,6 +80,7 @@ export function ensureHeader(data) {
             </th>
 
             <th id="syllableHeader">
+              <button class="lux-col-toggle" type="button" data-col="syllable" aria-label="Collapse/expand Syllable column" title="Collapse/expand Syllable column">▸</button>
               <span class="word-chip syllable-chip">Syllable</span>
             </th>
 
