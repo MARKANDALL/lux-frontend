@@ -578,3 +578,23 @@ details.lux-progress-drawer > summary::marker{ content:""; }
   border-radius: 0;
 }
 .lux-ai-drawer #aiFeedbackSection{ margin: 0; }
+
+/* ============================================================
+   FINAL polish: center header text (AI Coach / My Progress)
+   Keep chevrons pinned left/right; keep All Data pinned right
+   ============================================================ */
+
+.lux-progress-drawer-summary{
+  justify-content: flex-start !important; /* allow margin-auto centering */
+  padding-left: 44px !important;         /* room for LEFT chevron */
+  padding-right: 44px !important;        /* room for RIGHT edge */
+}
+
+/* Center the title + mini block within the bubble */
+.lux-progress-drawer-left{
+  margin-left: auto !important;
+  margin-right: auto !important;
+  align-items: center !important;
+  text-align: center !important;
+  max-width: calc(100% - 240px) !important; /* avoid overlapping All Data area */
+}

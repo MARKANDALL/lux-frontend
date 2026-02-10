@@ -108,3 +108,13 @@
 #prettyResult details.lux-results-accordion:not([open]) .lux-acc-label-closed{ display:inline !important; }
 #prettyResult details.lux-results-accordion[open] .lux-acc-label-open{ display:inline !important; }
 #prettyResult details.lux-results-accordion[open] .lux-acc-label-closed{ display:none !important; }
+
+/* ============================================================
+   Match drawer tab vertical depth (Word & Phoneme closed/open)
+   ============================================================ */
+
+#prettyResult details.lux-results-accordion > summary.lux-results-accordion-handle{
+  min-height: 64px !important;     /* matches the two-line drawers visually */
+  padding-top: 12px !important;
+  padding-bottom: 12px !important;
+}

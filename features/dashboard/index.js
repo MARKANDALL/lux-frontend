@@ -8,6 +8,7 @@ import { fetchHistory, ensureUID } from "/src/api/index.js";
 import { computeRollups } from "../progress/rollups.js";
 import { renderProgressDashboard } from "../progress/render.js";
 import { mountAICoachAlwaysOn } from "../../ui/ui-ai-ai-logic.js";
+import { bringBoxBottomToViewport } from "../../helpers/index.js";
 
 const ROOT_ID = "dashboard-root";
 const HUB_HREF = "./progress.html";
@@ -189,6 +190,20 @@ export async function initDashboard() {
   _state = { detailsEl, miniStatsEl, mountEl };
 
   let loadedOnce = false;
+  let wantScroll = false;
+  let scrollAfterLoad = false;
+
+  const summaryEl = detailsEl?.querySelector("summary");
+  summaryEl?.addEventListener(
+    "pointerdown",
+    () => {
+      wantScroll = true;
+    },
+    { passive: true }
+  );
+  summaryEl?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") wantScroll = true;
+  });
 
   async function loadIfNeeded() {
     if (loadedOnce) return;
@@ -216,9 +231,16 @@ export async function initDashboard() {
           // showMetricTrends: false (default)
         });
       }
+
+      // After the first lazy-load expands content, re-align the bottom once.
+      if (scrollAfterLoad && detailsEl?.open) {
+        scrollAfterLoad = false;
+        requestAnimationFrame(() => bringBoxBottomToViewport(detailsEl, 14));
+      }
     } catch (err) {
       console.error("[Dashboard] Drawer load failed:", err);
       loadedOnce = false; // allow retry on next open
+      scrollAfterLoad = false;
       if (miniStatsEl) miniStatsEl.textContent = "History unavailable";
       if (mountEl)
         mountEl.innerHTML = `<div style="color:#ef4444; padding: 14px 16px;">History unavailable.</div>`;
@@ -227,7 +249,16 @@ export async function initDashboard() {
 
   if (detailsEl) {
     detailsEl.addEventListener("toggle", () => {
-      if (detailsEl.open) loadIfNeeded();
+      if (!detailsEl.open) return;
+
+      // Scroll only if the user opened it (not programmatic).
+      if (wantScroll) {
+        wantScroll = false;
+        scrollAfterLoad = !loadedOnce; // only needed on first lazy-load open
+        requestAnimationFrame(() => bringBoxBottomToViewport(detailsEl, 14));
+      }
+
+      loadIfNeeded();
     });
   }
 }

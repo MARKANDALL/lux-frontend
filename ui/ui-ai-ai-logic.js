@@ -17,6 +17,7 @@ import {
 
 import { fetchAIFeedback, updateAttempt } from "/src/api/index.js";
 import { getLastAttemptId } from "../app-core/runtime.js";
+import { bringBoxBottomToViewport } from "../helpers/index.js";
 
 // State
 let chunkHistory = [];
@@ -53,7 +54,8 @@ export function promptUserForAI(azureResult, referenceText, firstLang) {
 
   // Render Entry with Sidebar Callback
   renderEntryButtons({
-    onQuick: (persona) => startQuickMode(azureResult, referenceText, firstLang, persona),
+    onQuick: (persona) =>
+      startQuickMode(azureResult, referenceText, firstLang, persona),
     onDeep: (persona) => startDeepMode(azureResult, referenceText, firstLang, persona),
     onPersonaChange: (newPersona) => onPersonaChanged(newPersona), // <--- Wire this up
   });
@@ -83,6 +85,26 @@ export function mountAICoachAlwaysOn(getContext) {
 
   // Keep collapsed on initial load (bubble bar only)
   collapseAICoachDrawer();
+
+  // Auto-scroll ONLY when the user manually opens the drawer
+  // (prevents jumps when we open it programmatically after first recording).
+  let wantScroll = false;
+  const summaryEl = drawer.querySelector("summary");
+  summaryEl?.addEventListener(
+    "pointerdown",
+    () => {
+      wantScroll = true;
+    },
+    { passive: true }
+  );
+  summaryEl?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") wantScroll = true;
+  });
+  drawer.addEventListener("toggle", () => {
+    if (!drawer.open || !wantScroll) return;
+    wantScroll = false;
+    requestAnimationFrame(() => bringBoxBottomToViewport(drawer, 14));
+  });
 
   renderEntryButtons({
     onQuick: (persona) => {
@@ -172,15 +194,27 @@ export function onLanguageChanged(newLang) {
     clearAIFeedback();
 
     if (mode === "simple") {
-      startQuickMode(lastContext.azureResult, lastContext.referenceText, newLang, currentPersona);
+      startQuickMode(
+        lastContext.azureResult,
+        lastContext.referenceText,
+        newLang,
+        currentPersona
+      );
     } else {
-      startDeepMode(lastContext.azureResult, lastContext.referenceText, newLang, currentPersona);
+      startDeepMode(
+        lastContext.azureResult,
+        lastContext.referenceText,
+        newLang,
+        currentPersona
+      );
     }
   } else {
     // Re-render to ensure any internal language state in closures is fresh
     renderEntryButtons({
-      onQuick: (p) => startQuickMode(lastContext.azureResult, lastContext.referenceText, newLang, p),
-      onDeep: (p) => startDeepMode(lastContext.azureResult, lastContext.referenceText, newLang, p),
+      onQuick: (p) =>
+        startQuickMode(lastContext.azureResult, lastContext.referenceText, newLang, p),
+      onDeep: (p) =>
+        startDeepMode(lastContext.azureResult, lastContext.referenceText, newLang, p),
       onPersonaChange: (p) => onPersonaChanged(p),
     });
   }

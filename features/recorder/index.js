@@ -32,6 +32,27 @@ const STOP_DELAY_MS = 800;
 const MIN_DURATION_MS = 1500; // Must record for at least 1.5s
 const MIN_SCORE_TO_SAVE = 10; // Don't save if score is < 10% (garbage audio)
 
+function buildAttemptSummaryFromAzure(result) {
+  const pa = result?.NBest?.[0]?.PronunciationAssessment || null;
+  if (!pa) return null;
+
+  const pron = Number(pa?.PronScore);
+  const acc = Number(pa?.AccuracyScore);
+  const flu = Number(pa?.FluencyScore);
+  const comp = Number(pa?.CompletenessScore);
+  const pros = Number(pa?.ProsodyScore);
+
+  const summary = {};
+  if (Number.isFinite(pron)) summary.pron = pron;
+  if (Number.isFinite(acc)) summary.acc = acc;
+  if (Number.isFinite(flu)) summary.flu = flu;
+  if (Number.isFinite(comp)) summary.comp = comp;
+  if (Number.isFinite(pros)) summary.pros = pros;
+
+  // If nothing is finite, return null so we don’t spam empty objects.
+  return Object.keys(summary).length ? summary : null;
+}
+
 
 /* ===========================
    Workflow Logic
@@ -187,6 +208,7 @@ async function saveToDatabase(result, text, lang) {
     const localTime = new Date().toISOString();
 
     if (uid) {
+      const summary = buildAttemptSummaryFromAzure(result);
       const saved = await saveAttempt({
         uid,
         passageKey: currentPassageKey,
@@ -196,6 +218,7 @@ async function saveToDatabase(result, text, lang) {
         l1: lang,
         sessionId,
         localTime,
+        summary,
       });
 
       if (saved && saved.id) {

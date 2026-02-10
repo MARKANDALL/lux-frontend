@@ -22,7 +22,8 @@
 
 /* Wrapper */
 .lux-toplinks{
-  margin: 18px auto 0;
+/* top | left/right | bottom */
+  margin: 18px auto 24px;  
   width: min(980px, 94vw);
   display:flex;
   gap: 8px;
@@ -35,10 +36,15 @@
 .lux-toplinks-cta{
   display: flex;
   justify-content: center;
-  margin-bottom: 18px;
+  margin-bottom: 32px;
 
   position: relative;
   z-index: 200; /* match top links */
+}
+
+/* If the element has BOTH classes, ensure the larger bottom gap wins */
+.lux-toplinks.lux-toplinks-cta{
+  margin-bottom: 32px;
 }
 
 .lux-toplink{
@@ -166,7 +172,8 @@
 /* Base button */
 a.lux-toplink-cta,
 button.lux-toplink-cta{
-  padding: 16px 30px;
+  /* keep total pill size identical even though we keep a 3px border at rest */
+  padding: 14px 28px;
   font-size: 18px;
   font-weight: 900;
 
@@ -177,11 +184,15 @@ button.lux-toplink-cta{
   isolation: isolate;
 
   color: #1f2a37;
-  border: 1px solid rgba(0,0,0,0.10);
+  /* IMPORTANT: constant border width prevents hover "push-down" */
+  border: 3px solid transparent;
   border-radius: 999px;
   background: linear-gradient(rgba(255,255,255,0.98), rgba(255,255,255,0.98)) padding-box;
 
-  box-shadow: 0 12px 26px rgba(0,0,0,0.10);
+  /* recreate the old 1px border look without affecting layout */
+  box-shadow:
+    0 12px 26px rgba(0,0,0,0.10),
+    inset 0 0 0 1px rgba(0,0,0,0.10);
   transition: transform 160ms ease, box-shadow 160ms ease;
 
   /* important for button parity */
@@ -260,8 +271,8 @@ button.lux-toplink-cta:hover,
 button.lux-toplink-cta:focus-visible{
   transform: translateY(-1px) !important; /* override global a:hover */
   box-shadow: 0 16px 36px rgba(0,0,0,0.14) !important;
-
-  border: 3px solid transparent;
+  /* border width is already 3px; keep it stable to avoid layout shift */
+  border-color: transparent;
 
   background:
     /* fill */
