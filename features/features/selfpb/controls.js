@@ -14,6 +14,20 @@ export function initControls({
   isExpandedOpen,
   karaoke,
 }) {
+  const setKaraokeLearner = () => {
+    try {
+      window.LuxKaraokeSource = "learner";
+      window.LuxKaraokeTimings = Array.isArray(window.LuxLastWordTimings)
+        ? window.LuxLastWordTimings
+        : window.LuxKaraokeTimings || [];
+      window.dispatchEvent(
+        new CustomEvent("lux:karaokeRefresh", {
+          detail: { source: "learner", timings: window.LuxKaraokeTimings || [] },
+        })
+      );
+    } catch {}
+  };
+
   const handlePlayAction = async (isRestart = false) => {
     if (!audio.currentSrc && !audio.src) {
       showToast("No recording yet!");
@@ -23,6 +37,8 @@ export function initControls({
       showToast("Audio empty/loading...");
       return;
     }
+
+    setKaraokeLearner();
 
     try {
       if (isRestart) {
@@ -48,6 +64,8 @@ export function initControls({
   };
 
   const handleLoopClick = () => {
+    setKaraokeLearner();
+
     if (!audio.duration) {
       showToast("No audio to loop!");
       return;
@@ -85,6 +103,7 @@ export function initControls({
 
   // 2.0 seconds skip
   ui.backBtn.addEventListener("click", () => {
+    setKaraokeLearner();
     audio.currentTime = api.clamp(
       (audio.currentTime || 0) - 2.0,
       0,
@@ -95,6 +114,7 @@ export function initControls({
   });
 
   ui.fwdBtn.addEventListener("click", () => {
+    setKaraokeLearner();
     audio.currentTime = api.clamp(
       (audio.currentTime || 0) + 2.0,
       0,
@@ -106,12 +126,14 @@ export function initControls({
 
   // ✅ If user grabs scrubber while playing -> PAUSE (pro behavior)
   ui.scrub.addEventListener("pointerdown", () => {
+    setKaraokeLearner();
     if (!audio.paused) {
       audio.pause();
     }
   });
 
   ui.scrub.addEventListener("input", () => {
+    setKaraokeLearner();
     api._setScrubbingOn();
     const p = Number(ui.scrub.value) / 1000;
     audio.currentTime = api.clamp(p * (audio.duration || 0), 0, audio.duration || 0);

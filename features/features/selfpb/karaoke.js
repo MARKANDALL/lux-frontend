@@ -26,8 +26,27 @@ export function initKaraoke({ ui, api, audio, syncTime, syncScrub }) {
 
   const clamp01 = (v) => Math.max(0, Math.min(1, v));
 
+  const karaokeSource = () => String(window.LuxKaraokeSource || "learner");
+
+  const getActiveAudio = () => {
+    const src = karaokeSource();
+    if (src === "tts") return window.luxTTS?.audioEl || api.getRefAudio?.() || audio;
+    if (src === "ref") return api.getRefAudio?.() || audio;
+    return audio;
+  };
+
+  const shouldSyncSelfPB = () => karaokeSource() === "learner";
+
+  const getActiveTimings = (fallback = []) => {
+    if (Array.isArray(window.LuxKaraokeTimings) && window.LuxKaraokeTimings.length) {
+      return window.LuxKaraokeTimings;
+    }
+    return Array.isArray(fallback) ? fallback : [];
+  };
+
   function getKaraokeDuration(words) {
-    const ad = audio.duration || 0;
+    const a = getActiveAudio();
+    const ad = a?.duration || 0;
     if (ad > 0) return ad;
     const last = words?.[words.length - 1];
     return last?.end || 0;
@@ -35,12 +54,15 @@ export function initKaraoke({ ui, api, audio, syncTime, syncScrub }) {
 
   function seekTo(sec) {
     if (!isFinite(sec)) return;
-    const dur = audio.duration || kDur || 0;
-    if (!dur) return;
+    const a = getActiveAudio();
+    const dur = a?.duration || kDur || 0;
+    if (!dur || !a) return;
 
-    audio.currentTime = api.clamp(sec, 0, dur);
-    syncTime();
-    syncScrub();
+    a.currentTime = api.clamp(sec, 0, dur);
+    if (shouldSyncSelfPB()) {
+      syncTime?.();
+      syncScrub?.();
+    }
   }
 
   function renderKaraoke(words) {
@@ -81,7 +103,8 @@ export function initKaraoke({ ui, api, audio, syncTime, syncScrub }) {
     }
 
     layoutKaraoke();
-    updateKaraokeAt(audio.currentTime || 0);
+    const a = getActiveAudio();
+    updateKaraokeAt(a?.currentTime || 0);
   }
 
   function layoutKaraoke() {
@@ -94,7 +117,8 @@ export function initKaraoke({ ui, api, audio, syncTime, syncScrub }) {
     const W = wrap.clientWidth - 16; // inset padding
     if (W <= 10) return;
 
-    const dur = kDur || audio.duration || 0;
+    const a = getActiveAudio();
+    const dur = kDur || a?.duration || 0;
     if (!dur) return;
 
     const ROW_H = 26;
@@ -135,7 +159,8 @@ export function initKaraoke({ ui, api, audio, syncTime, syncScrub }) {
   function updateKaraokeAt(t) {
     if (!ui.karaokeCursor || !kWords.length || !kEls.length) return;
 
-    const dur = kDur || audio.duration || 0;
+    const a = getActiveAudio();
+    const dur = kDur || a?.duration || 0;
     if (!dur) return;
 
     // cursor
@@ -170,7 +195,10 @@ export function initKaraoke({ ui, api, audio, syncTime, syncScrub }) {
   // click lane (empty space) to jump
   ui.karaokeLaneWrap?.addEventListener("click", (e) => {
     if (!isExpandedOpen()) return;
-    const dur = kDur || audio.duration || 0;
+    if (!kDur) return;
+
+    const a = getActiveAudio();
+    const dur = kDur || a?.duration || 0;
     if (!dur) return;
 
     const r = ui.karaokeLaneWrap.getBoundingClientRect();
@@ -180,13 +208,32 @@ export function initKaraoke({ ui, api, audio, syncTime, syncScrub }) {
 
   // refresh on expanded open
   window.addEventListener("lux:selfpbExpandedOpen", () => {
-    const words = window.LuxLastWordTimings || [];
+    const words = getActiveTimings(window.LuxLastWordTimings || []);
     renderKaraoke(words);
   });
 
   // refresh when a new assessment comes in (even if expanded is already open)
   window.addEventListener("lux:lastAssessment", (e) => {
     const words = e?.detail?.timings || window.LuxLastWordTimings || [];
+    // Learner assessments should be the default karaoke source
+    try {
+      window.LuxKaraokeSource = "learner";
+      window.LuxKaraokeTimings = Array.isArray(words) ? words : [];
+    } catch {}
+
+    if (isExpandedOpen()) renderKaraoke(getActiveTimings(words));
+  });
+
+  // Refresh when TTS (or other sources) publish new karaoke timings
+  window.addEventListener("lux:karaokeRefresh", (e) => {
+    try {
+      const src = e?.detail?.source;
+      const timings = e?.detail?.timings;
+      if (src) window.LuxKaraokeSource = String(src);
+      if (Array.isArray(timings)) window.LuxKaraokeTimings = timings;
+    } catch {}
+
+    const words = getActiveTimings(window.LuxLastWordTimings || []);
     if (isExpandedOpen()) renderKaraoke(words);
   });
 
@@ -198,7 +245,9 @@ export function initKaraoke({ ui, api, audio, syncTime, syncScrub }) {
 
   function update(t) {
     if (!isExpandedOpen()) return;
-    updateKaraokeAt(t);
+    const a = getActiveAudio();
+    const tt = shouldSyncSelfPB() && Number.isFinite(t) ? t : a?.currentTime || 0;
+    updateKaraokeAt(tt);
   }
 
   return { update, updateKaraokeAt, renderKaraoke };

@@ -122,6 +122,54 @@ export function ensureStyles() {
     /* ✅ In expanded mode, body fills floating card */
     #spb-float .spb-body{
       width: 100% !important;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-areas:
+        "top top"
+        "self tts";
+      gap: 14px;
+      align-items: start;
+    }
+
+    /* ✅ Hide the TTS mount in the small drawer */
+    #selfpb-lite .spb-controls--tts{
+      display:none !important;
+    }
+
+    #spb-float .spb-top{ grid-area: top; width:100%; }
+    #spb-float .spb-controls--self{ grid-area: self; width:100%; }
+    #spb-float .spb-controls--tts{ grid-area: tts; width:100%; display:block; }
+
+    /* ✅ Give the waveform area real space in expanded mode */
+    #spb-float .spb-wave{
+      height: 240px;
+    }
+
+    /* ✅ Karaoke (Word Sync) should stretch full width */
+    #spb-float #spb-karaokeWrap,
+    #spb-float #spb-karaokeLaneWrap{
+      width: 100%;
+    }
+
+    /* ✅ TTS card should fill its half */
+    #spb-float .spb-controls--tts #tts-wrap{
+      width: 100%;
+      max-width: 100%;
+      margin-left: 0;
+    }
+
+    /* ✅ In expanded view, the TTS expand button is redundant */
+    #spb-float #tts-expand{ display:none; }
+
+    /* ✅ Mobile: stack sections */
+    @media (max-width: 980px){
+      #spb-float .spb-body{
+        grid-template-columns: 1fr;
+        grid-template-areas:
+          "top"
+          "self"
+          "tts";
+      }
     }
 
     /* ✅ Prevent waveform/canvas from forcing overflow */
@@ -266,8 +314,8 @@ export function ensureStyles() {
       z-index: 200000;
       display: none;
 
-      width: min(920px, calc(100vw - 40px));
-      max-height: min(720px, calc(100vh - 40px));
+      width: min(1100px, calc(100vw - 40px));
+      height: min(86vh, 820px);
 
       left: 50%;
       top: 90px;
@@ -297,6 +345,17 @@ export function ensureStyles() {
 
     #spb-floatMount{
       padding: 12px;
+      height: calc(100% - 52px);
+      overflow: auto;
+    }
+
+    @media (max-width: 980px){
+      #spb-floatGrid{ flex-direction: column; }
+      #spb-floatRight{
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+      }
     }
 
     /* ✅ bigger waveform in expanded mode */

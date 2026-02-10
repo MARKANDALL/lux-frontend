@@ -10,6 +10,7 @@ export {
 export { speechDetected } from "./assess.js";
 export {
   bringInputToTop,
+  bringBoxBottomToViewport,
   initUnderlineObserver,
   showClickHint,
   keepTooltipInView,

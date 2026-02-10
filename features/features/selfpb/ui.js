@@ -76,8 +76,11 @@ export function mountSelfPlaybackLite() {
   initShortcuts({ ui, api, audio, syncRateUI });
 
   initialSync();
-  window.LuxSelfPB = Object.assign(window.LuxSelfPB || {}, { el: ui.host });
-  console.info("[self-pb] WaveSurfer UI Mounted");
+window.LuxSelfPB = Object.assign(window.LuxSelfPB || {}, {
+    el: ui.host,
+    karaokeUpdate: karaoke?.update,
+    karaokeRender: karaoke?.renderKaraoke,
+  });  console.info("[self-pb] WaveSurfer UI Mounted");
 }
 
 export { mountSelfPlaybackLite as default };

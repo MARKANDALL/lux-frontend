@@ -9,6 +9,27 @@ export function bringInputToTop(elOrSelector = "#referenceText", offset = 0) {
   window.scrollTo({ top: y, behavior: "smooth" });
 }
 
+// Scroll so the *bottom* of an element sits just above the viewport bottom.
+// Used for drawers that open downward (AI Coach / My Progress).
+export function bringBoxBottomToViewport(
+  elOrSelector,
+  margin = 14,
+  behavior = "smooth"
+) {
+  const el =
+    typeof elOrSelector === "string"
+      ? document.querySelector(elOrSelector)
+      : elOrSelector;
+  if (!el) return;
+
+  const rect = el.getBoundingClientRect();
+  const targetBottom = window.innerHeight - margin;
+  const delta = rect.bottom - targetBottom;
+  if (delta <= 0) return; // already fits
+
+  window.scrollTo({ top: window.pageYOffset + delta, behavior });
+}
+
 export function initUnderlineObserver(root = document) {
   const targets = root.querySelectorAll("h2, h3, strong");
   if (!targets.length || typeof IntersectionObserver !== "function") return;
