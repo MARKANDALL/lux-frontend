@@ -29,11 +29,12 @@
 /* Card */
 .tts-box {
   position: relative; /* ✅ required for #tts-expand absolute positioning */
-  border: 1px solid #e5e7eb;
+  border: 1px solid rgba(15,23,42,0.10);
   border-radius: 14px;
   padding: 12px;
+  padding-top: 34px; /* room for Expand pill */
   background: #fff;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 10px 26px rgba(0,0,0,0.12);
   width: 100%;
 }
 
@@ -41,7 +42,8 @@
 .tts-compact {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  align-items: stretch;
+  gap: 10px;
 }
 
 /* ✅ DO NOT center everything — it makes controls + Expand look wrong */
@@ -93,11 +95,108 @@
 }
 
 /* ✅ Hide the TTS expand button when the TTS card is living inside the expanded SelfPB modal */
-#spb-float #tts-expand{
+#spb-float #tts-expand,
+.lux-selfpb-expanded #tts-expand,
+#lux-selfpb-modal #tts-expand{
   display:none;
 }
 
-/* Inputs */
+/* ============================= */
+/*  Compact layout: inside-select labels + rows */
+/* ============================= */
+
+.tts-selectWrap{
+  position:relative;
+  width:100%;
+}
+.tts-selectWrap::after{
+  content: attr(data-label);
+  position:absolute;
+  right: 30px; /* leave room for the native arrow */
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  opacity: 0.55;
+  pointer-events:none;
+  white-space:nowrap;
+}
+.tts-selectWrap select{
+  width:100%;
+  padding: 6px 88px 6px 10px; /* room for pseudo-label */
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background:#fff;
+  font: inherit;
+}
+
+/* Speed row: label + slider + value */
+.tts-speedRow{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap: 10px;
+}
+.tts-inlineLabel{
+  font-size: 0.9rem;
+  font-weight: 700;
+  color:#374151;
+  white-space:nowrap;
+}
+.tts-inlineValue{
+  font-size: 0.9rem;
+  font-weight: 800;
+  color:#0f172a;
+  white-space:nowrap;
+}
+#tts-speed{
+  flex:1;
+  cursor:pointer;
+}
+
+/* Pitch row: Pitch | slider | value | Degree | number */
+.tts-pitchRow{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap: 10px;
+}
+#tts-pitch{
+  flex:1;
+  cursor:pointer;
+}
+#tts-styledegree{
+  width: 72px;
+  padding: 6px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  text-align:center;
+  font: inherit;
+}
+
+/* Main button + mini actions on one row */
+.tts-actionRow{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap: 10px;
+}
+#tts-main{
+  flex: 1 1 55%;
+  margin:0;
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+
+/* Mini actions cluster */
+.tts-miniActions{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+}
+
+/* Inputs (legacy selectors kept for safety) */
 .tts-voice select,
 .tts-style-grid select,
 .tts-style-grid input[type="number"] {
@@ -121,16 +220,12 @@
   gap: 6px;
   align-items: center;
 }
-#tts-speed {
-  width: 100%;
-  cursor: pointer;
-}
 #tts-speed-out {
   min-width: 3.5ch;
   text-align: right;
 }
 
-/* Style row */
+/* Style row (legacy) */
 .tts-style-row {
   width: 100%;
 }
@@ -146,7 +241,7 @@
   gap: 4px;
 }
 
-/* Main button */
+/* Buttons */
 .tts-btn {
   width: 100%;
   padding: 10px 14px;
@@ -165,28 +260,10 @@
   transform: translateY(1px);
 }
 .tts-btn--primary {
-  font-weight: 700;
+  font-weight: 800;
 }
 
-/* Pitch slider */
-.tts-pitch {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 8px;
-  margin-bottom: 8px;
-}
-#tts-pitch {
-  flex: 1;
-  cursor: pointer;
-}
-#tts-pitch-out {
-  width: 2.5ch;
-  text-align: right;
-}
-
-/* Skip buttons row */
+/* Skip buttons row (legacy wrapper) */
 #tts-main {
   margin-bottom: 0;
 }
@@ -229,12 +306,15 @@
 }
 
 /* Focus states */
+#tts-expand:focus-visible,
 .tts-btn:focus-visible,
+.tts-selectWrap select:focus-visible,
+#tts-speed:focus-visible,
+#tts-pitch:focus-visible,
+#tts-styledegree:focus-visible,
 .tts-voice select:focus-visible,
 .tts-style-grid select:focus-visible,
 .tts-style-grid input[type="number"]:focus-visible,
-#tts-speed:focus-visible,
-#tts-pitch:focus-visible,
 .tts-link:focus-visible {
   outline: 2px solid #2563eb;
   outline-offset: 2px;
@@ -242,6 +322,7 @@
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
+  #tts-expand,
   .tts-btn {
     transition: none;
   }
@@ -261,13 +342,15 @@
 @media (prefers-color-scheme: dark) {
   .tts-box {
     background: #0b0f14;
-    border-color: #1f2937;
+    border-color: rgba(255,255,255,0.14);
     box-shadow: none;
   }
   .tts-voice select,
   .tts-style-grid select,
   .tts-style-grid input[type="number"],
-  .tts-text {
+  .tts-text,
+  .tts-selectWrap select,
+  #tts-styledegree{
     background: #111827;
     color: #e5e7eb;
     border-color: #374151;
@@ -304,4 +387,16 @@
   margin-left: 0 !important;
   width: 100% !important;
   max-width: 100% !important;
+}
+
+/* Expanded view: remove extra "marker box" feel */
+#spb-float .tts-box{
+  border:0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  padding-top: 0;
+}
+#spb-float .tts-compact{
+  gap: 8px;
 }

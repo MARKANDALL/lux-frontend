@@ -153,7 +153,17 @@ export async function mountTTSPlayer(hostEl) {
   const pitchOut = $(host, "#tts-pitch-out");
   const styleSel = $(host, "#tts-style");
   const degreeEl = $(host, "#tts-styledegree");
+
+  // Expand: mirror SelfPB expand behavior (open the expanded SelfPB window)
   const expandBtn = $(host, "#tts-expand");
+  if (expandBtn && !expandBtn.dataset.luxBound) {
+    expandBtn.dataset.luxBound = "1";
+    expandBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      document.getElementById("spb-expand")?.click();
+    });
+  }
 
   // Progress fill (safe: only wires if found)
   const progressFill =
@@ -182,25 +192,6 @@ export async function mountTTSPlayer(hostEl) {
   audio.addEventListener("play", () => {
     if (String(window.LuxKaraokeSource || "") !== "tts") return;
     window.LuxSelfPB?.karaokeUpdate?.();
-  });
-
-  // Expand into Self Playback (right-column mount) if available
-  expandBtn?.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    // If we already have timings, set them as the active karaoke payload
-    const timings =
-      window.LuxTTSWordTimings ||
-      (audio?.duration ? buildWordTimings(getCurrentText(), audio.duration) : []) ||
-      [];
-    publishKaraoke("tts", timings);
-
-    // ✅ Robust: trigger via event, then fall back to clicking the button
-    try { window.dispatchEvent(new CustomEvent("lux:openSelfPBExpanded")); } catch (_) {}
-    const btn = document.getElementById("spb-expand");
-    if (btn) btn.click();
-    else setTimeout(() => document.getElementById("spb-expand")?.click(), 0);
   });
 
   // 4. Load Capabilities (Async)
