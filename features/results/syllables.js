@@ -392,7 +392,26 @@ function upgradePendingStressStrips() {
  * ---------------------------------------------------------- */
 
 export function renderSyllableStrip(wordObj) {
-  const syls = Array.isArray(wordObj?.Syllables) ? wordObj.Syllables : [];
+  let syls = Array.isArray(wordObj?.Syllables) ? wordObj.Syllables : [];
+
+  // IMPORTANT: Avoid "open but empty" column.
+  // If syllables aren't present yet, render a safe 1-chip fallback from observed phonemes.
+  if (!syls.length) {
+    const phs = Array.isArray(wordObj?.Phonemes) ? wordObj.Phonemes : [];
+    const compact = phs.length
+      ? phs
+          .map((p) => String(p?.Phoneme || "").trim())
+          .filter(Boolean)
+          .map((x) => x.replace(/[ˈˌ]/g, "").replace(/[0-2]$/g, ""))
+          .join("")
+      : "";
+
+    const fallbackText = compact || String(wordObj?.Word || "").trim();
+    if (fallbackText) {
+      syls = [{ Text: fallbackText }];
+    }
+  }
+
   const sylCount = syls.length;
 
   // Start loading the dict as soon as we ever render a strip.
@@ -479,6 +498,8 @@ export function mountSyllablesForTable(table, words) {
     table.addEventListener("click", (e) => {
       const btn = e.target.closest(".lux-sylAlt");
       if (!btn) return;
+      e.preventDefault();
+      e.stopPropagation();
       const strip = btn.closest(".lux-sylStrip");
       if (!strip) return;
 
