@@ -358,8 +358,14 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
         <summary class="lux-progress-drawer-summary">
           <div class="lux-progress-drawer-left">
             <div class="lux-progress-drawer-title">AI Coach</div>
-            <div class="lux-progress-drawer-mini">Tap to open</div>
-          </div>
+   <div class="lux-progress-drawer-mini">
+              <span class="lux-mini-open">Hide AI Coach</span>
+              <span class="lux-mini-closed">Show AI Coach?</span>
+            </div>
+           </div>
+          <div class="lux-progress-drawer-right">
+            <span class="lux-progress-drawer-chev" aria-hidden="true">▾</span>
+          </div>          </div>
         </summary>
         <div class="lux-progress-drawer-body">
           <div id="aiFeedbackSection">

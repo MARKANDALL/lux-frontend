@@ -35,7 +35,7 @@ export async function refreshConvoProgress() {
     const filtered = (attempts || []).filter(isConvoAttempt);
     const model = computeRollups(filtered, { windowDays: 30 });
 
-    if (_state.miniEl) _state.miniEl.textContent = fmtMini(model.totals);
+    if (_state.miniStatsEl) _state.miniStatsEl.textContent = fmtMini(model.totals);
 
     if (_state.detailsEl?.open && _state.mountEl) {
       renderProgressDashboard(_state.mountEl, filtered, model, {
@@ -46,7 +46,7 @@ export async function refreshConvoProgress() {
     }
   } catch (err) {
     console.error("[ConvoProgress] refresh failed:", err);
-    if (_state.miniEl) _state.miniEl.textContent = "History unavailable";
+    if (_state.miniStatsEl) _state.miniStatsEl.textContent = "History unavailable";
   }
 }
 
@@ -58,13 +58,20 @@ export async function initConvoProgress() {
   window.refreshConvoProgress = refreshConvoProgress;
 
   host.innerHTML = `
-    <details class="lux-progress-drawer">
+    <details class="lux-progress-drawer" id="luxConvoProgressDrawer">
       <summary class="lux-progress-drawer-summary">
         <div class="lux-progress-drawer-left">
           <div class="lux-progress-drawer-title">My Progress · Conversation Skills</div>
-          <div class="lux-progress-drawer-mini" data-role="mini">Tap to load</div>
+          <div class="lux-progress-drawer-mini">
+            <span class="lux-mini-open">Hide My Progress</span>
+            <span class="lux-mini-closed">Show My Progress</span>
+            <span class="lux-mini-stats" data-role="miniStats"></span>
+          </div>
         </div>
-        <a class="lux-progress-drawer-link" href="${HUB_HREF}">All Data</a>
+        <div class="lux-progress-drawer-right">
+          <a class="lux-progress-drawer-link" href="${HUB_HREF}">All Data</a>
+          <span class="lux-progress-drawer-chev" aria-hidden="true">▾</span>
+        </div>
       </summary>
       <div class="lux-progress-drawer-body">
         <div class="lux-progress-drawer-mount" data-role="mount">
@@ -75,10 +82,10 @@ export async function initConvoProgress() {
   `;
 
   const detailsEl = host.querySelector("details.lux-progress-drawer");
-  const miniEl = host.querySelector('[data-role="mini"]');
+  const miniStatsEl = host.querySelector('[data-role="miniStats"]');
   const mountEl = host.querySelector('[data-role="mount"]');
 
-  _state = { host, detailsEl, miniEl, mountEl };
+  _state = { host, detailsEl, miniStatsEl, mountEl };
 
   let loadedOnce = false;
 
@@ -94,7 +101,7 @@ export async function initConvoProgress() {
       const filtered = (attempts || []).filter(isConvoAttempt);
       const model = computeRollups(filtered, { windowDays: 30 });
 
-      if (miniEl) miniEl.textContent = fmtMini(model.totals);
+      if (miniStatsEl) miniStatsEl.textContent = fmtMini(model.totals);
 
       if (mountEl) {
         renderProgressDashboard(mountEl, filtered, model, {
@@ -106,7 +113,7 @@ export async function initConvoProgress() {
     } catch (err) {
       console.error("[ConvoProgress] Drawer load failed:", err);
       loadedOnce = false; // allow retry
-      if (miniEl) miniEl.textContent = "History unavailable";
+      if (miniStatsEl) miniStatsEl.textContent = "History unavailable";
       if (mountEl) mountEl.innerHTML = `<div style="color:#ef4444; padding: 14px 16px;">History unavailable.</div>`;
     }
   }

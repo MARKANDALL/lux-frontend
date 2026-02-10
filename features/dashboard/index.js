@@ -58,7 +58,7 @@ export async function refreshHistory() {
     const filtered = attempts.filter((a) => !isConvoAttempt(a));
     const model = computeRollups(filtered);
 
-    if (_state.miniEl) _state.miniEl.textContent = fmtMini(model.totals);
+    if (_state.miniStatsEl) _state.miniStatsEl.textContent = fmtMini(model.totals);
 
     if (_state.detailsEl && _state.detailsEl.open && _state.mountEl) {
       renderProgressDashboard(_state.mountEl, filtered, model, {
@@ -73,7 +73,7 @@ export async function refreshHistory() {
     }
   } catch (err) {
     console.error("[Dashboard] refreshHistory failed:", err);
-    if (_state.miniEl) _state.miniEl.textContent = "History unavailable";
+    if (_state.miniStatsEl) _state.miniStatsEl.textContent = "History unavailable";
   }
 }
 
@@ -163,9 +163,16 @@ export async function initDashboard() {
       <summary class="lux-progress-drawer-summary">
         <div class="lux-progress-drawer-left">
           <div class="lux-progress-drawer-title">My Progress · Practice Results</div>
-          <div class="lux-progress-drawer-mini" data-role="mini">Tap to load</div>
+       <div class="lux-progress-drawer-mini">
+            <span class="lux-mini-open">Hide My Progress</span>
+            <span class="lux-mini-closed">Show My Progress</span>
+            <span class="lux-mini-stats" data-role="miniStats"></span>
+          </div>
         </div>
+        <div class="lux-progress-drawer-right">
         <a class="lux-progress-drawer-link" href="${HUB_HREF}">All Data</a>
+        <span class="lux-progress-drawer-chev" aria-hidden="true">▾</span>
+      </div>
       </summary>
       <div class="lux-progress-drawer-body">
         <div class="lux-progress-drawer-mount" data-role="mount">
@@ -176,10 +183,10 @@ export async function initDashboard() {
   `;
 
   const detailsEl = root.querySelector("details.lux-progress-drawer");
-  const miniEl = root.querySelector('[data-role="mini"]');
+  const miniStatsEl = root.querySelector('[data-role="miniStats"]');
   const mountEl = root.querySelector('[data-role="mount"]');
 
-  _state = { detailsEl, miniEl, mountEl };
+  _state = { detailsEl, miniStatsEl, mountEl };
 
   let loadedOnce = false;
 
@@ -196,7 +203,7 @@ export async function initDashboard() {
       const filtered = attempts.filter((a) => !isConvoAttempt(a));
       const model = computeRollups(filtered);
 
-      if (miniEl) miniEl.textContent = fmtMini(model.totals);
+      if (miniStatsEl) miniStatsEl.textContent = fmtMini(model.totals);
 
       if (mountEl) {
         renderProgressDashboard(mountEl, filtered, model, {
@@ -212,7 +219,7 @@ export async function initDashboard() {
     } catch (err) {
       console.error("[Dashboard] Drawer load failed:", err);
       loadedOnce = false; // allow retry on next open
-      if (miniEl) miniEl.textContent = "History unavailable";
+      if (miniStatsEl) miniStatsEl.textContent = "History unavailable";
       if (mountEl)
         mountEl.innerHTML = `<div style="color:#ef4444; padding: 14px 16px;">History unavailable.</div>`;
     }

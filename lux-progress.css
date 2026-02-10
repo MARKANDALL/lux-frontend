@@ -281,6 +281,64 @@
   padding: 0 16px;
 }
 
+/* kill native markers (drawer summaries) */
+details.lux-progress-drawer > summary::-webkit-details-marker{ display:none; }
+details.lux-progress-drawer > summary::marker{ content:""; }
+
+/* ============================================================
+   Center drawer header text + dual chevrons (LEFT + RIGHT)
+   Applies to: AI Coach + My Progress drawers
+   ============================================================ */
+
+.lux-progress-drawer-summary{
+  position: relative;
+  justify-content: center;           /* center the title/mini block */
+  padding-left: 44px;               /* room for LEFT chevron */
+  padding-right: 140px;             /* room for All Data + RIGHT chevron */
+}
+
+/* LEFT chevron (CSS-only) */
+.lux-progress-drawer-summary::before{
+  content: "▾";
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.65;
+  transition: transform 160ms ease;
+  font-weight: 900;
+  line-height: 1;
+}
+.lux-progress-drawer[open] > .lux-progress-drawer-summary::before{
+  transform: translateY(-50%) rotate(180deg);
+}
+
+/* Center the two-line text */
+.lux-progress-drawer-left{
+  align-items: center;
+  text-align: center;
+  max-width: calc(100% - 160px); /* prevents overlap with right controls */
+}
+
+/* Keep right controls (All Data + right chevron) pinned to the far right */
+.lux-progress-drawer-right{
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Fallback: if any drawer still has a direct link child (no right wrapper), pin it */
+.lux-progress-drawer-summary > .lux-progress-drawer-link{
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
 .lux-progress-drawer-summary{
   list-style: none;
   cursor: pointer;
@@ -354,6 +412,35 @@
   border: 1px solid rgba(37,99,235,0.25);
   background: rgba(37,99,235,0.06);
 }
+
+.lux-progress-drawer-right{
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.lux-progress-drawer-chev{
+  opacity: 0.65;
+  transition: transform 160ms ease;
+  font-weight: 900;
+  line-height: 1;
+}
+.lux-progress-drawer[open] .lux-progress-drawer-chev{
+  transform: rotate(180deg);
+}
+
+/* mini label: swap Show/Hide based on open state */
+.lux-progress-drawer .lux-mini-open{ display: none; }
+.lux-progress-drawer .lux-mini-closed{ display: inline; }
+.lux-progress-drawer[open] .lux-mini-open{ display: inline; }
+.lux-progress-drawer[open] .lux-mini-closed{ display: none; }
+
+/* optional stats appended after Show/Hide */
+.lux-progress-drawer-mini .lux-mini-stats{
+  font-weight: 800;
+}
+.lux-progress-drawer-mini .lux-mini-stats:not(:empty)::before{ content: " · "; }
 
 .lux-progress-drawer-body{
   border: 1px solid rgba(15,23,42,0.10);
@@ -483,12 +570,11 @@
 .lux-ai-drawer > summary::-webkit-details-marker{ display:none; }
 .lux-ai-drawer > summary::marker{ content:""; }
 
-/* Coach panel already has its own framing — keep drawer body clean */
-.lux-ai-drawer .lux-progress-drawer-body{
-  border: 0;
-  background: transparent;
+/* AI Coach: keep the same drawer framing as My Progress (flush to the tab) */
+.lux-ai-drawer .ai-grid-container{
+  margin-top: 0 !important; /* remove the old “jump” gap */
   box-shadow: none;
+  border: 0;
+  border-radius: 0;
 }
-.lux-ai-drawer #aiFeedbackSection{
-  margin: 0;
-}
+.lux-ai-drawer #aiFeedbackSection{ margin: 0; }

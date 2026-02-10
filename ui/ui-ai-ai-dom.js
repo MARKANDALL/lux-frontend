@@ -13,35 +13,14 @@ function getCoachDrawerEl() {
   return section ? section.closest("details") : null;
 }
 
-function syncCoachDrawerMiniLabel() {
-  const d = getCoachDrawerEl();
-  if (!d) return;
-  const mini = d.querySelector(".lux-progress-drawer-mini");
-  if (!mini) return;
-
-  const set = () => {
-    mini.textContent = d.open ? "Tap to close" : "Tap to open";
-  };
-
-  // Always set immediately (covers first mount)
-  set();
-
-  // Bind once (covers manual user toggles)
-  if (d.dataset.luxMiniBound === "1") return;
-  d.dataset.luxMiniBound = "1";
-  d.addEventListener("toggle", set);
-}
-
 export function openAICoachDrawer() {
   const d = getCoachDrawerEl();
   if (d) d.open = true;
-  syncCoachDrawerMiniLabel();
 }
 
 export function collapseAICoachDrawer() {
   const d = getCoachDrawerEl();
   if (d) d.open = false;
-  syncCoachDrawerMiniLabel();
 }
 
 // --- Layout Builder (The Sidebar + Scrollable Content) ---

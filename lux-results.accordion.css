@@ -1,35 +1,97 @@
 /* lux-results.accordion.css */
 /* Word/Phoneme accordion pill handle (end-of-file rules) */
 
+/* ============================================================
+   Word & Phoneme: match drawer tab chrome + dual chevrons + flush open frame
+   ============================================================ */
+
+/* Make the accordion container match drawer width/padding */
 #prettyResult details.lux-results-accordion{
-  margin-top: 10px;
+  max-width: 1100px;
+  margin: 18px auto 0;
+  padding: 0 16px;
 }
 
 /* kill native marker */
 #prettyResult details.lux-results-accordion > summary::-webkit-details-marker{ display:none; }
 #prettyResult details.lux-results-accordion > summary::marker{ content:""; }
 
-/* the pill */
+/* Tab chrome (match AI Coach / My Progress) */
 #prettyResult details.lux-results-accordion > summary.lux-results-accordion-handle{
+  position: relative !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   gap: 10px !important;
 
-  height: 34px !important;
-  width: min(980px, 100%) !important;
-  margin: 6px auto 0 !important;
+  padding: 12px 14px !important;
+  padding-left: 44px !important;   /* room for LEFT chevron */
+  padding-right: 44px !important;  /* room for RIGHT chevron */
 
-  padding: 0 14px !important;
-  border-radius: 999px !important;
+  border-radius: 16px !important;
 
-  background: #e7f2fb !important;
-  border: 1px solid rgba(0,120,215,0.28) !important;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.06) !important;
+  background: rgba(255,255,255,0.78) !important;
+  border: 1px solid rgba(15,23,42,0.10) !important;
+  box-shadow: 0 10px 24px rgba(15,23,42,0.05) !important;
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease, background 160ms ease !important;
 
   cursor: pointer !important;
   user-select: none !important;
   list-style: none !important;
+}
+
+/* Closed hover lift like the drawers */
+#prettyResult details.lux-results-accordion:not([open]) > summary.lux-results-accordion-handle:hover{
+  transform: translateY(-1px) !important;
+  border-color: rgba(15,23,42,0.16) !important;
+  background: rgba(255,255,255,0.88) !important;
+  box-shadow: 0 14px 30px rgba(15,23,42,0.08) !important;
+}
+#prettyResult details.lux-results-accordion:not([open]) > summary.lux-results-accordion-handle:active{
+  transform: translateY(0) !important;
+}
+
+/* Remove the old “chevron next to the text” if present */
+#prettyResult .lux-acc-chev{ display: none !important; }
+
+/* LEFT + RIGHT chevrons pinned to the extremes */
+#prettyResult details.lux-results-accordion > summary.lux-results-accordion-handle::before,
+#prettyResult details.lux-results-accordion > summary.lux-results-accordion-handle::after{
+  content: "▾";
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.65;
+  transition: transform 160ms ease;
+  font-weight: 900;
+  line-height: 1;
+}
+#prettyResult details.lux-results-accordion > summary.lux-results-accordion-handle::before{ left: 14px; }
+#prettyResult details.lux-results-accordion > summary.lux-results-accordion-handle::after{ right: 14px; }
+
+/* Rotate both chevrons when open (down -> up) */
+#prettyResult details.lux-results-accordion[open] > summary.lux-results-accordion-handle::before,
+#prettyResult details.lux-results-accordion[open] > summary.lux-results-accordion-handle::after{
+  transform: translateY(-50%) rotate(180deg);
+}
+
+/* Open state: tab becomes the “top” of a flush frame (like drawers) */
+#prettyResult details.lux-results-accordion[open] > summary.lux-results-accordion-handle{
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  border-bottom-color: rgba(15,23,42,0.06) !important;
+}
+
+/* Open state: frame the content immediately under the tab */
+#prettyResult details.lux-results-accordion[open] > summary.lux-results-accordion-handle + *{
+  margin-top: 0 !important;
+  border: 1px solid rgba(15,23,42,0.10) !important;
+  border-top: 0 !important;
+  border-bottom-left-radius: 16px !important;
+  border-bottom-right-radius: 16px !important;
+  overflow: hidden !important;
+  background: rgba(255,255,255,0.65) !important;
+  box-shadow: 0 10px 24px rgba(15,23,42,0.05) !important;
 }
 
 /* label styles */
@@ -46,12 +108,3 @@
 #prettyResult details.lux-results-accordion:not([open]) .lux-acc-label-closed{ display:inline !important; }
 #prettyResult details.lux-results-accordion[open] .lux-acc-label-open{ display:inline !important; }
 #prettyResult details.lux-results-accordion[open] .lux-acc-label-closed{ display:none !important; }
-
-/* chevron */
-#prettyResult .lux-acc-chev{
-  opacity: 0.65 !important;
-  transition: transform 160ms ease !important;
-}
-#prettyResult details.lux-results-accordion[open] .lux-acc-chev{
-  transform: rotate(180deg) !important;
-}
