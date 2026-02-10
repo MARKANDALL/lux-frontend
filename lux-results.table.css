@@ -46,11 +46,15 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
    ============================================================ */
 
 /* Prevent that “vertical letter stacking” look */
-#prettyResult td.score-cell,
-#prettyResult td.error-cell,
 #prettyResult th#scoreHeader,
 #prettyResult th#errorHeader{
   white-space: nowrap !important;
+}
+
+/* Allow body cells to wrap if needed so the table never forces horizontal scrolling */
+#prettyResult td.score-cell,
+#prettyResult td.error-cell{
+  white-space: normal !important;
 }
 
 /* COLLAPSED: hide the body cells */
@@ -70,8 +74,8 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
 /* OPEN: restore the body cells */
 #prettyResult table:not(.collapsed-score) td.score-cell,
 #prettyResult table:not(.collapsed-score) th#scoreHeader{
-  width: 110px !important;
-  min-width: 85px !important;
+  width: 104px !important;
+  min-width: 0 !important;
   max-width: 140px !important;
   padding: 10px !important;
   opacity: 1 !important;
@@ -80,8 +84,8 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
 
 #prettyResult table:not(.collapsed-error) td.error-cell,
 #prettyResult table:not(.collapsed-error) th#errorHeader{
-  width: 170px !important;
-  min-width: 140px !important;
+  width: 150px !important;
+  min-width: 0 !important;
   max-width: 220px !important;
   padding: 10px !important;
   opacity: 1 !important;
@@ -90,6 +94,13 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
 
 #prettyResult .score-table td.score-cell,
 #prettyResult .score-table td.error-cell { cursor: pointer; }
+
+/* Word/Phoneme chart: keep the Phoneme header help tooltip from clipping on the right edge */
+#prettyResult th#phonemeHeader .tip-Phoneme .tooltiptext{
+  left: auto;
+  right: 0;
+  transform: none;
+}
 
 /* ============================================================
    Collapsible Word & Phoneme columns (NEW)
@@ -320,17 +331,25 @@ table:not(.collapsed-error) th#errorHeader::after { content: "◂"; }
 
 /* Tiny “alts” button (only shown when CMU has multiple pronunciations) */
 #prettyResult .lux-sylAlt{
-  border: 1px solid rgba(15, 23, 42, 0.16);
-  background: rgba(15, 23, 42, 0.04);
-  color: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(16, 185, 129, 0.55);
+  background: rgba(16, 185, 129, 0.14);
+  color: rgba(6, 95, 70, 0.95);
   border-radius: 999px;
-  padding: 2px 8px;
+  padding: 3px 10px;
   font-size: 0.78em;
-  font-weight: 800;
+  font-weight: 900;
+  letter-spacing: 0.02em;
   cursor: pointer;
+  box-shadow: 0 10px 22px rgba(16, 185, 129, 0.16);
+  transform: translateY(-1px);
 }
 #prettyResult .lux-sylAlt:hover{
-  background: rgba(15, 23, 42, 0.08);
+  background: rgba(16, 185, 129, 0.22);
+  box-shadow: 0 12px 26px rgba(16, 185, 129, 0.22);
+}
+#prettyResult .lux-sylAlt:active{
+  transform: translateY(0px);
+  box-shadow: 0 8px 18px rgba(16, 185, 129, 0.16);
 }
 
 /* Clickable Header Backgrounds */

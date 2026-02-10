@@ -29,7 +29,7 @@
 #prettyResult .table-scroll-container{
   max-height: min(520px, 55vh);   /* adjust if you want taller/shorter */
   overflow-y: auto;
-  overflow-x: auto;
+overflow-x: hidden;
   scrollbar-gutter: stable;
 }
 
@@ -81,11 +81,11 @@
 
 .results-flex.legend-open { gap: 12px; }
 
-#prosodyLegendToggle { position: absolute; left: 0; top: 8px; isolation: isolate; cursor: pointer; }
+#prosodyLegendToggle { position: absolute; left: -18px; top: -14px; isolation: isolate; cursor: pointer; }
 
 /* Small toggle button pinned near the Word & Phoneme chart (left edge) */
 #prosodyLegendToggle.prosody-legend-toggleBtn{
-  z-index: 8;
+  z-index: 3; /* default: let chart edge sit slightly above it */
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -99,6 +99,13 @@
   letter-spacing: .2px;
   box-shadow: 0 6px 16px rgba(15, 23, 42, .10);
 }
+
+/* Ensure chart/table can overlap the button by a tiny sliver (closed state) */
+#prettyResult .results-flex > .table-scroll-container{
+  position: relative;
+  z-index: 4;
+}
+
 #prosodyLegendToggle.prosody-legend-toggleBtn:hover{
   filter: brightness(0.98);
   transform: translateY(-1px);
@@ -109,6 +116,11 @@
 #prosodyLegendToggle.prosody-legend-toggleBtn:focus-visible{
   outline: 2px solid rgba(0, 120, 215, .45);
   outline-offset: 2px;
+}
+
+/* When legend is open, the button should sit slightly ABOVE the legend (not be covered by it) */
+#prettyResult .results-flex.legend-open #prosodyLegendToggle.prosody-legend-toggleBtn{
+  z-index: 9;
 }
 
 #prosodyLegendToggle.cue-legend::after {
