@@ -19,6 +19,32 @@ import {
   ensureAnalysisSummaryContainer,
 } from "./render-helpers.js";
 
+async function maybeMountSyllablesNow(words) {
+  try {
+    const host = document.getElementById("prettyResult");
+    if (!host) return;
+
+    const table = host.querySelector("table.score-table");
+    if (!table) return;
+
+    // If syllables are collapsed, do nothing (they'll mount on toggle).
+    if (table.classList.contains("collapsed-syllable")) return;
+
+    // If we already mounted for this render, skip.
+    if (table.dataset.syllablesMounted === "yes") return;
+
+    const mod = await import("./syllables.js");
+    if (typeof mod.mountSyllablesForTable !== "function") return;
+
+    mod.mountSyllablesForTable(table, words);
+    table.dataset.syllablesMounted = "yes";
+  } catch (e) {
+    try {
+      console.warn("[render-core] syllable mount failed", e);
+    } catch (_) {}
+  }
+}
+
 export function renderPrettyResultsCore({ $out, data, nbest }) {
   // Header/shell (legend + table)
   $out.innerHTML = "";
@@ -38,7 +64,14 @@ export function renderPrettyResultsCore({ $out, data, nbest }) {
 
   // Paint rows
   const body = document.getElementById("resultBody");
-  if (body) body.innerHTML = buildRows(words, timings, med);
+  if (body) {
+    const table = document.querySelector("#prettyResult table.score-table");
+    if (table) delete table.dataset.syllablesMounted;
+
+    body.innerHTML = buildRows(words, timings, med);
+    // If the syllable column is currently open, mount immediately (fixes "open but empty")
+    maybeMountSyllablesNow(words);
+  }
 
   // Post-DOM hooks
   requestAnimationFrame(() => wirePostDom(data));
@@ -58,7 +91,13 @@ export function renderDetailedAnalysisCore({ $out, data, nbest }) {
   if (host) host._luxLastWords = words;
 
   const body = document.getElementById("resultBody");
-  if (body) body.innerHTML = buildRows(words, timings, med);
+  if (body) {
+    const table = document.querySelector("#prettyResult table.score-table");
+    if (table) delete table.dataset.syllablesMounted;
+
+    body.innerHTML = buildRows(words, timings, med);
+    maybeMountSyllablesNow(words);
+  }
 
   requestAnimationFrame(() => wirePostDom(data));
 
