@@ -1,3 +1,4 @@
+// File: features/features/tts/player-ui.js
 // features/features/tts/player-ui.js
 // Logic: Event wiring, audio state management, and API orchestration.
 // UPDATED: simplified Waveform handoff (passes Blob directly to WaveSurfer).
@@ -76,6 +77,51 @@ function wireTtsProgress(audioEl, fillEl) {
   return () => stop();
 }
 
+// ------------------------------------------------------------
+// Karaoke / Word Sync (TTS): simple word timings (even spacing)
+// ------------------------------------------------------------
+function splitWords(text = "") {
+  const s = String(text || "").trim();
+  if (!s) return [];
+  // keep it simple + readable (works fine for English passages)
+  return s.match(/[A-Za-z0-9']+/g) || [];
+}
+
+function buildWordTimings(text, durSec) {
+  const words = splitWords(text);
+  const dur = Number(durSec) || 0;
+  if (!words.length || !(dur > 0)) return [];
+
+  const n = words.length;
+  const step = dur / n;
+
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    const start = i * step;
+    const end = (i + 1) * step;
+    out.push({ word: words[i], start, end });
+  }
+  return out;
+}
+
+function publishKaraoke(source, timings) {
+  try {
+    window.LuxKaraokeSource = String(source || "learner");
+    window.LuxKaraokeTimings = Array.isArray(timings) ? timings : [];
+    if (window.LuxKaraokeSource === "tts") {
+      window.LuxTTSWordTimings = window.LuxKaraokeTimings;
+    }
+    window.dispatchEvent(
+      new CustomEvent("lux:karaokeRefresh", {
+        detail: {
+          source: window.LuxKaraokeSource,
+          timings: window.LuxKaraokeTimings,
+        },
+      })
+    );
+  } catch {}
+}
+
 export async function mountTTSPlayer(hostEl) {
   const host = hostEl || document.getElementById("tts-controls");
   if (!host) return;
@@ -107,6 +153,7 @@ export async function mountTTSPlayer(hostEl) {
   const pitchOut = $(host, "#tts-pitch-out");
   const styleSel = $(host, "#tts-style");
   const degreeEl = $(host, "#tts-styledegree");
+  const expandBtn = $(host, "#tts-expand");
 
   // Progress fill (safe: only wires if found)
   const progressFill =
@@ -126,6 +173,35 @@ export async function mountTTSPlayer(hostEl) {
   // Wire progress (always moves while playing)
   // (No-op if progressFill not found)
   const stopProgress = wireTtsProgress(audio, progressFill);
+
+  // Keep SelfPB karaoke cursor synced while TTS plays (no-op if SelfPB isn't mounted)
+  audio.addEventListener("timeupdate", () => {
+    if (String(window.LuxKaraokeSource || "") !== "tts") return;
+    window.LuxSelfPB?.karaokeUpdate?.();
+  });
+  audio.addEventListener("play", () => {
+    if (String(window.LuxKaraokeSource || "") !== "tts") return;
+    window.LuxSelfPB?.karaokeUpdate?.();
+  });
+
+  // Expand into Self Playback (right-column mount) if available
+  expandBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // If we already have timings, set them as the active karaoke payload
+    const timings =
+      window.LuxTTSWordTimings ||
+      (audio?.duration ? buildWordTimings(getCurrentText(), audio.duration) : []) ||
+      [];
+    publishKaraoke("tts", timings);
+
+    // ✅ Robust: trigger via event, then fall back to clicking the button
+    try { window.dispatchEvent(new CustomEvent("lux:openSelfPBExpanded")); } catch (_) {}
+    const btn = document.getElementById("spb-expand");
+    if (btn) btn.click();
+    else setTimeout(() => document.getElementById("spb-expand")?.click(), 0);
+  });
 
   // 4. Load Capabilities (Async)
   let caps = await getVoiceCaps();
@@ -196,16 +272,21 @@ export async function mountTTSPlayer(hostEl) {
 
     // Reuse existing blob if params match
     if (key === lastKey && audio.src) {
+      // If key matches last, just replay from start
+      audio.currentTime = 0;
+      audio.playbackRate = speedMult;
+      await audio.play();
+
+      // Optional: push into SelfPB reference track
       if (window.LuxSelfPB?.setReference) {
         window.LuxSelfPB.setReference({
           audioEl: audio,
           meta: { voice, style, styledegree, rate: speedMult, ratePct, pitchSt },
         });
       }
-      try {
-        await audio.play();
-        setMainLabel(true);
-      } catch {}
+      // Karaoke: switch to TTS words + track time on the TTS audio element
+      publishKaraoke("tts", buildWordTimings(text, audio.duration || 0));
+
       return;
     }
 
@@ -242,6 +323,18 @@ export async function mountTTSPlayer(hostEl) {
       if (dl) {
         dl.href = blobUrl;
         dl.download = "lux_tts.mp3";
+      }
+
+      // Karaoke: publish simple word timings once duration is known
+      const timingsNow = buildWordTimings(text, audio.duration || 0);
+      if (timingsNow.length) {
+        publishKaraoke("tts", timingsNow);
+      } else {
+        const onMeta = () => {
+          audio.removeEventListener("loadedmetadata", onMeta);
+          publishKaraoke("tts", buildWordTimings(text, audio.duration || 0));
+        };
+        audio.addEventListener("loadedmetadata", onMeta);
       }
 
       // --- WAVEFORM HANDOFF (Simplified) ---

@@ -44,6 +44,12 @@ function ensurePanel() {
     panel.appendChild(shell);
   }
 
+  // ✅ Placeholder card (shown when TTS controls are moved into expanded SelfPB)
+  if (!shell.querySelector(".lux-tts-placeholder")) {
+    const ph = document.createElement("div");
+    ph.className = "lux-tts-placeholder";
+    shell.appendChild(ph);
+  }
   // Tab button (driven by tts-peekaboo.css)
   let tab = panel.querySelector(".lux-tts-tab");
   if (!tab) {

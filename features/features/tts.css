@@ -1,15 +1,34 @@
+/* File: features/features/tts.css */
+
 /* Container */
 #tts-controls {
   display: flex;
 }
+
 #tts-wrap {
   margin-left: auto;
   width: 340px;
   max-width: 95vw;
 }
 
+/* ✅ Placeholder behind the TTS tab when controls are moved into expanded SelfPB */
+.lux-tts-placeholder{
+  display:none;
+  width: 100%;
+  min-height: 220px;
+  background:#fff;
+  border-radius: 16px;
+  border: 1px solid rgba(15,23,42,0.10);
+  box-shadow: 0 10px 26px rgba(0,0,0,0.12);
+}
+
+.lux-tts-shell.lux-tts-shell--empty .lux-tts-placeholder{
+  display:block;
+}
+
 /* Card */
 .tts-box {
+  position: relative; /* ✅ required for #tts-expand absolute positioning */
   border: 1px solid #e5e7eb;
   border-radius: 14px;
   padding: 12px;
@@ -18,17 +37,16 @@
   width: 100%;
 }
 
+/* Layout inside the card */
 .tts-compact {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  gap: 12px !important;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
+/* ✅ DO NOT center everything — it makes controls + Expand look wrong */
 .tts-compact > * {
   width: 100%;
-  display: flex !important;
-  justify-content: center !important;
 }
 
 /* Head / note */
@@ -41,6 +59,7 @@
   flex-direction: column;
   gap: 4px;
 }
+
 .tts-note {
   font-size: 0.9rem;
   color: #374151;
@@ -48,6 +67,34 @@
 }
 .tts-note--warn {
   color: #b45309;
+}
+
+/* ✅ Expand button: match SelfPB mini feel + tuck top-right */
+#tts-expand{
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  border: 0;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-weight: 900;
+  cursor: pointer;
+  background: rgba(255,255,255,0.22);
+  color: rgba(15,23,42,0.85);
+  transition: transform .12s ease, filter .12s ease;
+  z-index: 10;
+}
+#tts-expand:hover{
+  transform: scale(1.10);
+  filter: brightness(1.12);
+}
+#tts-expand:active{
+  transform: scale(0.98);
+}
+
+/* ✅ Hide the TTS expand button when the TTS card is living inside the expanded SelfPB modal */
+#spb-float #tts-expand{
+  display:none;
 }
 
 /* Inputs */
@@ -59,9 +106,18 @@
   border-radius: 8px;
   background: #fff;
   font: inherit;
+  width: 100%;
+}
+
+.tts-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .tts-speed {
+  display: flex;
   gap: 6px;
   align-items: center;
 }
@@ -92,6 +148,7 @@
 
 /* Main button */
 .tts-btn {
+  width: 100%;
   padding: 10px 14px;
   border-radius: 10px;
   border: 1px solid #d1d5db;
@@ -111,13 +168,14 @@
   font-weight: 700;
 }
 
-/* Pitch slider — placed under main button */
+/* Pitch slider */
 .tts-pitch {
   width: 100%;
+  display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 8px; /* space below main button */
-  margin-bottom: 8px; /* space above skip buttons */
+  margin-top: 8px;
+  margin-bottom: 8px;
 }
 #tts-pitch {
   flex: 1;
@@ -133,6 +191,7 @@
   margin-bottom: 0;
 }
 .tts-skip {
+  width: 100%;
   gap: 12px;
   display: flex;
   justify-content: center;
@@ -154,16 +213,11 @@
   filter: brightness(0.9);
 }
 
-/* Misc legacy */
-.tts-row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
-}
+/* Misc */
 .tts-controls {
   margin-top: 8px;
 }
+
 .tts-text {
   width: 100%;
   min-height: 64px;
@@ -226,6 +280,7 @@
     color: #38bdf8;
   }
 }
+
 /* Hide the host until the panel adopts it to avoid any flash */
 #tts-controls[data-luxHidden="1"] {
   display: none !important;
@@ -242,4 +297,11 @@
   float: none !important;
   width: 100% !important;
   margin: 0 !important;
+}
+
+/* ✅ When TTS controls are mounted into the expanded SelfPB modal, fill the right half cleanly */
+#spb-float #tts-wrap{
+  margin-left: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
 }

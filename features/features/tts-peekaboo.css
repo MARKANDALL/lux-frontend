@@ -33,7 +33,7 @@
       - Matches Self Playback behavior
       ========================================================================== */
     --lux-tts-shell-h: 420px;        /* makes the blank card tall */
-    --lux-tts-shell-reveal: 88px;    /* makes the visible stub feel intentional */
+    --lux-tts-shell-reveal: 44px;    /* makes the visible stub feel intentional */
 
     --lux-tts-top-gap: 64px;        /* leaves space for Save Progress */
     --lux-tts-tab-h: 34px;
