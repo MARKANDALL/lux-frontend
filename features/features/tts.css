@@ -7,8 +7,11 @@
 
 #tts-wrap {
   margin-left: auto;
-  width: 340px;
-  max-width: 95vw;
+  width: 100%;
+  max-width: 340px;
+  max-width: min(340px, 95vw);
+  box-sizing: border-box;
+  overflow-x: hidden; /* ✅ prevent accidental horizontal scroll */
 }
 
 /* ✅ Placeholder behind the TTS tab when controls are moved into expanded SelfPB */
@@ -36,6 +39,8 @@
   background: #fff;
   box-shadow: 0 10px 26px rgba(0,0,0,0.12);
   width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden; /* ✅ keep drawer from forcing page scroll */
 }
 
 /* Layout inside the card */
@@ -160,15 +165,23 @@
   width:100%;
   display:flex;
   align-items:center;
-  gap: 10px;
+  gap: 6px;
+  flex-wrap: nowrap;
 }
 #tts-pitch{
-  flex:1;
+  flex: 1 1 auto;
+  min-width: 0; /* ✅ allow the slider to shrink instead of overflowing */
   cursor:pointer;
 }
+
+#tts-pitch-out{
+  width: 26px;
+  text-align: right;
+}
+
 #tts-styledegree{
-  width: 72px;
-  padding: 6px 8px;
+  width: 56px;
+  padding: 6px 6px;
   border: 1px solid #d1d5db;
   border-radius: 10px;
   text-align:center;
@@ -399,4 +412,128 @@
 }
 #spb-float .tts-compact{
   gap: 8px;
+}
+
+/* ============================================================
+   ✅ Hard overrides (added near end so they win)
+   ============================================================ */
+
+/* ✅ Force Expand pill to behave like SelfPB: never in-flow, always corner */
+.tts-box { position: relative !important; }
+
+#tts-expand{
+  position: absolute !important;
+  top: 8px !important;
+  right: 8px !important;
+  left: auto !important;
+
+  width: auto !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  border: 0 !important;
+  border-radius: 999px !important;
+  padding: 6px 10px !important;
+  font-weight: 900 !important;
+  cursor: pointer !important;
+  background: rgba(255,255,255,0.22) !important;
+  color: rgba(15,23,42,0.85) !important;
+  transition: transform .12s ease, filter .12s ease !important;
+  z-index: 50 !important;
+}
+
+#tts-expand:hover{
+  transform: scale(1.10) !important;
+  filter: brightness(1.12) !important;
+}
+
+/* ✅ Avoid double-card look: placeholder should NOT render as its own card */
+.lux-tts-placeholder{
+  display: none !important;
+}
+
+.lux-tts-shell.lux-tts-shell--empty{
+  min-height: 220px;
+}
+
+/* =========================================================
+   SelfPB Expanded integration polish (override at file end)
+   ========================================================= */
+
+/* ✅ Never show the TTS Expand pill inside the expanded quadrant */
+#spb-float #tts-expand,
+.spb-controls--tts #tts-expand{
+  display:none !important;
+}
+
+/* ✅ When the TTS shell is “empty”, hide the real controls to avoid double-box look */
+.lux-tts-shell.lux-tts-shell--empty #tts-controls,
+#tts-shell.tts-shell--empty #tts-controls{
+  display:none !important;
+}
+
+/* ✅ Placeholder should be sizing-only, not a second card */
+.lux-tts-shell.lux-tts-shell--empty .lux-tts-placeholder,
+#tts-shell.tts-shell--empty .lux-tts-placeholder{
+  display:block !important;
+  min-height: 260px;
+  height: 100%;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Empty drawer while controls are mounted into expanded view: match real perceived height */
+.lux-tts-shell.lux-tts-shell--empty .lux-tts-placeholder{
+  min-height: 320px !important;
+}
+
+.lux-tts-shell.lux-tts-shell--empty,
+#tts-shell.tts-shell--empty{
+  min-height: 260px;
+}
+
+/* Prevent global button:hover scale from expanding controls and triggering scrollbars */
+.tts-box button:hover{
+  transform: none !important;
+}
+
+/* Keep the expand pill's intended hover bulge */
+#tts-expand:hover{
+  transform: scale(1.10) !important;
+}
+
+/* Expanded SelfPB quadrant: use the full quadrant width + 2-column layout */
+.spb-controls--tts #tts-wrap{
+  max-width: none !important;
+}
+.spb-controls--tts .tts-box{
+  width: 100%;
+  max-width: none !important;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    "voice speed"
+    "style pitch"
+    "actions actions";
+  gap: 10px 12px;
+  align-items: start;
+}
+
+/* Remove wasted vertical space in the quadrant */
+.spb-controls--tts .tts-head{
+  display:none;
+}
+
+.spb-controls--tts .tts-selectWrap[data-label="Voice"]{ grid-area: voice; }
+.spb-controls--tts .tts-speedRow{ grid-area: speed; }
+.spb-controls--tts .tts-selectWrap[data-label="Speaking style"]{ grid-area: style; }
+.spb-controls--tts .tts-pitchRow{ grid-area: pitch; }
+.spb-controls--tts .tts-actionRow{ grid-area: actions; }
+
+/* Slightly tighten the primary row so it doesn't crowd mini-actions */
+.spb-controls--tts #tts-main{
+  padding: 9px 10px;
+  border-radius: 12px;
 }

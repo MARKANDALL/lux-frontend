@@ -154,14 +154,16 @@ export async function mountTTSPlayer(hostEl) {
   const styleSel = $(host, "#tts-style");
   const degreeEl = $(host, "#tts-styledegree");
 
-  // Expand: mirror SelfPB expand behavior (open the expanded SelfPB window)
+  // Expand: always open the shared expanded modal (even if SelfPB hasn't been opened yet)
   const expandBtn = $(host, "#tts-expand");
   if (expandBtn && !expandBtn.dataset.luxBound) {
     expandBtn.dataset.luxBound = "1";
     expandBtn.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
-      document.getElementById("spb-expand")?.click();
+      try {
+        window.dispatchEvent(new Event("lux:requestSelfPBExpanded"));
+      } catch (_) {}
     });
   }
 
