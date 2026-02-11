@@ -86,6 +86,8 @@ export function renderResultsHeaderModern(data) {
   };
 
   const saidText = data?.DisplayText || nbest?.Display || "(No speech detected)";
+  // Expose for other modules (e.g., syllable alt meaning tooltip)
+  try { window.LuxLastSaidText = saidText; } catch {}
 
   const headerScoreClass = overallAgg != null ? scoreClass(overallAgg) : "";
   const scoreHeaderAttrs = [
@@ -150,35 +152,32 @@ export function renderResultsHeaderModern(data) {
       <div style="margin-bottom: 12px;">
         <b style="font-size: 1.1em;">Your Results:</b>
 
-        <div class="lux-scoreSummary lux-scoreSummary--pyramid">
-          <!-- Top: Overall aggregate -->
-          <div class="lux-scoreMain">
-            <div class="lux-scoreMainLabel">
-              Overall
-              <span class="tooltip result-tip tip-Overall">(?) 
-                <span class="tooltiptext">${TOOLTIPS["Overall"] || ""}</span>
-              </span>
-            </div>
+        <details class="lux-results-accordion lux-results-accordion--scores" id="luxScoreAccordion" open>
+          <summary class="lux-results-accordion-handle lux-scoreAccordion-handle" title="Show/hide score breakdown">
+            <span class="lux-scoreAccWord lux-scoreAccWord--left">Overall</span>
 
-            <div class="lux-scoreRing lux-scoreRing--overall" style="--lux-score-ring:${overallRingColor};">
+            <div class="lux-scoreRing lux-scoreRing--overall lux-scoreAccRing" style="--lux-score-ring:${overallRingColor};">
               ${fmtRoundPct(overallAgg)}
             </div>
-          </div>
 
-          <!-- Pyramid tiles -->
-          <div class="lux-scorePyramid">
-            <div class="lux-scoreRow lux-scoreRow-mid">
-              ${renderMetricTile("Prosody", prosody, "Prosody", rateStr ? rateStr.replace(/^ • /, "") : "")}
-              ${renderMetricTile("Pronunciation", pronunciation, "Pronunciation")}
-            </div>
+            <span class="lux-scoreAccWord lux-scoreAccWord--right">Score</span>
+          </summary>
 
-            <div class="lux-scoreRow lux-scoreRow-bottom">
-              ${renderMetricTile("Accuracy", accuracy, "Accuracy")}
-              ${renderMetricTile("Fluency", fluency, "Fluency")}
-              ${renderMetricTile("Completeness", completeness, "Completeness")}
+          <div class="lux-scoreAccBody">
+            <div class="lux-scorePyramid">
+              <div class="lux-scoreRow lux-scoreRow-mid">
+                ${renderMetricTile("Prosody", prosody, "Prosody", rateStr ? rateStr.replace(/^ • /, "") : "")}
+                ${renderMetricTile("Pronunciation", pronunciation, "Pronunciation")}
+              </div>
+
+              <div class="lux-scoreRow lux-scoreRow-bottom">
+                ${renderMetricTile("Accuracy", accuracy, "Accuracy")}
+                ${renderMetricTile("Fluency", fluency, "Fluency")}
+                ${renderMetricTile("Completeness", completeness, "Completeness")}
+              </div>
             </div>
           </div>
-        </div>
+        </details>
       </div>
   
       <div style="margin-bottom: 16px; color:#334155;">
@@ -189,9 +188,9 @@ export function renderResultsHeaderModern(data) {
 
     <details class="lux-results-accordion" id="luxWpAccordion" open>
       <summary class="lux-results-accordion-handle" title="Show/hide Word & Phoneme chart">
-        <span class="lux-acc-label lux-acc-label-open">Hide Word &amp; Phoneme chart</span>
-        <span class="lux-acc-label lux-acc-label-closed">Show Word &amp; Phoneme chart</span>
-        <span class="lux-acc-chev">▾</span>
+        <span class="lux-toggleHint lux-toggleHint--closed" aria-hidden="true">Open</span>
+        <span class="lux-toggleHint lux-toggleHint--open" aria-hidden="true">Close</span>
+        <span class="lux-acc-title">Word &amp; Phoneme chart</span>
       </summary>
 
       <div class="results-flex">

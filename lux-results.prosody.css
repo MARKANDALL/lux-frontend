@@ -81,7 +81,7 @@ overflow-x: hidden;
 
 .results-flex.legend-open { gap: 12px; }
 
-#prosodyLegendToggle { position: absolute; left: 10px; top: 10px; isolation: isolate; cursor: pointer; z-index: 99999 !important; }
+#prosodyLegendToggle { position: absolute; left: -6px; top: -2px; isolation: isolate; cursor: pointer; z-index: 99999 !important; }
 
 /* Small toggle button pinned near the Word & Phoneme chart (left edge) */
 #prosodyLegendToggle.prosody-legend-toggleBtn{

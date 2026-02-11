@@ -103,18 +103,157 @@
   white-space: nowrap !important;
 }
 
-/* label swap: only one shows */
-#prettyResult .lux-acc-label-open{ display:none !important; }
-#prettyResult details.lux-results-accordion:not([open]) .lux-acc-label-closed{ display:inline !important; }
-#prettyResult details.lux-results-accordion[open] .lux-acc-label-open{ display:inline !important; }
-#prettyResult details.lux-results-accordion[open] .lux-acc-label-closed{ display:none !important; }
+/* Open/Close pills (Word & Phoneme) */
+#prettyResult details.lux-results-accordion .lux-drawer-action--open{ left: 44px; }
+#prettyResult details.lux-results-accordion .lux-drawer-action--close{ right: 44px; }
+#prettyResult details.lux-results-accordion .lux-drawer-action--close{
+  opacity: 0;
+  transform: translateY(-50%) translateX(6px);
+}
+#prettyResult details.lux-results-accordion[open] .lux-drawer-action--open{
+  opacity: 0;
+  transform: translateY(-50%) translateX(-6px);
+}
+#prettyResult details.lux-results-accordion[open] .lux-drawer-action--close{
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
 
 /* ============================================================
    Match drawer tab vertical depth (Word & Phoneme closed/open)
    ============================================================ */
 
 #prettyResult details.lux-results-accordion > summary.lux-results-accordion-handle{
-  min-height: 52px !important;     /* match AI Coach / My Progress closed height */
+  min-height: 46px !important;     /* match AI Coach / My Progress closed height */
   padding-top: 10px !important;
   padding-bottom: 10px !important;
+}
+
+/* ============================================================
+   Scores accordion (Overall ring always visible)
+   ============================================================ */
+
+#prettyResult details.lux-results-accordion--scores{
+  /* keep this one tighter under "Your Results:" */
+  margin: 10px auto 0 !important;
+}
+
+#prettyResult details.lux-results-accordion--scores > summary.lux-results-accordion-handle{
+  overflow: visible !important; /* allow the big ring to overlap above the bar */
+}
+
+#prettyResult .lux-scoreAccRing{
+  position: absolute;
+  left: 50%;
+  bottom: -10px;               /* sit on the bar bottom (compensate for 10px summary padding) */
+  transform: translateX(-50%);
+  z-index: 2;
+}
+
+#prettyResult .lux-scoreAccWord{
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-weight: 900;
+  color: #1e293b;
+  font-size: 0.95rem;
+  line-height: 1;
+  white-space: nowrap;
+  opacity: 0.92;
+  pointer-events: none;        /* clicking the words still toggles the accordion */
+}
+
+#prettyResult .lux-scoreAccWord--left{
+  right: calc(50% + 60px);
+}
+
+#prettyResult .lux-scoreAccWord--right{
+  left: calc(50% + 60px);
+}
+
+#prettyResult .lux-scoreAccBody{
+  padding: 14px 12px 12px;
+  display: flex;
+  justify-content: center;
+}
+
+/* ============================================================
+   Unified Open/Close hint (INFO tag, not a button)
+   Applies to: Scores + Word & Phoneme accordions
+   ============================================================ */
+#prettyResult .lux-results-accordion-handle{
+  position: relative !important;
+}
+
+#prettyResult .lux-toggleHint{
+  position: absolute;
+  left: 54px;                 /* between LEFT chevron (14px) and centered title */
+  top: 50%;
+  transform: translateY(-50%);
+
+  font-size: 0.82rem;
+  font-weight: 900;
+  padding: 3px 10px;
+  border-radius: 8px;         /* NOT a pill */
+  border: 1px solid transparent;
+  user-select: none;
+  pointer-events: none;       /* not clickable */
+  white-space: nowrap;
+}
+
+/* Show the right word for the open state */
+#prettyResult details.lux-results-accordion .lux-toggleHint--open{ display:none; }
+#prettyResult details.lux-results-accordion[open] .lux-toggleHint--open{ display:inline-block; }
+#prettyResult details.lux-results-accordion[open] .lux-toggleHint--closed{ display:none; }
+
+/* Closed = Open (green info) */
+#prettyResult details.lux-results-accordion:not([open]) .lux-toggleHint--closed{
+  color: #14532d;
+  background: rgba(34,197,94,0.10);
+  border-color: rgba(34,197,94,0.18);
+}
+
+/* Open = Close (red info) */
+#prettyResult details.lux-results-accordion[open] .lux-toggleHint--open{
+  color: #7f1d1d;
+  background: rgba(239,68,68,0.10);
+  border-color: rgba(239,68,68,0.18);
+}
+
+/* Center title for Word & Phoneme bar */
+#prettyResult .lux-acc-title{
+  font-weight: 900;
+  color: #0f172a;
+}
+
+/* ============================================================
+   Nudge (Option A): subtle breathe + soft glow, only when CLOSED
+   ============================================================ */
+@keyframes luxNudge{
+  0%   { transform: translateY(0) scale(1); }
+  45%  { transform: translateY(-1px) scale(1.01); }
+  100% { transform: translateY(0) scale(1); }
+}
+@keyframes luxHintPulse{
+  0%   { opacity: 0.85; }
+  45%  { opacity: 1; }
+  100% { opacity: 0.92; }
+}
+
+#prettyResult details.lux-results-accordion.lux-nudge > summary.lux-results-accordion-handle{
+  animation: luxNudge 700ms ease 1;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.10);
+}
+
+#prettyResult details.lux-results-accordion.lux-nudge:not([open]) .lux-toggleHint--closed{
+  animation: luxHintPulse 700ms ease 1;
+}
+
+@media (prefers-reduced-motion: reduce){
+  #prettyResult details.lux-results-accordion.lux-nudge > summary.lux-results-accordion-handle{
+    animation: none !important;
+  }
+  #prettyResult details.lux-results-accordion.lux-nudge .lux-toggleHint{
+    animation: none !important;
+  }
 }
