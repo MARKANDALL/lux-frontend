@@ -184,6 +184,27 @@ const module = await import("./selfpb/ui.js");
     toggle: handleToggle,
   });
 
+
+  // ✅ External request (used by TTS Expand): load SelfPB if needed, then open the shared expanded modal
+  window.addEventListener("lux:requestSelfPBExpanded", async () => {
+    try {
+      const isOpen = document.documentElement.classList.contains(OPEN_CLASS);
+
+      // If SelfPB is not loaded yet, force the load path (without accidentally closing)
+      if (!isLoaded) {
+        if (isOpen) document.documentElement.classList.remove(OPEN_CLASS);
+        await handleToggle();
+      }
+
+      // Ask the heavy UI to open its expanded floating window / modal
+      setTimeout(() => {
+        try { window.dispatchEvent(new Event("lux:openSelfPBExpanded")); } catch (_) {}
+      }, 0);
+    } catch (e) {
+      console.error("[Lux] requestSelfPBExpanded failed:", e);
+    }
+  });
+
   // 5) Boot the Shell
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", buildShell);

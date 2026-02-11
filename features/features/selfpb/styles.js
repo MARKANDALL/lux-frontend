@@ -136,6 +136,33 @@ export function ensureStyles() {
       display:none !important;
     }
 
+    /* Mini drawer: the loop-slot reserves width and crushes the speed slider.
+       Hide it in the mini drawer so #spb-rate can stretch normally. */
+    #selfpb-lite #spb-loop-slot{
+      display:none;
+    }
+
+    /* Expanded open: make the mini drawer read as ONE card (no bezel + inner-card stack) */
+    #selfpb-lite.spb-mini-empty{
+      padding: 0 !important;
+      background: transparent !important;
+      border: 0 !important;
+      box-shadow: none !important;
+      width: var(--spbW) !important;
+      border-radius: 18px !important;
+    }
+
+    /* The blank placeholder becomes the single visible card */
+    #selfpb-lite.spb-mini-empty .spb-miniPlaceholder{
+      width: 100% !important;
+      min-height: 260px;
+      background:#fff;
+      border-radius: 18px;
+      border: 1px solid rgba(15,23,42,0.10);
+      box-shadow: 0 10px 26px rgba(0,0,0,0.12);
+      padding: 0;
+    }
+
     #spb-float .spb-top{ grid-area: top; width:100%; }
     #spb-float .spb-controls--self{ grid-area: self; width:100%; }
     #spb-float .spb-controls--tts{ grid-area: tts; width:100%; display:block; }
@@ -306,6 +333,21 @@ export function ensureStyles() {
     #selfpb-lite .spb-miniBtn:hover{
       transform: scale(1.10);  /* ✅ “big bulge” hover */
       filter: brightness(1.12);
+    }
+
+    /* ✅ When expanded is open, mini drawer becomes a blank placeholder card */
+    #selfpb-lite .spb-miniPlaceholder{ display:none; }
+
+    /* Hide the top mini header strip (Expand/Ref/Time row) */
+    #selfpb-lite.spb-mini-empty > .row{
+      display:none !important;
+    }
+
+    /* Show a blank inner card so the mini drawer doesn’t collapse */
+    #selfpb-lite.spb-mini-empty .spb-miniPlaceholder{
+      display:block !important;
+      min-height: 260px;
+      padding: 0;
     }
 
     /* ✅ Floating expanded window (non-modal) */

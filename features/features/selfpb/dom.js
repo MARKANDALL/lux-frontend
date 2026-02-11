@@ -86,11 +86,13 @@ export function buildUI() {
 
   <!-- ✅ BOTTOM RIGHT (TTS mount) — hidden in drawer, shown in expanded via CSS -->
   <div class="spb-controls spb-controls--tts">
-    <div class="spb-ttsTitle">Text-to-Speech</div>
     <div id="spb-ttsMount"></div>
   </div>
 
-</div>
+    </div>
+
+    <!-- blank mini placeholder shown only while expanded is open -->
+    <div class="spb-body spb-miniPlaceholder" aria-hidden="true" style="display:none;"></div>
 
   `;
 
@@ -145,8 +147,15 @@ export function buildUI() {
 
   function openExpanded() {
     bodyNext = body.nextSibling; // ✅ re-capture in case DOM changes
+    host.classList.add("spb-mini-empty");
     float.classList.add("is-open");
     floatMount.appendChild(body);
+
+    // Nudge WaveSurfer / layout-dependent renders after mount
+    requestAnimationFrame(() => {
+      try { window.dispatchEvent(new Event("resize")); } catch (_) {}
+      setTimeout(() => { try { window.dispatchEvent(new Event("resize")); } catch (_) {} }, 120);
+    });
 
     // move TTS controls into expanded bottom-right mount
     const ttsWrap = document.getElementById("tts-wrap");
@@ -178,6 +187,7 @@ export function buildUI() {
   function closeExpanded() {
     float.classList.remove("is-open");
     bodyHome.insertBefore(body, bodyNext || null);
+    host.classList.remove("spb-mini-empty");
 
     // restore TTS controls back into its drawer home
     const ttsWrap = document.getElementById("tts-wrap");
