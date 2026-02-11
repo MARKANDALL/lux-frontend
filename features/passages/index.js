@@ -145,7 +145,8 @@ export function goToNextPart() {
       setPartIdx(currentPartIdx + 1);
       
       showCurrentPart({ preserveExistingInput: false });
-      DOM.clearResultsUI();
+      const preservePretty = !!document.getElementById("resultBody");
+      DOM.clearResultsUI({ preservePretty });
       
       const input = document.querySelector("#referenceText");
       if(input) input.focus();
@@ -155,7 +156,8 @@ export function goToNextPart() {
   if (currentPartIdx < currentParts.length - 1) {
     setPartIdx(currentPartIdx + 1);
     showCurrentPart();
-    DOM.clearResultsUI();
+    const preservePretty = !!document.getElementById("resultBody");
+    DOM.clearResultsUI({ preservePretty });
   }
 }
 

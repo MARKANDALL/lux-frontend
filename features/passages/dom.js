@@ -122,13 +122,38 @@ export function updateNavVisibility({ showNext, enableNext, nextMsgText, nextMsg
   }
 }
 
-export function clearResultsUI() {
-  if (ui.pretty) ui.pretty.innerHTML = "";
+export function clearResultsUI(opts = {}) {
+  const preservePretty = !!opts?.preservePretty;
+
+  // Keep the Word & Phoneme bar always visible (closed by default).
+  if (ui.pretty && !preservePretty)
+    ui.pretty.innerHTML = `
+      <details class="lux-results-accordion" id="luxWpAccordion">
+        <summary class="lux-results-accordion-handle" title="Word &amp; Phoneme chart">
+          <span class="lux-drawer-action lux-drawer-action--open" aria-hidden="true">Open</span>
+          <span class="lux-drawer-action lux-drawer-action--close" aria-hidden="true">Close</span>
+          <span class="lux-progress-drawer-title">Word &amp; Phoneme chart</span>
+        </summary>
+        <div class="results-flex">
+          <div style="padding: 14px 16px; color:#64748b;">Record to see the Word &amp; Phoneme chart.</div>
+        </div>
+      </details>
+    `;
+
   if (ui.status) ui.status.textContent = "Not recording";
+
+  // AI Coach must always be openable. Don’t hide the box; show a placeholder instead.
+  const coachDrawer = document.getElementById("aiCoachDrawer");
+  if (coachDrawer) coachDrawer.open = false;
+
+  const aiSection = document.getElementById("aiFeedbackSection");
+  if (aiSection) aiSection.style.display = "";
+
   if (ui.aiBox) {
-    ui.aiBox.style.display = "none";
-    ui.aiBox.innerHTML = "";
+    ui.aiBox.style.display = "";
+    ui.aiBox.innerHTML = `<div style="color:#64748b; padding: 14px 16px;">Open AI Coach anytime. Record to get feedback.</div>`;
   }
+
   setVisible(ui.showMore, false);
 }
 
