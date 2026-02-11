@@ -1,21 +1,36 @@
 // features/features/selfpb/ui-sync.js
+// UI syncing helpers for SelfPB (toast/warnings, state-to-UI updates, small orchestration).
 
 export function makeUISync({ ui, api, audio, refAudio, st }) {
   // --- Logic helpers ---
   const showToast = (msg, duration = 2000) => {
-    ui.toast.textContent = msg;
-    ui.toast.style.display = "inline-block";
-    ui.host.animate(
-      [
-        { transform: "translateX(0)" },
-        { transform: "translateX(-4px)" },
-        { transform: "translateX(4px)" },
-        { transform: "translateX(0)" },
-      ],
-      { duration: 200 }
-    );
+    const float = document.getElementById("spb-float");
+    const floatOpen = !!(float && float.classList.contains("is-open"));
+    const toastEl = floatOpen
+      ? document.getElementById("spb-toast-float") || ui.toast
+      : ui.toast;
+
+    toastEl.textContent = msg;
+    toastEl.style.display = "inline-block";
+
+    const shakeTarget = floatOpen
+      ? float.querySelector("#spb-floatHead") || float
+      : ui.host;
+
+    try {
+      shakeTarget.animate(
+        [
+          { transform: "translateX(0)" },
+          { transform: "translateX(-4px)" },
+          { transform: "translateX(4px)" },
+          { transform: "translateX(0)" },
+        ],
+        { duration: 200 }
+      );
+    } catch (_) {}
+
     setTimeout(() => {
-      ui.toast.style.display = "none";
+      toastEl.style.display = "none";
     }, duration);
   };
 

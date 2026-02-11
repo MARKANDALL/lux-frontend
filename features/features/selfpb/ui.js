@@ -2,7 +2,7 @@
 // FINAL PIVOT: Using WaveSurfer.js for reliable waveforms.
 
 import { initSelfPBCore } from "./core.js";
-import { initWaveSurfer } from "./waveform-logic.js";
+import { initWaveSurfer, loadLearnerBlob } from "./waveform-logic.js";
 import { ensureStyles } from "./styles.js";
 import { buildUI } from "./dom.js";
 import { initLatestDownload } from "./download-latest.js";
@@ -24,6 +24,50 @@ export function mountSelfPlaybackLite() {
     refContainer: ui.waveRef,
     masterAudio: audio,
   });
+
+  // Bridge: if the user records BEFORE SelfPB ever mounts, recorder can't attach
+  // into playbackAudio / WaveSurfer (because they don't exist yet). Recorder DOES
+  // store window.LuxLastRecordingBlob, so we attach it here on mount.
+  const audioEl = audio;
+  function attachLearnerBlob(blob, meta) {
+    if (!blob) return;
+
+    // Revoke our prior object URL (if any) to avoid leaks
+    try {
+      const prev = audioEl?.dataset?.luxBlobUrl;
+      if (prev && String(prev).startsWith("blob:")) URL.revokeObjectURL(prev);
+    } catch (_) {}
+
+    try {
+      const url = URL.createObjectURL(blob);
+      audioEl.dataset.luxBlobUrl = url;
+      audioEl.src = url;
+      try { audioEl.load?.(); } catch (_) {}
+    } catch (_) {}
+
+    // Draw waveform from the blob as well
+    try { loadLearnerBlob(blob); } catch (_) {}
+  }
+
+  // Recorder will call this if present
+  window.__attachLearnerBlob = attachLearnerBlob;
+
+  // If we already have a last recording (made before mount), attach it now
+  try {
+    if (window.LuxLastRecordingBlob) {
+      attachLearnerBlob(window.LuxLastRecordingBlob, window.LuxLastRecordingMeta || null);
+    }
+  } catch (_) {}
+
+  // Also listen for the event (belt + suspenders)
+  if (!window.__luxSelfPBLastRecordingBound) {
+    window.__luxSelfPBLastRecordingBound = true;
+    window.addEventListener(
+      "lux:lastRecording",
+      (e) => attachLearnerBlob(e?.detail?.blob, e?.detail?.meta),
+      { passive: true }
+    );
+  }
 
   initLatestDownload(ui);
 

@@ -499,6 +499,15 @@
   transform: none !important;
 }
 
+/* ✅ Restore intended hover bulge + darken for core actions */
+#tts-main:hover,
+#tts-back:hover,
+#tts-fwd:hover{
+  transform: scale(1.06) !important;
+  filter: brightness(0.92);
+}
+
+
 /* Keep the expand pill's intended hover bulge */
 #tts-expand:hover{
   transform: scale(1.10) !important;
@@ -517,7 +526,7 @@
     "voice speed"
     "style pitch"
     "actions actions";
-  gap: 10px 12px;
+  gap: 8px 10px;
   align-items: start;
 }
 
@@ -531,6 +540,35 @@
 .spb-controls--tts .tts-selectWrap[data-label="Speaking style"]{ grid-area: style; }
 .spb-controls--tts .tts-pitchRow{ grid-area: pitch; }
 .spb-controls--tts .tts-actionRow{ grid-area: actions; }
+
+/* ------------------------------------------------------------
+   PATCH 5B — Expanded (SelfPB) select-label overlap fix
+   (Place labels ABOVE the dropdown, prevent overlap)
+   ------------------------------------------------------------ */
+
+/* Expanded (SelfPB) layout: move select labels ABOVE the dropdown (prevents overlap) */
+.spb-controls--tts .tts-selectWrap::after{ display:none !important; }
+.spb-controls--tts .tts-selectWrap::before{
+  content: attr(data-label);
+  display:block;
+  margin: 0 0 2px 2px;
+  line-height: 1;
+  font-size: 12px;
+  font-weight: 800;
+  opacity: 0.55;
+}
+
+/* Expanded: align slider rows with the select labels so Voice+Speed / Style+Pitch sit on one plane */
+.spb-controls--tts .tts-speedRow,
+.spb-controls--tts .tts-pitchRow{
+  padding-top: 13px;
+}
+
+.spb-controls--tts .tts-selectWrap select{ padding-right: 14px; }
+
+/* Expanded: prevent hover/filters from triggering scrollbars */
+.spb-controls--tts .tts-actionRow{ overflow: hidden; padding: 3px 0; }
+.spb-controls--tts #tts-main{ padding: 9px 12px; border-radius: 14px; }
 
 /* Slightly tighten the primary row so it doesn't crowd mini-actions */
 .spb-controls--tts #tts-main{

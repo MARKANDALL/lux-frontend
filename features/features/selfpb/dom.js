@@ -106,6 +106,7 @@ export function buildUI() {
     float.innerHTML = `
       <div id="spb-floatHead">
         <div>Self Playback + Text-to-Speech (Expanded)</div>
+         <span id="spb-toast-float" class="pill tiny" style="display:none; position:absolute; right:52px; top:10px; background:#ef4444; border-color:#b91c1c; color:#fff; z-index:10; box-shadow: 0 2px 10px rgba(0,0,0,0.5);"></span>
         <button id="spb-floatClose" class="spb-btn secondary icon" title="Close">✕</button>
       </div>
 
@@ -145,7 +146,18 @@ export function buildUI() {
     } catch {}
   };
 
-  function openExpanded() {
+  let isExpandedOpen = false;
+  function setExpandedOpen(on) {
+    try {
+      document.documentElement.classList.toggle("lux-selfpb-expanded-open", !!on);
+    } catch (_) {}
+  }
+
+  async function openExpanded() {
+    if (isExpandedOpen) return;
+    isExpandedOpen = true;
+    setExpandedOpen(true);
+
     bodyNext = body.nextSibling; // ✅ re-capture in case DOM changes
     host.classList.add("spb-mini-empty");
     float.classList.add("is-open");
@@ -157,19 +169,29 @@ export function buildUI() {
       setTimeout(() => { try { window.dispatchEvent(new Event("resize")); } catch (_) {} }, 120);
     });
 
-    // move TTS controls into expanded bottom-right mount
-    const ttsWrap = document.getElementById("tts-wrap");
-    ttsShell = document.getElementById("tts-shell");
-
-    if (ttsWrap && ttsMount) {
-      // capture original home only if we're not already in the expanded mount
-      if (ttsWrap.parentElement !== ttsMount) {
-        ttsWrapHome = ttsWrap.parentElement;
-        ttsWrapNext = ttsWrap.nextSibling;
-        ttsMount.appendChild(ttsWrap);
-        ttsWrap.dataset.luxInSelfPB = "1";
+    // Ensure TTS player exists even if the drawer was never opened
+    try {
+      if (!document.getElementById("tts-wrap")) {
+        const ttsBoot = await import("../tts/boot-tts.js");
+        await ttsBoot.ensureTTSPlayerMounted?.();
       }
-    }
+    } catch (_) {}
+
+    // move TTS controls into expanded bottom-right mount
+    try {
+      const ttsWrap = document.getElementById("tts-wrap");
+      ttsShell = document.getElementById("tts-shell");
+
+      if (ttsWrap && ttsMount) {
+        // capture original home only if we're not already in the expanded mount
+        if (ttsWrap.parentElement !== ttsMount) {
+          ttsWrapHome = ttsWrap.parentElement;
+          ttsWrapNext = ttsWrap.nextSibling;
+          ttsMount.appendChild(ttsWrap);
+          ttsWrap.dataset.luxInSelfPB = "1";
+        }
+      }
+    } catch (_) {}
 
     // show placeholder in the TTS drawer while controls are moved out
     setTtsShellEmpty(true);
@@ -185,6 +207,10 @@ export function buildUI() {
   }
 
   function closeExpanded() {
+    if (!isExpandedOpen) return;
+    isExpandedOpen = false;
+    setExpandedOpen(false);
+
     float.classList.remove("is-open");
     bodyHome.insertBefore(body, bodyNext || null);
     host.classList.remove("spb-mini-empty");
@@ -204,7 +230,9 @@ export function buildUI() {
     if (loopRow) loopRow.style.display = "";
   }
 
-  expandBtn?.addEventListener("click", openExpanded);
+  expandBtn?.addEventListener("click", () => {
+    try { openExpanded(); } catch (_) {}
+  });
   floatClose?.addEventListener("click", closeExpanded);
 
   // ✅ Robust external trigger (used by TTS expand)

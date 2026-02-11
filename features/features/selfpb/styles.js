@@ -1,4 +1,5 @@
 // features/features/selfpb/styles.js
+// Injected CSS for Self Playback mini drawer + Expanded float layout rules (waveform sizing, placeholders, etc.).
 
 export function ensureStyles() {
   const STYLE_ID = "selfpb-lite-style";
@@ -206,7 +207,7 @@ export function ensureStyles() {
       max-width: 100% !important;
     }
 
-    :is(#selfpb-lite, #spb-float) .spb-wave{
+    #selfpb-lite .spb-wave{
       height:92px;
       border-radius:12px;
       background: rgba(15,23,42,0.04);
@@ -357,7 +358,9 @@ export function ensureStyles() {
       display: none;
 
       width: min(1100px, calc(100vw - 40px));
-      height: min(86vh, 820px);
+      height: auto;
+
+      max-height: min(86vh, 820px);
 
       left: 50%;
       top: 90px;
@@ -373,6 +376,7 @@ export function ensureStyles() {
     #spb-float.is-open{ display:block; }
 
     #spb-floatHead{
+      position: relative;
       display:flex;
       align-items:center;
       justify-content:space-between;
@@ -386,8 +390,9 @@ export function ensureStyles() {
     #spb-floatHead:active{ cursor: grabbing; }
 
     #spb-floatMount{
-      padding: 12px;
-      height: calc(100% - 52px);
+      padding: 10px;
+      height: auto;
+      max-height: calc(86vh - 52px);
       overflow: auto;
     }
 
@@ -407,7 +412,7 @@ export function ensureStyles() {
 
     /* ✅ expanded mode: speed slider not absurdly wide */
     #spb-float #spb-rate{
-      max-width: 320px;
+      max-width: 520px;
     }
 
     /* ============================================================

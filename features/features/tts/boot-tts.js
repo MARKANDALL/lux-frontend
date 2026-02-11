@@ -20,6 +20,7 @@ function ensureCSS(href, contains = "") {
 }
 
 let _playerBooted = false;
+let _panelBooted = false;
 
 function ensurePanel() {
   const host = document.getElementById("tts-controls");
@@ -81,7 +82,7 @@ function ensurePanel() {
         const mod = await import("./player-ui.js");
         const mountHost = document.getElementById("tts-controls");
         if (mod?.mountTTSPlayer) {
-          mod.mountTTSPlayer(mountHost);
+          await mod.mountTTSPlayer(mountHost);
           console.info("[Lux] TTS Player mounted (lazy).");
           document.documentElement.classList.add("lux-tts-booted");
         }
@@ -126,5 +127,32 @@ function lateMount() {
 }
 
 export function bootTTS() {
+  ensurePanel();
+  if (_panelBooted) return;
+  _panelBooted = true;
+
   lateMount();
+}
+
+// Allow other features (like SelfPB Expanded) to ensure the player exists even if
+// the user never opened the TTS drawer.
+export async function ensureTTSPlayerMounted() {
+  ensurePanel();
+  if (_playerBooted) return true;
+  _playerBooted = true;
+
+  try { ensureCSS(CSS_CORE, "tts.css"); } catch (_) {}
+
+  try {
+    const mod = await import("./player-ui.js");
+    const host = document.getElementById("tts-controls");
+    if (host && mod?.mountTTSPlayer) {
+      await mod.mountTTSPlayer(host);
+      document.documentElement.classList.add("lux-tts-booted");
+      return true;
+    }
+  } catch (_) {
+    _playerBooted = false;
+  }
+  return false;
 }
