@@ -1,3 +1,8 @@
+/* =============================================================================
+   FILE: features/interactions/legend-toggle.js
+   ONE-LINE: Wires the “Key” button behavior (toggle prosody legend open/closed).
+============================================================================= */
+
 // ui/interactions/legend-toggle.js
 // CLEANED: Removed dynamic CSS injection (now handled by lux-results.css)
 
@@ -63,7 +68,7 @@ export function initProsodyLegendToggle() {
 
   if (!tip._legendBound) {
     const toggle = (e) => {
-      e.preventDefault();
+      try { e?.preventDefault?.(); e?.stopPropagation?.(); } catch (_) {}
       const open = !wrap.classList.contains("legend-open");
       wrap.classList.toggle("legend-open", open);
       legend.setAttribute("aria-hidden", String(!open));

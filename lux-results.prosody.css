@@ -1,3 +1,8 @@
+/* =============================================================================
+   FILE: lux-results.prosody.css
+   ONE-LINE: Styles the results “Word & Phoneme” area (legend + contained scroll behavior).
+============================================================================= */
+
 /* lux-results.prosody.css */
 /* Prosody ribbons + legend + results layout cues */
 
@@ -21,15 +26,15 @@
 
 /* table is wrapped now, so flex the wrapper */
 #prettyResult .results-flex > .table-scroll-container { flex: 1 1 auto; min-width: 420px; }
-#prettyResult .results-flex > .table-scroll-container > table.score-table { width: 100%; }
+#prettyResult .results-flex > .table-scroll-container > table.score-table { width: 100% !important; margin: 0 !important; }
 
 /* ============================================================
    Word/Phoneme table: contained scroll (like AI feedback)
    ============================================================ */
 #prettyResult .table-scroll-container{
   max-height: min(520px, 55vh);   /* adjust if you want taller/shorter */
-  overflow-y: auto;
-overflow-x: hidden;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
   scrollbar-gutter: stable;
 }
 
@@ -81,7 +86,16 @@ overflow-x: hidden;
 
 .results-flex.legend-open { gap: 12px; }
 
-#prosodyLegendToggle { position: absolute; left: -6px; top: -2px; isolation: isolate; cursor: pointer; z-index: 99999 !important; }
+/* Key button lives in the accordion handle so it never blocks table header toggles */
+#prettyResult summary.lux-results-accordion-handle #prosodyLegendToggle{
+  position: absolute;
+  right: 44px;
+  top: 50%;
+  transform: translateY(-50%);
+  left: auto;
+  isolation: isolate;
+  cursor: pointer;
+}
 
 /* Small toggle button pinned near the Word & Phoneme chart (left edge) */
 #prosodyLegendToggle.prosody-legend-toggleBtn{
@@ -189,7 +203,4 @@ overflow-x: hidden;
   z-index: 9999 !important;
 }
 
-/* Allow the Prosody Key to protrude without getting clipped */
-#prettyResult .results-flex > .table-scroll-container{
-  overflow-y: visible !important;
-}
+/* Keep the chart as a vertical scroll region (no “floating inside the box” behavior) */

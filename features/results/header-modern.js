@@ -1,3 +1,8 @@
+/* =============================================================================
+   FILE: features/results/header-modern.js
+   ONE-LINE: Builds the “Word & Phoneme chart” accordion markup (summary handle + chart body).
+============================================================================= */
+
 /* ============================================================================
    MODERN HEADER BUILDER
    ---------------------------------------------------------------------------
@@ -191,10 +196,10 @@ export function renderResultsHeaderModern(data) {
         <span class="lux-toggleHint lux-toggleHint--closed" aria-hidden="true">Open</span>
         <span class="lux-toggleHint lux-toggleHint--open" aria-hidden="true">Close</span>
         <span class="lux-acc-title">Word &amp; Phoneme chart</span>
+        <button type="button" id="prosodyLegendToggle" class="prosody-legend-toggleBtn" aria-controls="prosodyLegend" aria-expanded="false" title="Show/hide prosody bars key">Key</button>
       </summary>
 
       <div class="results-flex">
-        <button type="button" id="prosodyLegendToggle" class="prosody-legend-toggleBtn" aria-controls="prosodyLegend" aria-expanded="false" title="Show/hide prosody bars key">Key</button>
         ${legendHtml}
 
         <div class="table-scroll-container custom-scrollbar">
