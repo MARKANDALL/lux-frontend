@@ -4,6 +4,7 @@
 // Then set: $env:VITE_API_BASE="http://localhost:8787" (restart vite)
 
 import http from "node:http";
+import process from "node:process";
 
 const PORT = Number(process.env.PORT || 8787);
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
