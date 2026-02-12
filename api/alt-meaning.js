@@ -1,28 +1,26 @@
-// api/alt-meaning.js
-// Fetch tiny AI meanings/examples for stress-shift / alt pronunciations.
+// C:\dev\LUX_GEMINI\api\alt-meaning.js
+// One-line: Frontend helper that calls backend /api/router?route=alt-meaning and returns JSON.
 
-import { API_BASE, jsonOrThrow, dbg } from "./util.js";
-import { getUID } from "./identity.js";
+const ALT_MEANING_URL = `/api/router?route=alt-meaning`;
 
-const ALT_MEANING_URL = `${API_BASE}/api/alt-meaning`;
-
-export async function fetchAltMeanings({ word, sentence, prons }) {
-  const uid = typeof getUID === "function" ? getUID() : null;
-
-  const payload = {
-    word: String(word || "").slice(0, 80),
-    sentence: String(sentence || "").slice(0, 280),
-    prons: Array.isArray(prons) ? prons.slice(0, 6) : [],
-    uid,
-  };
-
-  dbg("POST", ALT_MEANING_URL, { word: payload.word, n: payload.prons.length });
-
-  const resp = await fetch(ALT_MEANING_URL, {
+export async function fetchAltMeanings(payload = {}) {
+  const r = await fetch(ALT_MEANING_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(payload || {}),
   });
 
-  return jsonOrThrow(resp); // expects { alts: [{pos, def, example, note?}, ...] }
+  const text = await r.text();
+
+  if (!r.ok) {
+    throw new Error(`alt-meaning ${r.status}: ${text || "No body"}`);
+  }
+
+  try {
+    return text ? JSON.parse(text) : {};
+  } catch (e) {
+    throw new Error(
+      `alt-meaning bad json: ${String(e?.message || e)} :: ${text.slice(0, 120)}`
+    );
+  }
 }
