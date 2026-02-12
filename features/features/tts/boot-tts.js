@@ -70,7 +70,7 @@ function ensurePanel() {
     // Put tab BEFORE shell
     panel.insertBefore(tab, shell);
 
-    async function lazyBootPlayer() {
+    const lazyBootPlayer = async () => {
       // ✅ Lazy boot ONLY on first open
       if (_playerBooted) return;
       _playerBooted = true;
@@ -90,7 +90,7 @@ function ensurePanel() {
         console.warn("[Lux] TTS lazy mount failed:", e);
         _playerBooted = false; // allow retry
       }
-    }
+    };
 
     tab.addEventListener("click", async () => {
       const willOpen = !document.documentElement.classList.contains("lux-tts-open");

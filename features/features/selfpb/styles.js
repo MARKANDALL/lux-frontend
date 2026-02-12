@@ -299,6 +299,38 @@ export function ensureStyles() {
       box-shadow: 0 6px 14px rgba(0,0,0,0.18);
     }
 
+    /* ✅ Expanded-only: make the scrubber handle visually distinct (not the generic blue knob) */
+    #spb-float #spb-scrub::-webkit-slider-thumb{
+      width: 22px;
+      height: 22px;
+      border-radius: 8px;
+      background: radial-gradient(circle at 30% 30%, #ffffff 0%, #bfdbfe 32%, #2563eb 72%, #1e40af 100%);
+      border: 2px solid rgba(255,255,255,0.95);
+      margin-top: -6px;
+      box-shadow:
+        0 10px 22px rgba(37,99,235,0.28),
+        0 2px 0 rgba(255,255,255,0.65) inset,
+        0 0 0 3px rgba(37,99,235,0.10);
+      cursor: grab;
+    }
+    #spb-float #spb-scrub::-webkit-slider-thumb:active{
+      cursor: grabbing;
+      transform: scale(1.06);
+      filter: brightness(0.98);
+    }
+    #spb-float #spb-scrub::-moz-range-thumb{
+      width: 22px;
+      height: 22px;
+      border-radius: 8px;
+      background: radial-gradient(circle at 30% 30%, #ffffff 0%, #bfdbfe 32%, #2563eb 72%, #1e40af 100%);
+      border: 2px solid rgba(255,255,255,0.95);
+      box-shadow:
+        0 10px 22px rgba(37,99,235,0.28),
+        0 2px 0 rgba(255,255,255,0.65) inset,
+        0 0 0 3px rgba(37,99,235,0.10);
+      cursor: grab;
+    }
+
     /* ✅ Speed stays slimmer + quieter */
     :is(#selfpb-lite, #spb-float) #spb-rate::-webkit-slider-runnable-track{
       height: 6px;

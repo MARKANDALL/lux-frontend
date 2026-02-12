@@ -48,15 +48,40 @@ export async function getVoiceCaps() {
 }
 
 // ---- TTS synthesis (returns Blob with _meta) ----
+
+function b64ToBlob(b64, mime = "audio/mpeg") {
+  try {
+    const raw = String(b64 || "");
+    const clean =
+      raw.includes(",") && raw.trim().startsWith("data:")
+        ? raw.split(",").slice(1).join(",")
+        : raw;
+    const bin = atob(clean);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new Blob([bytes], { type: mime || "audio/mpeg" });
+  } catch {
+    return new Blob([], { type: mime || "audio/mpeg" });
+  }
+}
+
 export async function synthesize(payload) {
+  const wantTimings = !!payload?.wantWordTimings;
+  const cleanPayload = { ...(payload || {}) };
+  try {
+    delete cleanPayload.wantWordTimings;
+  } catch {}
+
+  const url = wantTimings ? `${TTS_URL}?timings=1` : TTS_URL;
+
   const doFetch = (token) =>
-    fetch(TTS_URL, {
+    fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         ...(token ? { "x-admin-token": token } : {}),
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(cleanPayload),
     });
 
   // Only prompt when the user actually tries to synthesize.
@@ -93,6 +118,24 @@ export async function synthesize(payload) {
     err.meta = meta;
     throw err;
   }
+
+  const ct = String(res.headers.get("content-type") || "").toLowerCase();
+
+  // If backend returns timed synthesis, it will respond with JSON (audio + word boundaries)
+  if (ct.includes("application/json")) {
+    const data = await res.json();
+    const audioB64 = data?.audioBase64 || data?.audio || "";
+    const mime = data?.mime || data?.contentType || "audio/mpeg";
+    const blob = b64ToBlob(audioB64, mime);
+    blob._meta = meta;
+    blob._wordBoundaries = Array.isArray(data?.wordBoundaries)
+      ? data.wordBoundaries
+      : Array.isArray(data?.boundaries)
+        ? data.boundaries
+        : [];
+    return blob;
+  }
+
   const blob = await res.blob();
   blob._meta = meta;
   return blob;
