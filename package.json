@@ -14,7 +14,8 @@
     "lint": "eslint . --ext .js,.mjs",
     "lint:fix": "eslint . --ext .js,.mjs --fix",
     "build:harvard:phonemes": "node scripts/build-harvard-phonemes.mjs",
-    "build:passages:phonemes": "node scripts/build-passage-phonemes.mjs"
+    "build:passages:phonemes": "node scripts/build-passage-phonemes.mjs",
+    "hygiene": "node scripts/hygiene-report.mjs"
   },
   "keywords": [
     "pronunciation",

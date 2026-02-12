@@ -7,7 +7,11 @@
   "ignorePatterns": ["dist/", "node_modules/", "public/vendor/"],
   "rules": {
     "no-empty": "off",
-    "no-unused-vars": "off",
+    "no-unused-vars": ["warn", {
+      "argsIgnorePattern": "^_",
+      "varsIgnorePattern": "^_",
+      "ignoreRestSiblings": true
+    }],
     "no-control-regex": "off",
     "no-misleading-character-class": "off",
     "no-useless-escape": "off"
