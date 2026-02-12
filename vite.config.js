@@ -13,7 +13,12 @@ export default defineConfig(({ mode }) => {
   console.log("[vite] API_ORIGIN =", API_ORIGIN);
 
   // Only used for dev proxy header injection (optional)
-  const ADMIN_TOKEN = env.LUX_ADMIN_TOKEN || env.ADMIN_TOKEN || "";
+  const ADMIN_TOKEN =
+    env.VITE_ADMIN_TOKEN ||
+    env.VITE_LUX_ADMIN_TOKEN ||
+    env.LUX_ADMIN_TOKEN ||
+    env.ADMIN_TOKEN ||
+    "";
 
   return {
     base: "./",
