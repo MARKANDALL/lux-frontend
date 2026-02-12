@@ -2,11 +2,15 @@
 // One-line: Frontend helper that calls backend /api/router?route=alt-meaning and returns JSON.
 
 const ALT_MEANING_URL = `/api/router?route=alt-meaning`;
+const ADMIN_TOKEN = (import.meta?.env?.VITE_ADMIN_TOKEN || "").toString().trim();
 
 export async function fetchAltMeanings(payload = {}) {
   const r = await fetch(ALT_MEANING_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(ADMIN_TOKEN ? { "x-admin-token": ADMIN_TOKEN } : {}),
+    },
     body: JSON.stringify(payload || {}),
   });
 

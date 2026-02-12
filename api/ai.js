@@ -6,6 +6,7 @@ import { getUID } from "./identity.js";
 import { getLastAttemptId } from "../app-core/runtime.js";
 
 const FEEDBACK_URL = `${API_BASE}/api/pronunciation-gpt`;
+const ADMIN_TOKEN = (import.meta?.env?.VITE_ADMIN_TOKEN || "").toString().trim();
 
 /**
  * Get GPT-powered coaching sections.
@@ -59,7 +60,10 @@ export async function fetchAIFeedback({
 
   const resp = await fetch(FEEDBACK_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(ADMIN_TOKEN ? { "x-admin-token": ADMIN_TOKEN } : {}),
+    },
     body: JSON.stringify(payload),
   });
 
