@@ -1,12 +1,12 @@
 // api/ai.js
 // GPT coaching fetcher
 
-import { API_BASE, dbg, jsonOrThrow } from "./util.js";
+import { API_BASE, dbg, jsonOrThrow, getAdminToken } from "./util.js";
 import { getUID } from "./identity.js";
 import { getLastAttemptId } from "../app-core/runtime.js";
 
 const FEEDBACK_URL = `${API_BASE}/api/pronunciation-gpt`;
-const ADMIN_TOKEN = (import.meta?.env?.VITE_ADMIN_TOKEN || "").toString().trim();
+const ENV_ADMIN_TOKEN = (import.meta?.env?.VITE_ADMIN_TOKEN || "").toString().trim();
 
 /**
  * Get GPT-powered coaching sections.
@@ -58,11 +58,18 @@ export async function fetchAIFeedback({
 
   dbg("POST", FEEDBACK_URL, { firstLang, mode, chunk, persona, uid, attemptId, tipIndex, tipCount, includeHistory });
 
+  const token =
+    ENV_ADMIN_TOKEN ||
+    getAdminToken({
+      promptIfMissing: true,
+      promptLabel: "Admin Token required for AI Coach (Quick Tips)",
+    });
+
   const resp = await fetch(FEEDBACK_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...(ADMIN_TOKEN ? { "x-admin-token": ADMIN_TOKEN } : {}),
+      ...(token ? { "x-admin-token": token } : {}),
     },
     body: JSON.stringify(payload),
   });
