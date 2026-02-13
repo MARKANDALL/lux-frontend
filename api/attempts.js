@@ -1,11 +1,23 @@
 // api/attempts.js
 // UPDATED: Added updateAttempt() to save AI feedback
 
-import { API_BASE, dbg, jsonOrThrow } from "./util.js";
+import { API_BASE, dbg, jsonOrThrow, getAdminToken } from "./util.js";
 
 const ATTEMPT_URL = `${API_BASE}/api/attempt`;
 const HISTORY_URL = `${API_BASE}/api/user-recent`;
 const UPDATE_URL  = `${API_BASE}/api/update-attempt`; // New!
+
+const ENV_ADMIN_TOKEN = (import.meta?.env?.VITE_ADMIN_TOKEN || "").toString().trim();
+
+function getTokenForWrites() {
+  return (
+    ENV_ADMIN_TOKEN ||
+    getAdminToken({
+      promptIfMissing: true,
+      promptLabel: "Admin Token required to save attempts",
+    })
+  );
+}
 
 // Helper: YYYY-MM-DD in the user's local day (best-effort)
 function localDayKey(ts) {
@@ -115,10 +127,15 @@ export async function updateAttempt(id, aiFeedbackData) {
 
   dbg("POST", UPDATE_URL, body);
 
+  const token = getTokenForWrites();
+
   try {
     const resp = await fetch(UPDATE_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { "x-admin-token": token } : {}),
+      },
       body: JSON.stringify(body),
     });
     return jsonOrThrow(resp);
