@@ -1,3 +1,6 @@
+// vite.config.js
+// Vite config for Lux frontend: multi-page build inputs + dev server proxy to API (with optional admin token + clearer proxy failures).
+
 import { defineConfig, loadEnv } from "vite";
 import { resolve } from "path";
 
@@ -80,6 +83,37 @@ export default defineConfig(({ mode }) => {
 
           // Add admin token header (if set). Safe no-op if empty.
           configure: (proxy) => {
+            // Log proxy errors clearly (port drift / backend down / wrong origin)
+            proxy.on("error", (err, req, res) => {
+              const code = err?.code || err?.message || String(err);
+              console.error(
+                `[vite][proxy error] ${req?.method} ${req?.url} -> ${API_ORIGIN} :: ${code}`
+              );
+
+              // Return a readable response instead of an opaque 500 page
+              try {
+                if (res && !res.headersSent) {
+                  res.writeHead(502, { "Content-Type": "text/plain" });
+                }
+                if (res && !res.writableEnded) {
+                  res.end(
+                    `Proxy error: ${code}\nTarget: ${API_ORIGIN}\n` +
+                      `Tip: confirm backend is running on Target port.\n`
+                  );
+                }
+              } catch (_) {}
+            });
+
+            // Optional: log non-2xx from target (helps distinguish target 401/500 vs proxy failure)
+            proxy.on("proxyRes", (proxyRes, req) => {
+              const sc = proxyRes?.statusCode || 0;
+              if (sc >= 400) {
+                console.warn(
+                  `[vite][proxy] ${req?.method} ${req?.url} -> ${API_ORIGIN} (${sc})`
+                );
+              }
+            });
+
             proxy.on("proxyReq", (proxyReq) => {
               if (ADMIN_TOKEN) proxyReq.setHeader("x-admin-token", ADMIN_TOKEN);
             });
