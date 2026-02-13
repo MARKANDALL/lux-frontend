@@ -6,9 +6,11 @@
 const GUARD_ID = "lux-tts-guard-style";
 
 // Heavy inner styling (controls UI)
-const CSS_CORE = "/features/features/tts.css";
+const CSS_CORE = new URL("../tts.css", import.meta.url).href;
+const CSS_CORE_ID = "lux-tts-css-core";
 
-function ensureCSS(href, contains = "") {
+function ensureCSS(href, contains = "", id = "") {
+  if (id && document.getElementById(id)) return;
   const needle = contains || href;
   const has = [...document.styleSheets].some((ss) => (ss.href || "").includes(needle));
   if (has) return;
@@ -16,6 +18,7 @@ function ensureCSS(href, contains = "") {
   const link = document.createElement("link");
   link.rel = "stylesheet";
   link.href = href;
+  if (id) link.id = id;
   document.head.appendChild(link);
 }
 
@@ -76,7 +79,7 @@ function ensurePanel() {
       _playerBooted = true;
 
       // Load inner control styling (NOT overlay positioning CSS)
-      ensureCSS(CSS_CORE, "tts.css");
+      ensureCSS(CSS_CORE, "tts.css", CSS_CORE_ID);
 
       try {
         const mod = await import("./player-ui.js");
@@ -141,7 +144,7 @@ export async function ensureTTSPlayerMounted() {
   if (_playerBooted) return true;
   _playerBooted = true;
 
-  try { ensureCSS(CSS_CORE, "tts.css"); } catch (_) {}
+  try { ensureCSS(CSS_CORE, "tts.css", CSS_CORE_ID); } catch (_) {}
 
   try {
     const mod = await import("./player-ui.js");
