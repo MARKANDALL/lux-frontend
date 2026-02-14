@@ -1,4 +1,4 @@
-// features/features/08-selfpb-peekaboo.js
+// C:\dev\LUX_GEMINI\features\features\08-selfpb-peekaboo.js
 // LAZY LOADER: Creates the tab immediately, but loads the heavy UI/WaveSurfer only on click.
 import "./selfpb-peekaboo.css";
 
@@ -40,13 +40,13 @@ import "./selfpb-peekaboo.css";
     document.body.appendChild(panel);
 
     // FAILSAFE DOCK: If CSS fails (or is overridden by device emulation / viewport rules),
-    // keep the SelfPB tab reachable and positioned like a right-edge peekaboo.
+    // keep the SelfPB tab reachable and positioned like a LEFT-edge peekaboo.
     // (CSS can still override these if it loads and applies.)
     try {
       panel.style.position = panel.style.position || "fixed";
-      panel.style.right = panel.style.right || "0";
-      panel.style.left = panel.style.left || "auto";
-      panel.style.top = panel.style.top || "96px";
+      panel.style.left = panel.style.left || "0";
+      panel.style.right = panel.style.right || "auto";
+      panel.style.top = panel.style.top || "10px";      
       panel.style.zIndex = panel.style.zIndex || "999999";
       panel.style.pointerEvents = panel.style.pointerEvents || "auto";
     } catch {}

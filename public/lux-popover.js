@@ -98,7 +98,10 @@
       : null;
   }
 
-  function getVideoSrcForPill(pill) {
+  function getVideoSrcForPil function getVideoSrcForPill(pill) {
+    // Self Playback UI uses .pill for its own labels (Ref/Time/etc).
+    // Do NOT treat those as hover-preview targets.
+    if (pill?.closest?.("#selfpb-lite")) return null;l(pill) {
     // Primary: explicit data attribute
     if (pill?.dataset?.video) return pill.dataset.video;
 
