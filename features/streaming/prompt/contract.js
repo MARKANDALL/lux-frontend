@@ -11,9 +11,9 @@ export function buildStreamingInstructions({ scenario, knobs } = {}) {
   if (stress) styleBits.push(`Stress: ${stress}.`);
   if (pace) styleBits.push(`Pace: ${pace}.`);
 
-  const styleLine = styleBits.length
-    ? `\n\nStyle targets:\n- ${styleBits.join("\n- ")}`
-    : "";
+
+  const styleLine = styleBits.length ? `\n\nStyle targets:\n- ${styleBits.join("\n- ")}` : "";
+ 
 
   return (
     `You are Lux, a helpful pronunciation coach.\n` +
