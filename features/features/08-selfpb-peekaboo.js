@@ -6,20 +6,24 @@
   const PANEL_SEL = ".lux-sp-panel";
   const BODY_SEL = ".lux-sp-body";
   const HOST_ID = "selfpb-lite";
-  const CSS_HREF = "./features/features/selfpb-peekaboo.css";
+  // Build-safe CSS URLs (Vite will rewrite/hashes correctly)
+  const CSS_HREF = new URL("./selfpb-peekaboo.css", import.meta.url).href;
+  const CSS_ID = "lux-selfpb-peekaboo-css";
+  const INNER_CSS_HREF = new URL("./self-playback.css", import.meta.url).href;
+  const INNER_CSS_ID = "lux-selfpb-inner-css";
 
   let isLoaded = false;
   let isLoading = false;
 
   // 1) Ensure Panel CSS (Lightweight)
   (function ensureCSS() {
-    const has = [...document.styleSheets].some((ss) =>
-      (ss.href || "").includes("selfpb-peekaboo.css")
-    );
+    if (document.getElementById(CSS_ID)) return;
+    const has = [...document.styleSheets].some((ss) => (ss.href || "").includes("selfpb-peekaboo"));
     if (!has) {
       const link = document.createElement("link");
       link.rel = "stylesheet";
       link.href = CSS_HREF;
+      link.id = CSS_ID;
       document.head.appendChild(link);
     }
   })();
@@ -48,9 +52,28 @@
     `;
     document.body.appendChild(panel);
 
+    // FAILSAFE DOCK: If CSS fails (or is overridden by device emulation / viewport rules),
+    // keep the SelfPB tab reachable and positioned like a right-edge peekaboo.
+    // (CSS can still override these if it loads and applies.)
+    try {
+      panel.style.position = panel.style.position || "fixed";
+      panel.style.right = panel.style.right || "0";
+      panel.style.left = panel.style.left || "auto";
+      panel.style.top = panel.style.top || "96px";
+      panel.style.zIndex = panel.style.zIndex || "999999";
+      panel.style.pointerEvents = panel.style.pointerEvents || "auto";
+    } catch {}
+
     // Wire the click to the Lazy Loader
     const tab = panel.querySelector(".lux-sp-tab");
     tab.addEventListener("click", handleToggle);
+
+    // If CSS didn't style the tab, it can look like a default HTML button.
+    // Give it a tiny baseline so it still looks intentional.
+    try {
+      tab.style.cursor = tab.style.cursor || "pointer";
+      tab.style.whiteSpace = tab.style.whiteSpace || "nowrap";
+    } catch {}
 
     // Closed panel/card click opens (never closes).
     // NOTE: We ignore clicks on the tab here only to prevent a double-trigger
@@ -91,14 +114,13 @@
 
         // ✅ 1) Ensure inner controls CSS only when opened (FIXED PATH)
         (function ensureInnerCSS() {
-          const href = "/features/features/self-playback.css";
-          const has = [...document.styleSheets].some((ss) =>
-            (ss.href || "").includes("self-playback.css")
-          );
+          if (document.getElementById(INNER_CSS_ID)) return;
+          const has = [...document.styleSheets].some((ss) => (ss.href || "").includes("self-playback"));
           if (!has) {
             const link = document.createElement("link");
             link.rel = "stylesheet";
-            link.href = href;
+            link.href = INNER_CSS_HREF;
+            link.id = INNER_CSS_ID;
             document.head.appendChild(link);
           }
         })();
