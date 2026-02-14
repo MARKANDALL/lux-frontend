@@ -1,32 +1,19 @@
 // features/features/08-selfpb-peekaboo.js
 // LAZY LOADER: Creates the tab immediately, but loads the heavy UI/WaveSurfer only on click.
+import "./selfpb-peekaboo.css";
 
 (() => {
   const OPEN_CLASS = "lux-sp-open";
   const PANEL_SEL = ".lux-sp-panel";
   const BODY_SEL = ".lux-sp-body";
   const HOST_ID = "selfpb-lite";
-  // Build-safe CSS URLs (Vite will rewrite/hashes correctly)
-  const CSS_HREF = new URL("./selfpb-peekaboo.css", import.meta.url).href;
-  const CSS_ID = "lux-selfpb-peekaboo-css";
   const INNER_CSS_HREF = new URL("./self-playback.css", import.meta.url).href;
   const INNER_CSS_ID = "lux-selfpb-inner-css";
 
   let isLoaded = false;
   let isLoading = false;
 
-  // 1) Ensure Panel CSS (Lightweight)
-  (function ensureCSS() {
-    if (document.getElementById(CSS_ID)) return;
-    const has = [...document.styleSheets].some((ss) => (ss.href || "").includes("selfpb-peekaboo"));
-    if (!has) {
-      const link = document.createElement("link");
-      link.rel = "stylesheet";
-      link.href = CSS_HREF;
-      link.id = CSS_ID;
-      document.head.appendChild(link);
-    }
-  })();
+  // 1) Panel CSS is imported above (no runtime injection needed).
 
   // 2) Build Panel Shell + Tab (Runs immediately)
   function buildShell() {
@@ -191,12 +178,20 @@ const module = await import("./selfpb/ui.js");
     document.documentElement.classList.add(OPEN_CLASS);
     const tab = document.querySelector(".lux-sp-tab");
     if (tab) tab.setAttribute("aria-expanded", "true");
+
+    // If the heavy SelfPB host exists, ensure it's visible when opened.
+    const host = document.getElementById(HOST_ID);
+    if (host) host.style.display = "";
   }
 
   function close() {
     document.documentElement.classList.remove(OPEN_CLASS);
     const tab = document.querySelector(".lux-sp-tab");
     if (tab) tab.setAttribute("aria-expanded", "false");
+
+    // Hard guarantee: close should actually hide the heavy host (even if CSS fails).
+    const host = document.getElementById(HOST_ID);
+    if (host) host.style.display = "none";
   }
 
   // Expose control API

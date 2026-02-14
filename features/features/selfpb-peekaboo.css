@@ -1,4 +1,4 @@
-/* Self-Playback “Peekaboo” Panel (top-left) */
+/* Self-Playback “Peekaboo” Panel (top-right) */
 
 :root {
   --lux-sp-panel-w: 360px;
@@ -32,8 +32,8 @@
 /* ───────────────── Panel ───────────────── */
 .lux-sp-panel {
   position: fixed;
-  inset: env(safe-area-inset-top, 0) auto auto env(safe-area-inset-left, 0);
-  z-index: var(--z-drawer); /* Treaty Compliant */
+  inset: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) auto auto;
+  z-index: 12000; /* Treaty Compliant */
 
   width: var(--lux-sp-panel-w);
   max-width: var(--lux-sp-panel-max-w);
@@ -45,15 +45,15 @@
   color: #333333;
   
   border: var(--lux-sp-border);
-  border-left: 0;
-  border-top-right-radius: var(--lux-sp-radius);
-  border-bottom-right-radius: var(--lux-sp-radius);
+  border-right: 0;
+  border-top-left-radius: var(--lux-sp-radius);
+  border-bottom-left-radius: var(--lux-sp-radius);
   box-shadow: var(--lux-sp-shadow);
 
   overflow: visible;
 
-  /* Closed State: Tucked left, but leaving 'peek' pixels visible */
-  transform: translate3d(calc(-100% + var(--lux-sp-tab-peek)), 0, 0);
+  /* Closed State: Tucked right, but leaving 'peek' pixels visible */
+  transform: translate3d(calc(100% - var(--lux-sp-tab-peek)), 0, 0);
   transition: transform var(--lux-drawer-dur) var(--lux-ease-drawer), box-shadow 160ms ease, filter 160ms ease, border-color 160ms ease;
 }
 
@@ -146,7 +146,8 @@ html:not(.lux-sp-open) .lux-sp-panel:active{
 .lux-sp-tab {
   position: absolute;
   top: 6px;
-  left: 6px;
+  right: 6px;
+  left: auto;
   width: calc(100% + var(--lux-sp-tab-protrude));
   height: var(--lux-sp-tab-h);
 
@@ -164,7 +165,7 @@ html:not(.lux-sp-open) .lux-sp-panel:active{
   box-shadow: 0 6px 18px rgba(13, 17, 23, 0.15); /* Softer shadow for light theme */
   cursor: pointer;
   user-select: none;
-  z-index: 2;
+  z-index: 12001;
 }
 
 /* Keep label visible when the tab is “peeking” (panel closed) */
