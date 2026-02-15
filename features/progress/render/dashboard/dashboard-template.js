@@ -6,6 +6,7 @@ import { sparklineSvg } from "../sparkline.js";
 import { renderMetricTrendCard } from "./actions-and-trends.js";
 
 export function buildProgressDashboardHtml({
+    model,
   title,
   subtitle,
   showActions,
