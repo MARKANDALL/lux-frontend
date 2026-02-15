@@ -1,6 +1,10 @@
 // features/features/selfpb/styles.js
 // Injected CSS for Self Playback mini drawer + Expanded float layout rules (waveform sizing, placeholders, etc.).
 
+import { KARAOKE_CSS } from "./styles/karaoke.js";
+import { FLOAT_CSS } from "./styles/float.js";
+import { EXPANDED_CSS } from "./styles/expanded.js";
+
 export function ensureStyles() {
   const STYLE_ID = "selfpb-lite-style";
   if (document.getElementById(STYLE_ID)) return;
@@ -120,18 +124,6 @@ export function ensureStyles() {
       border-top: 4px solid rgba(0,0,0,0.85);
     }
 
-    /* ✅ In expanded mode, body fills floating card */
-    #spb-float .spb-body{
-      width: 100% !important;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      grid-template-areas:
-        "top top"
-        "self tts";
-      gap: 14px;
-      align-items: start;
-    }
-
     /* ✅ Hide the TTS mount in the small drawer */
     #selfpb-lite .spb-controls--tts{
       display:none !important;
@@ -162,42 +154,6 @@ export function ensureStyles() {
       border: 1px solid rgba(15,23,42,0.10);
       box-shadow: 0 10px 26px rgba(0,0,0,0.12);
       padding: 0;
-    }
-
-    #spb-float .spb-top{ grid-area: top; width:100%; }
-    #spb-float .spb-controls--self{ grid-area: self; width:100%; }
-    #spb-float .spb-controls--tts{ grid-area: tts; width:100%; display:block; }
-
-    /* ✅ Give the waveform area real space in expanded mode */
-    #spb-float .spb-wave{
-      height: 240px;
-    }
-
-    /* ✅ Karaoke (Word Sync) should stretch full width */
-    #spb-float #spb-karaokeWrap,
-    #spb-float #spb-karaokeLaneWrap{
-      width: 100%;
-    }
-
-    /* ✅ TTS card should fill its half */
-    #spb-float .spb-controls--tts #tts-wrap{
-      width: 100%;
-      max-width: 100%;
-      margin-left: 0;
-    }
-
-    /* ✅ In expanded view, the TTS expand button is redundant */
-    #spb-float #tts-expand{ display:none; }
-
-    /* ✅ Mobile: stack sections */
-    @media (max-width: 980px){
-      #spb-float .spb-body{
-        grid-template-columns: 1fr;
-        grid-template-areas:
-          "top"
-          "self"
-          "tts";
-      }
     }
 
     /* ✅ Prevent waveform/canvas from forcing overflow */
@@ -382,199 +338,7 @@ export function ensureStyles() {
       min-height: 260px;
       padding: 0;
     }
-
-    /* ✅ Floating expanded window (non-modal) */
-    #spb-float{
-      position: fixed;
-      z-index: 200000;
-      display: none;
-
-      width: min(1100px, calc(100vw - 40px));
-      height: auto;
-
-      max-height: min(86vh, 820px);
-
-      left: 50%;
-      top: 90px;
-      transform: translateX(-50%);
-
-      border-radius: 22px;
-      background: rgba(255,255,255,0.96);
-      border: 1px solid rgba(15,23,42,0.12);
-      box-shadow: 0 18px 52px rgba(0,0,0,0.30);
-      overflow: hidden;
-    }
-
-    #spb-float.is-open{ display:block; }
-
-    #spb-floatHead{
-      position: relative;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      padding: 10px 12px;
-      font-weight: 900;
-      cursor: grab;            /* ✅ draggable */
-      user-select: none;
-      background: rgba(15,23,42,0.04);
-    }
-
-    #spb-floatHead:active{ cursor: grabbing; }
-
-    #spb-floatMount{
-      padding: 10px;
-      height: auto;
-      max-height: calc(86vh - 52px);
-      overflow: auto;
-    }
-
-    @media (max-width: 980px){
-      #spb-floatGrid{ flex-direction: column; }
-      #spb-floatRight{
-        width: 100%;
-        min-width: 0;
-        max-width: 100%;
-      }
-    }
-
-    /* ✅ bigger waveform in expanded mode */
-    #spb-float #spb-wavebox{
-      height: 240px;
-    }
-
-    /* ✅ expanded mode: speed slider not absurdly wide */
-    #spb-float #spb-rate{
-      max-width: 520px;
-    }
-
-    /* ============================================================
-       ✅ Expanded-only Karaoke Timeline
-       ============================================================ */
-
-    #spb-karaokeWrap{
-      display:none; /* ✅ hidden in small drawer */
-      margin-top: 10px;
-    }
-
-    #spb-karaokeWrap .spb-karaokeTitle{
-      font-weight: 900;
-      font-size: 12px;
-      opacity: .70;
-      margin: 2px 0 8px;
-    }
-
-    /* ✅ lane wrapper (timeline) */
-    #spb-karaokeLaneWrap{
-      position: relative;
-      border-radius: 14px;
-      background: rgba(15,23,42,0.04);
-      border: 1px solid rgba(15,23,42,0.10);
-      height: 76px;          /* JS can expand this if we need multiple rows */
-      overflow: hidden;
-      cursor: pointer;
-    }
-
-    /* subtle center “timeline rail” */
-    #spb-karaokeLaneWrap::before{
-      content:"";
-      position:absolute;
-      left:10px; right:10px;
-      top: 38px;
-      height: 2px;
-      border-radius: 999px;
-      background: rgba(15,23,42,0.10);
-    }
-
-    /* holds absolute-positioned words */
-    #spb-karaokeLane{
-      position:absolute;
-      inset: 8px 8px 8px 8px;
-    }
-
-    /* playback cursor */
-    #spb-karaokeCursor{
-      position:absolute;
-      top: 8px;
-      bottom: 8px;
-      width: 2px;
-      left: 0%;
-      transform: translateX(-1px);
-      background: rgba(47,111,228,0.55);
-      border-radius: 999px;
-      pointer-events: none;
-    }
-
-    /* each word pill */
-    #spb-karaokeLane .spbKWord{
-      --p: 0;
-      position:absolute;
-      height: 24px;
-      padding: 0 10px;
-      border-radius: 999px;
-
-      border: 1px solid rgba(15,23,42,0.12);
-      background:
-        linear-gradient(
-          90deg,
-          rgba(47,111,228,0.22) calc(var(--p) * 100%),
-          rgba(255,255,255,0.72) 0
-        );
-
-      font-weight: 900;
-      font-size: 12px;
-      color: rgba(15,23,42,0.86);
-
-      display:flex;
-      align-items:center;
-      justify-content:center;
-
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-
-      cursor: pointer;
-      transition: transform .08s ease, filter .12s ease;
-    }
-
-    #spb-karaokeLane .spbKWord:hover{
-      transform: scale(1.03);
-      filter: brightness(1.04);
-    }
-
-    #spb-karaokeLane .spbKWord.is-active{
-      z-index: 2;
-      transform: scale(1.04);
-      border-color: rgba(47,111,228,0.40);
-      box-shadow: 0 10px 18px rgba(47,111,228,0.14);
-    }
-
-    #spb-karaokeLane .spbKWord.is-past{ opacity: .50; }
-    #spb-karaokeLane .spbKWord.is-future{ opacity: .78; }
-
-    /* ✅ error glow if word accuracy is low */
-    #spb-karaokeLane .spbKWord.is-bad{
-      border-color: rgba(220,38,38,0.35);
-      box-shadow: 0 10px 20px rgba(220,38,38,0.14);
-      background:
-        linear-gradient(
-          90deg,
-          rgba(220,38,38,0.18) calc(var(--p) * 100%),
-          rgba(255,255,255,0.72) 0
-        );
-    }
-
-    /* ✅ great words get a soft “good glow” */
-    #spb-karaokeLane .spbKWord.is-great{
-      border-color: rgba(47,111,228,0.30);
-      box-shadow: 0 10px 20px rgba(47,111,228,0.12);
-    }
-
-    /* ✅ show karaoke ONLY inside Expanded containers */
-    #spb-modalCard #spb-karaokeWrap,
-    #spb-float #spb-karaokeWrap{
-      display:block;
-    }
-  `;
+  ` + EXPANDED_CSS + FLOAT_CSS + KARAOKE_CSS;
 
   document.head.appendChild(s);
 }
