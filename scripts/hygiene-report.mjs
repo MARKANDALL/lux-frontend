@@ -8,62 +8,102 @@ import process from "node:process";
 const argv = process.argv.slice(2);
 
 // Flags:
-//   --active    => ignore archive/legacy trash (actionable surface area)
-//   --no-vendor => ignore vendor/minified assets (less noise)
+//   (default) ACTIVE mode => ignores _ARCHIVE/_OLD/_LEGACY + skips lockfiles (actionable surface area)
+//   --active     => explicit ACTIVE mode (same as default)
+//   --all        => scan everything (includes historical + lockfiles)
+//   --no-vendor  => ignore vendor/minified assets (less noise)
+//   --no-html    => exclude .html/.css (logic-only view; sometimes useful)
 // Root arg can be provided as the first non-flag argument.
-const ACTIVE_ONLY = argv.includes("--active");
+const FORCE_ALL = argv.includes("--all");
+const ACTIVE_ONLY = !FORCE_ALL; // default ACTIVE unless --all
 const NO_VENDOR = argv.includes("--no-vendor");
-const rootArg = argv.find(a => a && !a.startsWith("--"));
+const NO_HTML = argv.includes("--no-html");
+
+const rootArg = argv.find((a) => a && !a.startsWith("--"));
 const ROOT = rootArg ? path.resolve(rootArg) : process.cwd();
 
 // Always-ignored dirs (almost always junk/noise for hygiene)
 const IGNORE_DIRS = new Set([
-  "node_modules", ".git",
-  "dist", "build", "coverage",
-  ".vercel", ".next",
-  ".cache", ".turbo", ".svelte-kit", ".vite",
+  "node_modules",
+  ".git",
+  "dist",
+  "build",
+  "coverage",
+  ".vercel",
+  ".next",
+  ".cache",
+  ".turbo",
+  ".svelte-kit",
+  ".vite",
   "out",
-  // common backend junk
-  ".nyc_output", ".pnpm-store", ".yarn", ".npm"
+  // common junk
+  ".nyc_output",
+  ".pnpm-store",
+  ".yarn",
+  ".npm",
 ]);
 
 // Optionally ignore “historical” areas when you want actionable results
-const ACTIVE_IGNORE_DIRS = new Set([
-  "_ARCHIVE", "_OLD", "_LEGACY"
-]);
+const ACTIVE_IGNORE_DIRS = new Set(["_ARCHIVE", "_OLD", "_LEGACY"]);
 
 // Optional vendor/minified ignore (cuts false positives + noise)
 const VENDOR_IGNORE_DIRS = new Set([
-  "vendor" // e.g., public/vendor
+  "vendor", // e.g., public/vendor
 ]);
 
-const EXTS = new Set([
-  ".js", ".mjs", ".cjs", ".ts", ".tsx",
-  ".json", ".md",
-  ".html", ".css"
+const EXTS_BASE = new Set([
+  ".js",
+  ".mjs",
+  ".cjs",
+  ".ts",
+  ".tsx",
+  ".json",
+  ".md",
+  ".html",
+  ".css",
 ]);
 
-// Lockfiles dominate LOC and are usually not actionable.
-// We skip them entirely (scan + LOC) to reduce noise.
-const IGNORE_FILES = new Set([
+const EXTS = new Set(
+  [...EXTS_BASE].filter((ext) => {
+    if (!NO_HTML) return true;
+    return ext !== ".html" && ext !== ".css";
+  })
+);
+
+// Lockfiles dominate LOC/bytes and are usually not actionable.
+// In ACTIVE mode we skip them; in --all we include them.
+const LOCKFILES = new Set([
   "package-lock.json",
   "yarn.lock",
   "pnpm-lock.yaml",
-  "npm-shrinkwrap.json"
+  "npm-shrinkwrap.json",
 ]);
 
+// Treat these as "generated/static data blobs" so they don't dominate refactor targeting.
+// (Still reported in a dedicated section.)
+function isGeneratedDataBlob(relPath) {
+  const p = relPath.replaceAll("\\", "/");
+  if (!p.startsWith("src/data/")) return false;
+
+  // Known big generated outputs in this project.
+  if (/phoneme-meta/i.test(p)) return true;
+
+  // If you later add other generated data, add patterns here.
+  return false;
+}
+
 const PATTERNS = [
-  // frontend-ish XSS sinks (still useful if you render templates / admin pages)
+  // XSS / DOM sinks
   { name: "innerHTML", re: /\binnerHTML\b/g },
   { name: "insertAdjacentHTML", re: /\binsertAdjacentHTML\b/g },
   { name: "outerHTML", re: /\bouterHTML\b/g },
   { name: "document.write", re: /\bdocument\.write\b/g },
 
-  // backend-relevant “code execution / injection” sinks
+  // code execution / injection sinks
   { name: "eval", re: /\beval\s*\(/g },
   { name: "new Function", re: /\bnew\s+Function\s*\(/g },
 
-  // process execution (precise only — avoids vendor false positives)
+  // process execution (precise-only — avoids vendor false positives)
   { name: "node:child_process import", re: /\bfrom\s+["']node:child_process["']/g },
   { name: "child_process require", re: /\brequire\s*\(\s*["']child_process["']\s*\)/g },
   { name: "child_process.exec", re: /\bchild_process\.exec\b/g },
@@ -71,15 +111,9 @@ const PATTERNS = [
   { name: "child_process.spawn", re: /\bchild_process\.spawn\b/g },
   { name: "child_process.spawnSync", re: /\bchild_process\.spawnSync\b/g },
 
-  // dynamic module loading (not “bad”, but good to know where it happens)
+  // dynamic module loading (not “bad”, but good to know)
   { name: "dynamic import(", re: /\bimport\s*\(\s*['"`]/g },
   { name: "require(", re: /\brequire\s*\(/g },
-
-  // raw response output surfaces (often where HTML or unsanitized strings can slip in)
-  { name: "res.send(", re: /\bres\.send\s*\(/g },
-  { name: "res.write(", re: /\bres\.write\s*\(/g },
-  { name: "res.end(", re: /\bres\.end\s*\(/g },
-  { name: "res.writeHead(", re: /\bres\.writeHead\s*\(/g },
 
   // parsing/input hotspots
   { name: "JSON.parse(", re: /\bJSON\.parse\s*\(/g },
@@ -102,7 +136,7 @@ const PATTERNS = [
   { name: "Content-Type", re: /\bContent-Type\b/g },
   { name: "bodyParser:false", re: /\bbodyParser\s*:\s*false\b/g },
 
-  // env/config surface (helps catch secret usage / configuration sprawl)
+  // env/config surface
   { name: "process.env", re: /\bprocess\.env\b/g },
 ];
 
@@ -125,18 +159,22 @@ function isMinifiedFile(relPath) {
   return /\.min\.(js|mjs|cjs|css)$/i.test(relPath);
 }
 
-function shouldIgnoreDirName(name, parentFullPath) {
+function isHtmlLike(relPath) {
+  const ext = path.extname(relPath).toLowerCase();
+  return ext === ".html" || ext === ".css";
+}
+
+function isInPublicVendor(relPath) {
+  const p = relPath.replaceAll("\\", "/");
+  return p.startsWith("public/vendor/") || p.includes("/public/vendor/");
+}
+
+function shouldIgnoreDirName(name) {
   if (IGNORE_DIRS.has(name)) return true;
   if (ACTIVE_ONLY && ACTIVE_IGNORE_DIRS.has(name)) return true;
 
-  if (NO_VENDOR && VENDOR_IGNORE_DIRS.has(name)) {
-    // only ignore if this "vendor" is actually a vendor directory (often under /public)
-    // parentFullPath helps avoid accidentally ignoring a legit src/vendor folder if you had one.
-    // Still acceptable to ignore any folder literally named "vendor" when --no-vendor is on.
-    return true;
-  }
+  if (NO_VENDOR && VENDOR_IGNORE_DIRS.has(name)) return true;
 
-  // If --no-vendor, also ignore common vendor-ish directories by name
   if (NO_VENDOR) {
     const lowered = String(name || "").toLowerCase();
     if (lowered === "third_party" || lowered === "third-party" || lowered === "vendors") return true;
@@ -147,9 +185,17 @@ function shouldIgnoreDirName(name, parentFullPath) {
 
 function shouldIgnoreFileRel(relPath) {
   const base = path.posix.basename(relPath);
-  if (IGNORE_FILES.has(base)) return true;
+
   if (relPath === SELF_REL) return true;
-  if (NO_VENDOR && isMinifiedFile(relPath)) return true;
+
+  // Skip lockfiles only in ACTIVE (default)
+  if (ACTIVE_ONLY && LOCKFILES.has(base)) return true;
+
+  if (NO_VENDOR) {
+    if (isMinifiedFile(relPath)) return true;
+    if (isInPublicVendor(relPath)) return true;
+  }
+
   return false;
 }
 
@@ -165,7 +211,7 @@ async function walk(dir, out) {
     const full = path.join(dir, ent.name);
 
     if (ent.isDirectory()) {
-      if (shouldIgnoreDirName(ent.name, dir)) continue;
+      if (shouldIgnoreDirName(ent.name)) continue;
       await walk(full, out);
       continue;
     }
@@ -183,12 +229,36 @@ function rel(p) {
   return path.relative(ROOT, p).replaceAll("\\", "/");
 }
 
+function fmtBytes(n) {
+  const v = Number(n || 0);
+  if (!Number.isFinite(v) || v <= 0) return "0 B";
+  const units = ["B", "KB", "MB", "GB"];
+  let i = 0;
+  let x = v;
+  while (x >= 1024 && i < units.length - 1) {
+    x /= 1024;
+    i++;
+  }
+  const rounded = i === 0 ? String(Math.round(x)) : x.toFixed(x < 10 ? 2 : 1);
+  return `${rounded} ${units[i]}`;
+}
+
+function topN(list, n, keyFn) {
+  return [...list].sort((a, b) => keyFn(b) - keyFn(a)).slice(0, n);
+}
+
+function isArchiveLike(relPath) {
+  // For "clean sinks view", treat archive dirs as noise even in --all
+  const p = relPath.replaceAll("\\", "/");
+  return p.startsWith("_ARCHIVE/") || p.includes("/_ARCHIVE/");
+}
+
 async function main() {
   const files = [];
   await walk(ROOT, files);
 
   const rows = [];
-  const totals = Object.fromEntries(PATTERNS.map(p => [p.name, 0]));
+  const totals = Object.fromEntries(PATTERNS.map((p) => [p.name, 0]));
   let todoTotal = 0;
 
   for (const f of files) {
@@ -196,6 +266,15 @@ async function main() {
     if (shouldIgnoreFileRel(r)) continue;
 
     let text;
+    let bytes = 0;
+
+    try {
+      const stat = await fs.stat(f);
+      bytes = Number(stat.size || 0);
+    } catch {
+      // ignore stat failures
+    }
+
     try {
       text = await fs.readFile(f, "utf8");
     } catch {
@@ -205,8 +284,11 @@ async function main() {
     const row = {
       file: r,
       loc: loc(text),
+      bytes,
       todo: countMatches(text, TODO_RE),
-      hits: {}
+      hits: {},
+      isHtml: isHtmlLike(r),
+      isGenerated: isGeneratedDataBlob(r),
     };
 
     for (const p of PATTERNS) {
@@ -214,67 +296,155 @@ async function main() {
       row.hits[p.name] = n;
       totals[p.name] += n;
     }
-    todoTotal += row.todo;
 
+    todoTotal += row.todo;
     rows.push(row);
   }
 
-  rows.sort((a, b) => b.loc - a.loc);
-
-  const topLOC = rows.slice(0, 25);
-
-  const bySink = (sinkName) =>
-    rows
-      .filter(r => (r.hits[sinkName] || 0) > 0)
-      .sort((a, b) => (b.hits[sinkName] || 0) - (a.hits[sinkName] || 0))
-      .slice(0, 25);
-
-  // path smell: repeated segment like features/features
-  const repeatedSeg = rows
-    .map(r => r.file)
-    .filter(p => /(^|\/)([^\/]+)\/\2(\/|$)/.test(p))
-    .slice(0, 50);
+  const modeLabel =
+    (ACTIVE_ONLY
+      ? "ACTIVE (default; ignores _ARCHIVE/_OLD/_LEGACY + skips lockfiles)"
+      : "ALL (includes everything)") + (NO_VENDOR ? " + NO_VENDOR" : "");
 
   console.log(`\n=== Hygiene Report ===`);
   console.log(`Root: ${ROOT}`);
-  console.log(`Mode: ${ACTIVE_ONLY ? "ACTIVE (ignores _ARCHIVE/_OLD/_LEGACY)" : "ALL (includes everything)"}${NO_VENDOR ? " + NO_VENDOR" : ""}`);
+  console.log(`Mode: ${modeLabel}`);
+  console.log(`HTML/CSS: ${NO_HTML ? "EXCLUDED (--no-html)" : "INCLUDED (see split lists below)"}`);
   console.log(`Files scanned: ${rows.length}\n`);
+
+  if (!NO_HTML) {
+    console.log(`NOTE: Hygiene is mainly for actionable code hotspots (big logic files, risky sinks, TODO clusters).`);
+    console.log(`      HTML/CSS are included because they matter (UI bloat/XSS surface), but they can dominate top lists.`);
+    console.log(`      Use the split lists to keep your focus.\n`);
+  }
 
   console.log(`-- Totals --`);
   for (const [k, v] of Object.entries(totals)) console.log(`${k}: ${v}`);
   console.log(`TODO/FIXME/HACK: ${todoTotal}`);
 
-  console.log(`\n-- Top 25 by LOC --`);
-  for (const r of topLOC) {
-    console.log(`${String(r.loc).padStart(5)}  ${r.file}`);
+  // ===== Buckets for "what to refactor" signal =====
+  const generated = rows.filter((r) => r.isGenerated);
+  const nonGenerated = rows.filter((r) => !r.isGenerated);
+
+  const htmlRows = rows.filter((r) => r.isHtml);
+  const nonHtmlRows = rows.filter((r) => !r.isHtml);
+
+  const nonGeneratedNonHtml = nonGenerated.filter((r) => !r.isHtml);
+  const nonGeneratedHtml = nonGenerated.filter((r) => r.isHtml);
+
+  // ===== Top lists =====
+  const topLOC_All = topN(rows, 25, (r) => r.loc);
+  const topBytes_All = topN(rows, 25, (r) => r.bytes);
+
+  const topLOC_NonHtml = topN(nonHtmlRows, 25, (r) => r.loc);
+  const topLOC_Html = topN(htmlRows, 25, (r) => r.loc);
+
+  const topBytes_NonHtml = topN(nonHtmlRows, 25, (r) => r.bytes);
+  const topBytes_Html = topN(htmlRows, 25, (r) => r.bytes);
+
+  // Refactor-target oriented lists (exclude generated data blobs)
+  const topLOC_Code_NoGenerated = topN(nonGeneratedNonHtml, 25, (r) => r.loc);
+  const topBytes_Code_NoGenerated = topN(nonGeneratedNonHtml, 25, (r) => r.bytes);
+
+  console.log(`\n-- Top 25 by LOC (ALL) --`);
+  for (const r of topLOC_All) console.log(`${String(r.loc).padStart(5)}  ${r.file}`);
+
+  console.log(`\n-- Top 25 by BYTES (ALL) --`);
+  for (const r of topBytes_All) console.log(`${fmtBytes(r.bytes).padStart(9)}  ${r.file}`);
+
+  if (!NO_HTML) {
+    console.log(`\n-- Top 25 by LOC (NON-HTML/CSS) --`);
+    for (const r of topLOC_NonHtml) console.log(`${String(r.loc).padStart(5)}  ${r.file}`);
+
+    console.log(`\n-- Top 25 by LOC (HTML/CSS) --`);
+    for (const r of topLOC_Html) console.log(`${String(r.loc).padStart(5)}  ${r.file}`);
+
+    console.log(`\n-- Top 25 by BYTES (NON-HTML/CSS) --`);
+    for (const r of topBytes_NonHtml) console.log(`${fmtBytes(r.bytes).padStart(9)}  ${r.file}`);
+
+    console.log(`\n-- Top 25 by BYTES (HTML/CSS) --`);
+    for (const r of topBytes_Html) console.log(`${fmtBytes(r.bytes).padStart(9)}  ${r.file}`);
   }
 
+  if (generated.length) {
+    console.log(`\n-- Generated/static data blobs (top by LOC) --`);
+    for (const r of topN(generated, 10, (x) => x.loc)) {
+      console.log(`${String(r.loc).padStart(5)}  ${r.file}`);
+    }
+    console.log(`-- Generated/static data blobs (top by BYTES) --`);
+    for (const r of topN(generated, 10, (x) => x.bytes)) {
+      console.log(`${fmtBytes(r.bytes).padStart(9)}  ${r.file}`);
+    }
+    console.log(
+      `NOTE: Generated/static blobs are reported here so they don't dominate the refactor-target lists.\n`
+    );
+  }
+
+  // “Refactor target” focused lists
+  console.log(`\n-- Refactor targets (NON-HTML/CSS, excluding generated data blobs) — Top by LOC --`);
+  for (const r of topLOC_Code_NoGenerated) console.log(`${String(r.loc).padStart(5)}  ${r.file}`);
+
+  console.log(`\n-- Refactor targets (NON-HTML/CSS, excluding generated data blobs) — Top by BYTES --`);
+  for (const r of topBytes_Code_NoGenerated) console.log(`${fmtBytes(r.bytes).padStart(9)}  ${r.file}`);
+
+  // ===== Sink rankings =====
+  function bySink(list, sinkName) {
+    return list
+      .filter((r) => (r.hits[sinkName] || 0) > 0)
+      .sort((a, b) => (b.hits[sinkName] || 0) - (a.hits[sinkName] || 0))
+      .slice(0, 25);
+  }
+
+  // Clean sinks: exclude archive + vendor noise (even in --all)
+  const cleanRowsForSinks = rows.filter((r) => {
+    if (isArchiveLike(r.file)) return false;
+    if (NO_VENDOR) return true; // already filtered
+    // Even without --no-vendor, remove obvious vendor noise from the "clean" view:
+    if (isInPublicVendor(r.file)) return false;
+    if (isMinifiedFile(r.file)) return false;
+    return true;
+  });
+
   for (const p of PATTERNS) {
-    const top = bySink(p.name);
+    const top = bySink(rows, p.name);
     if (!top.length) continue;
-    console.log(`\n-- Top files by ${p.name} usage --`);
-    for (const r of top) {
-      console.log(`${String(r.hits[p.name]).padStart(4)}  ${r.file}`);
+    console.log(`\n-- Top files by ${p.name} usage (RAW) --`);
+    for (const r of top) console.log(`${String(r.hits[p.name]).padStart(4)}  ${r.file}`);
+
+    const cleanTop = bySink(cleanRowsForSinks, p.name);
+    if (cleanTop.length) {
+      console.log(`-- Top files by ${p.name} usage (CLEAN: excludes _ARCHIVE + vendor/minified) --`);
+      for (const r of cleanTop) console.log(`${String(r.hits[p.name]).padStart(4)}  ${r.file}`);
     }
   }
 
+  // ===== TODOs =====
   const todoHeavy = rows
-    .filter(r => r.todo > 0)
+    .filter((r) => r.todo > 0)
     .sort((a, b) => b.todo - a.todo)
     .slice(0, 25);
 
   if (todoHeavy.length) {
     console.log(`\n-- Top files by TODO/FIXME/HACK --`);
-    for (const r of todoHeavy) {
-      console.log(`${String(r.todo).padStart(4)}  ${r.file}`);
-    }
+    for (const r of todoHeavy) console.log(`${String(r.todo).padStart(4)}  ${r.file}`);
   }
+
+  // ===== Path smells =====
+  const repeatedSeg = rows
+    .map((r) => r.file)
+    .filter((p) => /(^|\/)([^\/]+)\/\2(\/|$)/.test(p))
+    .slice(0, 50);
 
   if (repeatedSeg.length) {
     console.log(`\n-- Path smells (repeated folder segment) --`);
     for (const p of repeatedSeg) console.log(p);
   }
 
+  console.log(`\nTips:`);
+  console.log(`  - Default is ACTIVE mode. Use --all to include everything.`);
+  console.log(`  - Use --no-vendor to cut vendor/minified noise (recommended).`);
+  if (!NO_HTML) console.log(`  - Use --no-html for a logic-only scan.`);
+  console.log(`  - You can pass a root path: node scripts/hygiene-report.mjs C:\\dev\\LUX_GEMINI`);
   console.log(`\nDone.\n`);
 }
 
