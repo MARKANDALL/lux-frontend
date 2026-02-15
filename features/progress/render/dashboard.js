@@ -20,6 +20,13 @@ import { scoreClass, fmtScore, fmtDate, titleFromPassageKey, esc } from "./forma
 import { sparklineSvg } from "./sparkline.js";
 import { downloadBlob } from "./export.js";
 
+import {
+  pickAzure,
+  pickSummary,
+  pickTS,
+  buildAttemptsBySession,
+} from "./dashboard/attempt-utils.js";
+
 export function renderProgressDashboard(host, attempts, model, opts = {}) {
   const totals = model?.totals || {};
   const trouble = model?.trouble || {};
@@ -40,48 +47,7 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
   const topPh = (trouble.phonemesAll || []).slice(0, 12);
   const topWd = (trouble.wordsAll || []).slice(0, 12);
 
-  function pickAzure(a) {
-    return a?.azureResult || a?.azure_result || a?.azure || a?.result || null;
-  }
-  function pickSummary(a) {
-    return a?.summary || a?.summary_json || a?.sum || null;
-  }
-  function pickSessionId(a) {
-    return a?.session_id || a?.sessionId || "";
-  }
-  function pickTS(a) {
-    return a?.ts || a?.created_at || a?.createdAt || a?.time || a?.localTime || null;
-  }
-
-  // Pre-group attempts by session for History drill-in.
-  function localDayKey(ts) {
-    const d = new Date(ts);
-    try {
-      return d.toLocaleDateString("en-CA");
-    } catch (_) {}
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
-    const da = String(d.getDate()).padStart(2, "0");
-    return `${y}-${m}-${da}`;
-  }
-
-  function sessionKeyForAttempt(a) {
-    const sid = pickSessionId(a);
-    if (sid) return sid;
-
-    const ts = pickTS(a);
-    if (!ts) return "";
-    return `nosess:${localDayKey(ts)}`;
-  }
-
-  const bySession = new Map();
-  for (const a of attempts || []) {
-    const sid = sessionKeyForAttempt(a);
-    if (!sid) continue;
-    const arr = bySession.get(sid) || [];
-    arr.push(a);
-    bySession.set(sid, arr);
-  }
+  const bySession = buildAttemptsBySession(attempts);
 
   host.innerHTML = `
     <a id="lux-my-progress"></a>
@@ -471,7 +437,7 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
 
     if (pron != null) pills.push(`Pron ${Math.round(Number(pron))}`);
     if (acc != null) pills.push(`Acc ${Math.round(Number(acc))}`);
-    if (flu != null) pills.push(`Flu ${Math.round(Number(flu))}`);
+    if (flu !=null) pills.push(`Flu ${Math.round(Number(flu))}`);
     if (pro != null) pills.push(`Pro ${Math.round(Number(pro))}`);
 
     return pills.map((t) => `<span class="lux-mini-pill">${esc(t)}</span>`).join("");
