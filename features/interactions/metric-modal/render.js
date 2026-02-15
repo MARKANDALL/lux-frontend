@@ -1,21 +1,71 @@
 // features/interactions/metric-modal/render.js
 // HTML builder for the metric explainer modal card.
 
-import { fmtPct } from "../../../core/scoring/index.js";
 import {
   getScorePackAny,
   hasRawWordDetail,
   deriveTimingStats,
   deriveErrorStats,
-  prettyErrCounts,
   deriveCompletenessDiff,
   derivePhonemeClassSplit,
 } from "./derive.js";
-import { METRIC_META, esc, kv, section, sectionDetails, buildMeta } from "./render-parts/meta.js";
-import { noteBlock, explainMetric, interpretMetric, helpCta } from "./render-parts/content.js";
-import { uniqueMetricPanel } from "./render-parts/panels.js";
-// Keep render.js as the stable shim: other modules import esc from here.
-export { esc } from "./render-parts/meta.js";
+import { fmtPct } from "../../../core/scoring/index.js";
+import { METRIC_META, esc } from "./meta.js";
+import {
+  explainMetric,
+  interpretMetric,
+  uniqueMetricPanel,
+  helpCta,
+} from "./render-parts/panels.js";
+
+function section(title, body) {
+  return `
+    <section class="lux-metricSection">
+      <h3 class="lux-metricSectionTitle">${esc(title)}</h3>
+      <div class="lux-metricSectionBody">${body}</div>
+    </section>
+  `;
+}
+
+function sectionDetails(title, body, { open = false } = {}) {
+  return `
+    <details class="lux-metricSection lux-metricSection--details" ${open ? "open" : ""}>
+      <summary class="lux-metricSectionTitle">${esc(title)}</summary>
+      <div class="lux-metricSectionBody">${body}</div>
+    </details>
+  `;
+}
+
+function buildMeta(metricKey, pack) {
+  const base = METRIC_META[metricKey] || { title: metricKey, blurb: "" };
+
+  const valMap = {
+    Overall: pack.overallAgg,
+    Pronunciation: pack.pronunciation,
+    Accuracy: pack.accuracy,
+    Fluency: pack.fluency,
+    Completeness: pack.completeness,
+    Prosody: pack.prosody,
+  };
+
+  return {
+    title: base.title || metricKey,
+    blurb: base.blurb || "",
+    value: valMap[metricKey],
+  };
+}
+
+function noteBlock() {
+  return `
+    <div class="lux-metricNote">
+      <div class="lux-metricNoteTitle">Note</div>
+      <div class="lux-metricNoteBody">
+        This attempt was saved without raw word/phoneme detail, so Lux can show the score + explanation,
+        but not the deeper per-word/per-phoneme breakdown here.
+      </div>
+    </div>
+  `;
+}
 
 export function buildModalHtml(metricKey, data) {
   const ctx =
@@ -42,7 +92,6 @@ export function buildModalHtml(metricKey, data) {
   const hasRaw = hasRawWordDetail(azure);
   const isSummaryOnly = !hasRaw;
 
-  // ✅ TOP BLOCK (with subtle meter bar)
   const top = `
     <div class="lux-metricTop">
       <div class="lux-metricTitle">${esc(metricKey)}</div>
@@ -66,7 +115,6 @@ export function buildModalHtml(metricKey, data) {
     uniqueMetricPanel(metricKey, { pack, timing, errs, diff, classSplit, isSummaryOnly })
   );
 
-  // ✅ COLLAPSED BY DEFAULT (no “wall of text” on first glance)
   const interpretBlock = sectionDetails("How to interpret it", interpretMetric(metricKey, pack), {
     open: false,
   });

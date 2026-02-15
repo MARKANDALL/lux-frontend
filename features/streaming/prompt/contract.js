@@ -26,4 +26,4 @@ export function buildStreamingInstructions({ scenario, knobs } = {}) {
     `- Avoid long lists unless the user requests them.\n` +
     styleLine
   );
-}
+} 
