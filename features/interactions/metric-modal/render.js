@@ -137,3 +137,5 @@ export function buildModalHtml(metricKey, data) {
     </div>
   `;
 }
+
+export { METRIC_META, esc };
