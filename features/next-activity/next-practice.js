@@ -1,10 +1,35 @@
-// features/next-activity/next-practice.js
+// C:\dev\LUX_GEMINI\features\next-activity\next-practice.js
+// Builds and applies a “Next Practice Plan” by picking a focus phoneme from rollups and selecting the best matching Harvard list or non-Harvard passage (lazy-loads passage phoneme meta).
+
 import { getCodesForIPA } from "../../src/data/phonemes/core.js";
-import { PASSAGE_PHONEME_META } from "../../src/data/index.js";
+import { ensurePassagePhonemeMeta } from "../../src/data/index.js";
 import { setPassage, updatePartsInfoTip } from "../passages/index.js";
 import { loadHarvardList } from "../harvard/index.js";
 
 const STORAGE_KEY = "luxNextPracticePlan";
+
+// Lazy passage meta cache (keeps existing sync scoring helpers intact)
+let _PASSAGE_META = null;
+let _PASSAGE_META_PROMISE = null;
+
+async function _getPassageMeta() {
+  if (_PASSAGE_META) return _PASSAGE_META;
+  if (!_PASSAGE_META_PROMISE) {
+    _PASSAGE_META_PROMISE = ensurePassagePhonemeMeta()
+      .then((m) => {
+        _PASSAGE_META = m || {};
+        return _PASSAGE_META;
+      })
+      .catch((e) => {
+        // allow retry later
+        _PASSAGE_META_PROMISE = null;
+        console.error("[NextPractice] Failed to lazy-load PASSAGE_PHONEME_META", e);
+        _PASSAGE_META = _PASSAGE_META || {};
+        return _PASSAGE_META;
+      });
+  }
+  return _PASSAGE_META_PROMISE;
+}
 
 function pickFocusPhFromRollups(rollups) {
   const top = rollups?.trouble?.phonemesAll?.[0];
@@ -16,20 +41,20 @@ function pickFocusPhFromRollups(rollups) {
   return { ipa, code };
 }
 
-function scoreKeyForPh(key, ph) {
+function scoreKeyForPh(meta, key, ph) {
   if (!key || !ph) return 0;
-  const m = PASSAGE_PHONEME_META?.[String(key)] || null;
+  const m = meta?.[String(key)] || null;
   const c = m?.counts?.[String(ph).toUpperCase()];
   return Number(c || 0);
 }
 
-function bestHarvardForPh(ph) {
+function bestHarvardForPh(meta, ph) {
   let bestN = 0;
   let bestScore = -1;
 
   for (let n = 1; n <= 72; n++) {
     const key = `harvard${String(n).padStart(2, "0")}`;
-    const s = scoreKeyForPh(key, ph);
+    const s = scoreKeyForPh(meta, key, ph);
     if (s > bestScore) {
       bestScore = s;
       bestN = n;
@@ -38,18 +63,18 @@ function bestHarvardForPh(ph) {
   return { n: bestN, score: Math.max(0, bestScore) };
 }
 
-function bestNonHarvardForPh(ph) {
+function bestNonHarvardForPh(meta, ph) {
   const deny = new Set(["write-own", "clear", "custom", ""]);
   let bestKey = "";
   let bestScore = -1;
 
-  const keys = Object.keys(PASSAGE_PHONEME_META || {});
+  const keys = Object.keys(meta || {});
   for (const k of keys) {
     const key = String(k);
     if (key.startsWith("harvard")) continue;
     if (deny.has(key)) continue;
 
-    const s = scoreKeyForPh(key, ph);
+    const s = scoreKeyForPh(meta, key, ph);
     if (s > bestScore) {
       bestScore = s;
       bestKey = key;
@@ -69,14 +94,16 @@ function labelForPassageKey(key) {
   }
 }
 
-export function buildNextPracticePlanFromModel(model) {
+export async function buildNextPracticePlanFromModel(model) {
   const rollups = model || null;
   const { ipa, code } = pickFocusPhFromRollups(rollups);
 
   if (!code) return null;
 
-  const harv = bestHarvardForPh(code);
-  const pass = bestNonHarvardForPh(code);
+  const meta = await _getPassageMeta();
+
+  const harv = bestHarvardForPh(meta, code);
+  const pass = bestNonHarvardForPh(meta, code);
 
   return {
     focusIpa: ipa,

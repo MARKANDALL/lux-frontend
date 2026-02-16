@@ -1,6 +1,37 @@
-// features/harvard/modal-phoneme-metrics.js
+// C:\dev\LUX_GEMINI\features\harvard\modal-phoneme-metrics.js
+// Computes phoneme-count metrics for Harvard lists and passages, lazily loading large passage phoneme meta data when needed.
+
 import { HARVARD_PHONEME_META } from "../../src/data/harvard-phoneme-meta.js";
-import { PASSAGE_PHONEME_META } from "../../src/data/passage-phoneme-meta.js";
+import { ensurePassagePhonemeMeta } from "../../src/data/index.js";
+
+// Local cached passage meta (prevents repeated async imports + keeps sync APIs)
+let _PASSAGE_META = null;
+let _PASSAGE_META_PROMISE = null;
+
+function _kickPassageMetaLoad() {
+  if (_PASSAGE_META) return;
+  if (_PASSAGE_META_PROMISE) return;
+
+  _PASSAGE_META_PROMISE = ensurePassagePhonemeMeta()
+    .then((m) => {
+      _PASSAGE_META = m || {};
+      return _PASSAGE_META;
+    })
+    .catch((e) => {
+      // allow retry later
+      _PASSAGE_META_PROMISE = null;
+      console.error("[Harvard] Failed to lazy-load PASSAGE_PHONEME_META", e);
+      _PASSAGE_META = _PASSAGE_META || {};
+      return _PASSAGE_META;
+    });
+}
+
+function _getPassageMetaSync() {
+  // Start loading in the background the first time anyone asks.
+  _kickPassageMetaLoad();
+  // Return whatever we have so far (empty until loaded).
+  return _PASSAGE_META || {};
+}
 
 export function pad2(n) {
   return String(n).padStart(2, "0");
@@ -24,10 +55,12 @@ export function isHarvardKey(k) {
 }
 
 export function metaForHarvard(n) {
+  const PASSAGE_PHONEME_META = _getPassageMetaSync();
   return PASSAGE_PHONEME_META?.[harvardKey(n)] ?? null;
 }
 
 export function metaForKey(key) {
+  const PASSAGE_PHONEME_META = _getPassageMetaSync();
   return PASSAGE_PHONEME_META?.[String(key)] ?? null;
 }
 
@@ -77,6 +110,7 @@ export function getAllTopPhonemes() {
 
 export function getAllPhonemesFromPassageMeta() {
   const set = new Set();
+  const PASSAGE_PHONEME_META = _getPassageMetaSync();
   const meta = PASSAGE_PHONEME_META || {};
   for (const m of Object.values(meta)) {
     const counts = m?.counts;
