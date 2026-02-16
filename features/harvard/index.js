@@ -1,7 +1,8 @@
-// features/harvard/index.js
+// C:\dev\LUX_GEMINI\features\harvard\index.js
+// Wires the Harvard picker UI and lazy-loads Harvard list data + (on demand) the Harvard Library modal chunk.
+
 import { setPassage, updatePartsInfoTip } from "../passages/index.js";
 import { ensureHarvardPassages } from "../../src/data/index.js";
-import { createHarvardLibraryModal } from "./modal.js";
 
 function pad2(n) {
   return String(n).padStart(2, "0");
@@ -54,7 +55,7 @@ export function wireHarvardPicker() {
       return a[0];
     }
     // fallback
-    return Math.floor(Math.random() * 0xFFFFFFFF) >>> 0;
+    return Math.floor(Math.random() * 0xffffffff) >>> 0;
   }
 
   function shuffleInPlace(arr) {
@@ -102,24 +103,76 @@ export function wireHarvardPicker() {
 
   // Modal: browse all 72 lists (first sentence), hover preview, click select, practice -> apply()
   let modal = null;
-  if (browse) {
-    modal = createHarvardLibraryModal({
-      onPractice: async (sel) => {
-        // sel = { kind: "harvard", n } OR { kind: "passage", key }
-        if (sel?.kind === "harvard") {
-          await apply(sel.n);
-        } else if (sel?.kind === "passage") {
-          setPassage(sel.key);
-          updatePartsInfoTip();
-        } else {
-          return;
+  let modalLoading = null;
+
+  function showBrowseError(msg) {
+    if (!out) return;
+    out.textContent = msg;
+    out.style.display = "";
+  }
+
+  function clearBrowseError() {
+    if (!out) return;
+    out.textContent = "";
+    out.style.display = "none";
+  }
+
+  async function ensureModal() {
+    if (modal) return modal;
+
+    if (!modalLoading) {
+      modalLoading = (async () => {
+        try {
+          clearBrowseError();
+
+          const { createHarvardLibraryModal } = await import("./modal.js");
+
+          modal = createHarvardLibraryModal({
+            onPractice: async (sel) => {
+              if (sel?.kind === "harvard") {
+                await apply(sel.n);
+              } else if (sel?.kind === "passage") {
+                setPassage(sel.key);
+                updatePartsInfoTip();
+              } else {
+                return;
+              }
+
+              try {
+                document.getElementById("referenceText")?.focus();
+              } catch {}
+            },
+          });
+
+          return modal;
+        } catch (e) {
+          console.error(
+            "[Harvard] Failed to load Harvard Library modal chunk",
+            e
+          );
+
+          // allow retry on next click
+          modalLoading = null;
+
+          // user-facing message (non-blocking)
+          showBrowseError(
+            "Could not open Harvard Library right now. Please try again. (See console for details.)"
+          );
+
+          return null;
         }
+      })();
+    }
 
-        try { document.getElementById("referenceText")?.focus(); } catch {}
-      },
-    });
+    return modalLoading;
+  }
 
-    const openBrowse = () => modal?.open?.();
+  if (browse) {
+    const openBrowse = async () => {
+      const m = await ensureModal();
+      m?.open?.();
+    };
+
     browse.addEventListener("click", openBrowse);
     browse.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === " ") {
