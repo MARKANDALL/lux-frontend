@@ -7,9 +7,6 @@
 
   <script>
     (function ensureToken() {
-      const qs = new URLSearchParams(location.search);
-      const fromQS = qs.get('token') || qs.get('t');
-      if (fromQS) sessionStorage.setItem('lux_admin_token', fromQS);
       if (!sessionStorage.getItem('lux_admin_token')) {
         const entered = prompt('Enter admin token');
         if (entered) sessionStorage.setItem('lux_admin_token', entered.trim());
@@ -24,13 +21,11 @@
     *{ box-sizing:border-box }
     body{ font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial; padding:16px; color:#111 }
     h1{ margin:0 0 14px }
-
     .nav { display:flex; gap:10px; align-items:center; margin-bottom:8px; }
     .nav-link { padding:2px 6px; text-decoration:none; color:inherit; border-radius:6px; }
     .nav-link.active { font-weight:600; text-decoration:underline; }
     .right{ margin-left:auto }
     .note{ color:#666; font-size:12px }
-
     .bar{ display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:10px }
     .bar small{ color:#666; margin-left:auto }
     input[type="text"], input[type="number"], input[type="date"]{ padding:8px; border:1px solid #ccc; border-radius:8px; height:36px; }
@@ -42,7 +37,6 @@
     #chart{ width:100%; max-width:1100px; height:360px }
     .row{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:8px 0 }
     .checks{ display:flex; gap:14px; align-items:center; flex-wrap:wrap }
-
     table{ border-collapse:collapse; width:100%; margin-top:10px; font-size:13px }
     th,td{ border:1px solid #e7e7e7; padding:8px; vertical-align:top }
     th{ background:#f7f9fc; position:sticky; top:0; z-index:1 }
@@ -89,7 +83,6 @@
         <option value="0">None</option>
       </select>
     </label>
-
     <div class="checks">
       <span>Passages:</span>
       <label><input class="pass" type="checkbox" value="grandfather" checked> grandfather</label>
@@ -97,7 +90,6 @@
       <label><input class="pass" type="checkbox" value="sentences" checked> sentences</label>
       <label><input class="pass" type="checkbox" value="wordList" checked> wordList</label>
     </div>
-
     <button id="applyBtn">Apply</button>
     <button id="clearBtn">Clear</button>
   </div>
@@ -146,50 +138,46 @@
 
 <script>
 (function () {
-const API_BASE = "";
+  const API_BASE = "";
   const TOKEN = sessionStorage.getItem('lux_admin_token') || '';
   const headers = TOKEN ? { 'x-admin-token': TOKEN } : {};
 
-  const uidEl   = document.getElementById('uid');
-  const limitEl = document.getElementById('limit');
-  const fromEl  = document.getElementById('from');
-  const toEl    = document.getElementById('to');
-  const smoothEl= document.getElementById('smooth');
-  const passEls = Array.from(document.querySelectorAll('.pass'));
-  const csvBtn  = document.getElementById('csvBtn');
-  const loadBtn = document.getElementById('loadBtn');
-  const applyBtn= document.getElementById('applyBtn');
-  const clearBtn= document.getElementById('clearBtn');
-  const copyBtn = document.getElementById('copyBtn');
+  const uidEl    = document.getElementById('uid');
+  const limitEl  = document.getElementById('limit');
+  const fromEl   = document.getElementById('from');
+  const toEl     = document.getElementById('to');
+  const smoothEl = document.getElementById('smooth');
+  const passEls  = Array.from(document.querySelectorAll('.pass'));
+  const csvBtn   = document.getElementById('csvBtn');
+  const loadBtn  = document.getElementById('loadBtn');
+  const applyBtn = document.getElementById('applyBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const copyBtn  = document.getElementById('copyBtn');
   const labelInput = document.getElementById('labelInput');
-  const saveBtn = document.getElementById('saveNameBtn');
-  const saveMsg = document.getElementById('saveMsg');
+  const saveBtn  = document.getElementById('saveNameBtn');
+  const saveMsg  = document.getElementById('saveMsg');
   const statAttempts = document.getElementById('statAttempts');
-  const statAvg = document.getElementById('statAvg');
-  const tbody  = document.querySelector('#grid tbody');
+  const statAvg  = document.getElementById('statAvg');
+  const tbody    = document.querySelector('#grid tbody');
   const chartCanvas = document.getElementById('chart');
-  const troubleBtn = document.getElementById('troubleCsvBtn');
-
-  // ... (rest of logic same as source, but URL patched) ...
-  // Minimal re-implementation of critical functions to use API_BASE
 
   const qs = new URLSearchParams(location.search);
   uidEl.value = qs.get('uid') || '';
   limitEl.value = Number(qs.get('limit') || 500);
 
-  (function initDates(){
-    const pad = (n)=>String(n).padStart(2,'0');
-    const toStr = (d)=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  (function initDates() {
+    const pad = (n) => String(n).padStart(2, '0');
+    const toStr = (d) => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
     const today = new Date();
-    const fromDefault = new Date(); fromDefault.setDate(fromDefault.getDate()-14);
+    const fromDefault = new Date(); fromDefault.setDate(fromDefault.getDate() - 14);
     fromEl.value = qs.get('from') || toStr(fromDefault);
     toEl.value   = qs.get('to')   || toStr(today);
   })();
 
-  (function initPassages(){
+  (function initPassages() {
     const p = qs.get('passages');
     if (p) {
-      const set = new Set(p.split(',').map(s=>s.trim()));
+      const set = new Set(p.split(',').map(s => s.trim()));
       passEls.forEach(el => el.checked = set.has(el.value));
     }
   })();
@@ -198,8 +186,8 @@ const API_BASE = "";
   let lineChart = null;
   let currentRows = [];
 
-  const dateOnly = (iso)=>iso.slice(0,10);
-  const toLocal  = (iso)=> new Date(iso).toLocaleString();
+  const dateOnly = (iso) => iso.slice(0, 10);
+  const toLocal  = (iso) => new Date(iso).toLocaleString();
 
   function buildPassagesParam() {
     return passEls.filter(e => e.checked).map(e => e.value).join(',');
@@ -207,14 +195,15 @@ const API_BASE = "";
 
   function updateCsvHref() {
     const uid = uidEl.value.trim();
-    const limit = Number(limitEl.value||500);
+    const limit = Number(limitEl.value || 500);
     const passages = buildPassagesParam();
-    const from = fromEl.value; const to = toEl.value;
-
-    let url = `${API_BASE}/api/admin-recent?format=csv&limit=${encodeURIComponent(limit)}&token=${encodeURIComponent(TOKEN)}`;
-    if (uid) url += `&uid=${encodeURIComponent(uid)}`;
-    if (from) url += `&from=${encodeURIComponent(from)}`;
-    if (to) url += `&to=${encodeURIComponent(to)}`;
+    const from = fromEl.value;
+    const to = toEl.value;
+    // Token sent via request header — never in the URL
+    let url = `${API_BASE}/api/admin-recent?format=csv&limit=${encodeURIComponent(limit)}`;
+    if (uid)      url += `&uid=${encodeURIComponent(uid)}`;
+    if (from)     url += `&from=${encodeURIComponent(from)}`;
+    if (to)       url += `&to=${encodeURIComponent(to)}`;
     if (passages) url += `&passages=${encodeURIComponent(passages)}`;
     csvBtn.href = url;
   }
@@ -222,20 +211,20 @@ const API_BASE = "";
   function copyLinkToClipboard() {
     const url = new URL(location.href);
     const params = new URLSearchParams();
-    if (uidEl.value) params.set('uid', uidEl.value);
-    if (fromEl.value) params.set('from', fromEl.value);
-    if (toEl.value) params.set('to', toEl.value);
+    if (uidEl.value)    params.set('uid', uidEl.value);
+    if (fromEl.value)   params.set('from', fromEl.value);
+    if (toEl.value)     params.set('to', toEl.value);
     if (smoothEl.value) params.set('smooth', smoothEl.value);
     const passages = buildPassagesParam();
-    if (passages) params.set('passages', passages);
-    if (limitEl.value) params.set('limit', limitEl.value);
+    if (passages)       params.set('passages', passages);
+    if (limitEl.value)  params.set('limit', limitEl.value);
     url.search = params.toString();
     navigator.clipboard.writeText(url.toString())
-      .then(()=>{ copyBtn.textContent='Copied!'; setTimeout(()=>copyBtn.textContent='Copy link',1000); });
+      .then(() => { copyBtn.textContent = 'Copied!'; setTimeout(() => copyBtn.textContent = 'Copy link', 1000); });
   }
 
   function computeDailyAndSMA(rows, windowDays) {
-    const sorted = rows.slice().sort((a,b)=> new Date(a.ts) - new Date(b.ts));
+    const sorted = rows.slice().sort((a, b) => new Date(a.ts) - new Date(b.ts));
     const byDay = new Map();
     for (const r of sorted) {
       const p = Number(r?.summary?.pron);
@@ -248,34 +237,34 @@ const API_BASE = "";
     const days = Array.from(byDay.keys()).sort();
     const daily = days.map(d => ({
       date: d,
-      value: byDay.get(d).reduce((a,b)=>a+b,0)/byDay.get(d).length
+      value: byDay.get(d).reduce((a, b) => a + b, 0) / byDay.get(d).length
     }));
-    if (!windowDays || windowDays <= 0) return {daily, sma:[]};
+    if (!windowDays || windowDays <= 0) return { daily, sma: [] };
     const sma = [];
-    for (let i=0;i<daily.length;i++){
+    for (let i = 0; i < daily.length; i++) {
       const start = Math.max(0, i - (windowDays - 1));
       let sum = 0, count = 0;
-      for (let j=start;j<=i;j++){ sum += daily[j].value; count++; }
+      for (let j = start; j <= i; j++) { sum += daily[j].value; count++; }
       sma.push({ date: daily[i].date, value: sum / count });
     }
-    return {daily, sma};
+    return { daily, sma };
   }
 
   function renderChart(rows) {
-    const smoothDays = Number(smoothEl.value||0);
-    const {daily, sma} = computeDailyAndSMA(rows, smoothDays);
+    const smoothDays = Number(smoothEl.value || 0);
+    const { daily, sma } = computeDailyAndSMA(rows, smoothDays);
     const labels = daily.map(d => d.date);
     const pronSeries = daily.map(d => Number(d.value.toFixed(1)));
-    const smaSeries = sma.map(d => Number(d.value.toFixed(1)));
+    const smaSeries  = sma.map(d => Number(d.value.toFixed(1)));
     const data = {
       labels,
       datasets: [
         { label: 'Pron score (daily avg)', data: pronSeries, borderWidth: 2, pointRadius: 3, tension: 0.2 },
-        { label: smoothDays ? `${smoothDays}-day avg` : 'moving avg (off)', data: smaSeries, borderWidth: 2, pointRadius: 0, borderDash: smoothDays ? [] : [4,4], tension: 0.2 }
+        { label: smoothDays ? `${smoothDays}-day avg` : 'moving avg (off)', data: smaSeries, borderWidth: 2, pointRadius: 0, borderDash: smoothDays ? [] : [4, 4], tension: 0.2 }
       ]
     };
     if (lineChart) lineChart.destroy();
-    lineChart = new Chart(chartCanvas.getContext('2d'), { type: 'line', data, options:{responsive:true, maintainAspectRatio:false, scales:{y:{min:0,max:100}}} });
+    lineChart = new Chart(chartCanvas.getContext('2d'), { type: 'line', data, options: { responsive: true, maintainAspectRatio: false, scales: { y: { min: 0, max: 100 } } } });
   }
 
   function renderTable(rows) {
@@ -291,27 +280,27 @@ const API_BASE = "";
         <td>${s.flu ?? ''}</td>
         <td>${s.comp ?? ''}</td>
         <td>${s.pron ?? ''}</td>
-        <td class="text">${String(r.text||'').replace(/[<>&]/g,c=>({ '<':'&lt;', '>':'&gt;', '&':'&amp;' }[c]))}</td>
+        <td class="text">${String(r.text || '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]))}</td>
       `;
       tbody.appendChild(tr);
     }
   }
 
-  function renderTrouble(rows){
+  function renderTrouble(rows) {
     const ph = new Map(), wd = new Map();
-    for (const r of rows){
+    for (const r of rows) {
       const lows = r?.summary?.lows;
       if (!Array.isArray(lows)) continue;
-      for (const L of lows){
+      for (const L of lows) {
         const score = Number(L.score);
         if (!Number.isFinite(score)) continue;
-        if (L.phoneme){ const a=ph.get(L.phoneme)||{sum:0,n:0}; a.sum+=score; a.n++; ph.set(L.phoneme,a); }
-        if (L.word){ const a=wd.get(L.word)||{sum:0,n:0}; a.sum+=score; a.n++; wd.set(L.word,a); }
+        if (L.phoneme) { const a = ph.get(L.phoneme) || { sum: 0, n: 0 }; a.sum += score; a.n++; ph.set(L.phoneme, a); }
+        if (L.word)    { const a = wd.get(L.word)    || { sum: 0, n: 0 }; a.sum += score; a.n++; wd.set(L.word, a); }
       }
     }
-    const top = (m) => [...m.entries()].map(([k,v])=>({k, n:v.n, avg:v.sum/v.n})).sort((a,b)=>b.n-a.n).slice(0,10);
-    document.querySelector('#troublePh tbody').innerHTML = top(ph).map(r=>`<tr><td>${r.k}</td><td>${r.n}</td><td>${r.avg.toFixed(1)}</td></tr>`).join('');
-    document.querySelector('#troubleWord tbody').innerHTML = top(wd).map(r=>`<tr><td>${r.k}</td><td>${r.n}</td><td>${r.avg.toFixed(1)}</td></tr>`).join('');
+    const top = (m) => [...m.entries()].map(([k, v]) => ({ k, n: v.n, avg: v.sum / v.n })).sort((a, b) => b.n - a.n).slice(0, 10);
+    document.querySelector('#troublePh tbody').innerHTML   = top(ph).map(r => `<tr><td>${r.k}</td><td>${r.n}</td><td>${r.avg.toFixed(1)}</td></tr>`).join('');
+    document.querySelector('#troubleWord tbody').innerHTML = top(wd).map(r => `<tr><td>${r.k}</td><td>${r.n}</td><td>${r.avg.toFixed(1)}</td></tr>`).join('');
   }
 
   async function loadData() {
@@ -325,23 +314,20 @@ const API_BASE = "";
       if (fromEl.value) url += `&from=${encodeURIComponent(fromEl.value)}`;
       if (toEl.value)   url += `&to=${encodeURIComponent(toEl.value)}`;
       if (passages)     url += `&passages=${encodeURIComponent(passages)}`;
-
-      const r = await fetch(url, { cache:'no-store', headers });
+      const r = await fetch(url, { cache: 'no-store', headers });
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const json = await r.json();
       currentRows = json.rows || [];
       if (currentRows[0] && currentRows[0].label) labelInput.value = currentRows[0].label;
-
       statAttempts.textContent = currentRows.length;
       const vals = currentRows.map(r => Number(r?.summary?.pron)).filter(Number.isFinite);
-      statAvg.textContent = vals.length ? (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1) : '–';
-
+      statAvg.textContent = vals.length ? (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1) : '–';
       renderChart(currentRows);
       renderTrouble(currentRows);
       renderTable(currentRows);
       updateCsvHref();
-    } catch(e) {
-      alert('Load failed: '+e.message);
+    } catch (e) {
+      alert('Load failed: ' + e.message);
     } finally {
       loadBtn.disabled = false;
     }
@@ -354,7 +340,8 @@ const API_BASE = "";
     saveMsg.textContent = 'Saving...';
     try {
       await fetch(`${API_BASE}/api/admin-label-user`, {
-        method:'POST', headers: { 'Content-Type':'application/json', ...headers },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...headers },
         body: JSON.stringify({ uid, label })
       });
       saveMsg.textContent = 'Saved';
@@ -363,7 +350,7 @@ const API_BASE = "";
 
   loadBtn.onclick = loadData;
   applyBtn.onclick = loadData;
-  clearBtn.onclick = ()=>{ fromEl.value=''; loadData(); };
+  clearBtn.onclick = () => { fromEl.value = ''; loadData(); };
   saveBtn.onclick = saveLabel;
   copyBtn.onclick = copyLinkToClipboard;
   [uidEl, limitEl, fromEl, toEl, smoothEl, ...passEls].forEach(el => el.addEventListener('change', updateCsvHref));
