@@ -1,4 +1,3 @@
-
 // features/harvard/modal-controller.js
 import { ensureHarvardPassages, passages } from "../../src/data/index.js";
 import {
@@ -342,6 +341,8 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
       hideHover,
       renderList,
     });
+
+    renderList(); // ✅ re-render AFTER activeTab is updated
   }
 
   async function renderList() {
@@ -413,4 +414,3 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
 
   return { open, close };
 }
-

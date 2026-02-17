@@ -247,7 +247,6 @@ export function switchTabCore({
   }
 
   hideHover?.();
-  renderList?.();
 
   return activeTab;
 }
