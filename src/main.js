@@ -1,5 +1,12 @@
 // src/main.js
 // The Main Entry Point: Boots the app, handles the Typewriter, and wires the Dropdown.
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('[LUX] Unhandled promise rejection:', event.reason);
+});
+
+window.addEventListener('error', (event) => {
+  console.error('[LUX] Uncaught error:', event.message, event.filename, event.lineno);
+});
 
 import { wirePassageSelect, wireNextBtn } from "../features/passages/index.js";
 
