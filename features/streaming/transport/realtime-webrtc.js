@@ -1,6 +1,16 @@
+// FILE: features/streaming/transport/realtime-webrtc.js
+// PURPOSE: WebRTC TransportController that connects to OpenAI Realtime (SDP via backend + datachannel events), manages mic meter/health, and emits UI events via onEvent({type: ...}).
+
 // Implements the TransportController contract: emits events via onEvent({type: ...})
 
 import { getWebRTCAnswerSDP } from "./session-bootstrap.js";
+import { handleOaiEventsMessage } from "./realtime-webrtc/message-handler.js";
+import { startMicMeter as startMicMeterModule, stopMicMeter as stopMicMeterModule } from "./realtime-webrtc/mic-meter.js";
+import {
+  updateSession as updateSessionModule,
+  flushPendingSessionUpdate as flushPendingSessionUpdateModule,
+  setTurnTaking as setTurnTakingModule,
+} from "./realtime-webrtc/session-controls.js";
 
 export function createRealtimeWebRTCTransport({ onEvent } = {}) {
   let pc = null;
@@ -10,14 +20,16 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
   let mutedByInterrupt = false;
 
   // Mic meter (WebAudio)
-  let micAC = null;          // AudioContext
-  let micAnalyser = null;    // AnalyserNode
-  let micSrc = null;         // MediaStreamAudioSourceNode
-  let micTick = null;        // interval id
+  let micMeterState = {
+    micAC: null,          // AudioContext
+    micAnalyser: null,    // AnalyserNode
+    micSrc: null,         // MediaStreamAudioSourceNode
+    micTick: null,        // interval id
+  };
 
   // near top
   let inputMode = "tap";
-  let pendingSessionUpdate = null;
+  let pendingSessionUpdateRef = { value: null };
 
   // Debug + health state
   let DEBUG = false;
@@ -52,62 +64,21 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
   }
 
   function startMicMeter() {
-    try {
-      if (!micStream) return;
-      stopMicMeter();
-
-      const AC = window.AudioContext || window.webkitAudioContext;
-      if (!AC) return;
-
-      micAC = new AC();
-      // Attempt to resume immediately (connect is user gesture)
-      micAC.resume?.().catch(() => {});
-
-      micAnalyser = micAC.createAnalyser();
-      micAnalyser.fftSize = 512;
-      micAnalyser.smoothingTimeConstant = 0.6;
-
-      micSrc = micAC.createMediaStreamSource(micStream);
-      micSrc.connect(micAnalyser);
-
-      const buf = new Uint8Array(micAnalyser.fftSize);
-
-      micTick = window.setInterval(() => {
-        if (!micAnalyser) return;
-        micAnalyser.getByteTimeDomainData(buf);
-
-        // RMS on centered [-1..1]
-        let sum = 0;
-        for (let i = 0; i < buf.length; i++) {
-          const v = (buf[i] - 128) / 128;
-          sum += v * v;
-        }
-        const rms = Math.sqrt(sum / buf.length);
-
-        // Map to a friendly 0..1 range (tweakable)
-        const level = Math.max(0, Math.min(1, rms * 3.2));
-        pushHealth({ micLevel: level });
-      }, 100);
-    } catch {
-      // never fail connect because of a meter
-    }
+    return startMicMeterModule({
+      getMicStream: () => micStream,
+      stopMicMeter,
+      getMeterState: () => micMeterState,
+      setMeterState: (patch) => { micMeterState = { ...micMeterState, ...(patch || {}) }; },
+      pushHealth,
+    });
   }
 
   function stopMicMeter() {
-    try { if (micTick) window.clearInterval(micTick); } catch {}
-    micTick = null;
-
-    try { micSrc?.disconnect?.(); } catch {}
-    micSrc = null;
-
-    try { micAnalyser?.disconnect?.(); } catch {}
-    micAnalyser = null;
-
-    try { micAC?.close?.(); } catch {}
-    micAC = null;
-
-    // reset UI calm
-    pushHealth({ micLevel: 0 });
+    return stopMicMeterModule({
+      getMeterState: () => micMeterState,
+      setMeterState: (patch) => { micMeterState = { ...micMeterState, ...(patch || {}) }; },
+      pushHealth,
+    });
   }
 
   // TAP determinism: wait for committed before response.create
@@ -129,58 +100,36 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
    * @param {Object} sessionParams - The session object parameters to update.
    */
   function updateSession(sessionParams = {}) {
-    if (!dc || dc.readyState !== "open") {
-      pendingSessionUpdate = sessionParams; // keep only the latest patch
-      debugLog("[WebRTC] Queuing session.update (data channel not ready yet).");
-      pushHealth({ dc: dc?.readyState || "—" });
-      return false;
-    }
-
-    // ✅ Current Realtime schema requires session.type
-    const payload = {
-      type: "session.update",
-      session: {
-        type: "realtime",
-        ...sessionParams,
-      },
-    };
-
-    debugLog("[WebRTC] Sending session.update:", payload);
-    pushHealth({ mode: inputMode });
-    return sendEvent(payload);
+    return updateSessionModule(sessionParams, {
+      dc,
+      pendingSessionUpdateRef,
+      debugLog,
+      pushHealth,
+      inputMode,
+      sendEvent,
+    });
   }
 
   function flushPendingSessionUpdate() {
-    if (!pendingSessionUpdate) return;
-    const patch = pendingSessionUpdate;
-    pendingSessionUpdate = null;
-    updateSession(patch);
+    return flushPendingSessionUpdateModule({
+      dc,
+      pendingSessionUpdateRef,
+      debugLog,
+      pushHealth,
+      inputMode,
+      sendEvent,
+    });
   }
 
   function setTurnTaking({ mode } = {}) {
-    const m = String(mode || "tap").toLowerCase();
-    inputMode = (m === "auto") ? "auto" : "tap";
-    pushHealth({ mode: inputMode });
-    const isAuto = inputMode === "auto";
-
-    debugLog(
-      `[WebRTC] Switching Input Mode: ${isAuto ? "AUTO" : "TAP"} (create_response: ${isAuto})`
-    );
-
-    // ✅ Updated schema: audio.input.turn_detection (NOT session.turn_detection)
-    const turnDetection = {
-      type: "server_vad",
-      threshold: 0.5,
-      prefix_padding_ms: 300,
-      silence_duration_ms: 500,
-      create_response: isAuto,
-      interrupt_response: true,
-    };
-
-    updateSession({
-      audio: {
-        input: { turn_detection: turnDetection },
-      },
+    return setTurnTakingModule({ mode }, {
+      dc,
+      pendingSessionUpdateRef,
+      debugLog,
+      pushHealth,
+      sendEvent,
+      inputMode,
+      setInputMode: (m) => { inputMode = m; },
     });
   }
 
@@ -275,7 +224,7 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
       sendEvent({ type: "response.cancel" });
 
       // ✅ Apply whatever session.update was requested before dc opened
-      const hadQueued = !!pendingSessionUpdate;
+      const hadQueued = !!pendingSessionUpdateRef.value;
       flushPendingSessionUpdate();
       if (!hadQueued) {
         // Ensure we at least apply the current mode (defaults to "tap")
@@ -292,69 +241,19 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
       emit("disconnected");
     });
     dc.addEventListener("message", (e) => {
-      try {
-        const msg = JSON.parse(e.data);
-        const t = msg?.type || "(no type)";
-        if (
-          t.includes("turn") ||
-          t.includes("speech") ||
-          t.includes("response") ||
-          t.includes("input_audio") ||
-          t.includes("error")
-        ) {
-          if (t === "error" && msg?.error?.code === "response_cancel_not_active") {
-            return;
-          }
-          if (DEBUG || t === "error") console.log("[oai-events]", t, msg);
-        }
-      } catch {}
-
-      let evt = null;
-      try { evt = JSON.parse(e.data); } catch { return; }
-      if (evt?.type === "error" && evt?.error?.code === "response_cancel_not_active") {
-        // ignore or console.debug
-        return;
-      }
-
-      // --- Turn-phase signals (AUTO + general) ---
-      if (evt?.type === "input_audio_buffer.speech_started") {
-        // user began talking; we are “listening”
-        setPhase("listening");
-      }
-      if (evt?.type === "input_audio_buffer.speech_stopped") {
-        // in AUTO, the system is about to think/respond; in TAP it stays listening until you tap
-        if (inputMode === "auto") setPhase("thinking");
-      }
-
-      if (evt?.type === "input_audio_buffer.committed") {
-        pushHealth({ lastCommitAt: Date.now() });
-        // In AUTO, commit implies we should be thinking until response starts.
-        if (inputMode === "auto") setPhase("thinking");
-        if (_tapAwaitingCommit) {
-          if (_tapCommitTimeout) clearTimeout(_tapCommitTimeout);
-          _tapCommitTimeout = null;
-          _tapAwaitingCommit = false;
-          debugLog("[WebRTC] input_audio_buffer.committed -> response.create (TAP)");
-          const ok = sendEvent({ type: "response.create" });
-          // This “reply requested” timestamp gates the TAP button (fresh commit required again)
-          if (ok) pushHealth({ lastReplyAt: Date.now() });
-          setPhase("thinking");
-        }
-      }
-
-      if (evt?.type === "response.created") {
-        const id = evt?.response?.id || evt?.response_id || null;
-        pushHealth({ activeResponse: true, activeResponseId: id });
-        setPhase("speaking");
-      }
-      if (evt?.type === "response.done") {
-        pushHealth({ activeResponse: false, activeResponseId: null });
-        // When a response completes, we’re ready for next user input.
-        setPhase("listening");
-      }
-
-      const text = extractAssistantText(evt);
-      if (text) emit("assistant_text", { text });
+      handleOaiEventsMessage(e, {
+        DEBUG,
+        inputMode,
+        debugLog,
+        setPhase,
+        pushHealth,
+        sendEvent,
+        emit,
+        getTapAwaitingCommit: () => _tapAwaitingCommit,
+        setTapAwaitingCommit: (v) => { _tapAwaitingCommit = !!v; },
+        getTapCommitTimeout: () => _tapCommitTimeout,
+        setTapCommitTimeout: (v) => { _tapCommitTimeout = v; },
+      });
     });
 
     // SDP exchange via your backend
@@ -474,20 +373,4 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
     requestReply,
     updateSession, // Added to expose the updateSession method
   };
-}
-
-function extractAssistantText(evt) {
-  if (!evt || typeof evt !== "object") return "";
-
-  if (typeof evt.delta === "string" && evt.delta) return evt.delta;
-  if (typeof evt.text === "string" && evt.text) return evt.text;
-
-  const content = evt?.item?.content;
-  if (Array.isArray(content)) {
-    for (const c of content) {
-      if (c && typeof c.text === "string" && c.text) return c.text;
-      if (c && typeof c.transcript === "string" && c.transcript) return c.transcript;
-    }
-  }
-  return "";
 }
