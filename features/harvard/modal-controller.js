@@ -16,36 +16,23 @@ import {
 import { loadFavs, saveFavs } from "./modal-favs.js";
 import { clearNode, renderLines } from "./modal-dom-helpers.js";
 import { loadHarvardListRecords, loadPassageRecords } from "./modal-data.js";
-import {
-  renderHarvardPhonemeRows,
-  renderPassagePhonemeRows,
-} from "./modal-phoneme-rows.js";
 import { createHarvardModalDOM } from "./modal-dom.js";
 import { renderHarvardModalList } from "./modal-render-list.js";
 import {
   ensurePhonemeOptions as ensurePhonemeOptionsCore,
   updateFilterUI as updateFilterUICore,
-  selectHarvardList,
-  selectPassage,
-  showHoverHarvard as showHoverHarvardCore,
-  showHoverPassage as showHoverPassageCore,
   hideHover as hideHoverCore,
-  positionHoverCard as positionHoverCardCore,
-  switchTabCore,
 } from "./modal-actions.js";
 
-const EXPLAIN_HTML = `
-  <strong>What is the Harvard List?</strong><br/>
-  The Harvard Sentences are a classic set of <b>72 lists × 10 short sentences</b>
-  that cover a wide range of English sounds. Use them for a consistent, balanced
-  practice baseline.
-`;
-
-const PASSAGES_EXPLAIN_HTML = `
-  <strong>What are these passages?</strong><br/>
-  These are curated practice passages, drills, and phoneme tests already included in Lux.
-  Use them to target specific sounds and build fluency.
-`;
+import { EXPLAIN_HTML, PASSAGES_EXPLAIN_HTML } from "./modal-controller/constants.js";
+import {
+  setSelected as setSelectedIH,
+  setSelectedPassage as setSelectedPassageIH,
+  positionHoverCard as positionHoverCardIH,
+  showHoverHarvard as showHoverHarvardIH,
+  showHoverPassage as showHoverPassageIH,
+  switchTab as switchTabIH,
+} from "./modal-controller/interaction-handlers.js";
 
 export function createHarvardLibraryModal({ onPractice } = {}) {
   let overlay = null;
@@ -223,7 +210,6 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
   }
 
   function setFilterPh(ph) {
-    // toggle
     activePh = activePh === ph ? null : ph;
     renderList();
   }
@@ -244,64 +230,28 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
 
   function setSelected(n) {
     selectedN = n;
-    return selectHarvardList({
-      n,
-      listEl,
-      lists,
-      selTitle,
-      selLines,
-      renderLines,
-      phonTitleEl,
-      phonRows,
-      renderHarvardPhonemeRows,
-      practiceBtn,
-    });
+    return setSelectedIH(n, { listEl, lists, selTitle, selLines, phonTitleEl, phonRows, practiceBtn });
   }
 
   function setSelectedPassage(key) {
     selectedKey = key;
-    return selectPassage({
-      key,
-      listEl,
-      passRecs,
-      selTitle,
-      selLines,
-      renderLines,
-      phonTitleEl,
-      phonRows,
-      renderPassagePhonemeRows,
-      practiceBtn,
-    });
+    return setSelectedPassageIH(key, { listEl, passRecs, selTitle, selLines, phonTitleEl, phonRows, practiceBtn });
+  }
+
+  function positionHoverCard(btn) {
+    return positionHoverCardIH(btn, { hoverCard, card, listEl });
   }
 
   function showHoverHarvard(n, btn) {
     hoverN = n;
     hoverKey = null;
-    return showHoverHarvardCore({
-      n,
-      btn,
-      lists,
-      hoverTitle,
-      hoverLines,
-      renderLines,
-      hoverCard,
-      positionHoverCard,
-    });
+    return showHoverHarvardIH(n, btn, { lists, hoverTitle, hoverLines, hoverCard, card, listEl });
   }
 
   function showHoverPassage(key, btn) {
     hoverKey = key;
     hoverN = null;
-    return showHoverPassageCore({
-      key,
-      btn,
-      passRecs,
-      hoverTitle,
-      hoverLines,
-      renderLines,
-      hoverCard,
-      positionHoverCard,
-    });
+    return showHoverPassageIH(key, btn, { passRecs, hoverTitle, hoverLines, hoverCard, card, listEl });
   }
 
   function hideHover() {
@@ -310,23 +260,12 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
     return hideHoverCore({ hoverCard });
   }
 
-  function positionHoverCard(btn) {
-    return positionHoverCardCore({
-      btn,
-      hoverCard,
-      card,
-      listEl,
-    });
-  }
-
   function switchTab(next) {
-    activeTab = switchTabCore({
-      next,
+    activeTab = switchTabIH(next, {
       activeTab,
       explainRight,
       EXPLAIN_HTML,
       PASSAGES_EXPLAIN_HTML,
-
       selectedN,
       selectedKey,
       selTitle,
@@ -334,10 +273,6 @@ export function createHarvardLibraryModal({ onPractice } = {}) {
       listEl,
       phonTitleEl,
       phonRows,
-
-      renderHarvardPhonemeRows,
-      renderPassagePhonemeRows,
-
       hideHover,
       renderList,
     });
