@@ -5,6 +5,7 @@
   "main": "index.html",
   "type": "module",
   "scripts": {
+    "check:imports": "node scripts/check-absolute-imports.mjs",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
