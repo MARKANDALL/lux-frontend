@@ -1,6 +1,6 @@
 // features/my-words/index.js
 
-import { fetchHistory } from "/src/api/index.js";
+import { fetchHistory } from "../../src/api/index.js";
 import { ensureUID } from "../../api/identity.js";
 
 import { createMyWordsStore } from "./store.js";

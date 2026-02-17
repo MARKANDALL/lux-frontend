@@ -36,7 +36,7 @@ import {
   onLanguageChanged as onLanguageChangedCore,
 } from "./ui-ai-ai-logic/lifecycle.js";
 
-import { fetchAIFeedback, updateAttempt } from "/src/api/index.js";
+import { fetchAIFeedback, updateAttempt } from "../src/api/index.js";
 import { getLastAttemptId } from "../app-core/runtime.js";
 import { bringBoxBottomToViewport } from "../helpers/index.js";
 
