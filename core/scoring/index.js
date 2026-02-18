@@ -23,6 +23,27 @@ export const scoreClass = (s) =>
     ? "score-warn"
     : "score-bad";
 
+// CEFR rubric (display-only).
+// Calibrated thresholds (from your current score distribution discussion):
+// C2: 95+ | C1: 90–94 | B2: 85–89 | B1: 75–84 | A2: 60–74 | A1: <60
+export const CEFR_BANDS = [
+  { band: "C2", min: 95 },
+  { band: "C1", min: 90 },
+  { band: "B2", min: 85 },
+  { band: "B1", min: 75 },
+  { band: "A2", min: 60 },
+  { band: "A1", min: 0 },
+];
+
+export function cefrBand(score) {
+  if (score == null || !Number.isFinite(+score)) return "";
+  const n = +score;
+  for (const b of CEFR_BANDS) {
+    if (n >= b.min) return b.band;
+  }
+  return "A1";
+}
+
 export function getAzureScores(data) {
   const nbest = data?.NBest?.[0] || {};
   const pa =

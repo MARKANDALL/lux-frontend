@@ -5,11 +5,14 @@
 
 import { passages } from "../../../src/data/passages.js";
 import { SCENARIOS } from "../../convo/scenarios.js";
+import { scoreClass as scoreClassCore } from "../../../core/scoring/index.js";
 
 export function scoreClass(score) {
-  if (score >= 80) return "lux-pill--blue";
-  if (score >= 60) return "lux-pill--yellow";
-  return "lux-pill--red";
+  const cls = scoreClassCore(score);
+  if (cls === "score-good") return "lux-pill--blue";
+  if (cls === "score-warn") return "lux-pill--yellow";
+  if (cls === "score-bad") return "lux-pill--red";
+  return "";
 }
 
 export function fmtScore(score) {

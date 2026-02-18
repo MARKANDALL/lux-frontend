@@ -4,6 +4,7 @@
 import { scoreClass, fmtScore, fmtDate, titleFromPassageKey, esc } from "../format.js";
 import { sparklineSvg } from "../sparkline.js";
 import { renderMetricTrendCard } from "./actions-and-trends.js";
+import { cefrBand } from "../../../../core/scoring/index.js";
 
 export function buildProgressDashboardHtml({
     model,
@@ -57,7 +58,9 @@ export function buildProgressDashboardHtml({
         <div class="lux-pcard">
           <div class="lux-pcard-label">Average score</div>
           <div class="lux-pcard-value">${fmtScore(totals.avgScore ?? 0)}</div>
-          <div class="lux-pcard-mini">Last activity: ${fmtDate(totals.lastTS)}</div>
+          <div class="lux-pcard-mini">Last activity: ${fmtDate(totals.lastTS)}${
+            (totals.attempts ?? 0) ? (" · CEFR " + cefrBand(totals.avgScore ?? null)) : ""
+          }</div>
         </div>
 
         <div class="lux-pcard">
