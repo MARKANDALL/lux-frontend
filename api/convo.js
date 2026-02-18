@@ -1,8 +1,7 @@
 // api/convo.js
 import { API_BASE, dbg, jsonOrThrow, getAdminToken } from "./util.js";
 
-const API_URL = import.meta.env.VITE_API_URL || "";
-const CONVO_URL = `${API_URL}${API_BASE}/api/convo-turn`;
+const CONVO_URL = `${API_BASE}/api/convo-turn`;
 
 function isValidConvoTurn(x) {
   return (

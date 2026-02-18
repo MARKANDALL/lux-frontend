@@ -1,6 +1,8 @@
 // features/balloon/ui.js
 // Handles DOM creation, visual updates, and the "Confetti Pop" physics.
 
+import "./balloon.css";
+
 let wrapper = null;
 let balloon = null;
 let core = null;
@@ -8,13 +10,6 @@ let tip = null;
 
 function ensureDOM() {
   if (wrapper) return;
-  
-  if (!document.querySelector('link[href*="balloon.css"]')) {
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = "./features/balloon/balloon.css";
-    document.head.appendChild(link);
-  }
 
   wrapper = document.createElement("div");
   wrapper.id = "lux-balloon-wrapper";
