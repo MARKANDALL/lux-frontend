@@ -105,7 +105,10 @@ export function buildUI() {
     float.id = "spb-float";
     float.innerHTML = `
       <div id="spb-floatHead">
-        <div>Self Playback + Text-to-Speech (Expanded)</div>
+        <div id="spb-floatHeadLabel">
+          <div id="spb-floatDragHint" title="Drag to move">🖐️</div>
+          <div>Self Playback + Text-to-Speech (Expanded)</div>
+        </div>
          <span id="spb-toast-float" class="pill tiny" style="display:none; position:absolute; right:52px; top:10px; background:#ef4444; border-color:#b91c1c; color:#fff; z-index:10; box-shadow: 0 2px 10px rgba(0,0,0,0.5);"></span>
         <button id="spb-floatClose" class="spb-btn secondary icon" title="Close">✕</button>
       </div>
@@ -251,6 +254,10 @@ export function buildUI() {
     // prevent dragging when clicking the close button
     if (e.target && e.target.id === "spb-floatClose") return;
 
+    // ✅ Swap to grab fist
+    const dragHint = float.querySelector("#spb-floatDragHint");
+    if (dragHint) dragHint.textContent = "✊";
+
     dragOn = true;
     const r = float.getBoundingClientRect();
 
@@ -272,8 +279,37 @@ export function buildUI() {
   });
 
   floatHead.addEventListener("pointerup", () => {
+    // ✅ Restore open hand
+    const dragHint = float.querySelector("#spb-floatDragHint");
+    if (dragHint) dragHint.textContent = "🖐️";
+
     dragOn = false;
   });
+
+  // ✅ Wiggle close button when user clicks blank space outside the expanded modal
+  document.addEventListener("click", (e) => {
+    if (!isExpandedOpen) return;
+
+    // If click is inside the float, ignore
+    if (float.contains(e.target)) return;
+
+    // If click is on an interactive element (button, input, select, a, label, [role]), ignore
+    const interactive = e.target.closest(
+      "button, a, input, select, textarea, label, [role='button'], [role='tab'], [tabindex]"
+    );
+    if (interactive) return;
+
+    // It's a click on blank space — wiggle the close button
+    const closeBtn = float.querySelector("#spb-floatClose");
+    if (!closeBtn) return;
+    closeBtn.classList.remove("wiggle");
+    // Force reflow so re-triggering works
+    void closeBtn.offsetWidth;
+    closeBtn.classList.add("wiggle");
+    closeBtn.addEventListener("animationend", () => {
+      closeBtn.classList.remove("wiggle");
+    }, { once: true });
+  }, true); // ← useCapture so it fires before other handlers
 
   return {
     host,
