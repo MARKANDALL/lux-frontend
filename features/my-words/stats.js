@@ -2,6 +2,7 @@
 
 import { normalizeText } from "./normalize.js";
 import { getColorConfig } from "../progress/progress-utils.js";
+import { scoreClass as scoreClassCore } from "../../core/scoring/index.js";
 
 function getAttemptText(a) {
   return (
@@ -64,8 +65,15 @@ function statusFromScore(lastScore, attemptCount) {
   }
 
   const cfg = getColorConfig(lastScore);
-  const cls = lastScore >= 80 ? "mw-good" : lastScore >= 60 ? "mw-warn" : "mw-bad";
-  const label = lastScore >= 80 ? "solid" : lastScore >= 60 ? "getting-there" : "needs-work";
+  const tier = scoreClassCore(lastScore);
+  const cls =
+    tier === "score-good" ? "mw-good" : tier === "score-warn" ? "mw-warn" : "mw-bad";
+  const label =
+    tier === "score-good"
+      ? "solid"
+      : tier === "score-warn"
+      ? "getting-there"
+      : "needs-work";
 
   return { label, cls, color: cfg.color, bg: cfg.bg };
 }

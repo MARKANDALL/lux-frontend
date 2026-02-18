@@ -10,11 +10,14 @@ import {
 } from "../../src/data/phonemes/details.js";
 import { isCorrupt, encouragingLine } from "../../helpers/core.js";
 import { resolveYTLink } from "./deps.js";
+import { scoreClass as scoreClassCore } from "../../core/scoring/index.js";
 
 // --- Universal Color Helper (Inlined here for safety) ---
 function getColor(s) {
-  if (s >= 80) return { color: "#2563eb", bg: "#dbeafe" }; // Blue
-  if (s >= 60) return { color: "#d97706", bg: "#fef3c7" }; // Yellow
+  const n = Number(s) || 0;
+  const cls = scoreClassCore(n);
+  if (cls === "score-good") return { color: "#2563eb", bg: "#dbeafe" }; // Blue
+  if (cls === "score-warn") return { color: "#d97706", bg: "#fef3c7" }; // Yellow
   return { color: "#dc2626", bg: "#fee2e2" }; // Red
 }
 

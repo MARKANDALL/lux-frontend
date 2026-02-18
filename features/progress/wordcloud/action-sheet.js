@@ -1,5 +1,6 @@
 // features/progress/wordcloud/action-sheet.js
 import { esc, getColorConfig } from "../progress-utils.js";
+import { scoreClass as scoreClassCore } from "../../../core/scoring/index.js";
 
 const FAV_KEY = "lux.cloud.favs.v1";
 const PIN_KEY = "lux.cloud.pins.v1";
@@ -42,8 +43,9 @@ function toggleItem(kind, id, key) {
 
 function labelFor(avg) {
   const n = Number(avg) || 0;
-  if (n >= 80) return "Good";
-  if (n >= 60) return "Developing";
+  const cls = scoreClassCore(n);
+  if (cls === "score-good") return "Good";
+  if (cls === "score-warn") return "Developing";
   return "Needs work";
 }
 
@@ -315,3 +317,4 @@ export function createCloudActionSheet({
 
   return { open, close };
 }
+ BELOW HERE I'LL PASTE IN THE FILE THAT IT PERTAINS TO.

@@ -2,6 +2,15 @@
 // Small HTML render helpers for Attempt Details modal.
 
 import { esc, getColorConfig } from "../progress-utils.js";
+import { scoreClass as scoreClassCore } from "../../../core/scoring/index.js";
+
+const pillClassFromScore = (s) => {
+  const n = Number(s) || 0;
+  const cls = scoreClassCore(n);
+  if (cls === "score-good") return "lux-pill--blue";
+  if (cls === "score-warn") return "lux-pill--yellow";
+  return "lux-pill--red";
+};
 
 export function pillKV(label, val) {
   return `
@@ -37,9 +46,9 @@ export function chipRowWords(items = []) {
           )}"
         >
           <span>${esc(w.word)}</span>
-          <span class="lux-pill ${
-            w.avg >= 80 ? "lux-pill--blue" : w.avg >= 60 ? "lux-pill--yellow" : "lux-pill--red"
-          }">${Math.round(Number(w.avg) || 0)}%</span>
+          <span class="lux-pill ${pillClassFromScore(w.avg)}">${Math.round(
+            Number(w.avg) || 0
+          )}%</span>
         </span>
       `
         )
@@ -79,9 +88,9 @@ export function chipRowPhonemes(items = []) {
               )}"
             >
               <span>${esc(p.ipa)}</span>
-              <span class="lux-pill ${
-                p.avg >= 80 ? "lux-pill--blue" : p.avg >= 60 ? "lux-pill--yellow" : "lux-pill--red"
-              }">${Math.round(Number(p.avg) || 0)}%</span>
+              <span class="lux-pill ${pillClassFromScore(p.avg)}">${Math.round(
+                Number(p.avg) || 0
+              )}%</span>
             </span>
             ${ex}
           </div>

@@ -1,26 +1,13 @@
 // src/main.js
 // The Main Entry Point: Boots the app, handles the Typewriter, and wires the Dropdown.
-window.addEventListener('unhandledrejection', (event) => {
-  console.error('[LUX] Unhandled promise rejection:', event.reason);
-});
-
-window.addEventListener('error', (event) => {
-  console.error('[LUX] Uncaught error:', event.message, event.filename, event.lineno);
-});
 
 import { wirePassageSelect, wireNextBtn } from "../features/passages/index.js";
-
 import { wireHarvardPicker } from "../features/harvard/index.js";
 import { maybeApplyStoredNextPracticePlan } from "../features/next-activity/next-practice.js";
-
 import { initLuxRecorder, wireRecordingButtons } from "../features/recorder/index.js";
-
 import { mountAudioModeSwitch } from "../features/recorder/audio-mode-switch.js";
-
 import { showSummary } from "../features/results/index.js";
-
 import { allPartsResults, currentParts } from "../app-core/state.js";
-
 import { initAudioSink } from "../app-core/audio-sink.js";
 import { bootTTS } from "../features/features/tts/boot-tts.js";
 
@@ -44,6 +31,14 @@ import { initArrowTrail } from "../ui/ui-arrow-trail.js";
 
 // ✅ My Words Lazy-Load Launcher (NEW)
 import { bootMyWordsLauncher } from "../features/my-words/launcher.js";
+
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('[LUX] Unhandled promise rejection:', event.reason);
+});
+
+window.addEventListener('error', (event) => {
+  console.error('[LUX] Uncaught error:', event.message, event.filename, event.lineno);
+});
 
 // ✅ My Words warp prefill (?mw=...) into Practice Skills textarea
 function applyMyWordsWarpPrefill() {
@@ -75,31 +70,31 @@ function startTypewriter() {
   if (!input) return;
 
   const phrases = [
-    "Paste or type everything you’ll read here...",
+    "Paste or type everything you'll read here...",
     "Try the Rainbow Passage to test all phonemes (sounds)...",
     "Focus on difficult words you struggle with...",
     "Select a passage from the menu above...",
     "Practice your elevator pitch...",
     "Rehearse your upcoming presentation script...",
-    "Tricky phrase: “third thorough thought”",
+    "Tricky phrase: \u201cthird thorough thought\u201d",
     "Read an email draft out loud to check the tone...",
     "Prepare for a job interview answer...",
     "Practice your Zoom meeting introduction...",
-    "Interview intro: “Thanks for having me...”",
+    "Interview intro: \u201cThanks for having me...\u201d",
     "Read your favorite poem aloud...",
     "Practice a movie monologue...",
-    "Phone message: “Hi, this is Mark — please call me back”",
+    "Phone message: \u201cHi, this is Mark \u2014 please call me back\u201d",
     "Try a difficult tongue twister...",
     "Read a recipe instruction clearly...",
     "Tell a short story...",
     "Practice ordering coffee clearly...",
     "Read a news headline...",
-    "Audio note: “Schedule a sales demo for 10am”",
+    "Audio note: \u201cSchedule a sales demo for 10am\u201d",
     "Practice explaining a complex idea simple...",
     "Work on your 'R' and 'L' sounds...",
     "Slow down and enunciate every syllable...",
     "Go over exactly what you'll say when you propose...",
-    "Speech closer: “In short, here’s why...”",
+    "Speech closer: \u201cIn short, here\u2019s why...\u201d",
   ];
 
   let i = 0;
@@ -175,20 +170,19 @@ async function bootApp() {
   // ----------------------------------------------------------
 
   if (passageSelect && textInput) {
-passageSelect.addEventListener("change", (e) => {
+    passageSelect.addEventListener("change", (e) => {
       const val = e.target.value;
-
-// Return the dropdown to the blank "Select Passage..." option (no twitch).
-  passageSelect.value = "";
-  // Let the passages controller react to the now-blank selection.
-  passageSelect.dispatchEvent(new Event("change", { bubbles: true }));
+      if (val) {
+        // Return the dropdown to the blank "Select Passage..." option (no twitch).
+        passageSelect.value = "";
+        // Let the passages controller react to the now-blank selection.
+        passageSelect.dispatchEvent(new Event("change", { bubbles: true }));
 
         // Keep your existing UX: blur + typewriter hint.
         textInput.blur();
         startTypewriter();
       }
     });
-
 
     textInput.addEventListener("focus", () => {
       if (typewriterTimeout) clearTimeout(typewriterTimeout);
@@ -288,7 +282,7 @@ function updateTopBannerLayout() {
   );
 
   // Arrow + a11y
-  handle.textContent = collapsed ? "Tips ▾" : "Tips ▴";
+  handle.textContent = collapsed ? "Tips \u25be" : "Tips \u25b4";
   handle.setAttribute("aria-label", collapsed ? "Show tips" : "Hide tips");
   handle.title = collapsed ? "Show tips" : "Hide tips";
 

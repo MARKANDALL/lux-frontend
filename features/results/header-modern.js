@@ -66,8 +66,9 @@ export function renderResultsHeaderModern(data) {
   const getRingColor = (v) => {
     const n = +v;
     if (!Number.isFinite(n)) return "#cbd5e1";
-    if (n >= 80) return "#2563eb";
-    if (n >= 60) return "#d97706";
+    const cls = scoreClass(n);
+    if (cls === "score-good") return "#2563eb";
+    if (cls === "score-warn") return "#d97706";
     return "#dc2626";
   };
 
@@ -80,7 +81,7 @@ export function renderResultsHeaderModern(data) {
       <div class="lux-scoreTile" data-score-key="${key}">
         <div class="lux-scoreTile-label">
           ${labelHtml}
-          <span class="tooltip result-tip tip-${key}">(?) 
+          <span class="tooltip result-tip tip-${key}>(?) 
             <span class="tooltiptext">${TOOLTIPS[key] || ""}</span>
           </span>
         </div>

@@ -2,6 +2,7 @@
 // One-line: Wordcloud canvas paint engine (state + paint + hit test + ripple + RAF), extracted from render-canvas.js.
 
 import { clamp, idOfWord, hexToRgba } from "./helpers.js";
+import { scoreClass as scoreClassCore } from "../../../../core/scoring/index.js";
 
 export function createWordCloudPainter({
   canvas,
@@ -113,10 +114,11 @@ export function createWordCloudPainter({
         const dx = w * 0.17;
         const dy = h * 0.06;
 
-        if (avg >= 80) {
+        const cls = scoreClassCore(avg);
+        if (cls === "score-good") {
           driftX = -dx;
           driftY = -dy;
-        } else if (avg >= 60) {
+        } else if (cls === "score-warn") {
           driftX = 0;
           driftY = dy * 1.2;
         } else {
