@@ -7,7 +7,7 @@ import { bootTTS } from "../features/features/tts/boot-tts.js";
 import { initConvoProgress } from "../features/convo/progress.js";
 import { initAuthUI } from "../ui/auth-dom.js";
 import { bootRippleButtons } from "../ui/ui-ripple-filter.js";
-import { bootMyWordsLauncher } from "../features/my-words/launcher.js";
+import { bootMyWordsLauncher } from "../features/my-words/boot.js";
 
 // 0. Initialize UID (single source of truth)
 ensureUID();
@@ -35,3 +35,4 @@ initConvoProgress();
 
 // 6. Boot ripple buttons (safe here: script loads at end of body)
 bootRippleButtons();
+ 

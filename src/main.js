@@ -30,7 +30,7 @@ import { initAuthUI } from "../ui/auth-dom.js";
 import { initArrowTrail } from "../ui/ui-arrow-trail.js";
 
 // ✅ My Words Lazy-Load Launcher (NEW)
-import { bootMyWordsLauncher } from "../features/my-words/launcher.js";
+import { bootMyWordsLauncher } from "../features/my-words/boot.js";
 
 window.addEventListener('unhandledrejection', (event) => {
   console.error('[LUX] Unhandled promise rejection:', event.reason);

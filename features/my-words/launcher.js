@@ -85,31 +85,3 @@ export function mountMyWordsCornerLauncher({ onClick } = {}) {
 
   return btn;
 }
-
-/**
- * NEW NAME (what we want main.js to call)
- * ✅ Boots My Words ONLY when clicked (lazy import)
- */
-export function bootMyWordsLauncher() {
-  let booted = false;
-  let api = null; // ✅ holds { store, sidecar, modal, launcher }
-
-  mountMyWordsCornerLauncher({
-    onClick: async () => {
-      if (!booted) {
-        booted = true;
-        const mod = await import("./index.js");
-        api = await mod.initMyWordsEverywhere?.();
-      }
-
-      // ✅ toggle via returned store FIRST (most reliable)
-      if (api?.store?.toggleOpen) {
-        api.store.toggleOpen();
-        return;
-      }
-
-      // ✅ fallback if global exists
-      window.LuxMyWords?.toggle?.();
-    },
-  });
-}
