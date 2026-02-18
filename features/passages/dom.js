@@ -74,8 +74,9 @@ export function renderPartState({
   showLabel, 
   preserveInput 
 }) {
-  if (ui.suggested) ui.suggested.textContent = text; 
-  if (ui.input && !preserveInput) ui.input.value = text;
+const safeText = (text == null) ? "" : text;
+  if (ui.suggested) ui.suggested.textContent = safeText; 
+  if (ui.input && !preserveInput) ui.input.value = safeText;
   if (ui.progress) ui.progress.textContent = progressText;
   
   if (ui.label) {

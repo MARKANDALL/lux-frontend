@@ -208,11 +208,39 @@ export function markPartCompleted() {
 /* ---------------- Wiring ---------------- */
 
 export function wirePassageSelect() {
+  // Ensure the "custom" option always exists so typing can safely switch the select.
+  ensureCustomOption();
+
   DOM.wireSelectEvents({
-    onChange: (val) => {
+    onChange: (rawVal) => {
+      // Back-compat: older markup used "write-own"
+      const val = rawVal === "write-own" ? "custom" : rawVal;
+  // "clear" is handled in src/main.js by resetting the select to "" and re-dispatching change.
+    // If we get "" here, treat it as "no passage selected".
+    if (!val) {
+      setCustom(false);
+      setPassageKey("");
+      setPartIdx(0);
+      setParts([]);
+
+      DOM.renderPartState({
+        text: "",
+        progressText: "",
+        labelText: "",
+        showLabel: false,
+        preserveInput: false
+      });
+
+      DOM.clearResultsUI();
+      updatePartsInfoTip();
+      togglePartNav(false);
+      return;
+    }
+
       setPassage(val, { clearInputForCustom: val === "custom" });
       updatePartsInfoTip();
     },
+
     onClick: () => {
       const el = document.querySelector("#suggestedSentence");
       const empty = !el?.textContent?.trim();

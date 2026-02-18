@@ -175,18 +175,20 @@ async function bootApp() {
   // ----------------------------------------------------------
 
   if (passageSelect && textInput) {
-    passageSelect.addEventListener("change", (e) => {
+passageSelect.addEventListener("change", (e) => {
       const val = e.target.value;
-      if (val === "write-own") {
-        textInput.value = "";
-        textInput.focus();
-      } else if (val === "clear") {
-        textInput.value = "";
-        passageSelect.value = "";
+
+// Return the dropdown to the blank "Select Passage..." option (no twitch).
+  passageSelect.value = "";
+  // Let the passages controller react to the now-blank selection.
+  passageSelect.dispatchEvent(new Event("change", { bubbles: true }));
+
+        // Keep your existing UX: blur + typewriter hint.
         textInput.blur();
         startTypewriter();
       }
     });
+
 
     textInput.addEventListener("focus", () => {
       if (typewriterTimeout) clearTimeout(typewriterTimeout);
