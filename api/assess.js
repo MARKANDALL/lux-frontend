@@ -4,6 +4,9 @@ import AudioInspector from "../features/recorder/audio-inspector.js";
 
 const ASSESS_URL = `${API_BASE}/api/assess`;
 
+// Baked in at build time from VITE_ADMIN_TOKEN in .env.local
+const ENV_ADMIN_TOKEN = (import.meta?.env?.VITE_ADMIN_TOKEN || "").toString().trim();
+
 export async function assessPronunciation({ audioBlob, text, firstLang }) {
   const t = (text ?? "").trim();
   const audioBytes = audioBlob?.size ?? 0;
@@ -14,12 +17,14 @@ export async function assessPronunciation({ audioBlob, text, firstLang }) {
     return null; // keep it simple: "no assessment"
   }
 
-  // In dev the Vite proxy injects x-admin-token automatically.
-  // In build/preview there is no proxy, so we must attach it ourselves.
-  const token = getAdminToken({
-    promptIfMissing: !import.meta.env.DEV,
-    promptLabel: "Admin Token required for Recording Assessment",
-  });
+  // Priority: env var baked at build time → sessionStorage/localStorage → prompt
+  // In dev the Vite proxy injects the token, so we stay silent if nothing found.
+  const token =
+    ENV_ADMIN_TOKEN ||
+    getAdminToken({
+      promptIfMissing: !import.meta.env.DEV,
+      promptLabel: "Admin Token required for Recording Assessment",
+    });
 
   const fd = new FormData();
   fd.append("audio", audioBlob, "recording.webm");
