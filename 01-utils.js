@@ -87,10 +87,15 @@ var resolveYTLink =
 var scoreClass =
   window.scoreClass ||
   function (score) {
-    if (score == null) return "";
-    if (score >= 85) return "score-good";
-    if (score >= 70) return "score-warn";
-    return "score-bad";
+    try {
+      return window.LuxScoreClass ? window.LuxScoreClass(score) : "";
+    } catch (e) {
+      // final fallback: match canonical thresholds
+      if (score == null) return "";
+      if (+score >= 80) return "score-good";
+      if (+score >= 60) return "score-warn";
+      return "score-bad";
+    }
   };
 
 var buildYouglishUrl =

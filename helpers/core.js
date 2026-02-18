@@ -1,15 +1,13 @@
 // helpers/core.js
 import { getUID } from "../api/identity.js";
+import { scoreClass as scoreClassCore } from "../core/scoring/index.js";
 
 // Single source of truth for UID:
 // - api/identity.js owns generation + persistence + migration
 export const LUX_USER_ID = typeof window !== "undefined" ? getUID() : null;
 
 export function scoreClass(score) {
-  if (score == null || Number.isNaN(+score)) return "";
-  if (score >= 85) return "score-good";
-  if (score >= 70) return "score-warn";
-  return "score-bad";
+  return scoreClassCore(score);
 }
 
 export const buildYouglishUrl = (w) =>
@@ -67,4 +65,3 @@ export function mdToHtml(md) {
     )
     .join("\n");
 }
- 
