@@ -44,6 +44,7 @@ export function createMyWordsPanelDOM({
     <div class="lux-mw-body">
       ${composerHTML}
       <div class="lux-mw-list"></div>
+      <div class="lux-mw-footer"></div>
     </div>
   `;
 
@@ -53,6 +54,7 @@ export function createMyWordsPanelDOM({
   const elTa = root.querySelector(".lux-mw-addBox");
   const elAdd = root.querySelector(".lux-mw-addBtn");
   const elList = root.querySelector(".lux-mw-list");
+  const elFooter = root.querySelector(".lux-mw-footer");
   const elComposerZone = root.querySelector('[data-zone="composer"]');
 
   return {
@@ -63,6 +65,7 @@ export function createMyWordsPanelDOM({
     elTa,
     elAdd,
     elList,
+    elFooter,
     elComposerZone,
   };
 }

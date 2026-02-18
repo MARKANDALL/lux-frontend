@@ -118,5 +118,34 @@ export function bindMyWordsPanelEvents({
   // Re-render on store updates
   store.subscribe(() => render());
 
+  // ✅ Wiggle close button when user clicks blank space outside the My Words panel
+  document.addEventListener("click", (e) => {
+    // Only when panel is open
+    if (!root.isConnected || root.style.display === "none") return;
+    // Check panel is actually visible (has is-open or is mounted in sidecar)
+    const panelOpen = root.closest(".lux-mw-panel.is-open") || root.classList.contains("is-open") || root.isConnected;
+    if (!panelOpen) return;
+
+    // If click is inside the panel, ignore
+    if (root.contains(e.target)) return;
+
+    // If click is on any interactive element, ignore — let them use the app normally
+    const interactive = e.target.closest(
+      "button, a, input, select, textarea, label, [role='button'], [role='tab'], [tabindex]"
+    );
+    if (interactive) return;
+
+    // Blank space click — wiggle the close button
+    const closeBtn = root.querySelector('button[data-act="close"]');
+    if (!closeBtn) return;
+    closeBtn.classList.remove("wiggle");
+    void closeBtn.offsetWidth; // force reflow so re-triggering works
+    closeBtn.classList.add("wiggle");
+    closeBtn.addEventListener("animationend", () => {
+      closeBtn.classList.remove("wiggle");
+    }, { once: true });
+
+  }, true); // useCapture — fires before other handlers
+
   return {};
 }

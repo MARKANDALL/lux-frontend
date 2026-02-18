@@ -47,7 +47,7 @@ import "./selfpb-peekaboo.css";
       panel.style.left = panel.style.left || "0";
       panel.style.right = panel.style.right || "auto";
       panel.style.top = panel.style.top || "10px";      
-      panel.style.zIndex = panel.style.zIndex || "999999";
+panel.style.zIndex = panel.style.zIndex || "900";
       panel.style.pointerEvents = panel.style.pointerEvents || "auto";
     } catch {}
 

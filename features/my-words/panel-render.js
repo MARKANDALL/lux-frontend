@@ -4,6 +4,7 @@ export function createMyWordsPanelRenderer({
   root,
   elTitle,
   elList,
+  elFooter,
   elComposerZone,
 
   store,
@@ -95,9 +96,10 @@ export function createMyWordsPanelRenderer({
 
   function renderFooterButton(archivedTotal) {
     const isModal = root.classList.contains("is-modal");
+    const host = elFooter || elList;
 
     // Remove any existing footer button before adding a new one
-    const existing = elList.querySelector(".lux-mw-viewAllBtn");
+    const existing = host.querySelector(".lux-mw-viewAllBtn");
     if (existing) existing.remove();
 
     // Modal: always show Back
@@ -112,7 +114,7 @@ export function createMyWordsPanelRenderer({
         window.LuxMyWords?.closeLibrary?.();
       });
 
-      elList.appendChild(btn);
+      host.appendChild(btn);
       return;
     }
 
@@ -128,7 +130,7 @@ export function createMyWordsPanelRenderer({
         window.LuxMyWords?.openLibrary?.();
       });
 
-      elList.appendChild(btn);
+      host.appendChild(btn);
     }
   }
 

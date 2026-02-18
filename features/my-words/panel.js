@@ -43,6 +43,7 @@ export function mountMyWordsPanel({
     elTa,
     elAdd,
     elList,
+    elFooter,
     elComposerZone,
   } = createMyWordsPanelDOM({
     mountTo,
@@ -55,6 +56,7 @@ export function mountMyWordsPanel({
     root,
     elTitle,
     elList,
+    elFooter,
     elComposerZone,
 
     store,

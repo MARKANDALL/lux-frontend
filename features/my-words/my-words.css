@@ -217,6 +217,14 @@
   min-height: 0;   /* ✅ allows scrolling to bottom */
 }
 
+/* Pinned footer area (View Library / Back to My Words) */
+.lux-mw-footer{
+  padding: 10px 12px 12px 12px;
+  border-top: 1px solid rgba(0,0,0,.08);
+}
+.lux-mw-footer:empty{ display:none; }
+.lux-mw-footer .lux-mw-viewAllBtn{ margin-top: 0; }
+
 .lux-mw-empty{
   padding: 16px 12px;
   border-radius: 14px;
@@ -471,3 +479,19 @@
   cursor: pointer;
 }
 .lux-mw-viewAllBtn:hover { filter: brightness(1.01); }
+/* ✅ Wiggle animation for My Words close button (outside-click feedback) */
+@keyframes mw-wiggle {
+  0%   { transform: rotate(0deg)   scale(1);    box-shadow: none;                              background: rgba(255,255,255,.85); }
+  10%  { transform: rotate(-22deg) scale(1.25); box-shadow: 0 0 0 4px rgba(239,68,68,0.25);   background: rgba(239,68,68,0.15); }
+  25%  { transform: rotate(20deg)  scale(1.28); box-shadow: 0 0 14px 6px rgba(239,68,68,0.4); background: rgba(239,68,68,0.22); }
+  40%  { transform: rotate(-16deg) scale(1.2);  box-shadow: 0 0 10px 4px rgba(239,68,68,0.3); background: rgba(239,68,68,0.18); }
+  55%  { transform: rotate(12deg)  scale(1.15); box-shadow: 0 0 8px 3px rgba(239,68,68,0.22); background: rgba(239,68,68,0.12); }
+  70%  { transform: rotate(-7deg)  scale(1.08); box-shadow: 0 0 4px 2px rgba(239,68,68,0.12); background: rgba(239,68,68,0.07); }
+  85%  { transform: rotate(4deg)   scale(1.03); box-shadow: none;                              background: rgba(255,255,255,.85); }
+  100% { transform: rotate(0deg)   scale(1);    box-shadow: none;                              background: rgba(255,255,255,.85); }
+}
+
+.lux-mw-iconBtn.wiggle {
+  animation: mw-wiggle 0.65s ease forwards;
+  border-radius: 50%;
+}
