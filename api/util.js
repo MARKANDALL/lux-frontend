@@ -63,3 +63,35 @@ export function getAdminToken({
 
   return t || "";
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// apiFetch — single place that always attaches x-admin-token for admin-gated
+// routes. Use this for any new API helpers going forward so the token can
+// never be forgotten in an individual file again.
+//
+// Usage:
+//   const data = await apiFetch("/api/some-route", { method: "POST", body: fd });
+//
+// For multipart FormData, do NOT pass Content-Type — the browser sets it.
+// For JSON, pass body: JSON.stringify(payload) and it will set Content-Type automatically.
+// ─────────────────────────────────────────────────────────────────────────────
+export async function apiFetch(url, opts = {}) {
+  // Build-time env token takes priority, then storage, then nothing.
+  const envToken = (import.meta?.env?.VITE_ADMIN_TOKEN || "").toString().trim();
+  const token = envToken || getAdminToken({ promptIfMissing: false });
+
+  const { headers: callerHeaders, body, ...rest } = opts;
+
+  // Auto Content-Type for JSON strings; leave FormData alone (browser handles it).
+  const contentType =
+    typeof body === "string" ? { "Content-Type": "application/json" } : {};
+
+  const headers = {
+    ...contentType,
+    ...(callerHeaders || {}),
+    ...(token ? { "x-admin-token": token } : {}),
+  };
+
+  const resp = await fetch(url, { headers, body, ...rest });
+  return jsonOrThrow(resp);
+}
