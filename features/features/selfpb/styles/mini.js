@@ -76,6 +76,29 @@ export const MINI_CSS = `
     #selfpb-lite .pill{border-radius:999px;padding:6px 10px}
     #selfpb-lite .meta{opacity:.85}
 
+    /* ✅ Expand button — bezel area pill */
+    #selfpb-lite .spb-miniBtn {
+      border: 0;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.22);
+      color: rgba(15, 23, 42, 0.85);
+      transition: transform 0.12s ease, filter 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    #selfpb-lite .spb-miniBtn:hover {
+      transform: scale(1.10);
+      filter: brightness(1.12);
+      box-shadow: 0 0 10px rgba(96, 165, 250, 0.28);
+    }
+
+    #selfpb-lite .spb-miniBtn:active {
+      transform: scale(0.97);
+    }
+
     :is(#selfpb-lite, #spb-float) input[type="range"]{accent-color:#2d6cdf}
 
     #selfpb-lite .ab{display:flex;gap:6px;position:relative;}
