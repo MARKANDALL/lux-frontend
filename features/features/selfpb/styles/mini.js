@@ -9,7 +9,7 @@ export const MINI_CSS = `
       position: fixed;
       top: 12px;
       left: 12px;
-      z-index: 9999;
+      z-index: var(--z-drawer);   /* = 900, consistent with TTS drawer */
 
       /* 🔒 lock inner width into a variable so outer can wrap it */
       --spbW: min(390px, calc(100vw - 48px));
