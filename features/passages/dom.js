@@ -74,7 +74,7 @@ export function renderPartState({
   showLabel, 
   preserveInput 
 }) {
-const safeText = (text == null) ? "" : text;
+  const safeText = (text == null) ? "" : text;
   if (ui.suggested) ui.suggested.textContent = safeText; 
   if (ui.input && !preserveInput) ui.input.value = safeText;
   if (ui.progress) ui.progress.textContent = progressText;
@@ -85,7 +85,7 @@ const safeText = (text == null) ? "" : text;
   }
 }
 
-export function updateNavVisibility({ showNext, enableNext, nextMsgText, nextMsgColor, showSummary, customMode }) {
+export function updateNavVisibility({ showNext, enableNext, nextMsgText, nextMsgColor, showSummary, customMode, summaryProgress }) {
   if (ui.nextBtn) {
     setVisible(ui.nextBtn, showNext);
     ui.nextBtn.disabled = !enableNext;
@@ -116,17 +116,23 @@ export function updateNavVisibility({ showNext, enableNext, nextMsgText, nextMsg
             setVisible(ui.summaryBtn, false);
             ui.summaryBtn.disabled = true;
             ui.summaryBtn.classList.remove("lux-summary-subtle");
+            ui.summaryBtn.style.removeProperty("--summary-fill");
         } else if (showSummary === "subtle") {
             // ── Subtle: visible but muted — user CAN click, but isn't "done" ──
             setVisible(ui.summaryBtn, true);
             ui.summaryBtn.disabled = false;
             ui.summaryBtn.classList.add("lux-summary-subtle");
             ui.summaryBtn.textContent = "Show Summary";
+
+            // Progress fill: subtle background gradient showing completion
+            const pct = Math.min(Math.max((summaryProgress || 0) * 100, 0), 100);
+            ui.summaryBtn.style.setProperty("--summary-fill", `${pct}%`);
         } else {
             // ── Prominent: full CTA — user is done or custom mode ──
             setVisible(ui.summaryBtn, true);
             ui.summaryBtn.disabled = false;
             ui.summaryBtn.classList.remove("lux-summary-subtle");
+            ui.summaryBtn.style.removeProperty("--summary-fill");
             if (customMode) {
                 ui.summaryBtn.textContent = "Finish & View Summary";
             } else {

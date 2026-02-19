@@ -32,12 +32,12 @@ import { initArrowTrail } from "../ui/ui-arrow-trail.js";
 // ✅ My Words Lazy-Load Launcher (NEW)
 import { bootMyWordsLauncher } from "../features/my-words/boot.js";
 
-window.addEventListener('unhandledrejection', (event) => {
-  console.error('[LUX] Unhandled promise rejection:', event.reason);
+window.addEventListener("unhandledrejection", (event) => {
+  console.error("[LUX] Unhandled promise rejection:", event.reason);
 });
 
-window.addEventListener('error', (event) => {
-  console.error('[LUX] Uncaught error:', event.message, event.filename, event.lineno);
+window.addEventListener("error", (event) => {
+  console.error("[LUX] Uncaught error:", event.message, event.filename, event.lineno);
 });
 
 // ✅ My Words warp prefill (?mw=...) into Practice Skills textarea
@@ -65,9 +65,19 @@ function applyMyWordsWarpPrefill() {
 // --- VISUALS: Typewriter Effect ---
 let typewriterTimeout;
 
+function stopTypewriter() {
+  if (typewriterTimeout) {
+    clearTimeout(typewriterTimeout);
+    typewriterTimeout = undefined;
+  }
+}
+
 function startTypewriter() {
   const input = document.getElementById("referenceText");
   if (!input) return;
+
+  // ✅ Ensure only ONE loop runs (prevents stacked "twitchy" placeholders)
+  stopTypewriter();
 
   const phrases = [
     "Paste or type everything you'll read here...",
@@ -170,13 +180,23 @@ async function bootApp() {
   // ----------------------------------------------------------
 
   if (passageSelect && textInput) {
+    // ✅ Pause typewriter while the native <select> dropdown is being used
+    // (prevents DOM churn that can cause selections not to "stick")
+    passageSelect.addEventListener("mousedown", () => stopTypewriter());
+
     passageSelect.addEventListener("change", (e) => {
       const val = e.target.value;
-      if (val) {
-        // Return the dropdown to the blank "Select Passage..." option (no twitch).
+
+      if (val === "clear") {
+        // ✅ True reset: clear input + return dropdown to blank "Select Passage..."
+        textInput.value = "";
         passageSelect.value = "";
-        // Let the passages controller react to the now-blank selection.
-        passageSelect.dispatchEvent(new Event("change", { bubbles: true }));
+
+        // Let the passages controller react to the blank selection.
+        // (Defer to avoid nested change weirdness.)
+        setTimeout(() => {
+          passageSelect.dispatchEvent(new Event("change", { bubbles: true }));
+        }, 0);
 
         // Keep your existing UX: blur + typewriter hint.
         textInput.blur();
@@ -185,7 +205,7 @@ async function bootApp() {
     });
 
     textInput.addEventListener("focus", () => {
-      if (typewriterTimeout) clearTimeout(typewriterTimeout);
+      stopTypewriter();
       textInput.setAttribute("placeholder", "Type whatever you like here...");
     });
 
@@ -276,10 +296,7 @@ function updateTopBannerLayout() {
     const panelRect = panel.getBoundingClientRect();
     handleTop = Math.max(16, Math.ceil(panelRect.bottom));
   }
-  document.documentElement.style.setProperty(
-    "--lux-banner-handle-top",
-    handleTop + "px"
-  );
+  document.documentElement.style.setProperty("--lux-banner-handle-top", handleTop + "px");
 
   // Arrow + a11y
   handle.textContent = collapsed ? "Tips \u25be" : "Tips \u25b4";
@@ -294,14 +311,9 @@ function updateTopBannerLayout() {
 
   const panelRect = panel.getBoundingClientRect();
   const handleRect = handle.getBoundingClientRect();
-  const bottom = collapsed
-    ? handleRect.bottom
-    : Math.max(panelRect.bottom, handleRect.bottom);
+  const bottom = collapsed ? handleRect.bottom : Math.max(panelRect.bottom, handleRect.bottom);
 
-  document.documentElement.style.setProperty(
-    "--lux-top-banner-offset",
-    Math.ceil(bottom) + "px"
-  );
+  document.documentElement.style.setProperty("--lux-top-banner-offset", Math.ceil(bottom) + "px");
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -342,9 +354,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Keep layout correct after animation and resizes
   panel.addEventListener("transitionend", () => updateTopBannerLayout());
-  window.addEventListener("resize", () => updateTopBannerLayout(), {
-    passive: true,
-  });
+  window.addEventListener("resize", () => updateTopBannerLayout(), { passive: true });
 
   updateTopBannerLayout();
 });

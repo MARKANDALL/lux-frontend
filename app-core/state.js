@@ -27,7 +27,7 @@ const IS_PROD =
   typeof location !== "undefined" &&
   /luxurylanguagelearninglab\.com$/.test(location.hostname);
 
-export const DEFAULT_PASSAGE = "";
+export const DEFAULT_PASSAGE = ""; 
 
 // ---- Mutables (single source of truth)
 export let currentPassageKey = DEFAULT_PASSAGE;

@@ -81,7 +81,7 @@ export function renderResultsHeaderModern(data) {
       <div class="lux-scoreTile" data-score-key="${key}">
         <div class="lux-scoreTile-label">
           ${labelHtml}
-          <span class="tooltip result-tip tip-${key}>(?) 
+          <span class="tooltip result-tip tip-${key}">(?)
             <span class="tooltiptext">${TOOLTIPS[key] || ""}</span>
           </span>
         </div>

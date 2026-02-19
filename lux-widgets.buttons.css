@@ -64,7 +64,16 @@
 
 /* ── Subtle / muted state: available but not the primary CTA ── */
 #showSummaryBtn.lux-summary-subtle {
-  background: #94a3b8;            /* slate-400 — clearly secondary */
+  --summary-fill: 0%;
+  background:
+    linear-gradient(
+      to right,
+      rgba(100, 116, 139, 0.35) 0%,            /* slate-500 at 35% opacity */
+      rgba(100, 116, 139, 0.35) var(--summary-fill),
+      transparent var(--summary-fill),
+      transparent 100%
+    ),
+    #94a3b8;                                     /* slate-400 base */
   color: #f1f5f9;
   box-shadow: none;
   font-size: 13px;
@@ -72,6 +81,7 @@
   opacity: 0.65;
   font-weight: 600;
   letter-spacing: 0.01em;
+  transition: background 0.4s ease, opacity 0.3s ease, transform 160ms ease;
 }
 #showSummaryBtn.lux-summary-subtle:hover {
   opacity: 1;
@@ -87,10 +97,10 @@
 /* ============================================================
    Buttons → recording states & effects
    ============================================================ */
-#record::before { content: "🎙️  "; display: inline-block; }
-#stop::before { content: "🛑  "; }
-#nextPartBtn:not(.lux-ghost-custom)::before { content: "➡️  "; }
-#nextPartBtn.lux-ghost-custom::before { content: "➕  "; }
+#record::before { content: "\1F399\FE0F  "; display: inline-block; }
+#stop::before { content: "\1F6D1  "; }
+#nextPartBtn:not(.lux-ghost-custom)::before { content: "\27A1\FE0F  "; }
+#nextPartBtn.lux-ghost-custom::before { content: "\2795  "; }
 
 #record.record-intro,
 #record.record-glow,
