@@ -3,6 +3,7 @@ import { ensureUID } from "../../api/index.js";
 import { computeRollups } from "../progress/rollups.js";
 import { promptUserForAI } from "../../ui/ui-ai-ai-logic.js";
 import { setLastAttemptId } from "../../app-core/runtime.js";
+import { scoreClass as scoreClassCore } from "../../core/scoring/index.js";
 
 // --- Deck card sizing: make the CARD match the media's natural aspect ratio ---
 const _luxMediaMeta = new Map();
@@ -190,7 +191,7 @@ export function showConvoReportOverlay(report, turns = []) {
       if (!w) return false;
       if (!saidTargets.map((s) => s.toLowerCase()).includes(w)) return false;
       const avg = Number(x?.avg);
-      return Number.isFinite(avg) ? avg < 85 : true;
+      return Number.isFinite(avg) ? scoreClassCore(avg) !== "score-good" : true;
     })
     .slice(0, 10)
     .map((x) => {

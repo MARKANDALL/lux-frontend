@@ -27,6 +27,12 @@ Tip: shorter sentences (≈10–15 s) give the clearest results.`
 
 const MAX_CUSTOM_PARTS = 15;
 
+// Track whether user has recorded anything this session.
+// Used to decide if the "subtle" summary button should appear mid-passage.
+let hasRecordedAny = false;
+
+export function resetHasRecorded() { hasRecordedAny = false; }
+
 export function ensureCustomOption() {
   DOM.ensureCustomOptionInDOM();
   if (isCustom) {
@@ -54,16 +60,29 @@ export function togglePartNav(enabled) {
   const total = Array.isArray(currentParts) ? currentParts.length : 0;
   const isMulti = enabled && total > 1;
 
-  if (!isMulti && !isCustom) {
-    DOM.updateNavVisibility({ 
-      showNext: false, 
-      enableNext: false, 
+  // ── Nothing loaded / no passage selected → hide everything ──
+  if (total === 0 && !isCustom) {
+    DOM.updateNavVisibility({
+      showNext: false,
+      enableNext: false,
       nextMsgText: "",
-      showSummary: true
+      showSummary: false
     });
     return;
   }
 
+  // ── Single-part curated passage (or non-multi) ──
+  if (!isMulti && !isCustom) {
+    DOM.updateNavVisibility({
+      showNext: false,
+      enableNext: false,
+      nextMsgText: "",
+      showSummary: hasRecordedAny ? "subtle" : false
+    });
+    return;
+  }
+
+  // ── Multi-part curated passage ──
   const atLast = currentPartIdx >= total - 1;
 
   DOM.updateNavVisibility({
@@ -71,7 +90,7 @@ export function togglePartNav(enabled) {
     enableNext: !atLast,
     nextMsgText: !atLast ? "Record to continue." : "",
     nextMsgColor: "#666",
-    showSummary: false
+    showSummary: hasRecordedAny && !atLast ? "subtle" : false
   });
 }
 
@@ -119,6 +138,7 @@ export function setPassage(key, { clearInputForCustom = false } = {}) {
   setCustom(key === "custom");
   setPassageKey(key);
   setPartIdx(0);
+  hasRecordedAny = false;
 
   if (isCustom) {
     const nextText = clearInputForCustom ? "" : DOM.getInputValue();
@@ -162,6 +182,7 @@ export function goToNextPart() {
 }
 
 export function markPartCompleted() {
+  hasRecordedAny = true;   // ← flag that at least one recording exists
   const total = Array.isArray(currentParts) ? currentParts.length : 0;
 
   if (isCustom) {
@@ -171,7 +192,7 @@ export function markPartCompleted() {
           enableNext: !isFull,
           nextMsgText: isFull ? "Memory Full (Limit 15)" : "",
           nextMsgColor: isFull ? "#ef4444" : "",
-          showSummary: true,
+          showSummary: true,          // prominent — custom mode, user has recorded
           customMode: true 
       });
       // Custom: update count
@@ -179,7 +200,16 @@ export function markPartCompleted() {
       return;
   }
 
-  if (total <= 1) return;
+  // Single-part curated: show prominent summary immediately
+  if (total <= 1) {
+    DOM.updateNavVisibility({
+      showNext: false,
+      enableNext: false,
+      nextMsgText: "",
+      showSummary: true            // prominent — single part, just finished it
+    });
+    return;
+  }
 
   const atLast = currentPartIdx >= total - 1;
 
@@ -189,7 +219,7 @@ export function markPartCompleted() {
       enableNext: true,
       nextMsgText: "Finished: Ready for your next one?",
       nextMsgColor: "#15803d",
-      showSummary: false
+      showSummary: "subtle"        // subtle — mid-passage, not done yet
     });
     // Curated: Update progress (current part finished)
     updateBalloon(currentPartIdx + 1, total);
@@ -198,7 +228,7 @@ export function markPartCompleted() {
       showNext: false,
       enableNext: false,
       nextMsgText: "",
-      showSummary: true
+      showSummary: true            // prominent — final part completed!
     });
     // Curated: Full!
     updateBalloon(total, total);

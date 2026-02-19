@@ -1,18 +1,21 @@
-// ui/views/render-helpers.js
+// features/results/render-helpers.js
+// Small rendering helpers for Results UI: builds issue summaries, computes timings/median, and prepares the pretty output container.
+
 import { speechDetected } from "../../helpers/assess.js";
 // UPDATED IMPORT: Circular dependency resolved by using the new leaf module
 import { detailedPhonemeFeedback } from "./summary-feedback.js";
+import { scoreClass as scoreClassCore } from "../../core/scoring/index.js";
 
 export function computeIssueSummary(words) {
   const issues = {};
   const majorIssues = [];
 
   (words || []).forEach((w) => {
-    if (w.AccuracyScore != null && w.AccuracyScore < 70) {
+    if (w.AccuracyScore != null && scoreClassCore(Number(w.AccuracyScore)) === "score-bad") {
       majorIssues.push({ word: w.Word, score: w.AccuracyScore });
     }
     (w.Phonemes || []).forEach((p) => {
-      if (p.AccuracyScore != null && p.AccuracyScore < 85) {
+      if (p.AccuracyScore != null && scoreClassCore(Number(p.AccuracyScore)) !== "score-good") {
         const key = ((w) =>
           String(w || "")
             .trim()

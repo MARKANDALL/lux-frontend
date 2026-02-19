@@ -56,9 +56,9 @@ export function showSummary({ allPartsResults, currentParts }) {
         });
       }
 
-      // Phoneme Errors (85% trigger for coaching)
+      // Phoneme Errors (score-warn/bad trigger for coaching)
       (w.Phonemes || []).forEach((p) => {
-        if (p.AccuracyScore != null && p.AccuracyScore < 85) {
+        if (p.AccuracyScore != null && scoreClassCore(Number(p.AccuracyScore)) !== "score-good") {
           const key = norm(p.Phoneme);
           if (!issues[key]) issues[key] = { count: 0, scores: [], examples: [] };
           

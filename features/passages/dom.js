@@ -111,13 +111,27 @@ export function updateNavVisibility({ showNext, enableNext, nextMsgText, nextMsg
 
   if (ui.summaryBtn) {
     if (showSummary !== undefined) {
-        setVisible(ui.summaryBtn, showSummary);
-        ui.summaryBtn.disabled = !showSummary;
-        
-        if (customMode) {
-            ui.summaryBtn.textContent = "Finish & View Summary";
-        } else {
+        if (showSummary === false) {
+            // ── Hidden: no button at all ──
+            setVisible(ui.summaryBtn, false);
+            ui.summaryBtn.disabled = true;
+            ui.summaryBtn.classList.remove("lux-summary-subtle");
+        } else if (showSummary === "subtle") {
+            // ── Subtle: visible but muted — user CAN click, but isn't "done" ──
+            setVisible(ui.summaryBtn, true);
+            ui.summaryBtn.disabled = false;
+            ui.summaryBtn.classList.add("lux-summary-subtle");
             ui.summaryBtn.textContent = "Show Summary";
+        } else {
+            // ── Prominent: full CTA — user is done or custom mode ──
+            setVisible(ui.summaryBtn, true);
+            ui.summaryBtn.disabled = false;
+            ui.summaryBtn.classList.remove("lux-summary-subtle");
+            if (customMode) {
+                ui.summaryBtn.textContent = "Finish & View Summary";
+            } else {
+                ui.summaryBtn.textContent = "Show Summary";
+            }
         }
     }
   }
