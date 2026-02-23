@@ -1,6 +1,9 @@
 // helpers/core.js
 import { getUID } from "../api/identity.js";
-import { scoreClass as scoreClassCore } from "../core/scoring/index.js";
+import {
+  scoreClass as scoreClassCore,
+  coachingPreface,
+} from "../core/scoring/index.js";
 
 // Single source of truth for UID:
 // - api/identity.js owns generation + persistence + migration
@@ -16,7 +19,14 @@ export const buildYouglishUrl = (w) =>
 export const isCorrupt = (s) =>
   /[�‘’“”—–…•\u0080-\uFFFF]/.test(String(s || ""));
 
-export function encouragingLine() {
+export function encouragingLine(score) {
+  // If a score is provided, use canonical humanistic coaching preface
+  // (includes explicit “you’re in the green” for 80–84).
+  if (score !== undefined && score !== null) {
+    const s = coachingPreface(score);
+    if (s) return s;
+  }
+
   const msgs = [
     "Great effort! Keep going—your persistence is paying off.",
     "Nice work! Every attempt brings you closer to perfect pronunciation.",

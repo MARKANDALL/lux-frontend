@@ -23,6 +23,46 @@ export const scoreClass = (s) =>
     ? "score-warn"
     : "score-bad";
 
+// Coaching sensitivity:
+// - UI tiers are still driven by scoreClass() (80/60)
+// - Coaching gets a separate "polish" cutoff so green can still get gentle refinement
+export const COACHING_POLISH_THRESHOLD = 85;
+
+// Returns: "none" | "polish" | "coach" | "urgent"
+export function coachingLevel(score) {
+  const n = Number(score);
+  if (!Number.isFinite(n)) return "coach";
+  if (n >= COACHING_POLISH_THRESHOLD) return "none";
+  if (n >= 80) return "polish"; // green, but polish
+  if (n >= 60) return "coach";
+  return "urgent";
+}
+
+// Humanistic preface used by coaching surfaces.
+// Critical requirement: for 80–84 we explicitly acknowledge it’s green.
+export function coachingPreface(score) {
+  const n = Number(score);
+  if (!Number.isFinite(n)) return "";
+
+  const tier = scoreClass(n);
+  const lvl = coachingLevel(n);
+
+  if (lvl === "none") {
+    return "Excellent — you’re solidly in the green. Keep going.";
+  }
+
+  // ✅ Must explicitly acknowledge green when score is 80–84.
+  if (tier === "score-good" && lvl === "polish") {
+    return "You’re in the green — this is a good score. If you want to polish it further, here’s one small thing to keep in mind:";
+  }
+
+  if (tier === "score-warn") {
+    return "You’re close — a couple small tweaks can move this into the green:";
+  }
+
+  return "Let’s focus on the biggest win first — here’s what to work on:";
+}
+
 // CEFR rubric (display-only).
 // Calibrated thresholds (from your current score distribution discussion):
 // C2: 95+ | C1: 90–94 | B2: 85–89 | B1: 75–84 | A2: 60–74 | A1: <60
