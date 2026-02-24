@@ -1,11 +1,11 @@
 // features/convo/knobs-drawer.js
 
-const KNOBS_KEY = "lux_knobs_v2";  // ← bumped version so old localStorage doesn't conflict
+const KNOBS_KEY = "lux_knobs_v3";  // v3: mood→tone, expanded options
 
 const DEFAULTS = {
-  level: "B1",   // B1 | B2 | C1 | A2 etc (free-form)
-  mood: "neutral",   // neutral | friendly | playful | formal | flirty
-  length: "short",     // short | medium | long
+  level: "B1",
+  tone: "neutral",
+  length: "medium",
 };
 
 function read() {
@@ -43,10 +43,10 @@ export function onKnobsChange(fn) {
 
 export function formatKnobsSummary(k) {
   const level = (k.level || DEFAULTS.level);
-  const mood = (k.mood || DEFAULTS.mood);
+  const tone = (k.tone || DEFAULTS.tone);
   const length = (k.length || DEFAULTS.length);
   const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
-  return `Level: ${String(level).toUpperCase()} • Mood: ${cap(mood)} • Length: ${cap(length)}`;
+  return `Level: ${String(level).toUpperCase()} · Tone: ${cap(tone)} · Length: ${cap(length)}`;
 }
 
 function ensureDom() {
@@ -75,30 +75,45 @@ function ensureDom() {
         <div class="lux-knobsGroup" data-key="level">
           <div class="lux-knobsLabel">Level</div>
           <div class="lux-knobsChips">
+            <button type="button" data-value="A1">A1</button>
             <button type="button" data-value="A2">A2</button>
             <button type="button" data-value="B1">B1</button>
             <button type="button" data-value="B2">B2</button>
             <button type="button" data-value="C1">C1</button>
+            <button type="button" data-value="C2">C2</button>
           </div>
         </div>
 
-        <div class="lux-knobsGroup" data-key="mood">
-          <div class="lux-knobsLabel">Mood</div>
+        <div class="lux-knobsGroup" data-key="tone">
+          <div class="lux-knobsLabel">Tone</div>
           <div class="lux-knobsChips">
             <button type="button" data-value="neutral">Neutral</button>
-            <button type="button" data-value="friendly">Friendly</button>
-            <button type="button" data-value="playful">Playful</button>
             <button type="button" data-value="formal">Formal</button>
+            <button type="button" data-value="friendly">Friendly</button>
+            <button type="button" data-value="enthusiastic">Enthusiastic</button>
+            <button type="button" data-value="encouraging">Encouraging</button>
+            <button type="button" data-value="playful">Playful</button>
             <button type="button" data-value="flirty">Flirty</button>
+            <button type="button" data-value="sarcastic">Sarcastic</button>
+            <button type="button" data-value="tired">Tired</button>
+            <button type="button" data-value="distracted">Distracted</button>
+            <button type="button" data-value="cold">Cold</button>
+            <button type="button" data-value="blunt">Blunt</button>
+            <button type="button" data-value="impatient">Impatient</button>
+            <button type="button" data-value="irritable">Irritable</button>
+            <button type="button" data-value="angry">Angry</button>
+            <button type="button" data-value="emotional">Emotional / Upset</button>
           </div>
         </div>
 
         <div class="lux-knobsGroup" data-key="length">
           <div class="lux-knobsLabel">Length</div>
           <div class="lux-knobsChips">
+            <button type="button" data-value="terse">Terse</button>
             <button type="button" data-value="short">Short</button>
             <button type="button" data-value="medium">Medium</button>
             <button type="button" data-value="long">Long</button>
+            <button type="button" data-value="extended">Extended</button>
           </div>
         </div>
       </div>
@@ -160,4 +175,11 @@ export function mountKnobsDrawer() {
   });
 
   return { open, close };
+}
+
+// Singleton — safe to call from multiple modules
+let _instance = null;
+export function getKnobsDrawerInstance() {
+  if (!_instance) _instance = mountKnobsDrawer();
+  return _instance;
 }

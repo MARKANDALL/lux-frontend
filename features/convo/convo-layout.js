@@ -171,9 +171,14 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
 
   const drawerBody = el("div", "lux-body k");
   const levelSel = mkSelect(el, "Level", ["A1", "A2", "B1", "B2", "C1", "C2"]);
-  const moodSel = mkSelect(el, "Mood", ["patient", "neutral", "rushed", "difficult"]);
-  const lengthSel = mkSelect(el, "Length", ["short", "medium", "long"]);
-  drawerBody.append(levelSel.wrap, moodSel.wrap, lengthSel.wrap);
+  const toneSel = mkSelect(el, "Tone", [
+    "neutral", "formal", "friendly", "enthusiastic", "encouraging",
+    "playful", "flirty", "sarcastic",
+    "tired", "distracted", "cold", "blunt",
+    "impatient", "irritable", "angry", "emotional",
+  ]);
+  const lengthSel = mkSelect(el, "Length", ["terse", "short", "medium", "long", "extended"]);
+  drawerBody.append(levelSel.wrap, toneSel.wrap, lengthSel.wrap);
   drawerBody.append(
     el(
       "div",
@@ -244,7 +249,7 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
     scrim,
     convoProgress,
     levelSel,
-    moodSel,
+    toneSel,
     lengthSel,
   };
 }
@@ -256,7 +261,7 @@ function mkSelect(el, label, options) {
   options.forEach((o) => {
     const opt = document.createElement("option");
     opt.value = o;
-    opt.textContent = o;
+    opt.textContent = o.charAt(0).toUpperCase() + o.slice(1);
     sel.append(opt);
   });
   wrap.append(lab, sel);

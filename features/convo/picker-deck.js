@@ -1,7 +1,4 @@
 // features/convo/picker-deck.js
-import { mountKnobsDrawer, getKnobs, onKnobsChange, formatKnobsSummary } from "./knobs-drawer.js";
-
-const knobsDrawer = mountKnobsDrawer();
 
 export function wirePickerDeck({
   scenarios,
@@ -315,25 +312,6 @@ export function wirePickerDeck({
 
       ctaRow.append(cta);
       textWrap.append(ctaRow);
-
-      // Knobs row (active card only) — ✅ declared ONCE
-      const knobsRow = el("div", "lux-deckKnobsRow");
-
-      const knobsBtn = el("button", "lux-deckKnobsBtn", "Knobs");
-      knobsBtn.type = "button";
-      knobsBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        knobsDrawer.open();
-      });
-
-      const summary = el("div", "lux-deckKnobsSummary", formatKnobsSummary(getKnobs()));
-      const unsub = onKnobsChange((k) => {
-        summary.textContent = formatKnobsSummary(k);
-      });
-
-      knobsRow.append(knobsBtn, summary);
-      host.append(knobsRow);
 
       host.onclick = () => {
         host.classList.toggle("isExpanded");

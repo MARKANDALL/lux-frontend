@@ -81,7 +81,7 @@ export function bootConvo() {
     scrim,
     stage,
     levelSel,
-    moodSel,
+    toneSel,
     lengthSel,
   } = view;
 
@@ -103,7 +103,7 @@ export function bootConvo() {
     renderAICoachShell(state);
   }
 
-  const setKnobs = createSetKnobs({ state, stage, levelSel, moodSel, lengthSel });
+  const setKnobs = createSetKnobs({ state, stage, levelSel, toneSel, lengthSel });
 
   const { normalizeMode, setMode } = initConvoModeSystem({
     root,
@@ -127,7 +127,7 @@ export function bootConvo() {
     closeDrawer,
     scrim,
     levelSel,
-    moodSel,
+    toneSel,
     lengthSel,
     knobsSummaryText,
     saveKnobs,
