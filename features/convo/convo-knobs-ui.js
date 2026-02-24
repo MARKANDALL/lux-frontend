@@ -8,9 +8,9 @@ export function wireConvoKnobsUI({
   pickerKnobsSummary,
   closeDrawer,
   scrim,
-  toneSel,
-  stressSel,
-  paceSel,
+  levelSel,
+  moodSel,
+  lengthSel,
   knobsSummaryText,
   saveKnobs,
 }) {
@@ -31,9 +31,9 @@ export function wireConvoKnobsUI({
   });
 
   // Initialize drawer selects from stored knobs
-  toneSel.sel.value = state.knobs.tone;
-  stressSel.sel.value = state.knobs.stress;
-  paceSel.sel.value = state.knobs.pace;
+  levelSel.sel.value = state.knobs.level;
+  moodSel.sel.value = state.knobs.mood;
+  lengthSel.sel.value = state.knobs.length;
 
   // Picker summary (if present)
   function renderPickerKnobsSummary() {
@@ -42,20 +42,20 @@ export function wireConvoKnobsUI({
   }
   renderPickerKnobsSummary();
 
-  toneSel.sel.addEventListener("change", () => {
-    state.knobs.tone = toneSel.sel.value;
+  levelSel.sel.addEventListener("change", () => {
+    state.knobs.level = levelSel.sel.value;
     saveKnobs(state.knobs);
     renderPickerKnobsSummary();
   });
 
-  stressSel.sel.addEventListener("change", () => {
-    state.knobs.stress = stressSel.sel.value;
+  moodSel.sel.addEventListener("change", () => {
+    state.knobs.mood = moodSel.sel.value;
     saveKnobs(state.knobs);
     renderPickerKnobsSummary();
   });
 
-  paceSel.sel.addEventListener("change", () => {
-    state.knobs.pace = paceSel.sel.value;
+  lengthSel.sel.addEventListener("change", () => {
+    state.knobs.length = lengthSel.sel.value;
     saveKnobs(state.knobs);
     renderPickerKnobsSummary();
   });

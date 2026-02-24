@@ -80,9 +80,9 @@ export function bootConvo() {
     closeDrawer,
     scrim,
     stage,
-    toneSel,
-    stressSel,
-    paceSel,
+    levelSel,
+    moodSel,
+    lengthSel,
   } = view;
 
   const { applySceneVisuals, setParallaxEnabled } = initSceneAtmo({
@@ -103,7 +103,7 @@ export function bootConvo() {
     renderAICoachShell(state);
   }
 
-  const setKnobs = createSetKnobs({ state, stage, toneSel, stressSel, paceSel });
+  const setKnobs = createSetKnobs({ state, stage, levelSel, moodSel, lengthSel });
 
   const { normalizeMode, setMode } = initConvoModeSystem({
     root,
@@ -126,9 +126,9 @@ export function bootConvo() {
     pickerKnobsSummary,
     closeDrawer,
     scrim,
-    toneSel,
-    stressSel,
-    paceSel,
+    levelSel,
+    moodSel,
+    lengthSel,
     knobsSummaryText,
     saveKnobs,
   });
@@ -152,7 +152,7 @@ export function bootConvo() {
   });
 
   if (state.nextActivity) {
-    // Ensure we’re in chat mode and start immediately
+    // Ensure we're in chat mode and start immediately
     warpSwap(() => setMode("chat", { replace: true, push: false }), { outMs: 120, inMs: 160 })
       .then(() => startScenario())
       .catch((e) => console.error("[NextPractice] auto-start failed", e));
