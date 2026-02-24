@@ -33,6 +33,28 @@ async function postConvoTurn(payload, { signal } = {}) {
   return jsonOrThrow(resp);
 }
 
+/**
+ * POST /api/convo-turn
+ *
+ * payload.knobs shape (v3):
+ *   level  : "A1" | "A2" | "B1" | "B2" | "C1" | "C2"
+ *   tone   : "neutral" | "formal" | "friendly" | "enthusiastic" | "encouraging"
+ *            | "playful" | "flirty" | "sarcastic" | "tired" | "distracted"
+ *            | "cold" | "blunt" | "impatient" | "irritable" | "angry" | "emotional"
+ *   length : "terse" | "short" | "medium" | "long" | "extended"
+ *
+ * Backend contract — inject these into the ChatGPT system prompt:
+ *   1. level  → CEFR band the AI partner should target (vocab + grammar complexity)
+ *   2. tone   → conversational tone / emotional register the AI partner should adopt
+ *   3. length → response length:
+ *        terse    = 1-2 sentences, curt/snippet-like
+ *        short    = 2-3 sentences
+ *        medium   = 3-5 sentences (default)
+ *        long     = 5-8 sentences, fuller responses
+ *        extended = no artificial limit, genuinely full responses
+ *
+ * NOTE: field was renamed from "mood" to "tone" in knobs v3.
+ */
 export async function convoTurn({ scenario, knobs, messages }, opts = {}) {
   const payload = { scenario, knobs, messages };
   dbg("POST", CONVO_URL, { scenario: scenario?.id, knobs });

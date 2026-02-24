@@ -1,5 +1,7 @@
 // features/convo/convo-knobs-ui.js
 
+import { getKnobsDrawerInstance, onKnobsChange } from "./knobs-drawer.js";
+
 export function wireConvoKnobsUI({
   state,
   setKnobs,
@@ -9,18 +11,20 @@ export function wireConvoKnobsUI({
   closeDrawer,
   scrim,
   levelSel,
-  moodSel,
+  toneSel,
   lengthSel,
   knobsSummaryText,
   saveKnobs,
 }) {
+  // Chat-mode header button → opens docked drawer (unchanged)
   knobsBtn.addEventListener("click", () => setKnobs(!state.knobsOpen));
 
+  // Picker-mode button → opens the chip-pill knobs drawer (PASS 1 fix)
   if (pickerKnobsBtn) {
     pickerKnobsBtn.addEventListener("click", (e) => {
       e.preventDefault();
-      e.stopPropagation(); // IMPORTANT: don't advance deck / trigger other clicks
-      setKnobs(true);
+      e.stopPropagation();
+      getKnobsDrawerInstance().open();
     });
   }
 
@@ -32,31 +36,47 @@ export function wireConvoKnobsUI({
 
   // Initialize drawer selects from stored knobs
   levelSel.sel.value = state.knobs.level;
-  moodSel.sel.value = state.knobs.mood;
+  toneSel.sel.value = state.knobs.tone;
   lengthSel.sel.value = state.knobs.length;
 
-  // Picker summary (if present)
-  function renderPickerKnobsSummary() {
-    if (!pickerKnobsSummary) return;
-    pickerKnobsSummary.textContent = knobsSummaryText(state.knobs);
+  // --- Summary display (PASS 2: always in sync) ---
+  function renderAllSummaries() {
+    if (pickerKnobsSummary) {
+      pickerKnobsSummary.textContent = knobsSummaryText(state.knobs);
+    }
   }
-  renderPickerKnobsSummary();
+  renderAllSummaries();
 
+  // --- Docked-drawer selects → update state + fire unified event ---
   levelSel.sel.addEventListener("change", () => {
     state.knobs.level = levelSel.sel.value;
-    saveKnobs(state.knobs);
-    renderPickerKnobsSummary();
+    saveKnobs(state.knobs);        // fires lux:knobs event
+    renderAllSummaries();
   });
 
-  moodSel.sel.addEventListener("change", () => {
-    state.knobs.mood = moodSel.sel.value;
+  toneSel.sel.addEventListener("change", () => {
+    state.knobs.tone = toneSel.sel.value;
     saveKnobs(state.knobs);
-    renderPickerKnobsSummary();
+    renderAllSummaries();
   });
 
   lengthSel.sel.addEventListener("change", () => {
     state.knobs.length = lengthSel.sel.value;
     saveKnobs(state.knobs);
-    renderPickerKnobsSummary();
+    renderAllSummaries();
+  });
+
+  // --- Chip drawer → sync back into state + docked-drawer selects (PASS 2) ---
+  onKnobsChange((knobs) => {
+    state.knobs.level = knobs.level;
+    state.knobs.tone = knobs.tone;
+    state.knobs.length = knobs.length;
+
+    // Keep docked-drawer selects in sync
+    levelSel.sel.value = knobs.level;
+    toneSel.sel.value = knobs.tone;
+    lengthSel.sel.value = knobs.length;
+
+    renderAllSummaries();
   });
 }
