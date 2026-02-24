@@ -7,6 +7,11 @@ export const SCENARIOS = [
     img: "/convo-img/coffee.webp",
     thumb: "/convo-img/thumbs/coffee.webp",
     video: "/convo-vid/coffee.mp4",
+    more: "The barista speaks fast, there's a line behind you, and you need to get your order right the first time. You'll work on choosing size and options clearly, fixing small mix-ups ('Sorry — iced, not hot'), and adding a bit of warmth without slowing things down. When you can order, adjust, and say thanks naturally, you'll feel the difference everywhere — not just in coffee shops.",
+    roles: [
+      { id: "customer", label: "Customer", npc: "A friendly barista in her 20s working a busy morning shift at a café. She's fast, upbeat, and used to repeating orders." },
+      { id: "barista", label: "Barista", npc: "A middle-aged regular customer who comes in every morning. He's friendly but decisive — he knows what he wants and orders quickly." },
+    ],
   },
   {
     id: "doctor",
@@ -15,6 +20,11 @@ export const SCENARIOS = [
     img: "/convo-img/doctor.webp",
     thumb: "/convo-img/thumbs/doctor.webp",
     video: "/convo-vid/doctor.mp4",
+    more: "Saying 'it hurts' isn't enough — a doctor needs to know where, how much, how long, and what makes it worse. You'll work on describing symptoms clearly, answering follow-up questions without rambling, and understanding advice about medicine or next steps. You'll also build confidence to say 'Can you explain that again?' — because your health is too important to nod and hope.",
+    roles: [
+      { id: "patient", label: "Patient", npc: "A calm, thorough doctor in her 40s. She asks specific follow-up questions and uses some medical terms, but explains them if asked." },
+      { id: "doctor", label: "Doctor", npc: "A patient in their 30s who is nervous and has trouble describing symptoms precisely. They tend to say 'it just hurts' and need guided questions." },
+    ],
   },
   {
     id: "job",
@@ -23,6 +33,11 @@ export const SCENARIOS = [
     img: "/convo-img/job.webp",
     thumb: "/convo-img/thumbs/job.webp",
     video: "/convo-vid/job.mp4",
+    more: "Someone is deciding whether to hire you based on how you sound right now. You'll work on telling your story in a clear, short way, handling uncomfortable questions ('What's your biggest weakness?'), and asking smart questions back. The challenge isn't just vocabulary — it's sounding prepared and real at the same time, without sounding like you memorized a script.",
+    roles: [
+      { id: "candidate", label: "Candidate", npc: "A professional hiring manager in his 50s. He's polite but direct — he's done hundreds of these interviews and can tell when someone is being genuine." },
+      { id: "interviewer", label: "Interviewer", npc: "A nervous but qualified job candidate in their late 20s. They have good experience but tend to undersell themselves and give long, wandering answers." },
+    ],
   },
   {
     id: "airport",
@@ -31,6 +46,11 @@ export const SCENARIOS = [
     img: "/convo-img/airport.webp",
     thumb: "/convo-img/thumbs/airport.webp",
     video: "/convo-vid/airport.mp4",
+    more: "Your flight is cancelled, the line is long, and you're tired. This is where language skills get tested hardest — under stress. You'll work on explaining what happened, giving key details like flight numbers and times, and asking 'What are my options?' instead of freezing. The goal is staying calm, clear, and assertive when your plans fall apart.",
+    roles: [
+      { id: "traveler", label: "Traveler", npc: "An airline gate agent who has been dealing with frustrated passengers all day. She's professional but efficient — she needs your info fast and doesn't have time for long stories." },
+      { id: "agent", label: "Gate Agent", npc: "A stressed traveler whose connecting flight was cancelled. They're tired, slightly frustrated, and need help rebooking — but they don't have all their details ready." },
+    ],
   },
   {
     id: "restaurant",
@@ -39,6 +59,11 @@ export const SCENARIOS = [
     img: "/convo-img/restaurant.webp",
     thumb: "/convo-img/thumbs/restaurant.webp",
     video: "/convo-vid/restaurant.mp4",
+    more: "A meal has many small speaking moments: asking about dishes, making changes, mentioning allergies, and handling mistakes without making it awkward. You'll work on soft, natural phrasing — 'Would it be possible to…' instead of blunt demands. You'll also cover paying the check and wrapping things up. It sounds simple, but eating out smoothly in another language is a real confidence builder.",
+    roles: [
+      { id: "diner", label: "Diner", npc: "A friendly waiter at a mid-range restaurant. He's attentive, suggests dishes, and handles special requests gracefully — but the kitchen is busy tonight." },
+      { id: "waiter", label: "Waiter", npc: "A customer dining with a friend. She has dietary restrictions, wants to modify a dish, and will politely flag a mistake when the wrong order arrives." },
+    ],
   },
   {
     id: "school",
@@ -47,6 +72,11 @@ export const SCENARIOS = [
     img: "/convo-img/school.webp",
     thumb: "/convo-img/thumbs/school.webp",
     video: "/convo-vid/parents.mp4",
+    more: "You're the parent here, and you need to understand what the teacher is saying about your child — then respond thoughtfully, not defensively. You'll work on asking specific questions ('Where exactly is she struggling?'), expressing concerns without sounding confrontational, and agreeing on a plan together. This builds a skill many parents find hard even in their first language: being an advocate and a partner at the same time.",
+    roles: [
+      { id: "parent", label: "Parent", npc: "A young but experienced teacher in her 30s. She's caring and organized, with specific observations about the student — but she also has concerns she's trying to raise gently." },
+      { id: "teacher", label: "Teacher", npc: "A concerned parent who wants the best for their child. They're respectful but have strong opinions, and they need to hear honest feedback without getting defensive." },
+    ],
   },
   {
     id: "banking",
@@ -55,7 +85,11 @@ export const SCENARIOS = [
     img: "/convo-img/banking.webp",
     thumb: "/convo-img/thumbs/banking.webp",
     video: "/convo-vid/banking.mp4",
-    more: "Bring up ID/documents, minimum balance, and fees. Ask clarifying questions and confirm the next steps."
+    more: "Banks can feel intimidating — lots of rules, unfamiliar terms, and pressure to sign things you're not sure about. You'll work on understanding account types and fees, asking about anything unclear ('What triggers the monthly charge?'), and slowing the conversation down when you need to. The real skill here is staying in control when someone is giving you a lot of information at once.",
+    roles: [
+      { id: "customer", label: "Customer", npc: "A bank representative in his 40s. He's professional and thorough — he explains things clearly but uses a lot of financial terms and moves through the process quickly." },
+      { id: "teller", label: "Bank Rep", npc: "A new customer who just moved to the area. They have basic questions about accounts but are hesitant to ask too many — they don't want to seem uninformed." },
+    ],
   },
   {
     id: "calling",
@@ -64,7 +98,11 @@ export const SCENARIOS = [
     img: "/convo-img/calling.webp",
     thumb: "/convo-img/thumbs/calling.webp",
     video: "/convo-vid/calling.mp4",
-    more: "Practice polite openings, explaining your reason, and confirming details before ending the call."
+    more: "Phone calls are harder than face-to-face — you can't see the other person's face, the audio might be bad, and you have to process everything through sound alone. You'll work on opening clearly ('Hi, I'm calling about…'), spelling names and repeating numbers, asking for things to be repeated, and leaving a voicemail if no one answers. Many learners avoid phone calls entirely — this builds the confidence to stop avoiding them.",
+    roles: [
+      { id: "caller", label: "Caller", npc: "A receptionist at a medical office. She's polite but busy — she needs your name, date of birth, and reason for calling, and she speaks at a natural pace." },
+      { id: "receiver", label: "Receptionist", npc: "Someone calling to schedule an appointment. They're a bit nervous on the phone, may need to spell their name, and sometimes loses track of details." },
+    ],
   },
   {
     id: "car",
@@ -73,7 +111,11 @@ export const SCENARIOS = [
     img: "/convo-img/car.jpg",
     thumb: "/convo-img/thumbs/car.webp",
     video: "/convo-vid/car.mp4",
-    more: "Practice natural turn-taking, reacting, and asking follow-up questions in a casual conversation."
+    more: "You're sitting next to someone for a while, and the conversation has to carry itself — there's no walking away or checking your phone. You'll work on keeping talk going naturally: sharing opinions, reacting to what the other person says, and being comfortable with short pauses. This is where fluency really lives — not in perfect grammar, but in sounding relaxed and present.",
+    roles: [
+      { id: "passenger", label: "Passenger", npc: "A friend in their 30s who's driving. They're relaxed, talkative, and like to ask opinions about music, weekend plans, and random 'what would you do if' questions." },
+      { id: "driver", label: "Driver", npc: "A friend riding along who's a bit quieter today. They'll chat if you start topics, but they're also comfortable with silence — you have to carry more of the conversation." },
+    ],
   },
   {
     id: "choosing",
@@ -82,7 +124,11 @@ export const SCENARIOS = [
     img: "/convo-img/choosing.webp",
     thumb: "/convo-img/thumbs/choosing.webp",
     video: "/convo-vid/choosing.mp4",
-    more: "Practice asking for help, comparing options, and confirming what you want to buy."
+    more: "This might seem simple, but it's one of the most common real-life speaking situations: 'Excuse me, where's the…?' 'Is this the spicy one?' 'Which do you recommend?' You'll work on quick questions, understanding answers from busy workers, and talking through choices out loud. It's everyday, unglamorous, and exactly the kind of conversation that builds lasting confidence.",
+    roles: [
+      { id: "shopper", label: "Shopper", npc: "A grocery store worker stocking shelves. He's helpful but brief — he knows the store well and can point you in the right direction fast." },
+      { id: "worker", label: "Store Worker", npc: "A shopper who can't find what they're looking for. They're cooking something specific tonight and need help with ingredients and brands." },
+    ],
   },
   {
     id: "concern",
@@ -91,7 +137,11 @@ export const SCENARIOS = [
     img: "/convo-img/concern.webp",
     thumb: "/convo-img/thumbs/concern.webp",
     video: "/convo-vid/concern.mp4",
-    more: "Practice calm tone, clear details, and proposing options while staying respectful."
+    more: "Something is wrong and you need to say so — but how you say it matters as much as what you say. You'll work on describing a problem clearly, staying firm without getting emotional, and suggesting solutions instead of just complaining. This covers work, housing, services, and relationships. The skill you're building is one of the hardest in any language: standing up for yourself with dignity.",
+    roles: [
+      { id: "complainant", label: "Raise the Issue", npc: "A building manager who has heard complaints before. She's not hostile, but she's not going to fix anything unless you explain the problem clearly and ask specifically." },
+      { id: "manager", label: "Hear the Issue", npc: "A tenant who has a real problem — a leak, noise, or broken appliance — and is frustrated but trying to stay calm. They need acknowledgment and a clear plan." },
+    ],
   },
   {
     id: "couple",
@@ -100,7 +150,11 @@ export const SCENARIOS = [
     img: "/convo-img/couple.jpg",
     thumb: "/convo-img/thumbs/couple.webp",
     video: "/convo-vid/couple.mp4",
-    more: "Practice greetings, friendly questions, and smooth topic changes in a social setting."
+    more: "Walking up to people you don't know and starting to talk — that's hard in any language. You'll work on introductions, finding common ground fast, asking questions that aren't too personal, and keeping things balanced so nobody feels left out. You'll also work on how to leave gracefully ('It was great meeting you!'). Social confidence starts with surviving these first few minutes.",
+    roles: [
+      { id: "newcomer", label: "Join the Chat", npc: "A friendly couple at a house party. They've been here a while and are happy to meet someone new. They ask easy questions and share stories about how they know the host." },
+      { id: "host", label: "Be the Couple", npc: "Someone who just arrived at the party alone. They're a little shy, looking for a conversation to join, and grateful when you include them." },
+    ],
   },
   {
     id: "dinner",
@@ -109,7 +163,11 @@ export const SCENARIOS = [
     img: "/convo-img/dinner.webp",
     thumb: "/convo-img/thumbs/dinner.webp",
     video: "/convo-vid/dinner.mp4",
-    more: "Practice storytelling, reactions, and asking for more details while keeping it natural."
+    more: "This is the long game — not a quick exchange, but a full evening of talking. You'll work on sharing updates from your life, telling a story that holds people's attention, reacting with warmth ('No way — what happened next?'), and handling moments when the topic gets sensitive. Dinner conversation is where friendships are built, and it takes a different kind of fluency than ordering food or asking for directions.",
+    roles: [
+      { id: "friend", label: "Catch Up", npc: "An old friend you haven't seen in months. She's warm, curious, and full of her own news — she'll share stories and expect you to share yours." },
+      { id: "listener", label: "Be the Friend", npc: "A friend who's been going through a lot lately — new job, a move, some stress. They need someone to listen, react, and ask the right follow-up questions." },
+    ],
   },
   {
     id: "joke",
@@ -118,7 +176,11 @@ export const SCENARIOS = [
     img: "/convo-img/joke.jpg",
     thumb: "/convo-img/thumbs/joke.webp",
     video: "/convo-vid/joke.mp4",
-    more: "Practice timing, tone, and quick reactions (laughing, clarifying, and keeping it light)."
+    more: "Humor is one of the last things to feel natural in a new language — and one of the first things people notice. You'll work on setting up something funny, timing the key moment, and recovering smoothly if it doesn't land. You'll also work on reacting to other people's jokes: laughing, playing along, or saying 'Wait — I don't get it' without killing the mood. You don't need to be a comedian. You just need to be in on it.",
+    roles: [
+      { id: "joker", label: "Tell the Joke", npc: "A coworker on a lunch break who loves to laugh. He's an easy audience — he'll react, play along, and tell his own jokes back. Low pressure." },
+      { id: "audience", label: "React to Jokes", npc: "A coworker who always has a joke ready. Some land, some don't. Your job is to react naturally — laugh, ask for clarification, or play along." },
+    ],
   },
   {
     id: "lifeguard",
@@ -127,7 +189,11 @@ export const SCENARIOS = [
     img: "/convo-img/lifeguard.webp",
     thumb: "/convo-img/thumbs/lifeguard.webp",
     video: "/convo-vid/lifeguard.mp4",
-    more: "Practice urgent-but-calm requests, describing the situation, and confirming safety instructions."
+    more: "When safety is involved, you don't have time to search for words. You'll work on getting to the point fast — who needs help, where they are, what's happening — and following instructions without hesitation. This also covers low-stakes questions like pool rules or safe areas. The skill here is clarity under pressure: short sentences, direct language, no filler.",
+    roles: [
+      { id: "visitor", label: "Beach Visitor", npc: "A lifeguard in his 20s, alert and authoritative. He gives clear, short instructions and expects you to follow them quickly. Not unfriendly, just focused." },
+      { id: "lifeguard", label: "Lifeguard", npc: "A worried parent at the beach whose child swam out too far. They're anxious, speaking fast, and need clear direction from you." },
+    ],
   },
   {
     id: "mail",
@@ -136,7 +202,11 @@ export const SCENARIOS = [
     img: "/convo-img/mail.jpg",
     thumb: "/convo-img/thumbs/mail.webp",
     video: "/convo-vid/mail.mp4",
-    more: "Practice short clear questions, confirming locations, and thanking the worker politely."
+    more: "Sometimes all you need is one piece of information from someone you'll never see again: 'Where do I drop this off?' 'How long will it take?' 'Do I need a form?' You'll work on asking short, clear questions, understanding the answer the first time, and saying thank you and moving on. It's the simplest kind of real-world interaction — and surprisingly easy to get wrong when you're nervous.",
+    roles: [
+      { id: "sender", label: "Customer", npc: "A postal worker behind the counter. She's efficient and matter-of-fact — she handles hundreds of people a day and gives quick, clear answers." },
+      { id: "clerk", label: "Postal Worker", npc: "Someone mailing a package for the first time. They're not sure which service to use, what forms to fill out, or how much it costs." },
+    ],
   },
   {
     id: "networking",
@@ -145,7 +215,11 @@ export const SCENARIOS = [
     img: "/convo-img/networking.webp",
     thumb: "/convo-img/thumbs/networking.webp",
     video: "/convo-vid/networking.mp4",
-    more: "TODO: optional details"
+    more: "You have about two minutes to introduce yourself, say something memorable, and leave the door open for later. You'll work on a short, clear way to explain who you are and what you do, asking questions that show real interest, and knowing when to wrap up and exchange contact info. The hardest part isn't the words — it's the silence between them. This builds confidence for moments where first impressions count.",
+    roles: [
+      { id: "newcomer", label: "Introduce Yourself", npc: "A senior professional at an industry mixer. She's been in the field 15 years, is open to meeting new people, but expects you to have something interesting to say." },
+      { id: "veteran", label: "Be the Veteran", npc: "A young professional at their first networking event. They're smart but visibly nervous, and they need you to make the conversation easy for them." },
+    ],
   },
   {
     id: "parking",
@@ -154,7 +228,11 @@ export const SCENARIOS = [
     img: "/convo-img/parking.webp",
     thumb: "/convo-img/thumbs/parking.webp",
     video: "/convo-vid/parking.mp4",
-    more: "Practice explaining timing, asking for options, and staying calm under pressure."
+    more: "You might have made a mistake, or the sign was confusing, or you were only gone for a minute. Either way, you now need to explain yourself calmly to someone who hears excuses all day. You'll work on stating the facts without emotion, asking about your options, and knowing when to accept the outcome. This builds a skill that applies far beyond parking: staying credible when someone doubts you.",
+    roles: [
+      { id: "driver", label: "Driver", npc: "A parking enforcement officer who's seen it all. He's not rude, but he's not sympathetic either — he follows the rules and needs to hear facts, not excuses." },
+      { id: "officer", label: "Enforcement Officer", npc: "A driver who just found a ticket on their windshield. They're frustrated, think the sign was unclear, and want to know if they can contest it." },
+    ],
   },
   {
     id: "police",
@@ -163,7 +241,11 @@ export const SCENARIOS = [
     img: "/convo-img/police.webp",
     thumb: "/convo-img/thumbs/police.webp",
     video: "/convo-vid/police.mp4",
-    more: "Practice respectful language, clear details, and confirming what you should do next."
+    more: "Talking to a police officer can feel stressful even when you haven't done anything wrong — especially in a second language, and especially across cultures. You'll work on stating what you need simply, describing locations and situations clearly, and answering questions calmly. Whether you're asking for directions, reporting something, or just checking if an area is safe — the goal is being clear and composed when it matters most.",
+    roles: [
+      { id: "citizen", label: "Citizen", npc: "A police officer on foot patrol. She's approachable but professional — she asks direct questions and expects clear, factual answers." },
+      { id: "officer", label: "Officer", npc: "A person who looks lost and slightly worried. They may have had something stolen, or they're looking for a specific address. They need calm, clear guidance." },
+    ],
   },
   {
     id: "shopping",
@@ -172,7 +254,11 @@ export const SCENARIOS = [
     img: "/convo-img/shopping.jpg",
     thumb: "/convo-img/thumbs/shopping.webp",
     video: "/convo-vid/shopping.mp4",
-    more: "Practice store phrases, comparing items, and confirming what you need before purchasing."
+    more: "Shopping involves a lot of quick decisions and small conversations: 'Do you have this in a medium?' 'Can I return this if it doesn't fit?' 'I'm deciding between these two.' You'll work on describing what you're looking for, comparing options out loud, and saying no to a salesperson without feeling guilty. Retail conversations are fast, casual, and happen constantly — getting comfortable here pays off everywhere.",
+    roles: [
+      { id: "shopper", label: "Shopper", npc: "A sales associate in a clothing store. She's friendly and a little pushy — she'll suggest add-ons and extras. Saying no politely is part of the challenge." },
+      { id: "associate", label: "Sales Associate", npc: "A shopper looking for a gift. They're unsure about sizes, aren't sure what the person likes, and need honest guidance — not just a hard sell." },
+    ],
   },
   {
     id: "student",
@@ -181,7 +267,11 @@ export const SCENARIOS = [
     img: "/convo-img/student.webp",
     thumb: "/convo-img/thumbs/student.webp",
     video: "/convo-vid/student.mp4",
-    more: "Practice asking for clarification, requesting help, and confirming what to do next."
+    more: "You didn't understand something in class, or you need extra help, or you want to know how to improve. Going up to a teacher takes courage — especially when you're not sure if you're bothering them. You'll work on asking clear questions, admitting confusion without embarrassment ('I'm not sure I followed the part about…'), and walking away with a clear plan. This is about taking charge of your own learning.",
+    roles: [
+      { id: "student", label: "Student", npc: "A college professor in his 50s, wrapping up after class. He's knowledgeable and willing to help, but he's got another class soon — so be clear and focused." },
+      { id: "teacher", label: "Teacher", npc: "A student who stayed after class looking unsure. They want to ask about a concept they didn't understand but seem embarrassed to admit it." },
+    ],
   },
   {
     id: "technology",
@@ -190,7 +280,11 @@ export const SCENARIOS = [
     img: "/convo-img/technology.webp",
     thumb: "/convo-img/thumbs/technology.webp",
     video: "/convo-vid/technology.mp4",
-    more: "Practice describing symptoms, following instructions, and confirming whether the fix worked."
+    more: "Something's broken and you don't know the right words for what's happening. You'll work on describing what you see ('There's a message that keeps popping up'), giving useful context (what device, when it started, what you already tried), and following step-by-step instructions without getting lost. The real challenge is staying patient and asking for simpler explanations when you need them — instead of pretending you understood.",
+    roles: [
+      { id: "user", label: "Need Help", npc: "A tech support agent who's patient and methodical. She walks you through things step by step, but uses some technical terms — ask her to simplify if needed." },
+      { id: "support", label: "Give Help", npc: "Someone whose laptop keeps crashing. They're not tech-savvy, they describe things vaguely ('the thing popped up again'), and they need simple, patient instructions." },
+    ],
   },
   {
     id: "understanding",
@@ -199,7 +293,11 @@ export const SCENARIOS = [
     img: "/convo-img/understanding.webp",
     thumb: "/convo-img/thumbs/understanding.webp",
     video: "/convo-vid/understanding.mp4",
-    more: "Practice 'Did you mean…?', paraphrasing, and confirming mutual understanding."
+    more: "Someone took what you said the wrong way, or you misunderstood them, and now the conversation feels off. You'll work on noticing when things go sideways, saying 'I think I explained that badly — what I meant was…' and checking that you're both on the same page. This happens with friends, coworkers, and strangers. Repairing a misunderstanding well actually builds more trust than never having one at all.",
+    roles: [
+      { id: "clarifier", label: "Fix the Mix-Up", npc: "A coworker who misunderstood your email and is now slightly annoyed. They're not angry — just confused and waiting for you to clear it up." },
+      { id: "confused", label: "Be Confused", npc: "A coworker who said something ambiguous and doesn't realize you took it the wrong way. They'll need a gentle nudge to see the miscommunication." },
+    ],
   },
   {
     id: "videocall",
@@ -208,7 +306,11 @@ export const SCENARIOS = [
     img: "/convo-img/videocall.webp",
     thumb: "/convo-img/thumbs/videocall.webp",
     video: "",
-    more: "Practice screen-sharing etiquette, summarizing progress, and wrapping up clearly."
+    more: "Remote calls have their own rhythm — you can't read the room the same way, people talk over each other, and the connection might lag. You'll work on opening with a clear agenda, giving short updates, jumping back in after an interruption ('Sorry — go ahead' / 'Just to add to that…'), and ending with clear next steps. Modern work runs on these calls, and sounding confident on camera is a skill worth building.",
+    roles: [
+      { id: "presenter", label: "Give the Update", npc: "A remote colleague who's organized and direct. She'll ask for your update, give hers, and want to nail down next steps before the call ends." },
+      { id: "listener", label: "Run the Call", npc: "A colleague who has a lot to report but tends to go off-topic. You'll need to keep the meeting focused, ask good questions, and close it out on time." },
+    ],
   },
   {
     id: "hiking",
@@ -217,6 +319,10 @@ export const SCENARIOS = [
     img: "/convo-img/hiking.webp",
     thumb: "/convo-img/thumbs/hiking.webp",
     video: "",
-    more: "Practice casual back-and-forth, reacting to surroundings, and sharing opinions naturally."
+    more: "No agenda, no rush — just two people walking and talking about whatever comes up. You'll work on sharing thoughts and opinions loosely, reacting to what you see around you, and being comfortable with quiet moments instead of filling every pause. This is the kind of easy, natural conversation many learners want most but practice least. Fluency isn't just speed — it's also knowing how to slow down.",
+    roles: [
+      { id: "hiker", label: "Walk & Talk", npc: "A close friend who's thoughtful and easygoing. They share observations about the trail, ask what you've been thinking about lately, and are comfortable with silence." },
+      { id: "guide", label: "Lead the Hike", npc: "A friend who's quieter today — maybe tired, maybe thinking about something. They'll respond if you start a topic, but you'll need to gently carry the conversation." },
+    ],
   },
 ];

@@ -170,10 +170,10 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
   drawerHd.append(closeDrawer);
 
   const drawerBody = el("div", "lux-body k");
-  const toneSel = mkSelect(el, "Tone", ["friendly", "neutral", "playful", "formal", "flirty"]);
-  const stressSel = mkSelect(el, "Stress", ["low", "medium", "high"]);
-  const paceSel = mkSelect(el, "Pace", ["slow", "normal", "fast"]);
-  drawerBody.append(toneSel.wrap, stressSel.wrap, paceSel.wrap);
+  const levelSel = mkSelect(el, "Level", ["A1", "A2", "B1", "B2", "C1", "C2"]);
+  const moodSel = mkSelect(el, "Mood", ["patient", "neutral", "rushed", "difficult"]);
+  const lengthSel = mkSelect(el, "Length", ["short", "medium", "long"]);
+  drawerBody.append(levelSel.wrap, moodSel.wrap, lengthSel.wrap);
   drawerBody.append(
     el(
       "div",
@@ -243,9 +243,9 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
     closeDrawer,
     scrim,
     convoProgress,
-    toneSel,
-    stressSel,
-    paceSel,
+    levelSel,
+    moodSel,
+    lengthSel,
   };
 }
 

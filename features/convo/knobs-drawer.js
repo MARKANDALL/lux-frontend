@@ -1,11 +1,11 @@
 // features/convo/knobs-drawer.js
 
-const KNOBS_KEY = "lux_knobs_v1";
+const KNOBS_KEY = "lux_knobs_v2";  // ← bumped version so old localStorage doesn't conflict
 
 const DEFAULTS = {
-  tone: "friendly",   // friendly | neutral | playful | formal | flirty
-  stress: "medium",   // low | medium | high
-  pace: "normal",     // slow | normal | fast
+  level: "B1",   // B1 | B2 | C1 | A2 etc (free-form)
+  mood: "neutral",   // neutral | friendly | playful | formal | flirty
+  length: "short",     // short | medium | long
 };
 
 function read() {
@@ -42,11 +42,11 @@ export function onKnobsChange(fn) {
 }
 
 export function formatKnobsSummary(k) {
-  const tone = (k.tone || DEFAULTS.tone);
-  const stress = (k.stress || DEFAULTS.stress);
-  const pace = (k.pace || DEFAULTS.pace);
+  const level = (k.level || DEFAULTS.level);
+  const mood = (k.mood || DEFAULTS.mood);
+  const length = (k.length || DEFAULTS.length);
   const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
-  return `Tone: ${cap(tone)} • Stress: ${cap(stress)} • Pace: ${cap(pace)}`;
+  return `Level: ${String(level).toUpperCase()} • Mood: ${cap(mood)} • Length: ${cap(length)}`;
 }
 
 function ensureDom() {
@@ -72,32 +72,33 @@ function ensureDom() {
       </div>
 
       <div class="lux-knobsBody">
-        <div class="lux-knobsGroup" data-key="tone">
-          <div class="lux-knobsLabel">Tone</div>
+        <div class="lux-knobsGroup" data-key="level">
+          <div class="lux-knobsLabel">Level</div>
           <div class="lux-knobsChips">
-            <button type="button" data-value="friendly">Friendly</button>
+            <button type="button" data-value="A2">A2</button>
+            <button type="button" data-value="B1">B1</button>
+            <button type="button" data-value="B2">B2</button>
+            <button type="button" data-value="C1">C1</button>
+          </div>
+        </div>
+
+        <div class="lux-knobsGroup" data-key="mood">
+          <div class="lux-knobsLabel">Mood</div>
+          <div class="lux-knobsChips">
             <button type="button" data-value="neutral">Neutral</button>
+            <button type="button" data-value="friendly">Friendly</button>
             <button type="button" data-value="playful">Playful</button>
             <button type="button" data-value="formal">Formal</button>
             <button type="button" data-value="flirty">Flirty</button>
           </div>
         </div>
 
-        <div class="lux-knobsGroup" data-key="stress">
-          <div class="lux-knobsLabel">Stress level</div>
+        <div class="lux-knobsGroup" data-key="length">
+          <div class="lux-knobsLabel">Length</div>
           <div class="lux-knobsChips">
-            <button type="button" data-value="low">Low</button>
+            <button type="button" data-value="short">Short</button>
             <button type="button" data-value="medium">Medium</button>
-            <button type="button" data-value="high">High</button>
-          </div>
-        </div>
-
-        <div class="lux-knobsGroup" data-key="pace">
-          <div class="lux-knobsLabel">Pace</div>
-          <div class="lux-knobsChips">
-            <button type="button" data-value="slow">Slow</button>
-            <button type="button" data-value="normal">Normal</button>
-            <button type="button" data-value="fast">Fast</button>
+            <button type="button" data-value="long">Long</button>
           </div>
         </div>
       </div>

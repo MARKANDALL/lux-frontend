@@ -26,28 +26,34 @@ export function wireConvoFlow({
   convoReport,
   showConvoReportOverlay,
 }) {
-function scenarioForTurn() {
-  const overlay = buildConvoTargetOverlay(state.nextActivity);
+  function scenarioForTurn() {
+    const overlay = buildConvoTargetOverlay(state.nextActivity);
 
-  // ✅ If a custom scene was supplied (Life Journey), use it.
-  const custom = state.nextActivity?.scene;
-  if (custom && custom.title && custom.desc) {
+    // ✅ If a custom scene was supplied (Life Journey), use it.
+    const custom = state.nextActivity?.scene;
+    if (custom && custom.title && custom.desc) {
+      return {
+        id: custom.id || "custom",
+        title: custom.title,
+        desc: overlay ? `${custom.desc}\n\n${overlay}` : custom.desc,
+      };
+    }
+
+    // Default: regular scenario list
+    const s = SCENARIOS[state.scenarioIdx];
+
+    // ✅ Resolve the selected role (default to first role)
+    const roleIdx = state.roleIdx ?? 0;
+    const role = s.roles?.[roleIdx] || s.roles?.[0] || null;
+
     return {
-      id: custom.id || "custom",
-      title: custom.title,
-      desc: overlay ? `${custom.desc}\n\n${overlay}` : custom.desc,
+      id: s.id,
+      title: s.title,
+      desc: overlay ? `${s.desc}\n\n${overlay}` : s.desc,
+      more: s.more || "",
+      role: role,
     };
   }
-
-  // Default: regular scenario list
-  const s = SCENARIOS[state.scenarioIdx];
-  return {
-    id: s.id,
-    title: s.title,
-    desc: overlay ? `${s.desc}\n\n${overlay}` : s.desc,
-  };
-}
-
 
   function showNetErrorBubble(err) {
     const msg = err && err.message ? err.message : "Unknown error";
