@@ -1,4 +1,7 @@
 // features/my-words/panel-render.js
+// ONE-LINE: Renders the My Words panel rows/meta/footer and wires the View Library / Back buttons.
+
+import { fmtPctCefr } from "../../core/scoring/index.js";
 
 export function createMyWordsPanelRenderer({
   root,
@@ -28,7 +31,7 @@ export function createMyWordsPanelRenderer({
   function buildMeta(e) {
     const attempts = e.mw_attempts || 0;
     const score = e.mw_lastScore;
-    const lastScoreStr = score == null ? "—" : `${Math.round(score)}%`;
+    const lastScoreStr = score == null ? "—" : fmtPctCefr(Math.round(score));
     const lastAtStr = relTime(e.mw_lastAt);
     const trend = e.mw_trend || "—";
     return `Practiced ${attempts}× · Last ${lastScoreStr} ${trend} · ${lastAtStr}`;

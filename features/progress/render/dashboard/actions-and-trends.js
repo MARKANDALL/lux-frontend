@@ -1,4 +1,6 @@
 // features/progress/render/dashboard/actions-and-trends.js
+// ONE-LINE: Dashboard action-button wiring + metric trend card renderer.
+
 // Dashboard action-button wiring + metric trend card renderer.
 
 import {
@@ -9,6 +11,7 @@ import {
 import { esc } from "../format.js";
 import { sparklineSvg } from "../sparkline.js";
 import { downloadBlob } from "../export.js";
+import { fmtPctCefr } from "../../../../core/scoring/index.js";
 
 export function wireDashboardActions(host, model, attempts) {
   const gen = document.getElementById("luxGenerateNextPractice");
@@ -45,7 +48,7 @@ export function wireDashboardActions(host, model, attempts) {
 export function renderMetricTrendCard(m) {
   if (!m) return "";
   const fmtPct = (v) =>
-    v == null || !Number.isFinite(+v) ? "—" : `${Math.round(+v)}%`;
+    v == null || !Number.isFinite(+v) ? "—" : fmtPctCefr(Math.round(+v));
   const best =
     m.bestDay?.avg != null ? `${m.bestDay.day} • ${fmtPct(m.bestDay.avg)}` : "—";
 

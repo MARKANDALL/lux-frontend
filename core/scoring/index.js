@@ -46,21 +46,28 @@ export function coachingPreface(score) {
 
   const tier = scoreClass(n);
   const lvl = coachingLevel(n);
+  const band = cefrBand(n);
+  const bandNote = band ? ` (CEFR ${band})` : "";
 
+  // none: keep it short
   if (lvl === "none") {
-    return "Excellent — you’re solidly in the green. Keep going.";
+    return `Excellent — you’re solidly in the green${bandNote}. Keep going.`;
   }
 
-  // ✅ Must explicitly acknowledge green when score is 80–84.
-  if (tier === "score-good" && lvl === "polish") {
-    return "You’re in the green — this is a good score. If you want to polish it further, here’s one small thing to keep in mind:";
+  // polish: score is already green, encourage small refinements
+  if (lvl === "polish") {
+    if (n >= 80 && n < 85) {
+      return `Nice — you’re in the green${bandNote}. A couple small tweaks can make it even smoother:`;
+    }
+    return `You’re in the green${bandNote} — this is a good score. If you want to polish it further, here’s one small thing to keep in mind:`;
   }
 
+  // encourage: warn/bad tiers
   if (tier === "score-warn") {
-    return "You’re close — a couple small tweaks can move this into the green:";
+    return `You’re close${bandNote} — a couple small tweaks can move this into the green:`;
   }
 
-  return "Let’s focus on the biggest win first — here’s what to work on:";
+  return `Let’s focus on the biggest win first${bandNote} — here’s what to work on:`;
 }
 
 // CEFR rubric (display-only).
@@ -82,6 +89,21 @@ export function cefrBand(score) {
     if (n >= b.min) return b.band;
   }
   return "A1";
+}
+
+// Display helper: "87% · B2"
+// (CEFR band is display-only; the canonical numeric score remains 0–100 everywhere.)
+export function fmtPctCefr(v) {
+  const pct = fmtPct(v);
+  const band = cefrBand(v);
+  if (!band || pct === "–" || pct === "—") return pct;
+  return `${pct} · ${band}`;
+}
+
+// CSS helper: "cefr-b2" / "cefr-c1" / etc.
+export function cefrClass(v) {
+  const band = cefrBand(v);
+  return band ? `cefr-${String(band).toLowerCase()}` : "";
 }
 
 export function getAzureScores(data) {

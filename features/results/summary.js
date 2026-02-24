@@ -9,7 +9,7 @@ import { norm } from "../../src/data/phonemes/core.js";
 import { isCorrupt } from "../../helpers/core.js";
 import { passages } from "../../src/data/passages.js";
 import { detailedPhonemeFeedback } from "./summary-feedback.js";
-import { scoreClass as scoreClassCore } from "../../core/scoring/index.js";
+import { scoreClass as scoreClassCore, fmtPctCefr } from "../../core/scoring/index.js";
 
 // --- Universal Color Helper (Inlined for safety) ---
 function getColorConfig(s) {
@@ -47,8 +47,8 @@ export function showSummary({ allPartsResults, currentParts }) {
     (nb.Words || []).forEach((w) => {
       if (isCorrupt(w.Word)) return;
       
-      // Word Errors (Updated to < 60% Red Threshold)
-      if (w.AccuracyScore != null && w.AccuracyScore < 60) {
+      // Word Errors (canonical red threshold via scoreClassCore)
+      if (scoreClassCore(w.AccuracyScore) === "score-bad") {
         majorIssues.push({
           part: idx + 1,
           word: w.Word,
@@ -155,7 +155,7 @@ export function showSummary({ allPartsResults, currentParts }) {
             gap: 6px;
         ">
            ${err.word} 
-           <span style="opacity:0.8; font-weight:400;">(${err.score}%)</span>
+           <span style="opacity:0.8; font-weight:400;">(${fmtPctCefr(err.score)})</span>
            <span style="font-size:0.75em; opacity:0.6; text-transform:uppercase; letter-spacing:0.5px;">Pt ${err.part}</span>
         </span>
       `;

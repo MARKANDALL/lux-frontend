@@ -13,7 +13,7 @@
 
 import {
   scoreClass,
-  fmtPct,
+  fmtPctCefr,
   getAzureScores,
   deriveFallbackScores,
 } from "../../core/scoring/index.js";
@@ -49,7 +49,7 @@ export function renderResultsHeaderModern(data) {
   // 3) PYRAMID SCORE UI (Overall circle + 5 tiles)
 
   const fmtRoundPct = (v) =>
-    v == null || !Number.isFinite(+v) ? "—" : `${Math.round(+v)}%`;
+    v == null || !Number.isFinite(+v) ? "—" : fmtPctCefr(Math.round(+v));
 
   const meanAvail = (...vals) => {
     const v = vals.map((x) => +x).filter((x) => Number.isFinite(x));
@@ -61,7 +61,11 @@ export function renderResultsHeaderModern(data) {
   const pronunciation = overall;
 
   // Overall aggregate (your new blue circle)
-  const overallAgg = meanAvail(accuracy, fluency, completeness, prosody, pronunciation);
+  // Canonical "overall" is Azure overall/pronunciation when present.
+  // Only fall back to a mean if Azure overall is missing.
+  const overallAgg = Number.isFinite(+pronunciation)
+    ? +pronunciation
+    : meanAvail(accuracy, fluency, completeness, prosody);
 
   const getRingColor = (v) => {
     const n = +v;

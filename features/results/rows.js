@@ -8,7 +8,7 @@
 
 import { norm } from "../../src/data/phonemes/core.js";
 import { buildYouglishUrl } from "../../helpers/core.js";
-import { scoreClass } from "../../core/scoring/index.js";
+import { scoreClass, fmtPctCefr } from "../../core/scoring/index.js";
 
 // Logic import
 import { calculateWordStats } from "./rows-logic.js";
@@ -59,7 +59,7 @@ export function buildRows(words, timings, med) {
           >
             ${ipaRaw /* Display the raw symbol from Azure, usually safest */}
             <span style="font-size: 0.8em; opacity: 0.7; margin-left: 2px;">
-                (${ph.AccuracyScore}%)
+                (${fmtPctCefr(ph.AccuracyScore)})
             </span>
           </span>`;
         })
@@ -85,9 +85,9 @@ export function buildRows(words, timings, med) {
 
           <td class="score-cell">${
             word.AccuracyScore !== undefined
-              ? `${rawScore}%` +
-                (penalty
-                  ? ` <span title="Prosody-adjusted">· adj ${adjScore}%</span>`
+              ? `<span class="score-cell ${scoreClass(rawScore)}">${fmtPctCefr(rawScore)}</span>` +
+                (penalty > 0
+                  ? `<small style="opacity:0.8;"> · adj ${fmtPctCefr(adjScore)}</small>`
                   : "")
               : "–"
           }</td>

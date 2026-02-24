@@ -3,6 +3,7 @@
 // features/progress/render/export.js
 
 import { titleFromPassageKey } from "./format.js";
+import { getAzureScores } from "../../../core/scoring/index.js";
 
 export function downloadBlob(filename, text, mime) {
   const blob = new Blob([text], { type: mime || "text/plain" });
@@ -23,8 +24,8 @@ export function attemptsToCSV(attempts = []) {
     const pk = a.passage_key || a.passageKey || "";
     const src = String(pk).startsWith("convo:") ? "AI Conversations" : "Pronunciation";
     const activity = titleFromPassageKey(pk);
-    const score = Math.round(
-      a.summary?.pron != null ? a.summary.pron : a.azureResult?.NBest?.[0]?.PronScore || 0
+const score = Math.round(
+      a.summary?.pron != null ? a.summary.pron : getAzureScores(a.azureResult).overall || 0
     );
     const text = String(a.text || "").replace(/\s+/g, " ").trim();
     const sid = a.session_id || a.sessionId || "";

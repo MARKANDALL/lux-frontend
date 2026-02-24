@@ -5,13 +5,14 @@
 import { pickTS, pickAzure, pickSummary, pickPassageKey } from "../attempt-pickers.js";
 import { titleFromPassageKey } from "../render/format.js";
 import { lower } from "./compute.js";
+import { getAzureScores } from "../../../core/scoring/index.js";
 
 // ---------- Action Sheet helpers ----------
 export function attemptOverallScore(a) {
   const sum = pickSummary(a) || {};
   if (sum.pron != null) return Number(sum.pron) || 0;
   const az = pickAzure(a);
-  return Number(az?.NBest?.[0]?.PronScore) || 0;
+return Number(getAzureScores(az).overall) || 0;
 }
 export function attemptWhen(a) {
   const ts = pickTS(a);

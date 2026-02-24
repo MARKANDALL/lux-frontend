@@ -1,6 +1,8 @@
 // features/progress/rollups/rollupsUtils.js
 // Helper utilities extracted from rollups.js (surgical copy/paste)
 
+import { getAzureScores } from "../../../core/scoring/index.js";
+
 function num(x) {
   const n = Number(x);
   return Number.isFinite(n) ? n : null;
@@ -70,19 +72,20 @@ function priorityFromFull({ avg, count, daysSeen, lastTS }) {
   return errorRate * exposure * persistence * recency;
 }
 
-export function getAttemptScore(attempt) {
+function getAttemptScore(attempt) {
   const sum = pickSummary(attempt);
   if (sum && sum.pron != null) {
     const v = num(sum.pron);
     if (v != null) return v;
   }
   const az = pickAzure(attempt);
-  const v = num(az?.NBest?.[0]?.PronScore);
+  const v = num(getAzureScores(az).overall);
   return v != null ? v : 0;
 }
 
 export {
   num,
+  getAttemptScore,
   pickAzure,
   pickSummary,
   pickPassageKey,

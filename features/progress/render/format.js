@@ -1,11 +1,16 @@
 // features/progress/render/format.js
+// ONE-LINE: Formatting + labels used by Progress renders (fmtScore, fmtDate, titleFromPassageKey, esc).
+
 // Formatting helpers live here (fmtScore, fmtDate, etc).
 // features/progress/render/format.js
 // Formatting + labels used by Progress renders.
 
 import { passages } from "../../../src/data/passages.js";
 import { SCENARIOS } from "../../convo/scenarios.js";
-import { scoreClass as scoreClassCore } from "../../../core/scoring/index.js";
+import {
+  scoreClass as scoreClassCore,
+  fmtPctCefr,
+} from "../../../core/scoring/index.js";
 
 export function scoreClass(score) {
   const cls = scoreClassCore(score);
@@ -16,7 +21,9 @@ export function scoreClass(score) {
 }
 
 export function fmtScore(score) {
-  return `${Math.round(score)}%`;
+  const n = Number(score);
+  if (!Number.isFinite(n)) return "—";
+  return fmtPctCefr(Math.round(n));
 }
 
 export function fmtDate(ts) {

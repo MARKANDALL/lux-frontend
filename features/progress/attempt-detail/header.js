@@ -1,7 +1,10 @@
 // features/progress/attempt-detail/header.js
+// ONE-LINE: Builds the header element for Attempt Details modal (Session Report top area).
+
 // Builds the header element for Attempt Details modal (Session Report top area).
 
 import { esc, getColorConfig, mean } from "../progress-utils.js";
+import { fmtPctCefr } from "../../../core/scoring/index.js";
 
 export function buildAttemptDetailHeader({
   title,
@@ -30,10 +33,12 @@ export function buildAttemptDetailHeader({
   const prosAvg = mean((list || []).map((a) => attemptMetric(a, "pros")));
 
   const fmtRoundPct = (v) =>
-    v == null || !Number.isFinite(+v) ? "—" : `${Math.round(+v)}%`;
+    v == null || !Number.isFinite(+v) ? "—" : fmtPctCefr(Math.round(+v));
 
   // New: overall aggregate circle for the modal
-  const overallAgg = mean([accAvg, fluAvg, compAvg, prosAvg, pronAvg]);
+  const overallAgg = Number.isFinite(+pronAvg)
+    ? +pronAvg
+    : mean([accAvg, fluAvg, compAvg, prosAvg]);
   const overallColor = getColorConfig(overallAgg).color;
 
   const tileKV = (label, val) => `
