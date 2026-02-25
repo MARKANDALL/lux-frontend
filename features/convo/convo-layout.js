@@ -84,11 +84,12 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
 
   const thumbs = el("div", "lux-thumbs");
 
-  /* NEW: picker knobs row */
+  /* Picker bottom row: Characters + Scene Settings */
   const pickerKnobsRow = el("div", "lux-pickerKnobsRow");
-  const pickerKnobsBtn = el("button", "btn ghost", "Knobs");
+  const pickerCharsBtn = el("button", "btn ghost", "🎭 Characters");
+  const pickerKnobsBtn = el("button", "btn ghost", "⚙️ Scene Settings");
   const pickerKnobsSummary = el("div", "lux-pickerKnobsSummary", "");
-  pickerKnobsRow.append(pickerKnobsBtn, pickerKnobsSummary);
+  pickerKnobsRow.append(pickerCharsBtn, pickerKnobsBtn, pickerKnobsSummary);
 
   const nav = el("div", "lux-deckNav");
   const backBtn = el("button", "lux-navArrow", "← Back");
@@ -120,7 +121,7 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
   const actions = el("div", "lux-actions");
 
   const scenBtn = el("button", "btn ghost", "Scenarios");
-  const knobsBtn = el("button", "btn ghost", "Knobs");
+  const knobsBtn = el("button", "btn ghost", "⚙️ Settings");
   const endBtn = el("button", "btn danger", "End Session");
   actions.append(scenBtn, knobsBtn, endBtn);
 
@@ -165,7 +166,7 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
   // Knobs drawer
   const drawer = el("div", "lux-drawer");
   const drawerHd = el("div", "lux-drawerHd");
-  drawerHd.append(el("div", "lux-title", "Scene knobs"));
+  drawerHd.append(el("div", "lux-title", "Scene Settings"));
   const closeDrawer = el("button", "btn ghost", "Close");
   drawerHd.append(closeDrawer);
 
@@ -227,6 +228,7 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
     deckActive,
     deckPreview,
     thumbs,
+    pickerCharsBtn,
     pickerKnobsBtn,
     pickerKnobsSummary,
     backBtn,

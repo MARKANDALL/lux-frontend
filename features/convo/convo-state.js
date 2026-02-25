@@ -10,8 +10,9 @@ export function createConvoState() {
     sessionId: newSessionId(),
     scenarioIdx: 0,
     mode: "intro", // intro | picker | chat
-    knobsOpen: false,
+knobsOpen: false,
     knobs: loadKnobs(),
+    roleIdx: 0,
 
     messages: [], // {role:"user"|"assistant", content:string}
     turns: [], // {turn, userText, azureResult, attemptId?}

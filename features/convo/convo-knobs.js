@@ -24,7 +24,13 @@ function saveKnobs(knobs) {
 
 function knobsSummaryText(knobs) {
   const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : "");
-  return `Level: ${(knobs.level || "B1").toUpperCase()} · Tone: ${cap(knobs.tone)} · Length: ${cap(knobs.length)}`;
+  const EMOJI = {
+    neutral:"😐", formal:"👔", friendly:"😊", enthusiastic:"🤩", encouraging:"💪",
+    playful:"😜", flirty:"😏", sarcastic:"🙄", tired:"😴", distracted:"📱",
+    cold:"🧊", blunt:"🔨", impatient:"⏱️", irritable:"😤", angry:"🔥", emotional:"🥺",
+  };
+  const toneEmoji = EMOJI[knobs.tone] || "";
+  return `${(knobs.level || "B1").toUpperCase()} · ${toneEmoji} ${cap(knobs.tone)} · ${cap(knobs.length)}`;
 }
 
 export { loadKnobs, saveKnobs, knobsSummaryText };

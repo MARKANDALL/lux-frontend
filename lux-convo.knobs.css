@@ -80,6 +80,13 @@
   gap: 8px;
 }
 
+/* New chip classes override generic button styles */
+.lux-knobsChips .lux-levelChip,
+.lux-knobsChips .lux-toneChip,
+.lux-knobsChips .lux-lengthChip {
+  /* Reset generic styles — each chip type has its own rules above */
+}
+
 .lux-knobsChips button{
   border-radius: 999px;
   padding: 7px 12px;
@@ -280,4 +287,121 @@
 .lux-convoStage.knobs-open #convoKnobsDock .lux-drawer{
   transform: translateX(0);
   opacity: 1;
+}
+
+/* ============================================================
+   Level chips — color-coded (A=red, B=yellow, C=blue)
+   ============================================================ */
+.lux-levelChips {
+  gap: 6px;
+}
+
+.lux-levelChip {
+  border-radius: 999px;
+  padding: 7px 14px;
+  border: 2px solid transparent;
+  background: var(--lv-bg);
+  color: var(--lv-text);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+}
+.lux-levelChip:hover {
+  transform: scale(1.06);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+}
+.lux-levelChip.is-on {
+  border-color: rgba(0,0,0,0.5);
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.18);
+  transform: scale(1.08);
+}
+
+/* ============================================================
+   Tone chips — emoji + label, generous spacing
+   ============================================================ */
+.lux-toneChips {
+  gap: 10px;
+}
+
+.lux-toneChip {
+  border-radius: 999px;
+  padding: 8px 16px;
+  border: 1px solid rgba(0,0,0,0.12);
+  background: rgba(255,255,255,0.82);
+  cursor: pointer;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease, transform 100ms ease;
+}
+.lux-toneChip:hover {
+  background: rgba(0,120,215,0.06);
+  border-color: rgba(0,120,215,0.24);
+  transform: scale(1.03);
+}
+.lux-toneChip.is-on {
+  border-color: rgba(0,120,215,0.42);
+  box-shadow: 0 0 0 3px rgba(0,120,215,0.16);
+  background: rgba(0,120,215,0.08);
+  font-weight: 600;
+}
+
+/* ============================================================
+   Length chips — proportionally sized (smallest→largest)
+   ============================================================ */
+.lux-lengthChips {
+  gap: 8px;
+  align-items: center;
+}
+
+.lux-lengthChip {
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,0.14);
+  background: rgba(255,255,255,0.78);
+  cursor: pointer;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease, transform 100ms ease;
+  /* padding + font-size set inline via JS for proportional sizing */
+}
+.lux-lengthChip:hover {
+  background: rgba(0,120,215,0.06);
+  border-color: rgba(0,120,215,0.24);
+  transform: scale(1.04);
+}
+.lux-lengthChip.is-on {
+  border-color: rgba(0,120,215,0.42);
+  box-shadow: 0 0 0 3px rgba(0,120,215,0.16);
+  background: rgba(0,120,215,0.08);
+  font-weight: 700;
+}
+
+/* ============================================================
+   Knobs group spacing — breathe
+   ============================================================ */
+.lux-knobsGroup {
+  padding: 14px 0 16px;
+}
+
+.lux-knobsLabel {
+  font-weight: 700;
+  margin-bottom: 12px;
+  font-size: 0.95rem;
+}
+
+/* ============================================================
+   Picker summary — more visible with color badge
+   ============================================================ */
+.lux-pickerKnobsSummary {
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.92);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 420px;
+  background: rgba(0,0,0,0.22);
+  backdrop-filter: blur(6px);
+  padding: 4px 12px;
+  border-radius: 999px;
 }

@@ -34,6 +34,7 @@ import { initConvoModeSystem, applyInitialConvoMode } from "./convo-mode-system.
 import { createBeginScenario, initConvoPickerSystem } from "./convo-picker-system.js";
 
 import { createSetKnobs } from "./convo-knobs-system.js";
+import { openCharsDrawer, closeCharsDrawer } from "./characters-drawer.js";
 
 export function bootConvo() {
   const root = document.getElementById("convoApp");
@@ -64,6 +65,7 @@ export function bootConvo() {
     deckActive,
     deckPreview,
     thumbs,
+    pickerCharsBtn,
     pickerKnobsBtn,
     pickerKnobsSummary,
     backBtn,
@@ -132,6 +134,44 @@ export function bootConvo() {
     knobsSummaryText,
     saveKnobs,
   });
+
+  // --- Characters drawer wiring ---
+  if (pickerCharsBtn) {
+    pickerCharsBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openCharsDrawer({
+        scenarioIdx: state.scenarioIdx,
+        roleIdx: state.roleIdx ?? 0,
+        onRoleSelect: (idx) => {
+          state.roleIdx = idx;
+        },
+      });
+    });
+  }
+
+  // Re-open characters drawer with fresh data when scenario changes
+  window.addEventListener("lux:knobs", () => {
+    // no-op: knobs don't affect characters, but keep this hook if needed later
+  });
+
+  // Reset role selection when scenario changes
+  const origScenIdx = { val: state.scenarioIdx };
+  const observer = new MutationObserver(() => {
+    if (state.scenarioIdx !== origScenIdx.val) {
+      origScenIdx.val = state.scenarioIdx;
+      state.roleIdx = 0;
+      closeCharsDrawer();
+    }
+  });
+  // Lightweight poll (MutationObserver won't catch state.scenarioIdx changes)
+  setInterval(() => {
+    if (state.scenarioIdx !== origScenIdx.val) {
+      origScenIdx.val = state.scenarioIdx;
+      state.roleIdx = 0;
+      closeCharsDrawer();
+    }
+  }, 300);
 
   // --- Convo flow (extracted) ---
   const { startScenario } = wireConvoFlow({

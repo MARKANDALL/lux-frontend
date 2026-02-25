@@ -49,6 +49,53 @@ export function formatKnobsSummary(k) {
   return `Level: ${String(level).toUpperCase()} · Tone: ${cap(tone)} · Length: ${cap(length)}`;
 }
 
+/* ── Tone emoji map ───────────────────────────────────────── */
+const TONE_EMOJI = {
+  neutral:      "😐",
+  formal:       "👔",
+  friendly:     "😊",
+  enthusiastic: "🤩",
+  encouraging:  "💪",
+  playful:      "😜",
+  flirty:       "😏",
+  sarcastic:    "🙄",
+  tired:        "😴",
+  distracted:   "📱",
+  cold:         "🧊",
+  blunt:        "🔨",
+  impatient:    "⏱️",
+  irritable:    "😤",
+  angry:        "🔥",
+  emotional:    "🥺",
+};
+
+/* ── Level color map (A=red, B=yellow, C=blue + light variants) */
+const LEVEL_COLORS = {
+  A1: { bg: "#dc2626", text: "#fff" },
+  A2: { bg: "#f87171", text: "#fff" },
+  B1: { bg: "#eab308", text: "#fff" },
+  B2: { bg: "#fbbf24", text: "#78350f" },
+  C1: { bg: "#0078d7", text: "#fff" },
+  C2: { bg: "#60a5fa", text: "#fff" },
+};
+
+/* ── Length sizing (relative padding scale) ─────────────── */
+const LENGTH_SIZES = {
+  terse:    { px: "6px 10px",  fontSize: "0.78rem" },
+  short:    { px: "7px 14px",  fontSize: "0.82rem" },
+  medium:   { px: "8px 18px",  fontSize: "0.85rem" },
+  long:     { px: "9px 24px",  fontSize: "0.88rem" },
+  extended: { px: "10px 32px", fontSize: "0.90rem" },
+};
+
+const LENGTH_LABELS = {
+  terse:    "Terse",
+  short:    "Short",
+  medium:   "Medium",
+  long:     "Long",
+  extended: "Extended",
+};
+
 function ensureDom() {
   let overlay = document.getElementById("luxKnobsOverlay");
   let drawer = document.getElementById("luxKnobsDrawer");
@@ -65,55 +112,50 @@ function ensureDom() {
     drawer.id = "luxKnobsDrawer";
     drawer.className = "lux-knobsDrawer";
     drawer.setAttribute("aria-hidden", "true");
+
+    /* ── Level chips (color-coded) ─────────────────────── */
+    const levelChips = Object.keys(LEVEL_COLORS).map((lv) => {
+      const c = LEVEL_COLORS[lv];
+      return `<button type="button" data-value="${lv}" class="lux-levelChip" style="--lv-bg:${c.bg}; --lv-text:${c.text}">${lv}</button>`;
+    }).join("\n            ");
+
+    /* ── Tone chips (emoji + label) ───────────────────── */
+    const toneChips = Object.entries(TONE_EMOJI).map(([val, emoji]) => {
+      const label = val === "emotional" ? "Emotional / Upset" : val.charAt(0).toUpperCase() + val.slice(1);
+      return `<button type="button" data-value="${val}" class="lux-toneChip">${emoji} ${label}</button>`;
+    }).join("\n            ");
+
+    /* ── Length chips (proportionally sized) ───────────── */
+    const lengthChips = Object.entries(LENGTH_SIZES).map(([val, sz]) => {
+      const label = LENGTH_LABELS[val];
+      return `<button type="button" data-value="${val}" class="lux-lengthChip" style="padding:${sz.px}; font-size:${sz.fontSize}">${label}</button>`;
+    }).join("\n            ");
+
     drawer.innerHTML = `
       <div class="lux-knobsHeader">
-        <div class="lux-knobsTitle">Scene knobs</div>
+        <div class="lux-knobsTitle">Scene Settings</div>
         <button class="lux-knobsClose" type="button" aria-label="Close">✕</button>
       </div>
 
       <div class="lux-knobsBody">
         <div class="lux-knobsGroup" data-key="level">
-          <div class="lux-knobsLabel">Level</div>
-          <div class="lux-knobsChips">
-            <button type="button" data-value="A1">A1</button>
-            <button type="button" data-value="A2">A2</button>
-            <button type="button" data-value="B1">B1</button>
-            <button type="button" data-value="B2">B2</button>
-            <button type="button" data-value="C1">C1</button>
-            <button type="button" data-value="C2">C2</button>
+          <div class="lux-knobsLabel">📊 Level</div>
+          <div class="lux-knobsChips lux-levelChips">
+            ${levelChips}
           </div>
         </div>
 
         <div class="lux-knobsGroup" data-key="tone">
-          <div class="lux-knobsLabel">Tone</div>
-          <div class="lux-knobsChips">
-            <button type="button" data-value="neutral">Neutral</button>
-            <button type="button" data-value="formal">Formal</button>
-            <button type="button" data-value="friendly">Friendly</button>
-            <button type="button" data-value="enthusiastic">Enthusiastic</button>
-            <button type="button" data-value="encouraging">Encouraging</button>
-            <button type="button" data-value="playful">Playful</button>
-            <button type="button" data-value="flirty">Flirty</button>
-            <button type="button" data-value="sarcastic">Sarcastic</button>
-            <button type="button" data-value="tired">Tired</button>
-            <button type="button" data-value="distracted">Distracted</button>
-            <button type="button" data-value="cold">Cold</button>
-            <button type="button" data-value="blunt">Blunt</button>
-            <button type="button" data-value="impatient">Impatient</button>
-            <button type="button" data-value="irritable">Irritable</button>
-            <button type="button" data-value="angry">Angry</button>
-            <button type="button" data-value="emotional">Emotional / Upset</button>
+          <div class="lux-knobsLabel">🎭 Tone</div>
+          <div class="lux-knobsChips lux-toneChips">
+            ${toneChips}
           </div>
         </div>
 
         <div class="lux-knobsGroup" data-key="length">
-          <div class="lux-knobsLabel">Length</div>
-          <div class="lux-knobsChips">
-            <button type="button" data-value="terse">Terse</button>
-            <button type="button" data-value="short">Short</button>
-            <button type="button" data-value="medium">Medium</button>
-            <button type="button" data-value="long">Long</button>
-            <button type="button" data-value="extended">Extended</button>
+          <div class="lux-knobsLabel">⏱️ Length</div>
+          <div class="lux-knobsChips lux-lengthChips">
+            ${lengthChips}
           </div>
         </div>
       </div>
