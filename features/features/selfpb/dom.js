@@ -1,4 +1,5 @@
 // features/features/selfpb/dom.js
+// Builds the Self Playback UI DOM (mini + expanded floating window) and wires its interactions.
 
 export function buildUI() {
   const host = document.createElement("div");
@@ -146,14 +147,18 @@ export function buildUI() {
       // Compat with earlier patch wording (if present elsewhere)
       const shellByClass = document.querySelector(".lux-tts-shell");
       if (shellByClass) shellByClass.classList.toggle("lux-tts-shell--empty", !!on);
-    } catch {}
+    } catch (err) {
+      console.warn("[features/features/selfpb/dom.js] swallowed error", err);
+    }
   };
 
   let isExpandedOpen = false;
   function setExpandedOpen(on) {
     try {
       document.documentElement.classList.toggle("lux-selfpb-expanded-open", !!on);
-    } catch (_) {}
+    } catch (err) {
+      console.warn("[features/features/selfpb/dom.js] swallowed error", err);
+    }
   }
 
   async function openExpanded() {
@@ -168,8 +173,12 @@ export function buildUI() {
 
     // Nudge WaveSurfer / layout-dependent renders after mount
     requestAnimationFrame(() => {
-      try { window.dispatchEvent(new Event("resize")); } catch (_) {}
-      setTimeout(() => { try { window.dispatchEvent(new Event("resize")); } catch (_) {} }, 120);
+      try { window.dispatchEvent(new Event("resize")); } catch (err) {
+        console.warn("[features/features/selfpb/dom.js] swallowed error", err);
+      }
+      setTimeout(() => { try { window.dispatchEvent(new Event("resize")); } catch (err) {
+        console.warn("[features/features/selfpb/dom.js] swallowed error", err);
+      } }, 120);
     });
 
     // Ensure TTS player exists even if the drawer was never opened
@@ -178,7 +187,9 @@ export function buildUI() {
         const ttsBoot = await import("../tts/boot-tts.js");
         await ttsBoot.ensureTTSPlayerMounted?.();
       }
-    } catch (_) {}
+    } catch (err) {
+      console.warn("[features/features/selfpb/dom.js] swallowed error", err);
+    }
 
     // move TTS controls into expanded bottom-right mount
     try {
@@ -194,7 +205,9 @@ export function buildUI() {
           ttsWrap.dataset.luxInSelfPB = "1";
         }
       }
-    } catch (_) {}
+    } catch (err) {
+      console.warn("[features/features/selfpb/dom.js] swallowed error", err);
+    }
 
     // show placeholder in the TTS drawer while controls are moved out
     setTtsShellEmpty(true);
@@ -206,7 +219,9 @@ export function buildUI() {
     // ✅ Karaoke refresh hook
     try {
       window.dispatchEvent(new CustomEvent("lux:selfpbExpandedOpen"));
-    } catch {}
+    } catch (err) {
+      console.warn("[features/features/selfpb/dom.js] swallowed error", err);
+    }
   }
 
   function closeExpanded() {
@@ -234,7 +249,9 @@ export function buildUI() {
   }
 
   expandBtn?.addEventListener("click", () => {
-    try { openExpanded(); } catch (_) {}
+    try { openExpanded(); } catch (err) {
+      console.warn("[features/features/selfpb/dom.js] swallowed error", err);
+    }
   });
   floatClose?.addEventListener("click", closeExpanded);
 
@@ -242,7 +259,9 @@ export function buildUI() {
   window.addEventListener("lux:openSelfPBExpanded", () => {
     try {
       openExpanded();
-    } catch (_) {}
+    } catch (err) {
+      console.warn("[features/features/selfpb/dom.js] swallowed error", err);
+    }
   });
 
   // ✅ Drag floating expanded window

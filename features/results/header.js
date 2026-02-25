@@ -1,14 +1,8 @@
 /* ============================================================================
-   CANONICAL SHIM — HEADER SHELL + POST-DOM WIRING
-   ---------------------------------------------------------------------------
-   - Canonical results renderer: ui/views/index.js (lux-results-root)
-   - This file is ACTIVE in the modern trunk.
-   - It still supports legacy globals *only as fallback*.
-   - Phase-E move here: stop relying on hooks shim from deps.js.
+   features/results/header.js
+   Canonical shim: header shell + post-DOM wiring for the Results view (lux-results-root),
+   with legacy globals supported only as fallback.
 ============================================================================ */
-// ui/views/header.js
-
-// Modern ES-module header builder (canonical scoring)
 import { renderResultsHeaderModern } from "./header-modern.js";
 
 // Direct ES-module interaction boots (idempotent in their own modules)
@@ -58,21 +52,29 @@ export function ensureHeader(data) {
         const saved = localStorage.getItem(KEY);
         if (saved === "0") scoreAcc.open = false;
         if (saved === "1") scoreAcc.open = true;
-      } catch {}
+      } catch (err) {
+        console.warn("[features/results/header.js] swallowed error", err);
+      }
 
       // Save on toggle
       scoreAcc.addEventListener("toggle", () => {
         try {
           localStorage.setItem(KEY, scoreAcc.open ? "1" : "0");
-        } catch {}
+        } catch (err) {
+          console.warn("[features/results/header.js] swallowed error", err);
+        }
       });
 
       // The overall ring opens the metric modal; prevent it from also toggling the accordion
       const ring = scoreAcc.querySelector(".lux-scoreRing");
       if (ring) {
         const stop = (e) => {
-          try { e.preventDefault(); } catch {}
-          try { e.stopPropagation(); } catch {}
+          try { e.preventDefault(); } catch (err) {
+            console.warn("[features/results/header.js] swallowed error", err);
+          }
+          try { e.stopPropagation(); } catch (err) {
+            console.warn("[features/results/header.js] swallowed error", err);
+          }
         };
         ring.addEventListener("click", stop, true);
         ring.addEventListener("keydown", (e) => {
@@ -161,21 +163,29 @@ export function ensureHeader(data) {
       const saved = localStorage.getItem(KEY);
       if (saved === "0") scoreAcc.open = false;
       if (saved === "1") scoreAcc.open = true;
-    } catch {}
+    } catch (err) {
+      console.warn("[features/results/header.js] swallowed error", err);
+    }
 
     // Save on toggle
     scoreAcc.addEventListener("toggle", () => {
       try {
         localStorage.setItem(KEY, scoreAcc.open ? "1" : "0");
-      } catch {}
+      } catch (err) {
+        console.warn("[features/results/header.js] swallowed error", err);
+      }
     });
 
     // The overall ring opens the metric modal; prevent it from also toggling the accordion
     const ring = scoreAcc.querySelector(".lux-scoreRing");
     if (ring) {
       const stop = (e) => {
-        try { e.preventDefault(); } catch {}
-        try { e.stopPropagation(); } catch {}
+        try { e.preventDefault(); } catch (err) {
+          console.warn("[features/results/header.js] swallowed error", err);
+        }
+        try { e.stopPropagation(); } catch (err) {
+          console.warn("[features/results/header.js] swallowed error", err);
+        }
       };
       ring.addEventListener("click", stop, true);
       ring.addEventListener("keydown", (e) => {
@@ -212,7 +222,9 @@ export function wirePostDom(data) {
     initMetricScoreModals?.();
 
     // Subtle "new info exists" cue (Option A): staggered nudge for CLOSED sections
-    try { nudgeClosedSectionsOnce(); } catch {}
+    try { nudgeClosedSectionsOnce(); } catch (err) {
+      console.warn("[features/results/header.js] swallowed error", err);
+    }
 
     // Persist Word & Phoneme accordion (don't force open if user closed it)
     const wpAcc = document.getElementById("luxWpAccordion");
@@ -225,13 +237,17 @@ export function wirePostDom(data) {
         const saved = localStorage.getItem(KEY);
         if (saved === "0") wpAcc.open = false;
         if (saved === "1") wpAcc.open = true;
-      } catch {}
+      } catch (err) {
+        console.warn("[features/results/header.js] swallowed error", err);
+      }
 
       // Save only when the user toggles
       wpAcc.addEventListener("toggle", () => {
         try {
           localStorage.setItem(KEY, wpAcc.open ? "1" : "0");
-        } catch {}
+        } catch (err) {
+          console.warn("[features/results/header.js] swallowed error", err);
+        }
       });
     }
 
@@ -247,21 +263,29 @@ export function wirePostDom(data) {
         const saved = localStorage.getItem(KEY);
         if (saved === "0") scoreAcc.open = false;
         if (saved === "1") scoreAcc.open = true;
-      } catch {}
+      } catch (err) {
+        console.warn("[features/results/header.js] swallowed error", err);
+      }
 
       // Save on toggle
       scoreAcc.addEventListener("toggle", () => {
         try {
           localStorage.setItem(KEY, scoreAcc.open ? "1" : "0");
-        } catch {}
+        } catch (err) {
+          console.warn("[features/results/header.js] swallowed error", err);
+        }
       });
 
       // The overall ring opens the metric modal; prevent it from also toggling the accordion
       const ring = scoreAcc.querySelector(".lux-scoreRing");
       if (ring) {
         const stop = (e) => {
-          try { e.preventDefault(); } catch {}
-          try { e.stopPropagation(); } catch {}
+          try { e.preventDefault(); } catch (err) {
+            console.warn("[features/results/header.js] swallowed error", err);
+          }
+          try { e.stopPropagation(); } catch (err) {
+            console.warn("[features/results/header.js] swallowed error", err);
+          }
         };
         ring.addEventListener("click", stop, true);
         ring.addEventListener("keydown", (e) => {
@@ -291,7 +315,9 @@ function nudgeClosedSectionsOnce() {
   if (reduced) return;
 
   const markSeen = (k) => {
-    try { sessionStorage.setItem(k, "1"); } catch {}
+    try { sessionStorage.setItem(k, "1"); } catch (err) {
+      console.warn("[features/results/header.js] swallowed error", err);
+    }
   };
 
   const isSeen = (k) => {
@@ -324,7 +350,9 @@ function nudgeClosedSectionsOnce() {
 
       el.classList.add("lux-nudge");
       setTimeout(() => {
-        try { el.classList.remove("lux-nudge"); } catch {}
+        try { el.classList.remove("lux-nudge"); } catch (err) {
+          console.warn("[features/results/header.js] swallowed error", err);
+        }
       }, 900);
 
       markSeen(it.key);

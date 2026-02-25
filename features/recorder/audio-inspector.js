@@ -10,7 +10,8 @@ function isEnabled() {
     const qs = new URLSearchParams(location.search);
     if (qs.has("audioDebug")) return true;
     return localStorage.getItem(LS_KEY) === "1";
-  } catch {
+  } catch (err) {
+    console.warn("[features/recorder/audio-inspector.js] swallowed error", err);
     return false;
   }
 }
@@ -33,22 +34,30 @@ async function probeBlobDurationSeconds(blob) {
       el.preload = "metadata";
       el.onloadedmetadata = () => {
         const d = Number(el.duration);
-        try { URL.revokeObjectURL(el.src); } catch {}
+        try { URL.revokeObjectURL(el.src); } catch (err) {
+          console.warn("[features/recorder/audio-inspector.js] swallowed error", err);
+        }
         resolve(Number.isFinite(d) ? d : null);
       };
       el.onerror = () => {
-        try { URL.revokeObjectURL(el.src); } catch {}
+        try { URL.revokeObjectURL(el.src); } catch (err) {
+          console.warn("[features/recorder/audio-inspector.js] swallowed error", err);
+        }
         resolve(null);
       };
       el.src = URL.createObjectURL(blob);
     });
-  } catch {
+  } catch (err) {
+    console.warn("[features/recorder/audio-inspector.js] swallowed error", err);
     return null;
   }
 }
 
 function safeJson(obj) {
-  try { return JSON.stringify(obj, null, 2); } catch { return String(obj); }
+  try { return JSON.stringify(obj, null, 2); } catch (err) {
+    console.warn("[features/recorder/audio-inspector.js] swallowed error", err);
+    return String(obj);
+  }
 }
 
 function clampStr(s, max = 140) {
@@ -177,8 +186,8 @@ function ensurePanel() {
     const text = pre?.textContent || "";
     try {
       await navigator.clipboard.writeText(text);
-    } catch {
-      // ignore
+    } catch (err) {
+      console.warn("[features/recorder/audio-inspector.js] swallowed error", err);
     }
   });
 
@@ -300,7 +309,8 @@ async function inferDeviceLabel(stream) {
     const devices = await navigator.mediaDevices.enumerateDevices();
     const hit = devices.find(d => d.kind === "audioinput" && d.deviceId === deviceId);
     return hit?.label || null;
-  } catch {
+  } catch (err) {
+    console.warn("[features/recorder/audio-inspector.js] swallowed error", err);
     return null;
   }
 }
@@ -308,13 +318,17 @@ async function inferDeviceLabel(stream) {
 const AudioInspector = {
   enable() {
     state.enabled = true;
-    try { localStorage.setItem(LS_KEY, "1"); } catch {}
+    try { localStorage.setItem(LS_KEY, "1"); } catch (err) {
+      console.warn("[features/recorder/audio-inspector.js] swallowed error", err);
+    }
     render();
   },
 
   disable() {
     state.enabled = false;
-    try { localStorage.removeItem(LS_KEY); } catch {}
+    try { localStorage.removeItem(LS_KEY); } catch (err) {
+      console.warn("[features/recorder/audio-inspector.js] swallowed error", err);
+    }
     const el = document.getElementById("luxAudioInspector");
     if (el) el.remove();
   },
@@ -334,8 +348,8 @@ const AudioInspector = {
       state.trackSettings = track?.getSettings?.() || null;
       state.trackConstraints = track?.getConstraints?.() || null;
       state.device = await inferDeviceLabel(stream);
-    } catch {
-      // ignore
+    } catch (err) {
+      console.warn("[features/recorder/audio-inspector.js] swallowed error", err);
     }
 
     render();
@@ -346,8 +360,8 @@ const AudioInspector = {
     if (!state.enabled) return;
     try {
       state.recorderMimeType = recorder?.mimeType || null;
-    } catch {
-      // ignore
+    } catch (err) {
+      console.warn("[features/recorder/audio-inspector.js] swallowed error", err);
     }
     render();
   },
@@ -359,8 +373,8 @@ const AudioInspector = {
       state.blobType = blob?.type || null;
       state.blobSize = blob?.size ?? null;
       state.blobDuration = await probeBlobDurationSeconds(blob);
-    } catch {
-      // ignore
+    } catch (err) {
+      console.warn("[features/recorder/audio-inspector.js] swallowed error", err);
     }
     render();
   },
@@ -374,14 +388,16 @@ const AudioInspector = {
       state.uploadType = blob?.type || null;
       state.uploadSize = blob?.size ?? null;
       state.uploadTextLen = typeof text === "string" ? text.length : null;
-    } catch {
-      // ignore
+    } catch (err) {
+      console.warn("[features/recorder/audio-inspector.js] swallowed error", err);
     }
     render();
   },
 };
 
 // Auto-init on import
-try { AudioInspector.init(); } catch {}
+try { AudioInspector.init(); } catch (err) {
+  console.warn("[features/recorder/audio-inspector.js] swallowed error", err);
+}
 
 export default AudioInspector;
