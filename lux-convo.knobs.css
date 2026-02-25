@@ -394,14 +394,22 @@
    Picker summary — more visible with color badge
    ============================================================ */
 .lux-pickerKnobsSummary {
-  font-size: 0.85rem;
-  color: rgba(255,255,255,0.92);
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.94);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 420px;
-  background: rgba(0,0,0,0.22);
-  backdrop-filter: blur(6px);
-  padding: 4px 12px;
+  max-width: 480px;
+  background: rgba(0,0,0,0.32);
+  backdrop-filter: blur(8px);
+  padding: 5px 16px;
   border-radius: 999px;
+  text-align: center;
+  align-self: center;
+  letter-spacing: 0.02em;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+/* Hide if empty */
+.lux-pickerKnobsSummary:empty {
+  display: none;
 }

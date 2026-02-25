@@ -291,12 +291,35 @@ export function wirePickerDeck({
       el("div", "lux-deckDesc", scenario.desc || "")
     );
 
-    // “more” content node (shown when expanded via CSS)
-    const moreText =
+    // "more" content — break into bullet-style items for ESL readability
+    const moreRaw =
       scenario.more ||
       "More details coming next: goals, moves, and what to listen for.";
 
-    textWrap.append(el("div", "lux-deckMore", moreText));
+    const moreWrap = el("div", "lux-deckMore");
+
+    // Split on sentence boundaries (period + space, or end of string)
+    const sentences = moreRaw
+      .split(/(?<=\.)\s+/)
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+
+    // Group into chunks of ~2 sentences for readable bullet items
+    const chunks = [];
+    for (let i = 0; i < sentences.length; i += 2) {
+      const chunk = sentences.slice(i, i + 2).join(" ");
+      if (chunk) chunks.push(chunk);
+    }
+
+    chunks.forEach(chunk => {
+      const item = el("div", "lux-deckMore-item");
+      const bullet = el("div", "lux-deckMore-bullet");
+      const text = el("div", "lux-deckMore-text", chunk);
+      item.append(bullet, text);
+      moreWrap.append(item);
+    });
+
+    textWrap.append(moreWrap);
 
     // CTA only on active card (keeps preview calm / non-interactive)
     if (isActive) {

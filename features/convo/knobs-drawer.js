@@ -70,13 +70,18 @@ const TONE_EMOJI = {
 };
 
 /* ── Level color map (A=red, B=yellow, C=blue + light variants) */
+/* Color logic:
+   A2, B2, C2 = full standard color (matches phoneme/word chart scoring)
+   A1, B1, C1 = lighter shade of the same hue
+   Red = #dc2626  |  Amber = #d97706  |  Blue = #2563eb
+*/
 const LEVEL_COLORS = {
-  A1: { bg: "#dc2626", text: "#fff" },
-  A2: { bg: "#f87171", text: "#fff" },
-  B1: { bg: "#eab308", text: "#fff" },
-  B2: { bg: "#fbbf24", text: "#78350f" },
-  C1: { bg: "#0078d7", text: "#fff" },
-  C2: { bg: "#60a5fa", text: "#fff" },
+  A1: { bg: "#f87171", text: "#fff" },       // lighter red
+  A2: { bg: "#dc2626", text: "#fff" },       // standard red
+  B1: { bg: "#fbbf24", text: "#78350f" },    // lighter amber
+  B2: { bg: "#d97706", text: "#fff" },       // standard amber
+  C1: { bg: "#60a5fa", text: "#fff" },       // lighter blue
+  C2: { bg: "#2563eb", text: "#fff" },       // standard blue
 };
 
 /* ── Length sizing (relative padding scale) ─────────────── */

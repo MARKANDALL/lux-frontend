@@ -84,20 +84,22 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
 
   const thumbs = el("div", "lux-thumbs");
 
-  /* Picker bottom row: Characters + Scene Settings */
+  /* Summary badge — centered ABOVE the deck cards */
+  const pickerKnobsSummary = el("div", "lux-pickerKnobsSummary", "");
+
+  /* Picker bottom row: Characters + Scene Settings (NO summary here) */
   const pickerKnobsRow = el("div", "lux-pickerKnobsRow");
   const pickerCharsBtn = el("button", "btn ghost", "🎭 Characters");
   const pickerKnobsBtn = el("button", "btn ghost", "⚙️ Scene Settings");
-  const pickerKnobsSummary = el("div", "lux-pickerKnobsSummary", "");
-  pickerKnobsRow.append(pickerCharsBtn, pickerKnobsBtn, pickerKnobsSummary);
+  pickerKnobsRow.append(pickerCharsBtn, pickerKnobsBtn);
 
   const nav = el("div", "lux-deckNav");
   const backBtn = el("button", "lux-navArrow", "← Back");
   const nextBtn = el("button", "lux-navNext", "Next →");
   nav.append(backBtn, nextBtn);
 
-  /* IMPORTANT: insert knobs row between thumbs and nav */
-  picker.append(pickerToplinks, deck, thumbs, pickerKnobsRow, nav);
+/* Summary above deck, buttons below thumbs */
+  picker.append(pickerToplinks, pickerKnobsSummary, deck, thumbs, pickerKnobsRow, nav);
 
   // Chat panel (single centered)
   const chatWrap = el("div", "lux-chatwrap");

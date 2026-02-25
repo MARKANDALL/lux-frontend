@@ -42,9 +42,13 @@ export function wireConvoFlow({
     // Default: regular scenario list
     const s = SCENARIOS[state.scenarioIdx];
 
-    // ✅ Resolve the selected role (default to first role)
+// ✅ Resolve the selected role (default to first role)
     const roleIdx = state.roleIdx ?? 0;
     const role = s.roles?.[roleIdx] || s.roles?.[0] || null;
+
+    // The OTHER role — the one the AI plays
+    const otherIdx = roleIdx === 0 ? 1 : 0;
+    const otherRole = s.roles?.[otherIdx] || null;
 
     return {
       id: s.id,
@@ -52,6 +56,7 @@ export function wireConvoFlow({
       desc: overlay ? `${s.desc}\n\n${overlay}` : s.desc,
       more: s.more || "",
       role: role,
+      otherRole: otherRole,
     };
   }
 
