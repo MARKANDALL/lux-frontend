@@ -91,12 +91,11 @@ export function cefrBand(score) {
   return "A1";
 }
 
-// Display helper: "87% · B2"
-// (CEFR band is display-only; the canonical numeric score remains 0–100 everywhere.)
+// Convenience formatter for macro surfaces: "87% · B2"
 export function fmtPctCefr(v) {
   const pct = fmtPct(v);
   const band = cefrBand(v);
-  if (!band || pct === "–" || pct === "—") return pct;
+  if (!band || pct === "–") return pct;
   return `${pct} · ${band}`;
 }
 

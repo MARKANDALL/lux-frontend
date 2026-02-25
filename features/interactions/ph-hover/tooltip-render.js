@@ -3,6 +3,7 @@
 // Delegates carousel/video logic to other modules via callbacks.
 
 import { escapeHTML } from "./utils.js";
+import { fmtPctCefr } from "../../../core/scoring/index.js";
 
 export function showTooltip(state, chip, { pinned = false } = {}, hooks = {}) {
   const { initTooltipTextCarousel, initTooltipVideoControls, hideTooltip, openVideoFocusModal } = hooks;
@@ -19,6 +20,12 @@ export function showTooltip(state, chip, { pinned = false } = {}, hooks = {}) {
   state.tooltipPinned = !!pinned;
 
   const ipa = chip.getAttribute("data-ipa") || "?";
+  const scoreRaw = chip.getAttribute("data-score");
+  const scoreNum = scoreRaw == null ? null : Number(scoreRaw);
+  const scoreStr =
+    Number.isFinite(scoreNum) && scoreNum >= 0
+      ? fmtPctCefr(Math.round(scoreNum))
+      : "";
 
   const tipPlain =
     chip.getAttribute("data-tip-plain") ||
@@ -93,6 +100,11 @@ export function showTooltip(state, chip, { pinned = false } = {}, hooks = {}) {
         ${
           examplesStr
             ? `<span class="lux-ph-examples">${examplesStr}</span>`
+            : ``
+        }
+        ${
+          scoreStr
+            ? `<span class="lux-ph-score" style="opacity:0.75; font-weight:800; margin-left:10px;">${escapeHTML(scoreStr)}</span>`
             : ``
         }
       </div>

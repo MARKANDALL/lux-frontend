@@ -22,8 +22,12 @@ export function scoreClass(score) {
 
 export function fmtScore(score) {
   const n = Number(score);
-  if (!Number.isFinite(n)) return "—";
-  return fmtPctCefr(Math.round(n));
+  return Number.isFinite(n) ? `${Math.round(n)}%` : "—";
+}
+
+export function fmtScoreCefr(score) {
+  const n = Number(score);
+  return Number.isFinite(n) ? fmtPctCefr(Math.round(n)) : "—";
 }
 
 export function fmtDate(ts) {

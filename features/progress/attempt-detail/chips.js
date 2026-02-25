@@ -18,6 +18,11 @@ const pillClassFromScore = (s) => {
   return "lux-pill--red";
 };
 
+const fmtBand = (v) => {
+  const n = Number(v);
+  return Number.isFinite(n) ? fmtPctCefr(Math.round(n)) : "—";
+};
+
 export function pillKV(label, val) {
   return `
     <div style="background:#f8fafc; padding:8px; border-radius:8px; text-align:center;">
@@ -52,9 +57,9 @@ export function chipRowWords(items = []) {
           )}"
         >
           <span>${esc(w.word)}</span>
-          <span class="lux-pill ${pillClassFromScore(w.avg)} ${cefrClass(w.avg)}">${fmtPctCefr(
-            Math.round(Number(w.avg) || 0)
-          )}</span>
+          <span class="lux-pill ${pillClassFromScore(w.avg)} ${cefrClass(w.avg)}" title="${esc(fmtBand(w.avg))}">${Math.round(
+            Number(w.avg) || 0
+          )}%</span>
         </span>
       `
         )
@@ -94,9 +99,9 @@ export function chipRowPhonemes(items = []) {
               )}"
             >
               <span>${esc(p.ipa)}</span>
-              <span class="lux-pill ${pillClassFromScore(p.avg)} ${cefrClass(p.avg)}">${fmtPctCefr(
-                Math.round(Number(p.avg) || 0)
-              )}</span>
+              <span class="lux-pill ${pillClassFromScore(p.avg)} ${cefrClass(p.avg)}" title="${esc(fmtBand(p.avg))}">${Math.round(
+                Number(p.avg) || 0
+              )}%</span>
             </span>
             ${ex}
           </div>

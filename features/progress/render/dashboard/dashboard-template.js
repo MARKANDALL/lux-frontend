@@ -3,7 +3,7 @@
 
 // Builds the Progress dashboard HTML string (pure markup renderer).
 
-import { scoreClass, fmtScore, fmtDate, titleFromPassageKey, esc } from "../format.js";
+import { scoreClass, fmtScore, fmtScoreCefr, fmtDate, titleFromPassageKey, esc } from "../format.js";
 import { sparklineSvg } from "../sparkline.js";
 import { renderMetricTrendCard } from "./actions-and-trends.js";
 
@@ -58,7 +58,7 @@ export function buildProgressDashboardHtml({
 
         <div class="lux-pcard">
           <div class="lux-pcard-label">Average score</div>
-          <div class="lux-pcard-value">${fmtScore(totals.avgScore ?? 0)}</div>
+          <div class="lux-pcard-value">${fmtScoreCefr(totals.avgScore ?? 0)}</div>
           <div class="lux-pcard-mini">Last activity: ${fmtDate(totals.lastTS)}</div>
         </div>
 
@@ -202,7 +202,7 @@ export function buildProgressDashboardHtml({
             )}"
           >
             <span>${esc(p.ipa)}</span>
-            <span class="lux-pill ${scoreClass(p.avg)}">${fmtScore(p.avg)}</span>
+            <span class="lux-pill ${scoreClass(p.avg)}" title="${fmtScoreCefr(p.avg)}">${fmtScore(p.avg)}</span>
           </span>
         `
                     )
@@ -241,7 +241,7 @@ export function buildProgressDashboardHtml({
             )}"
           >
             <span>${esc(w.word)}</span>
-            <span class="lux-pill ${scoreClass(w.avg)}">${fmtScore(w.avg)}</span>
+            <span class="lux-pill ${scoreClass(w.avg)}" title="${fmtScoreCefr(w.avg)}">${fmtScore(w.avg)}</span>
           </span>
         `
                     )
@@ -275,7 +275,7 @@ export function buildProgressDashboardHtml({
                     <button class="lux-hbtn" type="button" data-sid="${esc(
                       s.sessionId
                     )}" aria-label="Show details">👉</button>
-                    <div class="lux-pill ${scoreClass(s.avgScore)}">${fmtScore(s.avgScore)}</div>
+                    <div class="lux-pill ${scoreClass(s.avgScore)}" title="${fmtScoreCefr(s.avgScore)}">${fmtScore(s.avgScore)}</div>
                   </div>
                 </div>
               </div>

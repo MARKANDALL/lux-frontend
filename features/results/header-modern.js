@@ -13,6 +13,7 @@
 
 import {
   scoreClass,
+  fmtPct,
   fmtPctCefr,
   getAzureScores,
   deriveFallbackScores,
@@ -49,6 +50,9 @@ export function renderResultsHeaderModern(data) {
   // 3) PYRAMID SCORE UI (Overall circle + 5 tiles)
 
   const fmtRoundPct = (v) =>
+    v == null || !Number.isFinite(+v) ? "—" : `${Math.round(+v)}%`;
+
+  const fmtRoundPctCefr = (v) =>
     v == null || !Number.isFinite(+v) ? "—" : fmtPctCefr(Math.round(+v));
 
   const meanAvail = (...vals) => {
@@ -64,8 +68,8 @@ export function renderResultsHeaderModern(data) {
   // Canonical "overall" is Azure overall/pronunciation when present.
   // Only fall back to a mean if Azure overall is missing.
   const overallAgg = Number.isFinite(+pronunciation)
-    ? +pronunciation
-    : meanAvail(accuracy, fluency, completeness, prosody);
+    ? pronunciation
+    : meanAvail(accuracy, fluency, completeness, prosody, pronunciation);
 
   const getRingColor = (v) => {
     const n = +v;
@@ -167,7 +171,7 @@ export function renderResultsHeaderModern(data) {
             <span class="lux-scoreAccWord lux-scoreAccWord--left">Overall</span>
 
             <div class="lux-scoreRing lux-scoreRing--overall lux-scoreAccRing" style="--lux-score-ring:${overallRingColor};">
-              ${fmtRoundPct(overallAgg)}
+              ${fmtRoundPctCefr(overallAgg)}
             </div>
 
             <span class="lux-scoreAccWord lux-scoreAccWord--right">Score</span>

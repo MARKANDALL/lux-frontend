@@ -33,12 +33,15 @@ export function buildAttemptDetailHeader({
   const prosAvg = mean((list || []).map((a) => attemptMetric(a, "pros")));
 
   const fmtRoundPct = (v) =>
+    v == null || !Number.isFinite(+v) ? "—" : `${Math.round(+v)}%`;
+
+  const fmtRoundPctCefr = (v) =>
     v == null || !Number.isFinite(+v) ? "—" : fmtPctCefr(Math.round(+v));
 
   // New: overall aggregate circle for the modal
   const overallAgg = Number.isFinite(+pronAvg)
-    ? +pronAvg
-    : mean([accAvg, fluAvg, compAvg, prosAvg]);
+    ? pronAvg
+    : mean([accAvg, fluAvg, compAvg, prosAvg, pronAvg]);
   const overallColor = getColorConfig(overallAgg).color;
 
   const tileKV = (label, val) => `
@@ -108,7 +111,7 @@ export function buildAttemptDetailHeader({
       <div class="lux-scoreMain">
         <div class="lux-scoreMainLabel">Overall</div>
 <div class="lux-scoreRing lux-scoreRing--overall" style="--lux-score-ring:${overallColor};">
-          ${fmtRoundPct(overallAgg)}
+          ${fmtRoundPctCefr(overallAgg)}
         </div>
       </div>
 

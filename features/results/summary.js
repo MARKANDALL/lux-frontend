@@ -155,7 +155,7 @@ export function showSummary({ allPartsResults, currentParts }) {
             gap: 6px;
         ">
            ${err.word} 
-           <span style="opacity:0.8; font-weight:400;">(${fmtPctCefr(err.score)})</span>
+           <span style="opacity:0.8; font-weight:400;" title="${fmtPctCefr(err.score)}">(${err.score}%)</span>
            <span style="font-size:0.75em; opacity:0.6; text-transform:uppercase; letter-spacing:0.5px;">Pt ${err.part}</span>
         </span>
       `;
