@@ -87,7 +87,7 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
   let _tapCommitTimeout = null;
 
   function emit(type, extra) {
-    try { onEvent?.({ type, ...(extra || {}) }); } catch {}
+    try { onEvent?.({ type, ...(extra || {}) }); } catch (err) { console.warn("[features/streaming/transport/realtime-webrtc.js] swallowed error", err); }
   }
 
   function sendEvent(evt) {
@@ -233,7 +233,9 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
       audioEl.muted = false;
       // don’t force play()—autoplay should resume as new audio arrives
       audioEl.play?.().catch(() => {});
-    } catch {}
+    } catch (err) {
+      console.warn("[features/streaming/transport/realtime-webrtc.js] swallowed error", err);
+    }
     mutedByInterrupt = false;
   }
 

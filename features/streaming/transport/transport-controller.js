@@ -126,7 +126,9 @@ export function createTransportController({ store, route }) {
   async function disconnect() {
     try {
       await provider.disconnect();
-    } catch (_) {}
+    } catch (err) {
+      console.warn("[features/streaming/transport/transport-controller.js] swallowed error", err);
+    }
     setConnection({ status: "disconnected", error: null });
   }
 
@@ -180,13 +182,17 @@ export function createTransportController({ store, route }) {
       if (typeof provider.setTurnTaking === "function") {
         provider.setTurnTaking({ mode });
       }
-    } catch (_) {}
+    } catch (err) {
+      console.warn("[features/streaming/transport/transport-controller.js] swallowed error", err);
+    }
   }
 
   function setDebug(enabled) {
     try {
       if (typeof provider.setDebug === "function") provider.setDebug(!!enabled);
-    } catch (_) {}
+    } catch (err) {
+      console.warn("[features/streaming/transport/transport-controller.js] swallowed error", err);
+    }
   }
 
   function requestReply() {

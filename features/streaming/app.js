@@ -33,7 +33,9 @@ export function mountStreamingApp({ rootId = "lux-stream-root" } = {}) {
     if (import.meta?.env?.PROD && refs.healthDetails) {
       refs.healthDetails.style.display = "none";
     }
-  } catch (_) {}
+  } catch (err) {
+    console.warn("[features/streaming/app.js] swallowed error", err);
+  }
 
   // Debug toggle (query param ?debug=1 or persisted localStorage)
   function readDebugFlag() {
@@ -63,7 +65,9 @@ export function mountStreamingApp({ rootId = "lux-stream-root" } = {}) {
     debugEnabled = !!enabled;
     try {
       window.localStorage.setItem("LUX_STREAM_DEBUG", debugEnabled ? "1" : "0");
-    } catch {}
+    } catch (err) {
+      console.warn("[features/streaming/app.js] swallowed error", err);
+    }
 
     // keep store in sync (health.debug)
     const prev = store.getState()?.connection?.health || {};
@@ -141,7 +145,11 @@ export function mountStreamingApp({ rootId = "lux-stream-root" } = {}) {
 
   // --- wire UI intents ---
   async function softResetConnect({ retryOnce = true } = {}) {
-    try { await transport.disconnect(); } catch (_) {}
+    try {
+      await transport.disconnect();
+    } catch (err) {
+      console.warn("[features/streaming/app.js] swallowed error", err);
+    }
     await new Promise((r) => setTimeout(r, 150));
     try {
       await transport.connect();
@@ -344,7 +352,9 @@ export function mountStreamingApp({ rootId = "lux-stream-root" } = {}) {
     if (conn === "live" && sess.ended) {
       try {
         transport.disconnect();
-      } catch (_) {}
+      } catch (err) {
+        console.warn("[features/streaming/app.js] swallowed error", err);
+      }
     }
   });
 
@@ -352,12 +362,18 @@ export function mountStreamingApp({ rootId = "lux-stream-root" } = {}) {
   window.addEventListener("beforeunload", () => {
     try {
       audio.dispose();
-    } catch (_) {}
+    } catch (err) {
+      console.warn("[features/streaming/app.js] swallowed error", err);
+    }
     try {
       transport.disconnect();
-    } catch (_) {}
+    } catch (err) {
+      console.warn("[features/streaming/app.js] swallowed error", err);
+    }
     try {
       stopTimer();
-    } catch (_) {}
+    } catch (err) {
+      console.warn("[features/streaming/app.js] swallowed error", err);
+    }
   });
 }

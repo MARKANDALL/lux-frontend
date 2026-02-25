@@ -61,7 +61,11 @@ export async function connectWebRTC(ctx = {}) {
   audioEl.play().catch(() => {});
 
   pc.ontrack = (e) => {
-    try { audioEl.srcObject = e.streams[0]; } catch {}
+    try {
+      audioEl.srcObject = e.streams[0];
+    } catch (err) {
+      console.warn("[features/streaming/transport/realtime-webrtc/connection-lifecycle.js] swallowed error", err);
+    }
     audioEl?.play?.().catch(() => {});
   };
 
@@ -144,12 +148,24 @@ export async function disconnectWebRTC(ctx = {}) {
   const micStream = getMicStream?.();
   const audioEl = getAudioEl?.();
 
-  try { dc?.close(); } catch {}
-  try { pc?.close(); } catch {}
+  try {
+    dc?.close();
+  } catch (err) {
+    console.warn("[features/streaming/transport/realtime-webrtc/connection-lifecycle.js] swallowed error", err);
+  }
+  try {
+    pc?.close();
+  } catch (err) {
+    console.warn("[features/streaming/transport/realtime-webrtc/connection-lifecycle.js] swallowed error", err);
+  }
 
   if (micStream) {
     for (const t of micStream.getTracks()) {
-      try { t.stop(); } catch {}
+      try {
+        t.stop();
+      } catch (err) {
+        console.warn("[features/streaming/transport/realtime-webrtc/connection-lifecycle.js] swallowed error", err);
+      }
     }
   }
 
@@ -168,7 +184,9 @@ export async function disconnectWebRTC(ctx = {}) {
       audioEl.srcObject = null;
       audioEl.remove();
     }
-  } catch {}
+  } catch (err) {
+    console.warn("[features/streaming/transport/realtime-webrtc/connection-lifecycle.js] swallowed error", err);
+  }
   setAudioEl?.(null);
 
   emit?.("disconnected");

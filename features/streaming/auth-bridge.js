@@ -13,12 +13,16 @@ export async function getStreamingUID() {
   try {
     const uid = await getCanonicalUID();
     if (uid) return uid;
-  } catch (_) {}
+  } catch (err) {
+    console.warn("[features/streaming/auth-bridge.js] swallowed error", err);
+  }
 
   try {
     const guest = getUID();
     if (guest) return guest;
-  } catch (_) {}
+  } catch (err) {
+    console.warn("[features/streaming/auth-bridge.js] swallowed error", err);
+  }
 
   return null;
 }
