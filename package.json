@@ -16,7 +16,9 @@
     "lint:fix": "eslint . --ext .js,.mjs --fix",
     "build:harvard:phonemes": "node scripts/build-harvard-phonemes.mjs",
     "build:passages:phonemes": "node scripts/build-passage-phonemes.mjs",
-    "hygiene": "node scripts/hygiene-report.mjs"
+    "hygiene": "node scripts/hygiene-report.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "keywords": [
     "pronunciation",
@@ -29,7 +31,8 @@
     "eslint": "^8.57.1",
     "serve": "11.2.0",
     "sharp": "^0.34.5",
-    "vite": "^6.0.0"
+    "vite": "^6.0.0",
+    "vitest": "^4.0.18"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.87.1",
