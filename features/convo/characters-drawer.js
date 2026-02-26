@@ -8,6 +8,7 @@ let _overlay = null;
 let _drawer = null;
 let _body = null;
 let _onRoleSelect = null;
+let _opener = null;
 
 function ensureDom() {
   if (_overlay) return;
@@ -56,6 +57,8 @@ function ensureDom() {
 export function openCharsDrawer({ scenarioIdx, roleIdx, onRoleSelect }) {
   ensureDom();
 
+  // Capture opener for focus restoration on close.
+  _opener = document.activeElement || null;
   _onRoleSelect = onRoleSelect || null;
 
   const scenario = SCENARIOS[scenarioIdx];
@@ -85,9 +88,17 @@ export function openCharsDrawer({ scenarioIdx, roleIdx, onRoleSelect }) {
 
 export function closeCharsDrawer() {
   if (!_drawer) return;
+
+  // Move focus out of the drawer BEFORE hiding it (prevents aria-hidden focus warning).
+  const safe = _opener || document.querySelector("#convoApp") || document.body;
+  if (_drawer.contains(document.activeElement)) {
+    try { safe.focus({ preventScroll: true }); } catch (_) {}
+  }
+
   _overlay.dataset.open = "0";
   _drawer.dataset.open = "0";
   _drawer.setAttribute("aria-hidden", "true");
+  _opener = null;
 }
 
 function escHtml(s) {

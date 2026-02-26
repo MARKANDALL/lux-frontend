@@ -69,6 +69,41 @@ function roleVoice(role) {
   return voiceFromPersona(derivePersona(role));
 }
 
+// ---- Tone → Azure TTS speaking style mapping ----
+// Maps knobs "tone" values to Azure speaking style names.
+// Only styles widely supported by Azure en-US voices are included.
+// Returns "" (neutral) for tones without a clear match.
+const TONE_TO_STYLE = {
+  neutral:      "",
+  formal:       "newscast-formal",
+  friendly:     "friendly",
+  enthusiastic: "cheerful",
+  encouraging:  "empathetic",
+  playful:      "cheerful",
+  flirty:       "chat",
+  sarcastic:    "chat",
+  tired:        "",
+  distracted:   "",
+  cold:         "",
+  blunt:        "",
+  impatient:    "",
+  irritable:    "angry",
+  angry:        "angry",
+  emotional:    "sad",
+};
+
+// Role-based style hints (from NPC description keywords).
+function styleFromRole(role) {
+  const npc = norm(role?.npc || role?.label || "").toLowerCase();
+  if (/\b(doctor|physician|nurse|medical)\b/.test(npc)) return "empathetic";
+  if (/\b(customer service|receptionist|representative|bank rep)\b/.test(npc)) return "customerservice";
+  if (/\b(support agent|tech support)\b/.test(npc)) return "customerservice";
+  if (/\b(interview|hiring|manager)\b/.test(npc)) return "newscast-formal";
+  if (/\b(friend|buddy|pal)\b/.test(npc)) return "friendly";
+  if (/\b(child|kid|teen)\b/.test(npc)) return "chat";
+  return "";
+}
+
 function lastMessageText(messages, role) {
   const list = Array.isArray(messages) ? messages : [];
   for (let i = list.length - 1; i >= 0; i--) {
@@ -177,6 +212,31 @@ export function installConvoTtsContext({ state, input, msgs, SCENARIOS }) {
       if (typed) return roleVoice(userRole);
 
       return roleVoice(aiRole);
+    },
+
+    // Auto speaking style: tone knobs → Azure style, with role-based fallback.
+    getStyle({ mode } = {}) {
+      // 1. Tone from knobs (highest priority)
+      let tone = "";
+      try {
+        const raw = localStorage.getItem("lux_knobs_v3");
+        if (raw) tone = (JSON.parse(raw)?.tone || "").toLowerCase();
+      } catch (_) {}
+
+      const fromTone = TONE_TO_STYLE[tone] || "";
+      if (fromTone) return fromTone;
+
+      // 2. Role-based hint (from NPC description)
+      const m = String(mode || window.luxTTS?.sourceMode || "auto");
+      const { roles, userIdx, aiIdx } = this.getRolePair();
+      const activeRole =
+        m === "me" ? (roles[userIdx] || null)
+        : m === "ai" ? (roles[aiIdx] || null)
+        : m === "selection"
+          ? (String(this._selected?.role || "") === "user" ? roles[userIdx] : roles[aiIdx])
+          : (roles[aiIdx] || null);
+
+      return styleFromRole(activeRole);
     },
   };
 
