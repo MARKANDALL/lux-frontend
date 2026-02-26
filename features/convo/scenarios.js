@@ -80,7 +80,7 @@ Common hurdles: missing details under stress · long wait frustration · unclear
 
 Practice targets: staying calm under pressure · giving factual details · assertive requesting`,
     roles: [
-      { id: "traveler", label: "Traveler", npc: "A tired passenger whose connecting flight was cancelled. Slightly frustrated and doesn't have all their details ready." },
+      { id: "traveler", label: "Traveler", npc: "A passenger whose connecting flight was cancelled. Tends to lose track of details under pressure and doesn't always have documents ready." },
       { id: "agent", label: "Gate Agent", npc: "An airline agent who has been handling frustrated passengers all day. Professional, efficient, and needs information fast." },
     ],
   },
@@ -164,7 +164,7 @@ Common hurdles: bad audio quality · spelling names over the phone · losing tra
 
 Practice targets: phone openings and closings · spelling and number dictation · requesting repetition`,
     roles: [
-      { id: "caller", label: "Caller", npc: "Someone calling to schedule an appointment. A bit nervous on the phone and sometimes loses track of details." },
+      { id: "caller", label: "Caller", npc: "Someone calling to schedule an appointment. Not great on the phone — tends to forget details and sometimes needs things repeated." },
       { id: "receiver", label: "Receptionist", npc: "A medical office receptionist. Polite but busy — needs name, date of birth, and reason for calling, at a natural pace." },
     ],
   },
@@ -227,8 +227,8 @@ Common hurdles: vague complaints · emotional escalation · no clear ask
 
 Practice targets: factual description · firm but polite tone · proposing solutions`,
     roles: [
-      { id: "complainant", label: "Raise the Issue", npc: "A tenant with a real problem — leak, noise, or broken appliance — who needs acknowledgment and a clear plan." },
-      { id: "manager", label: "Hear the Issue", npc: "A building manager who has heard complaints before. Not hostile, but won't fix anything unless the problem is explained clearly." },
+      { id: "complainant", label: "Tenant", npc: "A tenant with a real problem — leak, noise, or broken appliance — who needs acknowledgment and a clear plan." },
+      { id: "manager", label: "Manager", npc: "A building manager who has heard complaints before. Not hostile, but won't fix anything unless the problem is explained clearly." },
     ],
   },
   {
@@ -248,8 +248,8 @@ Common hurdles: breaking into an existing conversation · keeping talk balanced 
 
 Practice targets: introductions · small talk · social exit phrases`,
     roles: [
-      { id: "newcomer", label: "Join the Chat", npc: "Someone who just arrived at the party alone. A little shy and looking for a conversation to join." },
-      { id: "host", label: "Be the Couple", npc: "A friendly pair at a house party. They've been here a while, are happy to meet someone new, and share stories about the host." },
+      { id: "newcomer", label: "Newcomer", npc: "Someone who just arrived at the party alone. On the quieter side, but friendly once a conversation gets going." },
+      { id: "host", label: "Party Couple", npc: "A friendly pair at a house party. They've been here a while, are happy to meet someone new, and share stories about the host." },
     ],
   },
   {
@@ -269,8 +269,8 @@ Common hurdles: holding attention during a long story · reacting naturally · n
 
 Practice targets: narrative structure · active listening · emotional reactions`,
     roles: [
-      { id: "friend", label: "Catch Up", npc: "A friend going through a lot lately — new job, a move, some personal stress. Has a lot to share." },
-      { id: "listener", label: "Be the Friend", npc: "A warm, curious old friend. Full of their own news and expects stories in return." },
+      { id: "friend", label: "Old Friend", npc: "A friend with a lot going on — new job, recent move, life changes. Always has stories and expects to hear yours too." },
+      { id: "listener", label: "Listening Friend", npc: "A warm, curious old friend. Full of their own news and expects stories in return." },
     ],
   },
   {
@@ -290,8 +290,8 @@ Common hurdles: timing the punchline · recovering from a flat joke · understan
 
 Practice targets: comedic timing · natural reactions · playful language`,
     roles: [
-      { id: "joker", label: "Tell the Joke", npc: "A coworker who always has a joke ready. Some land, some don't — low pressure either way." },
-      { id: "audience", label: "React to Jokes", npc: "A coworker on lunch break who loves to laugh. Easy audience — will react, play along, and tell jokes back." },
+      { id: "joker", label: "Joke-Teller", npc: "A coworker who always has a joke ready. Some land, some don't — low pressure either way." },
+      { id: "audience", label: "Audience", npc: "A coworker on lunch break who loves to laugh. Easy audience — will react, play along, and tell jokes back." },
     ],
   },
   {
@@ -311,7 +311,7 @@ Common hurdles: panic reducing clarity · not knowing safety vocabulary · hesit
 
 Practice targets: clarity under pressure · imperative sentences · following rapid instructions`,
     roles: [
-      { id: "visitor", label: "Beach Visitor", npc: "A parent at the beach whose child swam out too far. Speaking fast and needs clear direction." },
+      { id: "visitor", label: "Beach Visitor", npc: "A parent at the beach whose child swam out too far. Needs to communicate the situation quickly and follow instructions." },
       { id: "lifeguard", label: "Lifeguard", npc: "An alert lifeguard in his 20s. Gives clear, short instructions and expects them to be followed quickly." },
     ],
   },
@@ -353,8 +353,8 @@ Common hurdles: stumbling over self-introductions · awkward silences · not kno
 
 Practice targets: elevator pitch · professional small talk · graceful exit`,
     roles: [
-      { id: "newcomer", label: "Introduce Yourself", npc: "A young professional at their first networking event. Smart but visibly nervous and needs the other person to make it easy." },
-      { id: "veteran", label: "Be the Veteran", npc: "A senior professional with 15 years in the field. Open to meeting new people but expects something interesting to be said." },
+      { id: "newcomer", label: "Newcomer", npc: "A young professional at their first networking event. Smart but new to this kind of setting and relies on the other person to keep things flowing." },
+      { id: "veteran", label: "Veteran", npc: "A senior professional with 15 years in the field. Open to meeting new people but expects something interesting to be said." },
     ],
   },
   {
@@ -374,7 +374,7 @@ Common hurdles: emotional reaction clouding facts · making excuses instead of a
 
 Practice targets: factual narration · staying credible · accepting outcomes gracefully`,
     roles: [
-      { id: "driver", label: "Driver", npc: "A driver who just found a ticket. Frustrated, thinks the sign was unclear, and wants to know if they can contest it." },
+      { id: "driver", label: "Driver", npc: "A driver who just found a ticket on the windshield. Believes the sign was unclear and wants to know about the appeals process." },
       { id: "officer", label: "Enforcement Officer", npc: "A parking enforcement officer who has seen it all. Not rude, not sympathetic — follows the rules and needs facts, not excuses." },
     ],
   },
@@ -395,7 +395,7 @@ Common hurdles: nervousness around authority · vague location descriptions · c
 
 Practice targets: factual reporting · location description · calm composure`,
     roles: [
-      { id: "citizen", label: "Citizen", npc: "A person who looks slightly worried. May have had something stolen or is looking for a specific address. Needs clear guidance." },
+      { id: "citizen", label: "Citizen", npc: "A person approaching an officer on foot patrol. May need to report something minor or find a specific address. Not sure of the proper procedure." },
       { id: "officer", label: "Officer", npc: "A police officer on foot patrol. Approachable but professional — asks direct questions and expects clear, factual answers." },
     ],
   },
@@ -437,7 +437,7 @@ Common hurdles: embarrassment about not understanding · vague questions · runn
 
 Practice targets: admitting confusion · asking focused questions · respectful register`,
     roles: [
-      { id: "student", label: "Student", npc: "A student who stayed after class. Wants to ask about a concept they missed but seems unsure how to start." },
+      { id: "student", label: "Student", npc: "A student who stayed after class. Wants to ask about a concept they missed but tends to start with vague questions." },
       { id: "teacher", label: "Teacher", npc: "A college professor in his 50s wrapping up after class. Knowledgeable and willing to help, but has another class soon." },
     ],
   },
@@ -458,8 +458,8 @@ Common hurdles: not knowing technical terms · describing visual errors vaguely 
 
 Practice targets: describing what you see · following sequential instructions · asking for simpler explanations`,
     roles: [
-      { id: "user", label: "Need Help", npc: "Someone whose laptop keeps crashing. Not tech-savvy, describes things vaguely, and needs simple, patient instructions." },
-      { id: "support", label: "Give Help", npc: "A patient, methodical tech support agent. Walks through things step by step but uses some technical terms." },
+      { id: "user", label: "User", npc: "Someone whose laptop keeps crashing. Not tech-savvy, describes things vaguely, and needs simple, patient instructions." },
+      { id: "support", label: "Support Agent", npc: "A patient, methodical tech support agent. Walks through things step by step but uses some technical terms." },
     ],
   },
   {
@@ -479,8 +479,8 @@ Common hurdles: not realizing a miscommunication happened · defensive reactions
 
 Practice targets: diplomatic correction · checking understanding · repair phrases`,
     roles: [
-      { id: "clarifier", label: "Fix the Mix-Up", npc: "A coworker who said something ambiguous and doesn't realize it was taken the wrong way. Needs a nudge to see the miscommunication." },
-      { id: "confused", label: "Be Confused", npc: "A coworker who misunderstood an email and is slightly annoyed. Not angry — just confused and waiting for clarification." },
+      { id: "clarifier", label: "Clarifier", npc: "A coworker who said something ambiguous and doesn't realize it was taken the wrong way. Needs a nudge to see the miscommunication." },
+      { id: "confused", label: "Confused Party", npc: "A coworker who tends to take things literally. Reads emails quickly and sometimes jumps to conclusions before asking follow-ups." },
     ],
   },
   {
@@ -500,8 +500,8 @@ Common hurdles: talking over each other · going off-topic · forgetting to conf
 
 Practice targets: concise updates · interruption recovery · professional closings`,
     roles: [
-      { id: "presenter", label: "Give the Update", npc: "A colleague who has a lot to report but tends to go off-topic. Needs the other person to keep things focused." },
-      { id: "listener", label: "Run the Call", npc: "An organized, direct remote colleague. Asks for updates, gives hers, and wants next steps nailed down before hanging up." },
+      { id: "presenter", label: "Presenter", npc: "A colleague who has a lot to report but tends to go off-topic. Needs the other person to keep things focused." },
+      { id: "listener", label: "Call Runner", npc: "An organized, direct remote colleague. Asks for updates, gives hers, and wants next steps nailed down before hanging up." },
     ],
   },
   {
@@ -521,8 +521,8 @@ Common hurdles: filling every silence · running out of casual topics · one-wor
 
 Practice targets: casual opinion sharing · reacting to surroundings · comfortable pacing`,
     roles: [
-      { id: "hiker", label: "Walk & Talk", npc: "A friend who's quieter today — maybe tired, maybe thinking. Will respond if topics come up but needs the other person to carry more." },
-      { id: "guide", label: "Lead the Hike", npc: "A thoughtful, easygoing close friend. Shares trail observations, asks what's been on your mind, and is comfortable with silence." },
+      { id: "hiker", label: "Hiker", npc: "A friend who's quieter on the trail. Will respond if topics come up but needs the other person to carry the conversation more." },
+      { id: "guide", label: "Trail Guide", npc: "A thoughtful, easygoing close friend. Shares trail observations, asks what's been on your mind, and is comfortable with silence." },
     ],
   },
 ];
