@@ -59,11 +59,21 @@
 .lux-charsClose:hover { opacity: 1; }
 
 .lux-charsBody {
-  padding: 8px 14px 24px;
+  padding: 16px 20px 28px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
+}
+
+/* ── Character avatar (hidden until images exist) ── */
+.char-avatar {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 10px;
+  display: block;
+  margin-bottom: 8px;
 }
 
 /* ── Character card ───────────────────────── */
@@ -71,7 +81,8 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 16px;
+  width: 100%;
+  padding: 18px;
   border-radius: 14px;
   border: 2px solid rgba(0,0,0,0.08);
   background: rgba(255,255,255,0.8);
@@ -104,9 +115,9 @@
 }
 
 .lux-charCard-npc {
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   color: rgba(0,0,0,0.58);
-  line-height: 1.45;
+  line-height: 1.5;
 }
 
 .lux-charsEmpty {

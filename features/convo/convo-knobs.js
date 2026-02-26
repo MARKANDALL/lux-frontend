@@ -22,7 +22,7 @@ function saveKnobs(knobs) {
   } catch {}
 }
 
-function knobsSummaryText(knobs) {
+function knobsSummaryText(knobs, roleLabel = null) {
   const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : "");
   const EMOJI = {
     neutral:"😐", formal:"👔", friendly:"😊", enthusiastic:"🤩", encouraging:"💪",
@@ -30,7 +30,11 @@ function knobsSummaryText(knobs) {
     cold:"🧊", blunt:"🔨", impatient:"⏱️", irritable:"😤", angry:"🔥", emotional:"🥺",
   };
   const toneEmoji = EMOJI[knobs.tone] || "";
-  return `${(knobs.level || "B1").toUpperCase()} · ${toneEmoji} ${cap(knobs.tone)} · ${cap(knobs.length)}`;
+  const parts = [(knobs.level || "B1").toUpperCase()];
+  if (roleLabel) parts.push(roleLabel);
+  parts.push(`${toneEmoji} ${cap(knobs.tone)}`);
+  parts.push(cap(knobs.length));
+  return parts.join(" · ");
 }
 
 export { loadKnobs, saveKnobs, knobsSummaryText };

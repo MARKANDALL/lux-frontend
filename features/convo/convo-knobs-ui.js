@@ -15,6 +15,7 @@ export function wireConvoKnobsUI({
   lengthSel,
   knobsSummaryText,
   saveKnobs,
+  SCENARIOS,
 }) {
   // Chat-mode header button → opens docked drawer (unchanged)
   knobsBtn.addEventListener("click", () => setKnobs(!state.knobsOpen));
@@ -42,7 +43,9 @@ export function wireConvoKnobsUI({
   // --- Summary display (PASS 2: always in sync) ---
   function renderAllSummaries() {
     if (pickerKnobsSummary) {
-      pickerKnobsSummary.textContent = knobsSummaryText(state.knobs);
+      const s = SCENARIOS?.[state.scenarioIdx];
+      const roleLabel = s?.roles?.[state.roleIdx ?? 0]?.label || null;
+      pickerKnobsSummary.textContent = knobsSummaryText(state.knobs, roleLabel);
     }
   }
   renderAllSummaries();
@@ -79,4 +82,6 @@ export function wireConvoKnobsUI({
 
     renderAllSummaries();
   });
+
+  return { renderAllSummaries };
 }

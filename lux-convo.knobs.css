@@ -59,7 +59,7 @@
 .lux-knobsClose:hover{ opacity: 1; }
 
 .lux-knobsBody{
-  padding: 8px 14px 14px;
+  padding: 12px 20px 20px;
   overflow: auto;
 }
 
@@ -82,9 +82,13 @@
 
 /* New chip classes override generic button styles */
 .lux-knobsChips .lux-levelChip,
+.lux-knobsChips .lux-levelChip.is-on {
+  background: var(--lv-bg);
+  color: var(--lv-text);
+}
 .lux-knobsChips .lux-toneChip,
 .lux-knobsChips .lux-lengthChip {
-  /* Reset generic styles — each chip type has its own rules above */
+  /* Reset generic styles — each chip type has its own rules below */
 }
 
 .lux-knobsChips button{
@@ -293,7 +297,7 @@
    Level chips — color-coded (A=red, B=yellow, C=blue)
    ============================================================ */
 .lux-levelChips {
-  gap: 6px;
+  gap: 8px;
 }
 
 .lux-levelChip {
@@ -328,6 +332,7 @@
 .lux-toneChip {
   border-radius: 999px;
   padding: 8px 16px;
+  min-width: 90px;
   border: 1px solid rgba(0,0,0,0.12);
   background: rgba(255,255,255,0.82);
   cursor: pointer;
@@ -381,7 +386,7 @@
    Knobs group spacing — breathe
    ============================================================ */
 .lux-knobsGroup {
-  padding: 14px 0 16px;
+  padding: 16px 0 20px;
 }
 
 .lux-knobsLabel {
