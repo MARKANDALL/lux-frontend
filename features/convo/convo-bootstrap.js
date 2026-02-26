@@ -120,7 +120,7 @@ export function bootConvo() {
   wireConvoNav({ state, guidedBtn, scenBtn, setMode, warpSwap });
 
   // ✅ Knobs drawer wiring now lives in convo-knobs-ui.js
-  wireConvoKnobsUI({
+  const { renderAllSummaries } = wireConvoKnobsUI({
     state,
     setKnobs,
     knobsBtn,
@@ -133,6 +133,7 @@ export function bootConvo() {
     lengthSel,
     knobsSummaryText,
     saveKnobs,
+    SCENARIOS,
   });
 
   // --- Characters drawer wiring ---
@@ -145,6 +146,7 @@ export function bootConvo() {
         roleIdx: state.roleIdx ?? 0,
         onRoleSelect: (idx) => {
           state.roleIdx = idx;
+          renderAllSummaries();
         },
       });
     });
@@ -162,6 +164,7 @@ export function bootConvo() {
       origScenIdx.val = state.scenarioIdx;
       state.roleIdx = 0;
       closeCharsDrawer();
+      renderAllSummaries();
     }
   });
   // Lightweight poll (MutationObserver won't catch state.scenarioIdx changes)
@@ -170,6 +173,7 @@ export function bootConvo() {
       origScenIdx.val = state.scenarioIdx;
       state.roleIdx = 0;
       closeCharsDrawer();
+      renderAllSummaries();
     }
   }, 300);
 
