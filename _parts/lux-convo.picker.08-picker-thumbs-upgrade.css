@@ -19,12 +19,14 @@
   justify-content: center;
   align-items: center;
   gap: 8px;
-  margin-top: 10px;
 
-  /* NEW: prevent wrap intrusion; make it a horizontal strip */
+  /* Horizontal strip: nowrap + scroll via arrow buttons */
   flex-wrap: nowrap;
   overflow-x: auto;
-  overflow-y: visible;          /* allow hover preview to extend */
+  overflow-y: visible;          /* NOTE: browser forces this to 'auto' when overflow-x
+                                   is auto (CSS spec). Generous vertical padding below
+                                   keeps the 3.5× hover scale inside the scroll container
+                                   so nothing is clipped. */
   scrollbar-width: none;        /* Firefox: hide scrollbar */
   -ms-overflow-style: none;     /* old Edge/IE: hide scrollbar */
   -webkit-overflow-scrolling: touch;
@@ -32,8 +34,8 @@
   width: min(980px, 94vw);
   max-width: min(980px, 94vw);
 
-  padding: 6px 42px;            /* room for arrows */
-  margin: 14px auto 0; /* give it breathing room */
+  padding: 48px 42px;           /* tall enough for 3.5× hover scale (was 6px 42px) */
+  margin: -28px auto -42px;     /* pull back the extra padding to preserve layout spacing */
   position: relative;
   z-index: 10;
 }

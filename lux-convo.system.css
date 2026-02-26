@@ -101,7 +101,8 @@ html:not([data-lux-convo-mode="chat"]) #lux-auth-btn{
   border-radius: 0;
   box-shadow: none;
   background: transparent;
-  overflow-x: hidden;  /* keep “no sideways junk” */
+  overflow-x: clip;    /* clip (not hidden) keeps sideways junk out WITHOUT
+                          forcing overflow-y:visible → auto (CSS spec quirk) */
   overflow-y: visible; /* allow hover previews to escape */
 
   --lux-par-bg: 7.5;
