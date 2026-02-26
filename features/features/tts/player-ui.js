@@ -89,6 +89,15 @@ export async function mountTTSPlayer(hostEl) {
   audio.preload = "auto";
   audio.playbackRate = DEFAULT_SPEED;
 
+  // ---- Speaker selector visibility: only show on AI Conversations pages ----
+  const sourceRow = host.querySelector(".tts-sourceRow");
+  function updateSourceRowVisibility() {
+    if (!sourceRow) return;
+    const isConvo = window.LuxTTSContext?.kind === "convo";
+    sourceRow.style.display = isConvo ? "" : "none";
+  }
+  updateSourceRowVisibility();
+
   // Apply default source mode (pages like convo can pre-seed window.luxTTS.sourceMode)
   const initialMode =
     window.luxTTS?.sourceMode ||
@@ -114,6 +123,17 @@ export async function mountTTSPlayer(hostEl) {
     populateStyles(styleSel, caps, voiceSel.value);
   }
 
+  function applyStyleHint(styleHint, caps) {
+    if (!styleSel) return;
+    if (!styleHint) return;
+    const voiceId = voiceSel?.value || "";
+    const styles = caps?.[voiceId]?.styles || [];
+    if (styles.includes(styleHint)) {
+      styleSel.value = styleHint;
+    }
+    // If voice doesn't support the hint, leave style as-is (graceful fallback)
+  }
+
   function syncVoiceFromContext(reason, caps) {
     const autoOn = autoVoiceEl ? autoVoiceEl.checked : (window.luxTTS?.autoVoice !== false);
     if (!autoOn) return;
@@ -122,6 +142,12 @@ export async function mountTTSPlayer(hostEl) {
     const mode = sourceSel?.value || window.luxTTS?.sourceMode || "auto";
     const hint = ctx.getVoiceId({ mode });
     applyVoiceHint(hint, caps);
+
+    // Auto speaking style: sync from context if available
+    if (typeof ctx.getStyle === "function") {
+      const styleHint = ctx.getStyle({ mode });
+      applyStyleHint(styleHint, caps);
+    }
   }
 
   // Wire progress (always moves while playing)
@@ -144,7 +170,7 @@ export async function mountTTSPlayer(hostEl) {
   syncVoiceFromContext("caps-loaded", caps);
   populateStyles(styleSel, caps, voiceSel.value);
 
-  voiceSel.addEventListener("change", () => {
+  voiceSel.addEventListener(“change”, () => {
     // Manual voice change implies “I’m overriding auto”
     if (autoVoiceEl && autoVoiceEl.checked) {
       autoVoiceEl.checked = false;
@@ -152,6 +178,16 @@ export async function mountTTSPlayer(hostEl) {
     }
     populateStyles(styleSel, caps, voiceSel.value);
   });
+
+  if (styleSel) {
+    styleSel.addEventListener(“change”, () => {
+      // Manual style change implies “I’m overriding auto”
+      if (autoVoiceEl && autoVoiceEl.checked) {
+        autoVoiceEl.checked = false;
+        window.luxTTS = Object.assign(window.luxTTS || {}, { autoVoice: false });
+      }
+    });
+  }
 
   if (sourceSel) {
     sourceSel.addEventListener("change", () => {
@@ -167,7 +203,15 @@ export async function mountTTSPlayer(hostEl) {
     });
   }
 
-  window.addEventListener("lux:ttsContextChanged", () => syncVoiceFromContext("ctx-event", caps));
+  window.addEventListener("lux:ttsContextChanged", () => {
+    updateSourceRowVisibility();
+    syncVoiceFromContext("ctx-event", caps);
+  });
+
+  // Re-sync style when knobs change (e.g., tone → speaking style)
+  window.addEventListener("lux:knobs", () => {
+    syncVoiceFromContext("knobs-change", caps);
+  });
 
   // 5. Wire Inputs
   const updateSpeedOut = () => {

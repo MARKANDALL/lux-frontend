@@ -186,7 +186,13 @@ function paintSelection(drawer, knobs) {
 export function mountKnobsDrawer() {
   const { overlay, drawer } = ensureDom();
 
+  // Track the element that opened the drawer so focus can return on close.
+  let _opener = null;
+
   const open = () => {
+    // Capture the currently focused element so we can restore focus on close.
+    _opener = document.activeElement || null;
+
     const knobs = getKnobs();
     paintSelection(drawer, knobs);
     overlay.dataset.open = "1";
@@ -195,9 +201,16 @@ export function mountKnobsDrawer() {
   };
 
   const close = () => {
+    // Move focus out of the drawer BEFORE hiding it (prevents aria-hidden focus warning).
+    const safe = _opener || document.querySelector("#convoApp") || document.body;
+    if (drawer.contains(document.activeElement)) {
+      try { safe.focus({ preventScroll: true }); } catch (_) {}
+    }
+
     overlay.dataset.open = "0";
     drawer.dataset.open = "0";
     drawer.setAttribute("aria-hidden", "true");
+    _opener = null;
   };
 
   overlay.addEventListener("click", close);
