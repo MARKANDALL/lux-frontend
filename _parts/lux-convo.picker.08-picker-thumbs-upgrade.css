@@ -1,8 +1,18 @@
+/* _parts/lux-convo.picker.08-picker-thumbs-upgrade.css */
+/* ONE-LINE: Picker-mode thumbnail strip styling (bigger thumbs + hover previews) with a no-scrollbar scroller wrapper and arrow buttons. */
+
 /* =========================================================
    Picker: thumbnail dots (bigger + actual image preview)
    NOTE: Your DOM uses .lux-thumbs + .lux-thumb already.
    This block upgrades them in picker mode (size + cover/center).
 ========================================================= */
+
+#convoApp[data-mode="picker"] .lux-thumbsWrap{
+  width: min(980px, 94vw);
+  margin: 14px auto 0;
+  position: relative;
+  z-index: 30; /* above deck */
+}
 
 #convoApp[data-mode="picker"] .lux-thumbs{
   display: flex;
@@ -14,23 +24,58 @@
   /* NEW: prevent wrap intrusion; make it a horizontal strip */
   flex-wrap: nowrap;
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: visible;          /* allow hover preview to extend */
+  scrollbar-width: none;        /* Firefox: hide scrollbar */
+  -ms-overflow-style: none;     /* old Edge/IE: hide scrollbar */
   -webkit-overflow-scrolling: touch;
 
   width: min(980px, 94vw);
   max-width: min(980px, 94vw);
 
-  padding: 6px 10px;
+  padding: 6px 42px;            /* room for arrows */
   margin: 14px auto 0; /* give it breathing room */
   position: relative;
   z-index: 10;
 }
 
+#convoApp[data-mode="picker"] .lux-thumbs::-webkit-scrollbar{
+  width: 0;
+  height: 0;
+}
+
+#convoApp[data-mode="picker"] .lux-thumbsArrow{
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+
+  border: 1px solid rgba(0,0,0,0.14);
+  background: rgba(255,255,255,0.85);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.16);
+
+  font-size: 20px;
+  line-height: 32px;
+  text-align: center;
+
+  cursor: pointer;
+  z-index: 60;
+}
+
+#convoApp[data-mode="picker"] .lux-thumbsArrow.left{ left: 6px; }
+#convoApp[data-mode="picker"] .lux-thumbsArrow.right{ right: 6px; }
+
+#convoApp[data-mode="picker"] .lux-thumbsArrow:disabled{
+  opacity: 0.35;
+  cursor: default;
+}
+
 /* base “dot” becomes a tiny thumbnail */
 #convoApp[data-mode="picker"] .lux-thumb{
-  width: 28px;              /* bigger than circles, still small */
-  height: 18px;
-  border-radius: 6px;
+  width: 42px;     /* bigger base so the strip is readable */
+  height: 28px;
+  border-radius: 8px;
 
   background-size: cover;
   background-position: center;
@@ -39,13 +84,15 @@
   border: 1px solid rgba(0,0,0,0.10);
   box-shadow: 0 8px 18px rgba(0,0,0,0.10);
 
-  opacity: 0.70;
+  opacity: 0.82;
   transform: translateY(0);
-  transition: transform 160ms ease, opacity 160ms ease, box-shadow 160ms ease;
+  transition: transform 180ms ease, opacity 180ms ease, box-shadow 180ms ease, filter 180ms ease;
   cursor: pointer;
 
-  /* NEW: keep each thumb from shrinking/wrapping */
   flex: 0 0 auto;
+
+  position: relative; /* enable z-index on hover */
+  z-index: 1;
 }
 
 /* keep non-image fallback readable (single letter) */
@@ -58,9 +105,18 @@
 }
 
 #convoApp[data-mode="picker"] .lux-thumb:hover{
-  opacity: 0.95;
-  transform: translateY(-1px) scale(1.04);
-  box-shadow: 0 10px 22px rgba(0,0,0,0.12);
+  opacity: 1;
+  z-index: 80;
+
+  /* BIG pop: ~42x28 becomes ~147x98 at scale(3.5) */
+  transform: translateY(-10px) scale(3.5);
+
+  /* “darken” is usually contrast + deeper shadow (not lower opacity) */
+  filter: contrast(1.12) saturate(1.12) brightness(0.98);
+
+  box-shadow:
+    0 18px 44px rgba(0,0,0,0.22),
+    0 0 0 2px rgba(255,255,255,0.65);
 }
 
 #convoApp[data-mode="picker"] .lux-thumb.is-active{
