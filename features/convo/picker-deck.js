@@ -50,38 +50,49 @@ export function wirePickerDeck({
     wrap.append(left, right);
 
     function step() {
-      // scroll by ~70% of visible width (feels “carousel-like”)
-      return Math.max(120, Math.floor(thumbs.clientWidth * 0.7));
+      const first = thumbs.querySelector(".lux-thumb");
+      const w = first ? first.getBoundingClientRect().width : 42;
+      const gap = 8;
+      return Math.max(120, Math.round((w + gap) * 6)); // ~6 thumbs per click
+    }
+
+    function maxScroll() {
+      return Math.max(0, thumbs.scrollWidth - thumbs.clientWidth);
     }
 
     function updateArrows() {
-      const max = thumbs.scrollWidth - thumbs.clientWidth;
-      const atStart = thumbs.scrollLeft <= 1;
-      const atEnd = thumbs.scrollLeft >= max - 1;
-
-      left.disabled = atStart;
-      right.disabled = atEnd;
-
-      // hide both if no scrolling needed
+      const max = maxScroll();
       const scrollable = max > 2;
       left.style.display = scrollable ? "" : "none";
       right.style.display = scrollable ? "" : "none";
+      left.disabled = false;
+      right.disabled = false;
     }
 
     left.addEventListener("click", (e) => {
       e.preventDefault();
+      const max = maxScroll();
+      if (max <= 2) return;
+
+      // wrap: if at start, jump to end
+      if (thumbs.scrollLeft <= 1) thumbs.scrollLeft = max;
+
       thumbs.scrollBy({ left: -step(), behavior: "smooth" });
     });
 
     right.addEventListener("click", (e) => {
       e.preventDefault();
+      const max = maxScroll();
+      if (max <= 2) return;
+
+      // wrap: if at end, jump to start
+      if (thumbs.scrollLeft >= max - 1) thumbs.scrollLeft = 0;
+
       thumbs.scrollBy({ left: step(), behavior: "smooth" });
     });
 
     thumbs.addEventListener("scroll", updateArrows, { passive: true });
     window.addEventListener("resize", updateArrows);
-
-    // initial state
     updateArrows();
     setTimeout(updateArrows, 0);
   }

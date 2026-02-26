@@ -9,6 +9,14 @@
 *{ box-sizing: border-box; }
 html, body{ height: 100%; }
 
+/* Picker: allow thumbnail hover previews to escape the outer container */
+body:has(#convoApp[data-mode="picker"]) #container{
+  overflow-x: hidden;
+  overflow-y: visible;
+}
+
+
+
 #tts-controls{
   position: fixed;
   top: 0;

@@ -84,7 +84,7 @@ export function wireHarvardPicker() {
     if (num) num.value = String(n);
     try {
       localStorage.setItem("LUX_HARVARD_LAST", String(n));
-    } catch {}
+} catch (err) { console.warn("[features/harvard/index.js] swallowed error", err); }
 
     // ✅ Delegate actual loading to exported helper (keeps behavior consistent)
     try {
@@ -140,7 +140,7 @@ export function wireHarvardPicker() {
 
               try {
                 document.getElementById("referenceText")?.focus();
-              } catch {}
+} catch (err) { console.warn("[features/harvard/index.js] swallowed error", err); }
             },
           });
 
@@ -186,7 +186,7 @@ export function wireHarvardPicker() {
   try {
     const last = localStorage.getItem("LUX_HARVARD_LAST");
     if (last) num.value = String(clamp(parseInt(last, 10) || 1, 1, 72));
-  } catch {}
+} catch (err) { console.warn("[features/harvard/index.js] swallowed error", err); }
 
   load.addEventListener("click", () => apply(num.value));
   num.addEventListener("keydown", (e) => {

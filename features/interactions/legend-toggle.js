@@ -26,7 +26,7 @@ export function initProsodyLegendToggle() {
     try {
       tip.setAttribute("aria-controls", "prosodyLegend");
       tip.setAttribute("aria-expanded", "false");
-    } catch (_) {}
+} catch (err) { console.warn("[features/interactions/legend-toggle.js] swallowed error", err); }
 
     legend._legendReady = 1;
   }
@@ -68,16 +68,18 @@ export function initProsodyLegendToggle() {
 
   if (!tip._legendBound) {
     const toggle = (e) => {
-      try { e?.preventDefault?.(); e?.stopPropagation?.(); } catch (_) {}
+      try { e?.preventDefault?.(); e?.stopPropagation?.(); } catch (err) { console.warn("[features/interactions/legend-toggle.js] swallowed error", err); }
+
       const open = !wrap.classList.contains("legend-open");
       wrap.classList.toggle("legend-open", open);
       legend.setAttribute("aria-hidden", String(!open));
-      try { tip.setAttribute("aria-expanded", String(open)); } catch (_) {}
+      try { tip.setAttribute("aria-expanded", String(open)); } catch (err) { console.warn("[features/interactions/legend-toggle.js] swallowed error", err); }
+
       if (open) {
         tip.classList.remove("cue-legend");
         try {
           localStorage.setItem("seenProsodyLegendCue", "1");
-        } catch (_) {}
+} catch (err) { console.warn("[features/interactions/legend-toggle.js] swallowed error", err); }
         hidePeek();
       } else {
         positionPeek();
@@ -110,7 +112,7 @@ export function initProsodyLegendToggle() {
   try {
     if (!localStorage.getItem("seenProsodyLegendCue"))
       tip.classList.add("cue-legend");
-  } catch (_) {}
+} catch (err) { console.warn("[features/interactions/legend-toggle.js] swallowed error", err); }
 
   positionPeek();
   window.addEventListener("resize", positionPeek, { passive: true });

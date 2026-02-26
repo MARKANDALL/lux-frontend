@@ -87,7 +87,7 @@ export function selectHarvardList({
 
   try {
     localStorage.setItem("LUX_HARVARD_LAST", String(n));
-  } catch {}
+} catch (err) { console.warn("[features/harvard/modal-actions.js] swallowed error", err); }
 }
 
 export function selectPassage({
@@ -124,7 +124,7 @@ export function selectPassage({
 
   try {
     localStorage.setItem("LUX_PASSAGES_LAST", String(key));
-  } catch {}
+} catch (err) { console.warn("[features/harvard/modal-actions.js] swallowed error", err); }
 }
 
 export function showHoverHarvard({

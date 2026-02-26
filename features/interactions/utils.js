@@ -8,10 +8,10 @@ export function safePlay(node, src, opts) {
     if (opts && opts.restart) {
       try {
         node.currentTime = 0;
-      } catch (_) {}
+} catch (err) { console.warn("[features/interactions/utils.js] swallowed error", err); }
     }
     return node.play?.().catch?.(() => {});
-  } catch (_) {}
+} catch (err) { console.warn("[features/interactions/utils.js] swallowed error", err); }
 }
 
 export function playWithGesture(
@@ -21,11 +21,11 @@ export function playWithGesture(
   if (!vid) return;
   try {
     vid.loop = false;
-  } catch (_) {}
+} catch (err) { console.warn("[features/interactions/utils.js] swallowed error", err); }
   if (restart) {
     try {
       vid.currentTime = 0;
-    } catch (_) {}
+} catch (err) { console.warn("[features/interactions/utils.js] swallowed error", err); }
   }
   vid.muted = !wantSound;
   return vid.play().catch(() => {
@@ -37,13 +37,13 @@ export function playWithGesture(
           setTimeout(() => {
             try {
               vid.muted = false;
-            } catch (_) {}
+} catch (err) { console.warn("[features/interactions/utils.js] swallowed error", err); }
           }, 50);
       })
       .catch(() => {
         try {
           vid.pause();
-        } catch (_) {}
+} catch (err) { console.warn("[features/interactions/utils.js] swallowed error", err); }
       });
   });
 }

@@ -73,7 +73,7 @@ export async function mountTTSPlayer(hostEl) {
       e.stopPropagation();
       try {
         window.dispatchEvent(new Event("lux:requestSelfPBExpanded"));
-      } catch (_) {}
+} catch (err) { console.warn("[features/features/tts/player-ui.js] swallowed error", err); }
     });
   }
 
@@ -346,7 +346,7 @@ export async function mountTTSPlayer(hostEl) {
       try {
         await audio.play();
         setMainLabel(true);
-      } catch {}
+} catch (err) { console.warn("[features/features/tts/player-ui.js] swallowed error", err); }
     } else {
       await ensureAudioReadyAndPlay();
     }
@@ -368,7 +368,7 @@ export async function mountTTSPlayer(hostEl) {
           try {
             await audio.play();
             setMainLabel(true);
-          } catch {}
+} catch (err) { console.warn("[features/features/tts/player-ui.js] swallowed error", err); }
         }
       }
       clickPending = false;
