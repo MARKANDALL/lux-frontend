@@ -65,6 +65,10 @@ export function openCharsDrawer({ scenarioIdx, roleIdx, onRoleSelect }) {
     _body.innerHTML = scenario.roles.map((role, i) => `
       <button class="lux-charCard ${i === roleIdx ? "is-selected" : ""}"
               data-role-idx="${i}" type="button">
+        <img src="assets/characters/${escHtml(scenario.id)}-${escHtml(role.id)}.jpg"
+             alt="${escHtml(role.label)}"
+             class="char-avatar"
+             onerror="this.style.display='none'">
         <div class="lux-charCard-header">
           <span class="lux-charCard-icon">${i === 0 ? "🗣️" : "👤"}</span>
           <span class="lux-charCard-label">${escHtml(role.label)}</span>
