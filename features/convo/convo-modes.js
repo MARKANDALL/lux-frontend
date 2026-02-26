@@ -1,4 +1,5 @@
 // features/convo/convo-modes.js
+// ONE-LINE: Controls convo screen mode transitions (intro/picker/chat), history syncing, and popstate wiring.
 
 export function createConvoModeController({ root, state, setParallaxEnabled, setKnobs, render }) {
   const VALID_MODES = new Set(["intro", "picker", "chat"]);
@@ -25,6 +26,9 @@ export function createConvoModeController({ root, state, setParallaxEnabled, set
 
     // Used by lux-convo.css to gate drawers (TTS + SelfPB) until chat mode.
     document.documentElement.dataset.luxConvoMode = mode;
+
+    // Broadcast mode transitions (picker uses this to randomize the default card on entry).
+    try { document.dispatchEvent(new CustomEvent("luxConvo:mode", { detail: { mode, changed } })); } catch (_) {}
 
     // Parallax ONLY on intro screen.
     setParallaxEnabled(mode === "intro");
