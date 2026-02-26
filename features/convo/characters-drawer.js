@@ -1,4 +1,7 @@
 // features/convo/characters-drawer.js
+// Left-side drawer showing the two characters in the current scenario and lets the user pick which role they want to play.
+
+
 // Left-side drawer showing the two characters in the current scenario.
 // User picks which role they want to play.
 
@@ -62,20 +65,31 @@ export function openCharsDrawer({ scenarioIdx, roleIdx, onRoleSelect }) {
   if (!scenario || !scenario.roles) {
     _body.innerHTML = `<div class="lux-charsEmpty">No characters for this scene.</div>`;
   } else {
-    _body.innerHTML = scenario.roles.map((role, i) => `
-      <button class="lux-charCard ${i === roleIdx ? "is-selected" : ""}"
-              data-role-idx="${i}" type="button">
-        <img src="assets/characters/${escHtml(scenario.id)}-${escHtml(role.id)}.jpg"
-             alt="${escHtml(role.label)}"
-             class="char-avatar"
-             onerror="this.style.display='none'">
-        <div class="lux-charCard-header">
-          <span class="lux-charCard-icon">${i === 0 ? "🗣️" : "👤"}</span>
-          <span class="lux-charCard-label">${escHtml(role.label)}</span>
-        </div>
-        <div class="lux-charCard-npc">${escHtml(role.npc)}</div>
-      </button>
-    `).join("");
+    _body.innerHTML = scenario.roles.map((role, i) => {
+      // Optional override supported (future-proof), otherwise fall back to convention:
+      // assets/characters/<scenarioId>-<roleId>.webp
+      const src = `assets/characters/${scenario.id}-${role.id}.jpg`;
+
+      return `
+        <button class="lux-charCard ${i === roleIdx ? "is-selected" : ""}"
+                data-role-idx="${i}" type="button">
+
+          <div class="lux-charCard-header">
+            <span class="lux-charCard-icon">${i === 0 ? "🗣️" : "👤"}</span>
+            <span class="lux-charCard-label">${escHtml(role.label)}</span>
+          </div>
+
+          <div class="lux-charCard-npc">${escHtml(role.npc)}</div>
+
+          <img src="${escHtml(src)}"
+               alt="${escHtml(role.label)}"
+               class="char-avatar"
+               loading="lazy"
+               decoding="async"
+               onerror="this.style.display='none'">
+        </button>
+      `;
+    }).join("");
   }
 
   _overlay.dataset.open = "1";

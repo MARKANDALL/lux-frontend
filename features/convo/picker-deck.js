@@ -49,11 +49,19 @@ export function wirePickerDeck({
 
     wrap.append(left, right);
 
-    function step() {
+    function stepPx(count = 1) {
       const first = thumbs.querySelector(".lux-thumb");
       const w = first ? first.getBoundingClientRect().width : 42;
-      const gap = 8;
-      return Math.max(120, Math.round((w + gap) * 6)); // ~6 thumbs per click
+
+      // try to read actual gap from CSS; fall back to 8
+      const cs = window.getComputedStyle(thumbs);
+      const gap =
+        parseFloat(cs.columnGap) ||
+        parseFloat(cs.gap) ||
+        8;
+
+      const one = Math.max(48, Math.round(w + gap));
+      return one * Math.max(1, count);
     }
 
     function maxScroll() {
@@ -69,26 +77,31 @@ export function wirePickerDeck({
       right.disabled = false;
     }
 
-    left.addEventListener("click", (e) => {
-      e.preventDefault();
+    function scrollWrapped(delta) {
       const max = maxScroll();
       if (max <= 2) return;
 
-      // wrap: if at start, jump to end
-      if (thumbs.scrollLeft <= 1) thumbs.scrollLeft = max;
+      const cur = thumbs.scrollLeft;
 
-      thumbs.scrollBy({ left: -step(), behavior: "smooth" });
+      // Use a modulo wrap so it NEVER "sticks" even if delta > max
+      const period = max + 1; // scrollLeft is effectively in [0..max]
+      let target = cur + delta;
+
+      target = ((target % period) + period) % period;
+
+      thumbs.scrollTo({ left: target, behavior: "smooth" });
+    }
+
+    left.addEventListener("click", (e) => {
+      e.preventDefault();
+      const n = e.shiftKey ? 6 : 1;     // hold Shift to jump faster
+      scrollWrapped(-stepPx(n));
     });
 
     right.addEventListener("click", (e) => {
       e.preventDefault();
-      const max = maxScroll();
-      if (max <= 2) return;
-
-      // wrap: if at end, jump to start
-      if (thumbs.scrollLeft >= max - 1) thumbs.scrollLeft = 0;
-
-      thumbs.scrollBy({ left: step(), behavior: "smooth" });
+      const n = e.shiftKey ? 6 : 1;
+      scrollWrapped(stepPx(n));
     });
 
     thumbs.addEventListener("scroll", updateArrows, { passive: true });
