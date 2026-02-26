@@ -38,8 +38,18 @@ Common hurdles: vague symptom descriptions · unfamiliar medical vocabulary · n
 
 Practice targets: precise description · asking for clarification · understanding instructions`,
     roles: [
-      { id: "patient", label: "Patient", npc: "Someone in their 30s who tends to say 'it just hurts' and needs guided questions to get specific." },
-      { id: "doctor", label: "Doctor", npc: "A thorough physician in her 40s. Asks targeted follow-ups and uses some medical terms but explains them when asked." },
+      {
+        id: "patient",
+        label: "Patient",
+        npc: "Someone in their 30s who tends to say 'it just hurts' and needs guided questions to get specific.",
+        ttsVoice: "en-US-ChristopherNeural",
+      },
+      {
+        id: "doctor",
+        label: "Doctor",
+        npc: "A thorough physician in her 40s. Asks targeted follow-ups and uses some medical terms but explains them when asked.",
+        ttsVoice: "en-US-NancyNeural",
+      },
     ],
   },
   {

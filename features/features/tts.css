@@ -76,6 +76,27 @@
   color: #b45309;
 }
 
+.tts-sourceRow{
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.tts-autoVoice{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  opacity: 0.6;
+  white-space: nowrap;
+  user-select: none;
+}
+.tts-autoVoice input{
+  transform: translateY(1px);
+}
+
 /* ✅ Expand button: match SelfPB mini feel + tuck top-right */
 #tts-expand{
   position: absolute;

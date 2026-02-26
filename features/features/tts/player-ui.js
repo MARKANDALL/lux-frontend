@@ -49,6 +49,8 @@ export async function mountTTSPlayer(hostEl) {
   renderControls(host);
 
   // 2. Select Elements
+  const sourceSel = $(host, "#tts-source");
+  const autoVoiceEl = $(host, "#tts-autovoice");
   const voiceSel = $(host, "#tts-voice");
   const speedEl = $(host, "#tts-speed");
   const speedOut = $(host, "#tts-speed-out");
@@ -87,8 +89,40 @@ export async function mountTTSPlayer(hostEl) {
   audio.preload = "auto";
   audio.playbackRate = DEFAULT_SPEED;
 
-  // Expose audio for other panels (like Self Playback sync)
-  window.luxTTS = Object.assign(window.luxTTS || {}, { audioEl: audio });
+  // Apply default source mode (pages like convo can pre-seed window.luxTTS.sourceMode)
+  const initialMode =
+    window.luxTTS?.sourceMode ||
+    window.LuxTTSContext?.defaultSourceMode ||
+    "auto";
+  if (sourceSel) sourceSel.value = initialMode;
+
+  const initialAuto = window.luxTTS?.autoVoice;
+  if (autoVoiceEl && typeof initialAuto === "boolean") autoVoiceEl.checked = initialAuto;
+
+  // Expose audio + tts UI state for other panels (like Self Playback sync)
+  window.luxTTS = Object.assign(window.luxTTS || {}, {
+    audioEl: audio,
+    sourceMode: sourceSel?.value || initialMode,
+    autoVoice: autoVoiceEl?.checked !== false,
+  });
+
+  function applyVoiceHint(voiceId, caps) {
+    if (!voiceId || !voiceSel) return;
+    const exists = Array.from(voiceSel.options || []).some((o) => o.value === voiceId);
+    if (!exists) return;
+    voiceSel.value = voiceId;
+    populateStyles(styleSel, caps, voiceSel.value);
+  }
+
+  function syncVoiceFromContext(reason, caps) {
+    const autoOn = autoVoiceEl ? autoVoiceEl.checked : (window.luxTTS?.autoVoice !== false);
+    if (!autoOn) return;
+    const ctx = window.LuxTTSContext;
+    if (!ctx || typeof ctx.getVoiceId !== "function") return;
+    const mode = sourceSel?.value || window.luxTTS?.sourceMode || "auto";
+    const hint = ctx.getVoiceId({ mode });
+    applyVoiceHint(hint, caps);
+  }
 
   // Wire progress (always moves while playing)
   // (No-op if progressFill not found)
@@ -106,11 +140,34 @@ export async function mountTTSPlayer(hostEl) {
 
   // 4. Load Capabilities (Async)
   let caps = await getVoiceCaps();
+  // In case a page installed a context (e.g. convo), align voice to speaker now.
+  syncVoiceFromContext("caps-loaded", caps);
   populateStyles(styleSel, caps, voiceSel.value);
 
-  voiceSel.addEventListener("change", () =>
-    populateStyles(styleSel, caps, voiceSel.value)
-  );
+  voiceSel.addEventListener("change", () => {
+    // Manual voice change implies “I’m overriding auto”
+    if (autoVoiceEl && autoVoiceEl.checked) {
+      autoVoiceEl.checked = false;
+      window.luxTTS = Object.assign(window.luxTTS || {}, { autoVoice: false });
+    }
+    populateStyles(styleSel, caps, voiceSel.value);
+  });
+
+  if (sourceSel) {
+    sourceSel.addEventListener("change", () => {
+      window.luxTTS = Object.assign(window.luxTTS || {}, { sourceMode: sourceSel.value || "auto" });
+      syncVoiceFromContext("source-change", caps);
+    });
+  }
+
+  if (autoVoiceEl) {
+    autoVoiceEl.addEventListener("change", () => {
+      window.luxTTS = Object.assign(window.luxTTS || {}, { autoVoice: !!autoVoiceEl.checked });
+      if (autoVoiceEl.checked) syncVoiceFromContext("autovoice-on", caps);
+    });
+  }
+
+  window.addEventListener("lux:ttsContextChanged", () => syncVoiceFromContext("ctx-event", caps));
 
   // 5. Wire Inputs
   const updateSpeedOut = () => {
@@ -160,8 +217,10 @@ export async function mountTTSPlayer(hostEl) {
   let dblTriggered = false;
 
   async function ensureAudioReadyAndPlay() {
+    // Right before speaking: re-sync voice to the chosen speaker (AI/Me/etc)
+    syncVoiceFromContext("preSpeak", caps);
     const text = getCurrentText();
-    if (!text) return alert("Type or select some text first.");
+    if (!text) return alert("Type, select, or click a message bubble first.");
 
     const voice = voiceSel?.value || VOICES[0].id;
     const speedMult = Number(speedEl.value) || 1;

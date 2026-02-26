@@ -8,6 +8,17 @@ export const $ = (root, sel) => root.querySelector(sel);
 
 // Helper: Get text from input or selection
 export function getCurrentText() {
+  // If a page installs a TTS context adapter (e.g., AI Conversations),
+  // let it provide the “current” text (AI / Me / Selection / Auto).
+  try {
+    const mode = window.luxTTS?.sourceMode || "auto";
+    const ctx = window.LuxTTSContext;
+    if (ctx && typeof ctx.getText === "function") {
+      const t = String(ctx.getText({ mode }) || "").trim();
+      if (t) return t;
+    }
+  } catch (_) {}
+
   const el =
     document.querySelector("#referenceText") ||
     document.querySelector("#free-input") ||
@@ -40,6 +51,21 @@ export function renderControls(mount) {
 
           <div class="tts-head">
             <div id="tts-note" class="tts-note" aria-live="polite"></div>
+          </div>
+
+          <div class="tts-sourceRow">
+            <div class="tts-selectWrap" data-label="Speak">
+              <select id="tts-source">
+                <option value="auto">(auto)</option>
+                <option value="ai">AI</option>
+                <option value="me">Me</option>
+                <option value="selection">Selection</option>
+              </select>
+            </div>
+            <label class="tts-autoVoice">
+              <input id="tts-autovoice" type="checkbox" checked>
+              Auto voice
+            </label>
           </div>
 
           <div class="tts-selectWrap" data-label="Voice">

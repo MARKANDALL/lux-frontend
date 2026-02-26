@@ -35,6 +35,7 @@ import { createBeginScenario, initConvoPickerSystem } from "./convo-picker-syste
 
 import { createSetKnobs } from "./convo-knobs-system.js";
 import { openCharsDrawer, closeCharsDrawer } from "./characters-drawer.js";
+import { installConvoTtsContext } from "./convo-tts-context.js";
 
 export function bootConvo() {
   const root = document.getElementById("convoApp");
@@ -86,6 +87,9 @@ export function bootConvo() {
     toneSel,
     lengthSel,
   } = view;
+
+  // ✅ Give the global TTS drawer a convo-aware source (AI/Me/Selection) + character-matched voices
+  installConvoTtsContext({ state, input, msgs, SCENARIOS });
 
   const { applySceneVisuals, setParallaxEnabled } = initSceneAtmo({
     root,
@@ -147,6 +151,7 @@ export function bootConvo() {
         onRoleSelect: (idx) => {
           state.roleIdx = idx;
           renderAllSummaries();
+          try { window.dispatchEvent(new Event("lux:ttsContextChanged")); } catch (_) {}
         },
       });
     });
@@ -165,6 +170,7 @@ export function bootConvo() {
       state.roleIdx = 0;
       closeCharsDrawer();
       renderAllSummaries();
+      try { window.dispatchEvent(new Event("lux:ttsContextChanged")); } catch (_) {}
     }
   });
   // Lightweight poll (MutationObserver won't catch state.scenarioIdx changes)
@@ -174,6 +180,7 @@ export function bootConvo() {
       state.roleIdx = 0;
       closeCharsDrawer();
       renderAllSummaries();
+      try { window.dispatchEvent(new Event("lux:ttsContextChanged")); } catch (_) {}
     }
   }, 300);
 

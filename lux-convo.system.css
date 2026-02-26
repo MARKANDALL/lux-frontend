@@ -1,3 +1,6 @@
+/* lux-convo.system.css */
+/* ONE-LINE: Core system-layer styling for convo modes (stage sizing/overflow + drawer layering/gating). */
+
 /* ============================================================
    TTS portal + drawer layering (critical for interactivity)
    ============================================================ */
@@ -98,7 +101,8 @@ html:not([data-lux-convo-mode="chat"]) #lux-auth-btn{
   border-radius: 0;
   box-shadow: none;
   background: transparent;
-  overflow: hidden;
+  overflow-x: hidden;  /* keep “no sideways junk” */
+  overflow-y: visible; /* allow hover previews to escape */
 
   --lux-par-bg: 7.5;
   --lux-par-img: 9.0;

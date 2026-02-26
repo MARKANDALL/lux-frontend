@@ -1,4 +1,5 @@
 // features/convo/picker-deck.js
+// ONE-LINE: Wires the convo picker deck UI (active/preview cards + thumbnails strip), including thumb hydration and smooth arrow-scrolling wrapper.
 
 export function wirePickerDeck({
   scenarios,
@@ -18,6 +19,72 @@ export function wirePickerDeck({
   onBeginScenario,
 }) {
   const list = Array.isArray(scenarios) ? scenarios : [];
+
+  // --- thumbs scroller UI (no scrollbar; arrows scroll smoothly) ---
+  function ensureThumbScroller() {
+    if (!thumbs) return;
+    if (thumbs.closest(".lux-thumbsWrap")) return;
+
+    const wrap = document.createElement("div");
+    wrap.className = "lux-thumbsWrap";
+
+    // Insert wrapper where thumbs currently sits
+    const parent = thumbs.parentNode;
+    if (!parent) return;
+    parent.insertBefore(wrap, thumbs);
+    wrap.appendChild(thumbs);
+
+    // Arrows (overlay, not part of flex flow)
+    const left = document.createElement("button");
+    left.type = "button";
+    left.className = "lux-thumbsArrow left";
+    left.setAttribute("aria-label", "Scroll thumbnails left");
+    left.textContent = "‹";
+
+    const right = document.createElement("button");
+    right.type = "button";
+    right.className = "lux-thumbsArrow right";
+    right.setAttribute("aria-label", "Scroll thumbnails right");
+    right.textContent = "›";
+
+    wrap.append(left, right);
+
+    function step() {
+      // scroll by ~70% of visible width (feels “carousel-like”)
+      return Math.max(120, Math.floor(thumbs.clientWidth * 0.7));
+    }
+
+    function updateArrows() {
+      const max = thumbs.scrollWidth - thumbs.clientWidth;
+      const atStart = thumbs.scrollLeft <= 1;
+      const atEnd = thumbs.scrollLeft >= max - 1;
+
+      left.disabled = atStart;
+      right.disabled = atEnd;
+
+      // hide both if no scrolling needed
+      const scrollable = max > 2;
+      left.style.display = scrollable ? "" : "none";
+      right.style.display = scrollable ? "" : "none";
+    }
+
+    left.addEventListener("click", (e) => {
+      e.preventDefault();
+      thumbs.scrollBy({ left: -step(), behavior: "smooth" });
+    });
+
+    right.addEventListener("click", (e) => {
+      e.preventDefault();
+      thumbs.scrollBy({ left: step(), behavior: "smooth" });
+    });
+
+    thumbs.addEventListener("scroll", updateArrows, { passive: true });
+    window.addEventListener("resize", updateArrows);
+
+    // initial state
+    updateArrows();
+    setTimeout(updateArrows, 0);
+  }
 
   function safeBeginScenario() {
     try {
@@ -353,6 +420,7 @@ export function wirePickerDeck({
 
     if (!list.length) {
       renderThumbs({ thumbs, list, selectedId: null, onPick: () => {} });
+      ensureThumbScroller();
       return;
     }
 
@@ -377,6 +445,8 @@ export function wirePickerDeck({
 
     if (disposeThumbHydrator) disposeThumbHydrator();
     disposeThumbHydrator = hydrateThumbButtons(thumbs, { immediate: 8 });
+
+    ensureThumbScroller();
   }
 
   // --- wire controls (once) ---
