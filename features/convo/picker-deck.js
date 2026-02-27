@@ -1,10 +1,11 @@
 // features/convo/picker-deck.js
-// ONE-LINE: Wires the convo picker deck UI (active/preview cards + thumbnails strip), including thumb hydration and smooth arrow-scrolling wrapper.
+// ONE-LINE: Wires the convo picker deck UI (active/preview cards + thumbnails strip), including progressive thumb hydration and smooth arrow-scrolling wrapper.
 
 import { ensureThumbScroller } from "./picker-deck/thumb-scroller.js";
 import { makeThumbHydrator } from "./picker-deck/thumbs-hydrator.js";
 import { makeFillDeckCard } from "./picker-deck/deck-card.js";
 import { renderThumbs } from "./picker-deck/thumbs-render.js";
+import { makeRenderDeck } from "./picker-deck/render-deck.js";
 
 export function wirePickerDeck({
   scenarios,
@@ -35,43 +36,22 @@ export function wirePickerDeck({
   }
 
   const { hydrateThumbButtons, scenarioThumbUrl } = makeThumbHydrator();
-
   const fillDeckCard = makeFillDeckCard({ el, applyMediaSizingVars, safeBeginScenario });
 
-  let disposeThumbHydrator = null;
-
-  function renderDeck() {
-    applySceneVisuals?.();
-
-    if (!list.length) {
-      renderThumbs({ thumbs, list, state, el, scenarioThumbUrl, onPickIndex: () => {} });
-      ensureThumbScroller(thumbs);
-      return;
-    }
-
-    const idx = state.scenarioIdx;
-    const next = (idx + 1) % list.length;
-
-    fillDeckCard(deckActive, list[idx], true);
-    fillDeckCard(deckPreview, list[next], false);
-
-    renderThumbs({
-      thumbs,
-      list,
-      state,
-      el,
-      scenarioThumbUrl,
-      onPickIndex: (i) => {
-        state.scenarioIdx = i;
-        renderDeck();
-      },
-    });
-
-    if (disposeThumbHydrator) disposeThumbHydrator();
-    disposeThumbHydrator = hydrateThumbButtons(thumbs, { immediate: 8 });
-
-    ensureThumbScroller(thumbs);
-  }
+  const { renderDeck } = makeRenderDeck({
+    list,
+    state,
+    thumbs,
+    deckActive,
+    deckPreview,
+    el,
+    applySceneVisuals,
+    ensureThumbScroller,
+    hydrateThumbButtons,
+    scenarioThumbUrl,
+    renderThumbs,
+    fillDeckCard,
+  });
 
   // --- wire controls (once) ---
   backBtn?.addEventListener("click", () => {
