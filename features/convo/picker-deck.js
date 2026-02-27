@@ -4,6 +4,7 @@
 import { ensureThumbScroller } from "./picker-deck/thumb-scroller.js";
 import { makeThumbHydrator } from "./picker-deck/thumbs-hydrator.js";
 import { makeFillDeckCard } from "./picker-deck/deck-card.js";
+import { renderThumbs } from "./picker-deck/thumbs-render.js";
 
 export function wirePickerDeck({
   scenarios,
@@ -37,52 +38,13 @@ export function wirePickerDeck({
 
   const fillDeckCard = makeFillDeckCard({ el, applyMediaSizingVars, safeBeginScenario });
 
-  function renderThumbs({ thumbs, list, selectedId, onPick }){
-    if (!thumbs) return;
-
-    thumbs.innerHTML = "";
-
-    list.forEach((s, i) => {
-      const isActive = i === state.scenarioIdx;
-      const b = el("button", "lux-thumb" + (isActive ? " is-active" : ""));
-      b.type = "button";
-      b.title = s?.title || `Scenario ${i + 1}`;
-
-      // accessibility + "active" marker
-      b.setAttribute("aria-label", b.title);
-      b.setAttribute("aria-current", isActive ? "true" : "false");
-
-      const thumb = scenarioThumbUrl(s);
-      if (thumb) {
-        b.dataset.thumbSrc = thumb;     // store only
-        b.classList.add("has-img");
-        b.textContent = "";
-        // DO NOT set backgroundImage here
-      } else {
-        // fallback (keeps your “color dots” behavior if a scenario has no image)
-        const hue = (i * 37) % 360;
-        b.style.backgroundImage = `linear-gradient(135deg, hsl(${hue} 55% 70%), hsl(${(hue+18)%360} 55% 62%))`;
-        b.textContent = (s?.title || "?").trim().slice(0, 1).toUpperCase();
-      }
-
-      b.addEventListener("click", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        state.scenarioIdx = i;
-        renderDeck();
-      });
-
-      thumbs.append(b);
-    });
-  }
-
   let disposeThumbHydrator = null;
 
   function renderDeck() {
     applySceneVisuals?.();
 
     if (!list.length) {
-      renderThumbs({ thumbs, list, selectedId: null, onPick: () => {} });
+      renderThumbs({ thumbs, list, state, el, scenarioThumbUrl, onPickIndex: () => {} });
       ensureThumbScroller(thumbs);
       return;
     }
@@ -96,14 +58,13 @@ export function wirePickerDeck({
     renderThumbs({
       thumbs,
       list,
-      selectedId: list[idx]?.id,
-      onPick: (id) => {
-        const i = list.findIndex((s) => s?.id === id);
-        if (i >= 0) {
-          state.scenarioIdx = i;
-          renderDeck();
-        }
-      }
+      state,
+      el,
+      scenarioThumbUrl,
+      onPickIndex: (i) => {
+        state.scenarioIdx = i;
+        renderDeck();
+      },
     });
 
     if (disposeThumbHydrator) disposeThumbHydrator();
