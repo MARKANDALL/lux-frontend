@@ -1,5 +1,5 @@
-// features/convo/picker-deck/thumb-scroller.js
-// ONE-LINE: Adds a wrapper + left/right arrows around the thumbs strip and provides smooth 1-thumb stepping with infinite modulo wrap.
+// FILE: features/convo/picker-deck/thumb-scroller.js
+// ONE-LINE: Adds a wrapper + left/right arrows around the thumbs strip and provides smooth 1-thumb stepping with “edge then recycle” wrap.
 
 export function ensureThumbScroller(thumbs) {
   if (!thumbs) return;
@@ -57,31 +57,41 @@ export function ensureThumbScroller(thumbs) {
     right.disabled = false;
   }
 
-  function scrollWrapped(delta) {
+  function scrollEdgeWrap(dir, steps = 1) {
     const max = maxScroll();
     if (max <= 2) return;
 
+    const delta = stepPx(steps);
     const cur = thumbs.scrollLeft;
 
-    // Use a modulo wrap so it NEVER "sticks" even if delta > max
-    const period = max + 1; // scrollLeft is effectively in [0..max]
-    let target = cur + delta;
+    if (dir < 0) {
+      // left
+      if (cur <= delta * 0.5) {
+        thumbs.scrollTo({ left: max, behavior: "smooth" });
+      } else {
+        thumbs.scrollTo({ left: Math.max(0, cur - delta), behavior: "smooth" });
+      }
+      return;
+    }
 
-    target = ((target % period) + period) % period;
-
-    thumbs.scrollTo({ left: target, behavior: "smooth" });
+    // right
+    if (cur >= max - delta * 0.5) {
+      thumbs.scrollTo({ left: 0, behavior: "smooth" });
+    } else {
+      thumbs.scrollTo({ left: Math.min(max, cur + delta), behavior: "smooth" });
+    }
   }
 
   left.addEventListener("click", (e) => {
     e.preventDefault();
     const n = e.shiftKey ? 6 : 1;     // hold Shift to jump faster
-    scrollWrapped(-stepPx(n));
+    scrollEdgeWrap(-1, n);
   });
 
   right.addEventListener("click", (e) => {
     e.preventDefault();
     const n = e.shiftKey ? 6 : 1;
-    scrollWrapped(stepPx(n));
+    scrollEdgeWrap(1, n);
   });
 
   thumbs.addEventListener("scroll", updateArrows, { passive: true });

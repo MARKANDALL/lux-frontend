@@ -1,3 +1,6 @@
+/* FILE: lux-convo.knobs.css */
+/* ONE-LINE: Styles the picker’s bottom row buttons (Characters / Scene Settings) and knobs UI. */
+
 /* =========================================================
    Knobs drawer (shared: picker + convo)
 ========================================================= */
@@ -119,6 +122,15 @@
   justify-content: center;
   gap: 10px;
   padding: 8px 0 4px;
+   position: relative;
+  z-index: 95; /* stay above any thumb hover / scroller padding */
+}
+
+/* Ensure picker bottom row stays clickable even if the thumbs strip has
+   oversized padding/margins for hover zoom. */
+#convoApp[data-mode="picker"] .lux-pickerKnobsRow{
+  position: relative;
+  z-index: 80;
 }
 
 .lux-pickerKnobsRow .btn{
@@ -385,6 +397,7 @@
 /* ============================================================
    Knobs group spacing — breathe
    ============================================================ */
+
 .lux-knobsGroup {
   padding: 16px 0 20px;
 }
@@ -398,6 +411,7 @@
 /* ============================================================
    Picker summary — more visible with color badge
    ============================================================ */
+
 .lux-pickerKnobsSummary {
   font-size: 0.82rem;
   color: rgba(255,255,255,0.94);

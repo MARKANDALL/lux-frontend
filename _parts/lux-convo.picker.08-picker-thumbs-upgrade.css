@@ -1,4 +1,4 @@
-/* _parts/lux-convo.picker.08-picker-thumbs-upgrade.css */
+/* FILE: _parts/lux-convo.picker.08-picker-thumbs-upgrade.css */
 /* ONE-LINE: Picker-mode thumbnail strip styling (bigger thumbs + hover previews) with a no-scrollbar scroller wrapper and arrow buttons. */
 
 /* =========================================================
@@ -8,7 +8,7 @@
 ========================================================= */
 
 #convoApp[data-mode="picker"] .lux-thumbsWrap{
-  width: min(980px, 94vw);
+  width: min(680px, 92vw); /* narrower = fewer thumbs visible at once */
   margin: 14px auto 0;
   position: relative;
   z-index: 30; /* above deck */
@@ -31,11 +31,12 @@
   -ms-overflow-style: none;     /* old Edge/IE: hide scrollbar */
   -webkit-overflow-scrolling: touch;
 
-  width: min(980px, 94vw);
-  max-width: min(980px, 94vw);
+  width: 100%;
+  max-width: 100%;
 
-  padding: 48px 42px;           /* tall enough for 3.5× hover scale (was 6px 42px) */
-  margin: -28px auto -42px;     /* pull back the extra padding to preserve layout spacing */
+  /* Smaller hover scale => smaller padding, and NO negative bottom overlap into the buttons row */
+  padding: 44px 42px 12px;
+  margin: -18px auto 0;
   position: relative;
   z-index: 10;
 }
@@ -88,6 +89,7 @@
 
   opacity: 0.82;
   transform: translateY(0);
+  transform-origin: center bottom; /* keep hover growth UPWARD (away from Characters/Scene Settings buttons) */
   transition: transform 180ms ease, opacity 180ms ease, box-shadow 180ms ease, filter 180ms ease;
   cursor: pointer;
 
@@ -110,8 +112,8 @@
   opacity: 1;
   z-index: 80;
 
-  /* BIG pop: ~42x28 becomes ~147x98 at scale(3.5) */
-  transform: translateY(-10px) scale(3.5);
+  /* Smaller pop (still a preview), and grows upward (see transform-origin) */
+  transform: translateY(-8px) scale(2.2);
 
   /* “darken” is usually contrast + deeper shadow (not lower opacity) */
   filter: contrast(1.12) saturate(1.12) brightness(0.98);
