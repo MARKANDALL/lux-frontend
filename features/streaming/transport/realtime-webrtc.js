@@ -247,7 +247,7 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
       try {
         audioEl.muted = true;
         audioEl.pause();
-      } catch {}
+} catch (err) { console.warn("[features/streaming/transport/realtime-webrtc.js] swallowed error", err); }
       mutedByInterrupt = true;
     }
 
