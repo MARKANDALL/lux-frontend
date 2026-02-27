@@ -1,5 +1,5 @@
 /* FILE: lux-convo.knobs.css */
-/* ONE-LINE: Styles the picker’s bottom row buttons (Characters / Scene Settings) and knobs UI. */
+/* ONE-LINE: Styles the picker's bottom row buttons (Characters / Scene Settings) and knobs UI. */
 
 /* =========================================================
    Knobs drawer (shared: picker + convo)
@@ -11,7 +11,7 @@
   background: rgba(0,0,0,0.28);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 180ms ease;
+  transition: opacity 260ms cubic-bezier(0.2, 0, 0, 1);
   z-index: 998;
 }
 .lux-knobsOverlay[data-open="1"]{
@@ -27,20 +27,103 @@
   width: 380px;
   max-width: 92vw;
 
-  background: rgba(255,255,255,0.86);
-  backdrop-filter: blur(16px);
-  border-left: 1px solid rgba(0,0,0,0.10);
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-left: 1px solid rgba(0,0,0,0.08);
 
+  /* ── Surface polish (Gemini floating-card feel) ── */
+  border-radius: 18px 0 0 18px;
+  box-shadow:
+    -4px 0 24px rgba(0,0,0,0.10),
+    -1px 0 6px rgba(0,0,0,0.06);
+
+  /* ── Default: offscreen right ── */
   transform: translateX(110%);
-  transition: transform 220ms ease;
   z-index: 999;
 
   display: flex;
   flex-direction: column;
+
+  /* ── Disable simple transition — keyframes handle motion now ── */
+  transition: none;
 }
+
+/* data-open positions the drawer when open */
 .lux-knobsDrawer[data-open="1"]{
   transform: translateX(0);
 }
+
+/* ── OPENING: emphasized slide-in with subtle overshoot ── */
+.lux-knobsDrawer[data-state="opening"] {
+  animation: luxKnobsSlideIn 380ms cubic-bezier(0.2, 0, 0, 1.04) both;
+}
+
+/* ── CLOSING: clean exit, slightly faster ── */
+.lux-knobsDrawer[data-state="closing"] {
+  animation: luxKnobsSlideOut 280ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+@keyframes luxKnobsSlideIn {
+  0%   { transform: translateX(110%); }
+  75%  { transform: translateX(-4px); }     /* tiny overshoot */
+  100% { transform: translateX(0); }
+}
+
+@keyframes luxKnobsSlideOut {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(110%); }
+}
+
+/* ── STAGED CONTENT ENTRANCE ── */
+
+/* Content hidden while closed or closing */
+.lux-knobsDrawer[data-state="closed"] .lux-knobsHeader,
+.lux-knobsDrawer[data-state="closed"] .lux-knobsGroup,
+.lux-knobsDrawer[data-state="closing"] .lux-knobsHeader,
+.lux-knobsDrawer[data-state="closing"] .lux-knobsGroup {
+  opacity: 0;
+}
+
+/* Opening entrance: staggered fly-up */
+.lux-knobsDrawer[data-state="opening"] .lux-knobsHeader {
+  animation: luxKnobsFlyUp 300ms cubic-bezier(0.2, 0, 0, 1) 140ms both;
+}
+
+.lux-knobsDrawer[data-state="opening"] .lux-knobsGroup:nth-child(1) {
+  animation: luxKnobsFlyUp 300ms cubic-bezier(0.2, 0, 0, 1) 200ms both;
+}
+
+.lux-knobsDrawer[data-state="opening"] .lux-knobsGroup:nth-child(2) {
+  animation: luxKnobsFlyUp 300ms cubic-bezier(0.2, 0, 0, 1) 260ms both;
+}
+
+.lux-knobsDrawer[data-state="opening"] .lux-knobsGroup:nth-child(3) {
+  animation: luxKnobsFlyUp 300ms cubic-bezier(0.2, 0, 0, 1) 320ms both;
+}
+
+/* Once open, content fully visible */
+.lux-knobsDrawer[data-state="open"] .lux-knobsHeader,
+.lux-knobsDrawer[data-state="open"] .lux-knobsGroup {
+  opacity: 1;
+  transform: none;
+}
+
+@keyframes luxKnobsFlyUp {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/* ──────────────────────────────────────────────────────────
+   EVERYTHING BELOW IS THE ORIGINAL LAYOUT — PRESERVED AS-IS
+   ────────────────────────────────────────────────────────── */
 
 .lux-knobsHeader{
   display: flex;
@@ -275,7 +358,7 @@
   margin-left: 14px;
   width: min(360px, 92vw);
   height: 100%;
-  overflow: hidden;     /* enables “slide from behind” */
+  overflow: hidden;     /* enables "slide from behind" */
   pointer-events: none; /* only enabled when open */
 }
 .lux-convoStage.knobs-open .lux-knobsDock{
@@ -431,4 +514,27 @@
 /* Hide if empty */
 .lux-pickerKnobsSummary:empty {
   display: none;
+}
+
+/* ============================================================
+   Reduced-motion: instant open/close, no keyframes
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .lux-knobsDrawer,
+  .lux-knobsDrawer[data-state="opening"],
+  .lux-knobsDrawer[data-state="closing"] {
+    animation: none !important;
+    transition: transform 0ms !important;
+  }
+
+  .lux-knobsDrawer[data-state="opening"] .lux-knobsHeader,
+  .lux-knobsDrawer[data-state="opening"] .lux-knobsGroup {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .lux-knobsOverlay {
+    transition: opacity 0ms !important;
+  }
 }

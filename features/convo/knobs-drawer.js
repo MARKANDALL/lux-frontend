@@ -101,6 +101,8 @@ const LENGTH_LABELS = {
   extended: "Extended",
 };
 
+let _openerEl = null;           // focus-return target
+
 function ensureDom() {
   let overlay = document.getElementById("luxKnobsOverlay");
   let drawer = document.getElementById("luxKnobsDrawer");
@@ -117,6 +119,8 @@ function ensureDom() {
     drawer.id = "luxKnobsDrawer";
     drawer.className = "lux-knobsDrawer";
     drawer.setAttribute("aria-hidden", "true");
+    drawer.inert = true;
+    drawer.dataset.state = "closed";
 
     /* ── Level chips (color-coded) ─────────────────────── */
     const levelChips = Object.keys(LEVEL_COLORS).map((lv) => {
@@ -166,9 +170,49 @@ function ensureDom() {
       </div>
     `;
     document.body.appendChild(drawer);
+
+    // Listen for animation/transition end for lifecycle finalization
+    drawer.addEventListener("animationend", _onKnobsAnimEnd);
+    drawer.addEventListener("transitionend", _onKnobsTransEnd);
   }
 
   return { overlay, drawer };
+}
+
+/* ── Lifecycle helpers ───────────────────────────────────── */
+
+function _onKnobsAnimEnd(e) {
+  const drawer = document.getElementById("luxKnobsDrawer");
+  if (e.target !== drawer) return;
+  _finalizeKnobs();
+}
+
+function _onKnobsTransEnd(e) {
+  const drawer = document.getElementById("luxKnobsDrawer");
+  if (e.target !== drawer || e.propertyName !== "transform") return;
+  _finalizeKnobs();
+}
+
+function _finalizeKnobs() {
+  const drawer = document.getElementById("luxKnobsDrawer");
+  const overlay = document.getElementById("luxKnobsOverlay");
+  if (!drawer) return;
+
+  const st = drawer.dataset.state;
+  if (st === "opening") {
+    drawer.dataset.state = "open";
+  } else if (st === "closing") {
+    if (overlay) overlay.dataset.open = "0";
+    drawer.dataset.open = "0";
+    drawer.dataset.state = "closed";
+    drawer.setAttribute("aria-hidden", "true");
+    drawer.inert = true;
+
+    if (_openerEl && typeof _openerEl.focus === "function") {
+      _openerEl.focus();
+      _openerEl = null;
+    }
+  }
 }
 
 function paintSelection(drawer, knobs) {
@@ -187,17 +231,41 @@ export function mountKnobsDrawer() {
   const { overlay, drawer } = ensureDom();
 
   const open = () => {
+    _openerEl = document.activeElement || null;
+
     const knobs = getKnobs();
     paintSelection(drawer, knobs);
+
     overlay.dataset.open = "1";
     drawer.dataset.open = "1";
+    drawer.dataset.state = "opening";
     drawer.setAttribute("aria-hidden", "false");
+    drawer.inert = false;
+
+    requestAnimationFrame(() => {
+      const closeBtn = drawer.querySelector(".lux-knobsClose");
+      if (closeBtn) closeBtn.focus();
+    });
   };
 
   const close = () => {
-    overlay.dataset.open = "0";
-    drawer.dataset.open = "0";
-    drawer.setAttribute("aria-hidden", "true");
+    const st = drawer.dataset.state;
+    if (st === "closing" || st === "closed") return;
+
+    drawer.dataset.state = "closing";
+
+    // Reduced-motion fallback
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      overlay.dataset.open = "0";
+      drawer.dataset.open = "0";
+      drawer.dataset.state = "closed";
+      drawer.setAttribute("aria-hidden", "true");
+      drawer.inert = true;
+      if (_openerEl && typeof _openerEl.focus === "function") {
+        _openerEl.focus();
+        _openerEl = null;
+      }
+    }
   };
 
   overlay.addEventListener("click", close);
