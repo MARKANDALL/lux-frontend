@@ -146,7 +146,7 @@ export function openDetailsModal(attempt, overallScore, dateStr, ctx = {}) {
     );
 
     initMetricScoreModals?.();
-  } catch {}
+} catch (err) { console.warn("[features/progress/attempt-detail-modal.js] swallowed error", err); }
 
   // "Next conversation" (session-based): uses THIS session’s trouble list
   const nextBtn = header?.querySelector?.('[data-lux-generate-next="1"]');

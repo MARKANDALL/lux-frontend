@@ -83,13 +83,13 @@ export function mountMyWordsPanel({
   function focusComposer() {
     try {
       elTa?.focus();
-    } catch {}
+} catch (err) { console.warn("[features/my-words/panel.js] swallowed error", err); }
   }
 
   function focusSearch() {
     try {
       elSearch?.focus();
-    } catch {}
+} catch (err) { console.warn("[features/my-words/panel.js] swallowed error", err); }
   }
 
   bindMyWordsPanelEvents({
