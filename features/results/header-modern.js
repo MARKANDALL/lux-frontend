@@ -41,14 +41,13 @@ export function renderResultsHeaderModern(data) {
   // 2. SPEAKING RATE
   let rateStr = "";
   if (typeof globalThis.getSpeakingRate === "function") {
-      const rate = globalThis.getSpeakingRate(data);
-      if (rate && Number.isFinite(rate.wps)) {
-          rateStr = ` • ~${rate.wps.toFixed(1)} w/s`;
-      }
+    const rate = globalThis.getSpeakingRate(data);
+    if (rate && Number.isFinite(rate.wps)) {
+      rateStr = ` • ~${rate.wps.toFixed(1)} w/s`;
+    }
   }
 
   // 3) PYRAMID SCORE UI (Overall circle + 5 tiles)
-
   const fmtRoundPct = (v) =>
     v == null || !Number.isFinite(+v) ? "—" : `${Math.round(+v)}%`;
 
@@ -65,8 +64,6 @@ export function renderResultsHeaderModern(data) {
   const pronunciation = overall;
 
   // Overall aggregate (your new blue circle)
-  // Canonical "overall" is Azure overall/pronunciation when present.
-  // Only fall back to a mean if Azure overall is missing.
   const overallAgg = Number.isFinite(+pronunciation)
     ? pronunciation
     : meanAvail(accuracy, fluency, completeness, prosody, pronunciation);
@@ -100,14 +97,22 @@ export function renderResultsHeaderModern(data) {
   };
 
   const saidText = data?.DisplayText || nbest?.Display || "(No speech detected)";
+
   // Expose for other modules (e.g., syllable alt meaning tooltip)
-  try { window.LuxLastSaidText = saidText; catch (err) { warnSwallow("features/results/header-modern.js", err); }
+  try {
+    window.LuxLastSaidText = saidText;
+  } catch (err) {
+    // If you have warnSwallow globally, keep this; otherwise swallow quietly.
+    if (typeof globalThis.warnSwallow === "function") {
+      globalThis.warnSwallow("features/results/header-modern.js", err);
+    }
+  }
 
   const headerScoreClass = overallAgg != null ? scoreClass(overallAgg) : "";
   const scoreHeaderAttrs = [
     'id="scoreHeader"',
     `class="toggle-col ${headerScoreClass}"`,
-    `data-overall-score="${overallAgg || 0}"`
+    `data-overall-score="${overallAgg || 0}"`,
   ].join(" ");
 
   // 4. PROSODY LEGEND
@@ -159,8 +164,6 @@ export function renderResultsHeaderModern(data) {
   `;
 
   // 5. FINAL ASSEMBLY
-  // FIX: Styles specifically tuned to kill white space and scrolling issues.
-  // display: block; height: auto; flex: none; -> Forces container to shrink to content.
   return `
     <div id="resultHeader" style="margin-bottom: 20px;">
       <div style="margin-bottom: 12px;">
@@ -193,7 +196,7 @@ export function renderResultsHeaderModern(data) {
           </div>
         </details>
       </div>
-  
+
       <div style="margin-bottom: 16px; color:#334155;">
         <b>What you said:</b>
         <span style="font-style:italic;">"${saidText}"</span>
@@ -212,7 +215,7 @@ export function renderResultsHeaderModern(data) {
         ${legendHtml}
 
         <div class="table-scroll-container custom-scrollbar">
-<table class="score-table collapsed-score collapsed-error">
+          <table class="score-table collapsed-score collapsed-error">
             <thead style="position: sticky; top: 0; z-index: 20; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
               <tr>
                 <th id="wordHeader">
@@ -227,6 +230,7 @@ export function renderResultsHeaderModern(data) {
 
                 <th ${scoreHeaderAttrs}>Score ▸</th>
                 <th id="errorHeader" class="toggle-col">Error ▸</th>
+
                 <th id="phonemeHeader">
                   <button class="lux-col-toggle" type="button" data-col="phoneme" aria-label="Collapse/expand Phoneme column" title="Collapse/expand Phoneme column">▸</button>
                   <span class="word-chip phoneme-chip clickable" id="phonemeTitle">Phoneme</span>

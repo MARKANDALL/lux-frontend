@@ -2,6 +2,8 @@
 // ONE-LINE: Initializes the convo scenario picker deck and randomizes the default scenario selection when entering picker mode.
 
 import { wirePickerDeck } from "./picker-deck.js";
+import { openCharsDrawer, closeCharsDrawer, peekCharsDrawer, unpeekCharsDrawer } from "./characters-drawer.js";
+import { getKnobsDrawerInstance, onKnobsChange, peekKnobsDrawer, unpeekKnobsDrawer } from "./knobs-drawer.js";
 
 const PICKER_BAG_KEY = "lux_convo_picker_bag_v1";
 const PICKER_LAST_KEY = "lux_convo_picker_last_idx_v1";
@@ -85,6 +87,8 @@ export function initConvoPickerSystem({
   applyMediaSizingVars,
   applySceneVisuals,
   onBeginScenario,
+  pickerCharsBtn,
+  pickerKnobsBtn,
 }) {
   // --- Picker deck (extracted) ---
   const { renderDeck } = wirePickerDeck({
@@ -100,6 +104,18 @@ export function initConvoPickerSystem({
     applySceneVisuals,
     onBeginScenario,
   });
+
+  // ─── Characters button peekaboo ───
+  if (pickerCharsBtn) {
+    pickerCharsBtn.addEventListener("mouseenter", () => peekCharsDrawer());
+    pickerCharsBtn.addEventListener("mouseleave", () => unpeekCharsDrawer());
+  }
+
+  // ─── Scene Settings button peekaboo ───
+  if (pickerKnobsBtn) {
+    pickerKnobsBtn.addEventListener("mouseenter", () => peekKnobsDrawer());
+    pickerKnobsBtn.addEventListener("mouseleave", () => unpeekKnobsDrawer());
+  }
 
   const listLen = Array.isArray(scenarios) ? scenarios.length : 0;
 
