@@ -65,7 +65,7 @@ export function initModalVideoControls(back) {
     if (!v) return;
     try {
       if (restart) v.currentTime = 0;
-} catch (err) { console.warn("[features/interactions/ph-hover/tooltip-modal.js] swallowed error", err); }
+} catch (err) { warnSwallow("features/interactions/ph-hover/tooltip-modal.js", err); }
 
     v.muted = soundOn ? false : true;
     v.volume = 1.0;
@@ -76,7 +76,7 @@ export function initModalVideoControls(back) {
       try {
         v.muted = true;
         await v.play();
-} catch (err) { console.warn("[features/interactions/ph-hover/tooltip-modal.js] swallowed error", err); }
+} catch (err) { warnSwallow("features/interactions/ph-hover/tooltip-modal.js", err); }
     }
   }
 
@@ -85,10 +85,10 @@ export function initModalVideoControls(back) {
       if (!v) continue;
       try {
         v.pause();
-} catch (err) { console.warn("[features/interactions/ph-hover/tooltip-modal.js] swallowed error", err); }
+} catch (err) { warnSwallow("features/interactions/ph-hover/tooltip-modal.js", err); }
       try {
         v.currentTime = 0;
-} catch (err) { console.warn("[features/interactions/ph-hover/tooltip-modal.js] swallowed error", err); }
+} catch (err) { warnSwallow("features/interactions/ph-hover/tooltip-modal.js", err); }
     }
   }
 
@@ -149,10 +149,10 @@ export function initModalVideoControls(back) {
 
     try {
       if (sideVid) sideVid.currentTime = 0;
-} catch (err) { console.warn("[features/interactions/ph-hover/tooltip-modal.js] swallowed error", err); }
+} catch (err) { warnSwallow("features/interactions/ph-hover/tooltip-modal.js", err); }
     try {
       if (frontVid) frontVid.currentTime = 0;
-} catch (err) { console.warn("[features/interactions/ph-hover/tooltip-modal.js] swallowed error", err); }
+} catch (err) { warnSwallow("features/interactions/ph-hover/tooltip-modal.js", err); }
 
     applySound();
     applySpeed();
@@ -319,7 +319,7 @@ export function openVideoFocusModal({ sideSrc, frontSrc, meta } = {}) {
     back.querySelectorAll("video").forEach((v) => {
       try {
         v.pause();
-} catch (err) { console.warn("[features/interactions/ph-hover/tooltip-modal.js] swallowed error", err); }
+} catch (err) { warnSwallow("features/interactions/ph-hover/tooltip-modal.js", err); }
     });
     back.remove();
   }
@@ -361,7 +361,8 @@ export function openVideoFocusModal({ sideSrc, frontSrc, meta } = {}) {
           v.pause();
           tile.classList.remove("is-playing");
         }
-} catch (err) { console.warn("[features/interactions/ph-hover/tooltip-modal.js] swallowed error", err); }
+} catch (err) { warnSwallow("features/interactions/ph-hover/tooltip-modal.js", err); }
     });
   });
 }
+

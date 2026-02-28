@@ -70,10 +70,10 @@ function openMetricModal(metricKey, ctx) {
   function close() {
     try {
       document.body.style.overflow = "";
-} catch (err) { console.warn("[features/interactions/metric-modal/events.js] swallowed error", err); }
+} catch (err) { warnSwallow("features/interactions/metric-modal/events.js", err); }
     try {
       modal.remove();
-} catch (err) { console.warn("[features/interactions/metric-modal/events.js] swallowed error", err); }
+} catch (err) { warnSwallow("features/interactions/metric-modal/events.js", err); }
     document.removeEventListener("keydown", onKey);
   }
 
@@ -114,7 +114,7 @@ function openMetricModal(metricKey, ctx) {
 
   try {
     document.body.style.overflow = "hidden";
-} catch (err) { console.warn("[features/interactions/metric-modal/events.js] swallowed error", err); }
+} catch (err) { warnSwallow("features/interactions/metric-modal/events.js", err); }
 }
 
 function shouldIgnoreClick(target) {
@@ -172,7 +172,7 @@ export function setMetricModalData(data, scopeEl = null) {
     try {
       scopeEl.dataset.luxMetricScope = "1";
       scopeEl.__luxMetricCtx = ctx;
-} catch (err) { console.warn("[features/interactions/metric-modal/events.js] swallowed error", err); }
+} catch (err) { warnSwallow("features/interactions/metric-modal/events.js", err); }
     decorateTiles(scopeEl);
   } else {
     currentCtx = ctx;
@@ -193,3 +193,4 @@ export function initMetricScoreModals() {
 
   decorateTiles();
 }
+

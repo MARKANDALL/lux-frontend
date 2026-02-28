@@ -127,7 +127,7 @@ export function createTransportController({ store, route }) {
     try {
       await provider.disconnect();
     } catch (err) {
-      console.warn("[features/streaming/transport/transport-controller.js] swallowed error", err);
+      warnSwallow("features/streaming/transport/transport-controller.js", err);
     }
     setConnection({ status: "disconnected", error: null });
   }
@@ -183,7 +183,7 @@ export function createTransportController({ store, route }) {
         provider.setTurnTaking({ mode });
       }
     } catch (err) {
-      console.warn("[features/streaming/transport/transport-controller.js] swallowed error", err);
+      warnSwallow("features/streaming/transport/transport-controller.js", err);
     }
   }
 
@@ -191,7 +191,7 @@ export function createTransportController({ store, route }) {
     try {
       if (typeof provider.setDebug === "function") provider.setDebug(!!enabled);
     } catch (err) {
-      console.warn("[features/streaming/transport/transport-controller.js] swallowed error", err);
+      warnSwallow("features/streaming/transport/transport-controller.js", err);
     }
   }
 

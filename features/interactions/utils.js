@@ -8,10 +8,10 @@ export function safePlay(node, src, opts) {
     if (opts && opts.restart) {
       try {
         node.currentTime = 0;
-} catch (err) { console.warn("[features/interactions/utils.js] swallowed error", err); }
+} catch (err) { warnSwallow("features/interactions/utils.js", err); }
     }
     return node.play?.().catch?.(() => {});
-} catch (err) { console.warn("[features/interactions/utils.js] swallowed error", err); }
+} catch (err) { warnSwallow("features/interactions/utils.js", err); }
 }
 
 export function playWithGesture(
@@ -21,11 +21,11 @@ export function playWithGesture(
   if (!vid) return;
   try {
     vid.loop = false;
-} catch (err) { console.warn("[features/interactions/utils.js] swallowed error", err); }
+} catch (err) { warnSwallow("features/interactions/utils.js", err); }
   if (restart) {
     try {
       vid.currentTime = 0;
-} catch (err) { console.warn("[features/interactions/utils.js] swallowed error", err); }
+} catch (err) { warnSwallow("features/interactions/utils.js", err); }
   }
   vid.muted = !wantSound;
   return vid.play().catch(() => {
@@ -37,13 +37,13 @@ export function playWithGesture(
           setTimeout(() => {
             try {
               vid.muted = false;
-} catch (err) { console.warn("[features/interactions/utils.js] swallowed error", err); }
+} catch (err) { warnSwallow("features/interactions/utils.js", err); }
           }, 50);
       })
       .catch(() => {
         try {
           vid.pause();
-} catch (err) { console.warn("[features/interactions/utils.js] swallowed error", err); }
+} catch (err) { warnSwallow("features/interactions/utils.js", err); }
       });
   });
 }
@@ -57,3 +57,4 @@ export function prepareVideo(v) {
   v.loop = false;
   v.muted = true;
 }
+

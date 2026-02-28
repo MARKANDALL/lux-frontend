@@ -107,7 +107,7 @@ async function handleRecordingComplete(audioBlob) {
         ts: Date.now(),
         scope: "practice",
       });
-} catch (err) { console.warn("[features/recorder/index.js] swallowed error", err); }
+} catch (err) { warnSwallow("features/recorder/index.js", err); }
 
     // Guardrail 1 Check: Audio Size
     if (audioBlob.size < 1000) {
@@ -146,7 +146,7 @@ async function handleRecordingComplete(audioBlob) {
     try {
       setMetricModalData({ azureResult: result, referenceText: text });
       initMetricScoreModals();
-} catch (err) { console.warn("[features/recorder/index.js] swallowed error", err); }
+} catch (err) { warnSwallow("features/recorder/index.js", err); }
 
     // ✅ expose word timings for SelfPB Expanded "karaoke"
     try {
@@ -158,7 +158,7 @@ async function handleRecordingComplete(audioBlob) {
       window.dispatchEvent(
         new CustomEvent("lux:lastAssessment", { detail: { result, timings } })
       );
-} catch (err) { console.warn("[features/recorder/index.js] swallowed error", err); }
+} catch (err) { warnSwallow("features/recorder/index.js", err); }
 
     // Guardrail 2: Bad Score / No Speech Detected?
     const score = result?.NBest?.[0]?.PronScore || 0;
@@ -293,3 +293,4 @@ export function initLuxRecorder() {
   }
 }
 export const wireRecordingButtons = initLuxRecorder;
+

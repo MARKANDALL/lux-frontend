@@ -40,7 +40,7 @@ export function createMyWordsStore({ uid, onMutation } = {}) {
       try {
         fn(state);
       } catch (err) {
-        console.warn("[features/my-words/store.js] swallowed error", err);
+        warnSwallow("features/my-words/store.js", err);
       }
     });
   }
@@ -49,7 +49,7 @@ export function createMyWordsStore({ uid, onMutation } = {}) {
     try {
       localStorage.setItem(key, JSON.stringify(state.entries));
     } catch (err) {
-      console.warn("[features/my-words/store.js] swallowed error", err);
+      warnSwallow("features/my-words/store.js", err);
     }
   }
 
@@ -65,7 +65,7 @@ export function createMyWordsStore({ uid, onMutation } = {}) {
       const arr = safeParse(raw, []);
       state.entries = Array.isArray(arr) ? arr : [];
     } catch (err) {
-      console.warn("[features/my-words/store.js] swallowed error", err);
+      warnSwallow("features/my-words/store.js", err);
     }
 
     try {
@@ -119,7 +119,7 @@ export function createMyWordsStore({ uid, onMutation } = {}) {
     try {
       state.entries = Array.isArray(entries) ? entries : [];
     } catch (err) {
-      console.warn("[features/my-words/store.js] swallowed error", err);
+      warnSwallow("features/my-words/store.js", err);
     }
     persist();
     emit();

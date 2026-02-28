@@ -93,7 +93,7 @@ export async function startMic(onStopCallback, { onMeter } = {}) {
           break;
         }
       }
-} catch (err) { console.warn("[features/recorder/media.js] swallowed error", err); }
+} catch (err) { warnSwallow("features/recorder/media.js", err); }
     mediaRecorder = new MediaRecorder(stream, opts);
 
     // ✅ Inspector: note recorder right after creation
@@ -147,3 +147,4 @@ export function stopMic() {
     mediaRecorder.stop();
   }
 }
+

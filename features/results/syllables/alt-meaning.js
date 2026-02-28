@@ -61,7 +61,7 @@ function scheduleAltHover(btn, strip) {
   const t = setTimeout(() => {
     try {
       loadAltMeaningFor(btn, strip);
-} catch (err) { console.warn("[features/results/syllables/alt-meaning.js] swallowed error", err); }
+} catch (err) { warnSwallow("features/results/syllables/alt-meaning.js", err); }
   }, 750);
   _ALT_HOVER_TIMERS.set(btn, t);
 }
@@ -203,3 +203,4 @@ export function bindSyllableAltInteractions(table) {
     });
   }
 }
+

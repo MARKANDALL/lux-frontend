@@ -101,7 +101,7 @@ export function renderResultsHeaderModern(data) {
 
   const saidText = data?.DisplayText || nbest?.Display || "(No speech detected)";
   // Expose for other modules (e.g., syllable alt meaning tooltip)
-  try { window.LuxLastSaidText = saidText; catch (err) { console.warn("[features/results/header-modern.js] swallowed error", err); }
+  try { window.LuxLastSaidText = saidText; catch (err) { warnSwallow("features/results/header-modern.js", err); }
 
   const headerScoreClass = overallAgg != null ? scoreClass(overallAgg) : "";
   const scoreHeaderAttrs = [

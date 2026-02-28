@@ -27,7 +27,7 @@ export const resolveYTLink =
     try {
       if (typeof G.ytLink === "function") return G.ytLink(arg);
       if (typeof G.ytLink === "string") return G.ytLink;
-} catch (err) { console.warn("[features/results/deps.js] swallowed error", err); }
+} catch (err) { warnSwallow("features/results/deps.js", err); }
     return null;
   });
 
@@ -35,3 +35,4 @@ export const resolveYTLink =
 // Prosody helpers (re-exported from canonical gateway)
 // ------------------------------------------------------------
 export { computeTimings, median, classifyTempo, classifyGap, renderProsodyRibbon };
+

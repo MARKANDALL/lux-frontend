@@ -143,7 +143,7 @@ export async function applyNextPracticePlan(plan, opts = {}) {
     await loadHarvardList(plan.harvardN);
     try {
       document.getElementById("referenceText")?.focus();
-} catch (err) { console.warn("[features/next-activity/next-practice.js] swallowed error", err); }
+} catch (err) { warnSwallow("features/next-activity/next-practice.js", err); }
     return;
   }
 
@@ -158,7 +158,7 @@ export async function applyNextPracticePlan(plan, opts = {}) {
     updatePartsInfoTip();
     try {
       document.getElementById("referenceText")?.focus();
-} catch (err) { console.warn("[features/next-activity/next-practice.js] swallowed error", err); }
+} catch (err) { warnSwallow("features/next-activity/next-practice.js", err); }
   }
 }
 
@@ -167,3 +167,4 @@ export async function maybeApplyStoredNextPracticePlan() {
   if (!plan) return;
   await applyNextPracticePlan(plan);
 }
+

@@ -66,18 +66,23 @@ export default defineConfig(({ mode }) => {
           // ✅ Do NOT proxy module/static asset requests under /api (those are frontend files)
           bypass: (req) => {
             const url = req.url || "";
+
+            // Vite adds query params like ?t=... or ?import to module requests
+            const pathOnly = url.split("?")[0].split("#")[0];
+
             if (
-              url.endsWith(".js") ||
-              url.endsWith(".css") ||
-              url.endsWith(".map") ||
-              url.endsWith(".ico") ||
-              url.endsWith(".png") ||
-              url.endsWith(".jpg") ||
-              url.endsWith(".jpeg") ||
-              url.endsWith(".svg") ||
-              url.endsWith(".webp")
+              pathOnly.endsWith(".js") ||
+              pathOnly.endsWith(".mjs") ||
+              pathOnly.endsWith(".css") ||
+              pathOnly.endsWith(".map") ||
+              pathOnly.endsWith(".ico") ||
+              pathOnly.endsWith(".png") ||
+              pathOnly.endsWith(".jpg") ||
+              pathOnly.endsWith(".jpeg") ||
+              pathOnly.endsWith(".svg") ||
+              pathOnly.endsWith(".webp")
             ) {
-              return url; // let Vite serve it locally
+              return url; // let Vite serve it locally (keep querystring intact)
             }
           },
 

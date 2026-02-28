@@ -45,7 +45,7 @@ export function getAudioMode() {
     // Default for everyone (first run / invalid value): NORMAL
     try {
       localStorage.setItem(KEY, AUDIO_MODES.NORMAL);
-} catch (err) { console.warn("[features/recorder/audio-mode-core.js] swallowed error", err); }
+} catch (err) { warnSwallow("features/recorder/audio-mode-core.js", err); }
 
     return AUDIO_MODES.NORMAL;
   } catch {
@@ -68,3 +68,4 @@ export function setAudioMode(mode) {
   initAudioModeDataset(safe);
   return safe;
 }
+

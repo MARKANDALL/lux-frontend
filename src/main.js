@@ -1,6 +1,9 @@
 // src/main.js
 // The Main Entry Point: Boots the app, handles the Typewriter, and wires the Dropdown.
 
+// ✅ Swallowed-error warning toggle (IMPORTANT-only by default in dev; OFF in prod)
+import "../ui/lux-warn.js";
+
 import { wirePassageSelect, wireNextBtn } from "../features/passages/index.js";
 import { wireHarvardPicker } from "../features/harvard/index.js";
 import { maybeApplyStoredNextPracticePlan } from "../features/next-activity/next-practice.js";
@@ -328,7 +331,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let collapsed = false;
   try {
     collapsed = localStorage.getItem("bannerCollapsed") === "true";
-} catch (err) { console.warn("[src/main.js] swallowed error", err); }
+} catch (err) { warnSwallow("src/main.js", err); }
   banner.classList.toggle("is-collapsed", collapsed);
 
   // If user previously collapsed it, we still want the handle visible immediately
@@ -338,7 +341,7 @@ document.addEventListener("DOMContentLoaded", () => {
     banner.classList.toggle("is-collapsed", !!next);
     try {
       localStorage.setItem("bannerCollapsed", next ? "true" : "false");
-} catch (err) { console.warn("[src/main.js] swallowed error", err); }
+} catch (err) { warnSwallow("src/main.js", err); }
 
     requestAnimationFrame(() => {
       updateTopBannerLayout();
@@ -365,3 +368,4 @@ if (document.readyState === "loading") {
 } else {
   bootApp();
 }
+
