@@ -1,4 +1,6 @@
 // features/convo/convo-bootstrap.js
+// Boots the AI conversation UI: builds layout, wires drawers/nav/flow, and initializes picker + state.
+
 import { SCENARIOS } from "./scenarios.js";
 import { assessPronunciation } from "../../api/assess.js";
 import { convoReport } from "../../api/convo-report.js";
@@ -34,7 +36,7 @@ import { initConvoModeSystem, applyInitialConvoMode } from "./convo-mode-system.
 import { createBeginScenario, initConvoPickerSystem } from "./convo-picker-system.js";
 
 import { createSetKnobs } from "./convo-knobs-system.js";
-import { openCharsDrawer, closeCharsDrawer } from "./characters-drawer.js";
+import { openCharsDrawer, closeCharsDrawer, peekCharsDrawer, unpeekCharsDrawer } from "./characters-drawer.js";
 import { installConvoTtsContext } from "./convo-tts-context.js";
 
 export function bootConvo() {
@@ -155,6 +157,11 @@ export function bootConvo() {
         },
       });
     });
+  }
+
+  if (pickerCharsBtn) {
+    pickerCharsBtn.addEventListener("mouseenter", () => peekCharsDrawer());
+    pickerCharsBtn.addEventListener("mouseleave", () => unpeekCharsDrawer());
   }
 
   // Re-open characters drawer with fresh data when scenario changes

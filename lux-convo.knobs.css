@@ -1,117 +1,69 @@
-/* FILE: lux-convo.knobs.css */
+/* lux-convo.knobs.css  —  v4 */
 /* Scene Settings drawer (right-side) + picker bottom row buttons */
 
-/* =========================================================
-   Knobs drawer — right-side
-   ========================================================= */
+/* ============================================================
+   DRAWER SHELL — blue wrapping frame (Gemini-style)
+   ============================================================ */
 
 .lux-knobsDrawer {
   position: fixed;
   top: 0;
   right: 0;
   height: 100vh;
-  width: 384px;
+  width: 390px;
   max-width: 92vw;
+
+  /* ── Blue gradient frame ── */
+  background: linear-gradient(180deg, #4285f4 0%, #5e60ce 45%, #4285f4 100%);
+  padding: 6px;                 /* blue frame thickness */
+  border-radius: 20px 0 0 20px; /* rounded left, flush right */
 
   /* ── Default: offscreen right ── */
   transform: translateX(100%);
   z-index: 999;
 
   display: flex;
-  flex-direction: row;   /* edge strip + inner content side by side */
+  flex-direction: column;
 
-  /* no transition — keyframes drive all motion */
+  /* ── Heavy layered shadow ── */
+  box-shadow:
+    -10px 0 48px rgba(0,0,0,0.16),
+    -4px 0 16px rgba(0,0,0,0.10),
+    -1px 0 4px rgba(0,0,0,0.06);
+
   transition: none;
 }
 
-/* ── Blue edge strip (Gemini-style) ── */
-.lux-knobsEdge {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 4px;
-  height: 100%;
-  background: linear-gradient(180deg, #4285f4, #6d5bf7 40%, #4285f4);
-  border-radius: 4px 0 0 4px;
-  z-index: 2;
-}
-
-/* ── Inner panel (white content area) ── */
+/* ── Inner white panel ── */
 .lux-knobsInner {
   flex: 1;
-  min-width: 0;
-  background: rgba(255,255,255,0.96);
+  min-height: 0;
+  background: rgba(255,255,255,0.97);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-radius: 16px 0 0 16px;
   display: flex;
   flex-direction: column;
-
-  /* ── Heavy layered shadow ── */
-  box-shadow:
-    -8px 0 40px rgba(0,0,0,0.14),
-    -3px 0 14px rgba(0,0,0,0.08),
-    -1px 0 4px rgba(0,0,0,0.05);
+  overflow: hidden;
 }
 
 
 /* ================================================================
-   ANIMATION KEYFRAMES — premium physics (mirror of chars drawer)
-   ================================================================ */
-
-/* OPEN: fast launch → decelerate → tiny overshoot → settle */
-@keyframes luxKnobsSlideIn {
-  0%   { transform: translateX(100%); }
-  40%  { transform: translateX(18%); }          /* fast initial burst */
-  70%  { transform: translateX(2%); }           /* decelerating */
-  82%  { transform: translateX(-1.2%); }        /* slight overshoot past target */
-  100% { transform: translateX(0); }            /* settle */
-}
-
-/* CLOSE: accelerate out — quick and decisive */
-@keyframes luxKnobsSlideOut {
-  0%   { transform: translateX(0); }
-  30%  { transform: translateX(8%); }           /* ease into motion */
-  100% { transform: translateX(100%); }         /* gone */
-}
-
-/* ── OPENING state ── */
-.lux-knobsDrawer[data-state="opening"] {
-  animation: luxKnobsSlideIn 480ms cubic-bezier(0.22, 0.6, 0.35, 1) both;
-}
-
-/* ── Keep position when OPEN ── */
-.lux-knobsDrawer[data-state="open"] {
-  transform: translateX(0);
-}
-
-/* ── CLOSING state ── */
-.lux-knobsDrawer[data-state="closing"] {
-  animation: luxKnobsSlideOut 260ms cubic-bezier(0.4, 0, 0.7, 0.2) both;
-}
-
-
-/* ================================================================
-   PEEKABOO: hover hint on trigger button
+   PEEKABOO
    ================================================================ */
 .lux-knobsDrawer.lux-knobsPeek {
-  transform: translateX(calc(100% - 14px));
+  transform: translateX(calc(100% - 16px));
   transition: transform 300ms cubic-bezier(0.22, 0.6, 0.35, 1);
 }
-
-/* When peek is removed, slide back smoothly */
 .lux-knobsDrawer:not(.lux-knobsPeek)[data-state="closed"] {
   transition: transform 250ms cubic-bezier(0.4, 0, 0.7, 0.2);
 }
 
 
 /* ================================================================
-   STAGED CONTENT ENTRANCE — cascading chips
-   The header slides in, then each knobs group cascades down
-   with a nice staggered waterfall + overshoot effect
+   STAGED CONTENT ENTRANCE — cascading groups
    ================================================================ */
 
-/* Hidden while closed or closing */
 .lux-knobsDrawer[data-state="closed"] .lux-knobsHeader,
 .lux-knobsDrawer[data-state="closed"] .lux-knobsGroup,
 .lux-knobsDrawer[data-state="closing"] .lux-knobsHeader,
@@ -119,43 +71,38 @@
   opacity: 0;
 }
 
-/* Header: slide from right */
 .lux-knobsDrawer[data-state="opening"] .lux-knobsHeader {
-  animation: luxKnobsContentIn 340ms cubic-bezier(0.22, 0.6, 0.35, 1) 200ms both;
+  animation: luxKnobsContentIn 340ms cubic-bezier(0.22, 0.6, 0.35, 1) 220ms both;
 }
-
-/* Groups: cascade down with stagger — each slides in from right with overshoot */
 .lux-knobsDrawer[data-state="opening"] .lux-knobsGroup:nth-child(1) {
-  animation: luxKnobsGroupIn 420ms cubic-bezier(0.22, 0.6, 0.35, 1) 300ms both;
+  animation: luxKnobsGroupIn 440ms cubic-bezier(0.22, 0.6, 0.35, 1) 320ms both;
 }
 .lux-knobsDrawer[data-state="opening"] .lux-knobsGroup:nth-child(2) {
-  animation: luxKnobsGroupIn 420ms cubic-bezier(0.22, 0.6, 0.35, 1) 420ms both;
+  animation: luxKnobsGroupIn 440ms cubic-bezier(0.22, 0.6, 0.35, 1) 440ms both;
 }
 .lux-knobsDrawer[data-state="opening"] .lux-knobsGroup:nth-child(3) {
-  animation: luxKnobsGroupIn 420ms cubic-bezier(0.22, 0.6, 0.35, 1) 540ms both;
+  animation: luxKnobsGroupIn 440ms cubic-bezier(0.22, 0.6, 0.35, 1) 560ms both;
 }
 
-/* Once open, content fully visible */
 .lux-knobsDrawer[data-state="open"] .lux-knobsHeader,
 .lux-knobsDrawer[data-state="open"] .lux-knobsGroup {
-  opacity: 1;
-  transform: none;
+  opacity: 1; transform: none;
 }
 
 @keyframes luxKnobsContentIn {
-  0%   { opacity: 0; transform: translateX(16px); }
+  0%   { opacity: 0; transform: translateX(20px); }
   100% { opacity: 1; transform: translateX(0); }
 }
 
 @keyframes luxKnobsGroupIn {
-  0%   { opacity: 0; transform: translateX(30px) translateY(8px); }
-  70%  { opacity: 1; transform: translateX(-2px) translateY(-1px); }  /* overshoot */
+  0%   { opacity: 0; transform: translateX(36px) translateY(8px); }
+  68%  { opacity: 1; transform: translateX(-3px) translateY(-1px); }
   100% { opacity: 1; transform: translateX(0) translateY(0); }
 }
 
 
 /* ================================================================
-   CLOSE BUTTON — circular, polished
+   CLOSE BUTTON
    ================================================================ */
 
 .lux-knobsClose {
@@ -165,8 +112,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   color: rgba(0,0,0,0.55);
   transition: background 140ms ease, color 140ms ease, transform 100ms ease;
@@ -176,9 +123,8 @@
   background: rgba(0,0,0,0.06);
   color: rgba(0,0,0,0.8);
 }
-.lux-knobsClose:active { transform: scale(0.92); }
+.lux-knobsClose:active { transform: scale(0.9); }
 
-/* ── Nudge animation (red glow + spin) ── */
 @keyframes luxCloseGlow {
   0%, 100% { box-shadow: 0 0 0 0 rgba(220,38,38,0); }
   25% { box-shadow: 0 0 0 6px rgba(220,38,38,0.18), 0 0 16px rgba(220,38,38,0.30); }
@@ -193,7 +139,6 @@
   60% { transform: rotate(7deg); }
   80% { transform: rotate(-3deg); }
 }
-
 .lux-knobsClose.lux-closeNudge {
   animation: luxCloseGlow 0.8s ease-out, luxCloseWiggle 0.6s ease-in-out;
   color: #dc2626;
@@ -202,7 +147,7 @@
 
 
 /* ================================================================
-   ORIGINAL LAYOUT — PRESERVED
+   LAYOUT
    ================================================================ */
 
 .lux-knobsHeader {
@@ -216,29 +161,15 @@
   font-weight: 700;
 }
 
-.lux-knobsBody {
-  padding: 12px 20px 20px;
-  overflow: auto;
-}
+.lux-knobsBody { padding: 12px 20px 20px; overflow: auto; }
 
-.lux-knobsGroup {
-  padding: 10px 0 12px;
-  border-top: 1px solid rgba(0,0,0,0.06);
-}
+.lux-knobsGroup { padding: 10px 0 12px; border-top: 1px solid rgba(0,0,0,0.06); }
 .lux-knobsGroup:first-child { border-top: 0; }
 
-.lux-knobsLabel {
-  font-weight: 700;
-  margin-bottom: 10px;
-}
+.lux-knobsLabel { font-weight: 700; margin-bottom: 10px; }
 
-.lux-knobsChips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
+.lux-knobsChips { display: flex; flex-wrap: wrap; gap: 8px; }
 
-/* Level chips use custom colors */
 .lux-knobsChips .lux-levelChip,
 .lux-knobsChips .lux-levelChip.is-on {
   background: var(--lv-bg);
@@ -258,7 +189,6 @@
   background: rgba(0,120,215,0.06);
   border-color: rgba(0,120,215,0.24);
 }
-
 .lux-knobsChips button.is-on {
   border-color: rgba(0,120,215,0.42);
   box-shadow: 0 0 0 3px rgba(0,120,215,0.16);
@@ -268,7 +198,7 @@
 
 
 /* ================================================================
-   Picker: bottom row buttons (Characters / Scene Settings)
+   Picker bottom row (Characters / Scene Settings buttons)
    ================================================================ */
 
 .lux-pickerKnobsRow {
@@ -280,12 +210,10 @@
   position: relative;
   z-index: 95;
 }
-
 #convoApp[data-mode="picker"] .lux-pickerKnobsRow {
   position: relative;
   z-index: 80;
 }
-
 .lux-pickerKnobsRow .btn {
   border-radius: 999px;
   padding: 7px 14px;
@@ -300,7 +228,6 @@
 .lux-pickerKnobsRow .btn:hover {
   background: rgba(255,255,255,0.32);
 }
-
 .lux-pickerKnobsSummary {
   font-size: 0.85rem;
   color: rgba(255,255,255,0.88);
@@ -312,13 +239,12 @@
 
 
 /* ============================================================
-   LEGACY knobs drawer (keep for migration)
+   LEGACY knobs drawer (kept for migration)
    ============================================================ */
 
 .lux-drawer {
   position: fixed;
-  top: 0;
-  right: 0;
+  top: 0; right: 0;
   height: 100vh;
   width: min(360px, 92vw);
   background: rgba(255,255,255,0.96);
@@ -331,7 +257,6 @@
   display: flex;
   flex-direction: column;
 }
-
 .lux-drawerHd {
   padding: 12px 14px;
   border-bottom: 1px solid rgba(0,0,0,0.08);
@@ -347,14 +272,6 @@
    Reduced-motion
    ============================================================ */
 @media (prefers-reduced-motion: reduce) {
-  .lux-knobsDrawer,
-  .lux-knobsDrawer[data-state="opening"],
-  .lux-knobsDrawer[data-state="closing"] {
-    animation: none !important;
-    transition: none !important;
-  }
-  .lux-knobsDrawer[data-state="opening"] { transform: translateX(0); }
-  .lux-knobsDrawer[data-state="open"] { transform: translateX(0); }
   .lux-knobsDrawer[data-state="opening"] .lux-knobsHeader,
   .lux-knobsDrawer[data-state="opening"] .lux-knobsGroup {
     animation: none !important; opacity: 1 !important; transform: none !important;

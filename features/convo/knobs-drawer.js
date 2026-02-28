@@ -4,62 +4,24 @@ const KNOBS_KEY = "lux_knobs_v3";
 const DEFAULTS = { level: "B1", tone: "neutral", length: "medium" };
 
 function read() {
-  try {
-    const raw = localStorage.getItem(KNOBS_KEY);
-    if (!raw) return { ...DEFAULTS };
-    return { ...DEFAULTS, ...(JSON.parse(raw) || {}) };
-  } catch { return { ...DEFAULTS }; }
+  try { const r = localStorage.getItem(KNOBS_KEY); return r ? { ...DEFAULTS, ...JSON.parse(r) } : { ...DEFAULTS }; }
+  catch { return { ...DEFAULTS }; }
 }
-
-function write(next) {
-  localStorage.setItem(KNOBS_KEY, JSON.stringify(next));
-  window.dispatchEvent(new CustomEvent("lux:knobs", { detail: next }));
-}
+function write(n) { localStorage.setItem(KNOBS_KEY, JSON.stringify(n)); window.dispatchEvent(new CustomEvent("lux:knobs", { detail: n })); }
 
 export function getKnobs() { return read(); }
+export function setKnobs(p) { const n = { ...read(), ...p }; write(n); return n; }
+export function onKnobsChange(fn) { const h = (e) => fn(e.detail || read()); window.addEventListener("lux:knobs", h); return () => window.removeEventListener("lux:knobs", h); }
+export function formatKnobsSummary(k) { const c = s => s.charAt(0).toUpperCase()+s.slice(1); return `Level: ${String(k.level||"B1").toUpperCase()} · Tone: ${c(k.tone||"neutral")} · Length: ${c(k.length||"medium")}`; }
 
-export function setKnobs(patch) {
-  const next = { ...read(), ...(patch || {}) };
-  write(next);
-  return next;
-}
-
-export function onKnobsChange(fn) {
-  const handler = (e) => fn(e.detail || read());
-  window.addEventListener("lux:knobs", handler);
-  return () => window.removeEventListener("lux:knobs", handler);
-}
-
-export function formatKnobsSummary(k) {
-  const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
-  return `Level: ${String(k.level || "B1").toUpperCase()} · Tone: ${cap(k.tone || "neutral")} · Length: ${cap(k.length || "medium")}`;
-}
-
-/* ── Tone emoji map ───────────────────────────────────────── */
-const TONE_EMOJI = {
-  neutral:"😐", formal:"👔", friendly:"😊", enthusiastic:"🤩", encouraging:"💪",
-  playful:"😜", flirty:"😏", sarcastic:"🙄", tired:"😴", distracted:"📱",
-  cold:"🧊", blunt:"🔨", impatient:"⏱️", irritable:"😤", angry:"🔥", emotional:"🥺",
-};
-
-const LEVEL_COLORS = {
-  A1: { bg: "#f87171", text: "#fff" }, A2: { bg: "#dc2626", text: "#fff" },
-  B1: { bg: "#fbbf24", text: "#78350f" }, B2: { bg: "#d97706", text: "#fff" },
-  C1: { bg: "#60a5fa", text: "#fff" }, C2: { bg: "#2563eb", text: "#fff" },
-};
-
-const LENGTH_SIZES = {
-  terse:  { px: "6px 10px", fontSize: "0.78rem" },
-  short:  { px: "7px 14px", fontSize: "0.82rem" },
-  medium: { px: "8px 18px", fontSize: "0.85rem" },
-  long:   { px: "9px 24px", fontSize: "0.88rem" },
-  extended:{ px: "10px 32px",fontSize: "0.90rem" },
-};
-
-const LENGTH_LABELS = { terse:"Terse", short:"Short", medium:"Medium", long:"Long", extended:"Extended" };
+const TONE_EMOJI = {neutral:"😐",formal:"👔",friendly:"😊",enthusiastic:"🤩",encouraging:"💪",playful:"😜",flirty:"😏",sarcastic:"🙄",tired:"😴",distracted:"📱",cold:"🧊",blunt:"🔨",impatient:"⏱️",irritable:"😤",angry:"🔥",emotional:"🥺"};
+const LEVEL_COLORS = {A1:{bg:"#f87171",text:"#fff"},A2:{bg:"#dc2626",text:"#fff"},B1:{bg:"#fbbf24",text:"#78350f"},B2:{bg:"#d97706",text:"#fff"},C1:{bg:"#60a5fa",text:"#fff"},C2:{bg:"#2563eb",text:"#fff"}};
+const LENGTH_SIZES = {terse:{px:"6px 10px",fs:"0.78rem"},short:{px:"7px 14px",fs:"0.82rem"},medium:{px:"8px 18px",fs:"0.85rem"},long:{px:"9px 24px",fs:"0.88rem"},extended:{px:"10px 32px",fs:"0.90rem"}};
+const LENGTH_LABELS = {terse:"Terse",short:"Short",medium:"Medium",long:"Long",extended:"Extended"};
 
 let _openerEl = null;
 let _docClickBound = false;
+let _currentAnim = null;
 
 function ensureDom() {
   let drawer = document.getElementById("luxKnobsDrawer");
@@ -71,23 +33,13 @@ function ensureDom() {
   drawer.setAttribute("aria-hidden", "true");
   drawer.inert = true;
   drawer.dataset.state = "closed";
+  drawer.style.willChange = "transform";
 
-  const levelChips = Object.keys(LEVEL_COLORS).map((lv) => {
-    const c = LEVEL_COLORS[lv];
-    return `<button type="button" data-value="${lv}" class="lux-levelChip" style="--lv-bg:${c.bg}; --lv-text:${c.text}">${lv}</button>`;
-  }).join("\n");
-
-  const toneChips = Object.entries(TONE_EMOJI).map(([val, emoji]) => {
-    const label = val === "emotional" ? "Emotional / Upset" : val.charAt(0).toUpperCase() + val.slice(1);
-    return `<button type="button" data-value="${val}" class="lux-toneChip">${emoji} ${label}</button>`;
-  }).join("\n");
-
-  const lengthChips = Object.entries(LENGTH_SIZES).map(([val, sz]) => {
-    return `<button type="button" data-value="${val}" class="lux-lengthChip" style="padding:${sz.px}; font-size:${sz.fontSize}">${LENGTH_LABELS[val]}</button>`;
-  }).join("\n");
+  const levelChips = Object.keys(LEVEL_COLORS).map(lv => { const c=LEVEL_COLORS[lv]; return `<button type="button" data-value="${lv}" class="lux-levelChip" style="--lv-bg:${c.bg};--lv-text:${c.text}">${lv}</button>`; }).join("\n");
+  const toneChips = Object.entries(TONE_EMOJI).map(([v,e]) => { const l=v==="emotional"?"Emotional / Upset":v.charAt(0).toUpperCase()+v.slice(1); return `<button type="button" data-value="${v}" class="lux-toneChip">${e} ${l}</button>`; }).join("\n");
+  const lengthChips = Object.entries(LENGTH_SIZES).map(([v,s]) => `<button type="button" data-value="${v}" class="lux-lengthChip" style="padding:${s.px};font-size:${s.fs}">${LENGTH_LABELS[v]}</button>`).join("\n");
 
   drawer.innerHTML = `
-    <div class="lux-knobsEdge"></div>
     <div class="lux-knobsInner">
       <div class="lux-knobsHeader">
         <div class="lux-knobsTitle">Scene Settings</div>
@@ -115,14 +67,61 @@ function ensureDom() {
   `;
   document.body.appendChild(drawer);
 
-  drawer.addEventListener("animationend", _onAnimEnd);
-
   if (!_docClickBound) {
     _docClickBound = true;
     document.addEventListener("click", _onDocClick, true);
   }
 
   return { drawer };
+}
+
+/* ── WAAPI slide animations ── */
+
+function _animateOpen(drawer) {
+  if (_currentAnim) { _currentAnim.cancel(); _currentAnim = null; }
+
+  _currentAnim = drawer.animate([
+    { transform: "translateX(100%)",  offset: 0    },
+    { transform: "translateX(12%)",   offset: 0.35 },
+    { transform: "translateX(0%)",    offset: 0.7  },
+    { transform: "translateX(-1.4%)", offset: 0.82 },
+    { transform: "translateX(0.3%)",  offset: 0.92 },
+    { transform: "translateX(0%)",    offset: 1    },
+  ], {
+    duration: 520,
+    easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+    fill: "forwards",
+  });
+
+  _currentAnim.onfinish = () => {
+    drawer.dataset.state = "open";
+    drawer.style.transform = "translateX(0)";
+    _currentAnim = null;
+  };
+}
+
+function _animateClose(drawer) {
+  if (_currentAnim) { _currentAnim.cancel(); _currentAnim = null; }
+
+  _currentAnim = drawer.animate([
+    { transform: "translateX(0)",    offset: 0    },
+    { transform: "translateX(-2%)",  offset: 0.15 },
+    { transform: "translateX(100%)", offset: 1    },
+  ], {
+    duration: 300,
+    easing: "cubic-bezier(0.4, 0, 0.85, 0.12)",
+    fill: "forwards",
+  });
+
+  _currentAnim.onfinish = () => {
+    drawer.dataset.open = "0";
+    drawer.dataset.state = "closed";
+    drawer.setAttribute("aria-hidden", "true");
+    drawer.inert = true;
+    drawer.style.transform = "translateX(100%)";
+    _currentAnim = null;
+    if (_openerEl) { _openerEl.focus(); _openerEl = null; }
+  };
 }
 
 /* ── Peekaboo ── */
@@ -132,8 +131,8 @@ export function peekKnobsDrawer() {
   drawer.classList.add("lux-knobsPeek");
 }
 export function unpeekKnobsDrawer() {
-  const drawer = document.getElementById("luxKnobsDrawer");
-  if (drawer) drawer.classList.remove("lux-knobsPeek");
+  const d = document.getElementById("luxKnobsDrawer");
+  if (d) d.classList.remove("lux-knobsPeek");
 }
 
 /* ── Empty-space nudge ── */
@@ -141,47 +140,30 @@ function _onDocClick(e) {
   const drawer = document.getElementById("luxKnobsDrawer");
   if (!drawer || drawer.dataset.state !== "open") return;
   if (drawer.contains(e.target)) return;
-  const charsDrawer = document.getElementById("luxCharsDrawer");
-  if (charsDrawer && charsDrawer.contains(e.target)) return;
+  const chars = document.getElementById("luxCharsDrawer");
+  if (chars && chars.contains(e.target)) return;
+
   const interactive = e.target.closest(
-    "a, button, input, select, textarea, [role='button'], [tabindex]:not([tabindex='-1']), video, audio, details, summary, label, .btn, .lux-pickerKnobsRow, .lux-thumb, img[onclick], [data-scenario]"
+    "a, button, input, select, textarea, [role='button'], [role='dialog'], " +
+    "[tabindex]:not([tabindex='-1']), video, audio, details, summary, label, " +
+    ".btn, .lux-pickerKnobsRow, .lux-thumb, img[onclick], [data-scenario], " +
+    "[data-expandable], .scenario-desc, .practice-btn, .lux-scenarioDialog, " +
+    ".lux-dialogBackdrop, dialog, [aria-expanded], nav, .lux-navItem, " +
+    "[contenteditable], .lux-ttsBtn, .lux-micBtn"
   );
   if (interactive) return;
-  _nudgeCloseBtn(drawer);
-}
 
-function _nudgeCloseBtn(drawer) {
-  const btn = drawer?.querySelector(".lux-knobsClose");
+  const btn = drawer.querySelector(".lux-knobsClose");
   if (!btn || btn.classList.contains("lux-closeNudge")) return;
   btn.classList.add("lux-closeNudge");
   btn.addEventListener("animationend", () => btn.classList.remove("lux-closeNudge"), { once: true });
 }
 
-/* ── Lifecycle ── */
-function _onAnimEnd(e) {
-  const drawer = document.getElementById("luxKnobsDrawer");
-  if (e.target !== drawer) return;
-  const nm = e.animationName;
-  if (nm === "luxKnobsSlideIn") {
-    drawer.dataset.state = "open";
-  } else if (nm === "luxKnobsSlideOut") {
-    drawer.dataset.open = "0";
-    drawer.dataset.state = "closed";
-    drawer.setAttribute("aria-hidden", "true");
-    drawer.inert = true;
-    if (_openerEl && typeof _openerEl.focus === "function") {
-      _openerEl.focus();
-      _openerEl = null;
-    }
-  }
-}
-
 function paintSelection(drawer, knobs) {
-  drawer.querySelectorAll(".lux-knobsGroup").forEach((group) => {
-    const key = group.getAttribute("data-key");
-    const val = knobs[key];
-    group.querySelectorAll("button[data-value]").forEach((b) => {
-      const on = b.getAttribute("data-value") === val;
+  drawer.querySelectorAll(".lux-knobsGroup").forEach(g => {
+    const k = g.getAttribute("data-key"), v = knobs[k];
+    g.querySelectorAll("button[data-value]").forEach(b => {
+      const on = b.getAttribute("data-value") === v;
       b.classList.toggle("is-on", on);
       b.setAttribute("aria-pressed", on ? "true" : "false");
     });
@@ -193,25 +175,22 @@ export function mountKnobsDrawer() {
 
   const open = () => {
     drawer.classList.remove("lux-knobsPeek");
-
-    // TOGGLE: if already open/opening, close
-    if (drawer.dataset.state === "open" || drawer.dataset.state === "opening") {
-      close();
-      return;
-    }
-
+    if (drawer.dataset.state === "open" || drawer.dataset.state === "opening") { close(); return; }
     _openerEl = document.activeElement || null;
     paintSelection(drawer, getKnobs());
-
     drawer.dataset.open = "1";
     drawer.dataset.state = "opening";
     drawer.setAttribute("aria-hidden", "false");
     drawer.inert = false;
 
-    requestAnimationFrame(() => {
-      const closeBtn = drawer.querySelector(".lux-knobsClose");
-      if (closeBtn) closeBtn.focus();
-    });
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      drawer.style.transform = "translateX(0)";
+      drawer.dataset.state = "open";
+    } else {
+      _animateOpen(drawer);
+    }
+
+    requestAnimationFrame(() => { const c = drawer.querySelector(".lux-knobsClose"); if (c) c.focus(); });
   };
 
   const close = () => {
@@ -219,38 +198,23 @@ export function mountKnobsDrawer() {
     if (st === "closing" || st === "closed") return;
     drawer.dataset.state = "closing";
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      drawer.dataset.open = "0";
-      drawer.dataset.state = "closed";
-      drawer.setAttribute("aria-hidden", "true");
-      drawer.inert = true;
-      if (_openerEl && typeof _openerEl.focus === "function") {
-        _openerEl.focus();
-        _openerEl = null;
-      }
-    }
+      drawer.style.transform = "translateX(100%)";
+      drawer.dataset.open = "0"; drawer.dataset.state = "closed";
+      drawer.setAttribute("aria-hidden", "true"); drawer.inert = true;
+      if (_openerEl) { _openerEl.focus(); _openerEl = null; }
+    } else { _animateClose(drawer); }
   };
 
   drawer.querySelector(".lux-knobsClose").addEventListener("click", close);
-
   drawer.addEventListener("click", (e) => {
-    const btn = e.target.closest("button[data-value]");
-    if (!btn) return;
-    const group = btn.closest(".lux-knobsGroup");
-    if (!group) return;
-    const key = group.getAttribute("data-key");
-    const value = btn.getAttribute("data-value");
-    paintSelection(drawer, setKnobs({ [key]: value }));
+    const btn = e.target.closest("button[data-value]"); if (!btn) return;
+    const g = btn.closest(".lux-knobsGroup"); if (!g) return;
+    paintSelection(drawer, setKnobs({ [g.getAttribute("data-key")]: btn.getAttribute("data-value") }));
   });
-
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && drawer.dataset.state === "open") close();
-  });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && drawer.dataset.state === "open") close(); });
 
   return { open, close };
 }
 
 let _instance = null;
-export function getKnobsDrawerInstance() {
-  if (!_instance) _instance = mountKnobsDrawer();
-  return _instance;
-}
+export function getKnobsDrawerInstance() { if (!_instance) _instance = mountKnobsDrawer(); return _instance; }

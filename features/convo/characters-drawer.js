@@ -1,6 +1,5 @@
 // features/convo/characters-drawer.js
-// Left-side drawer showing the two characters in the current scenario.
-// User picks which role they want to play.
+// Left-side drawer – character selection.
 
 import { SCENARIOS } from "./scenarios.js";
 
@@ -9,6 +8,7 @@ let _body = null;
 let _onRoleSelect = null;
 let _openerEl = null;
 let _docClickBound = false;
+let _currentAnim = null;  // track running WAAPI animation
 
 function ensureDom() {
   if (_drawer) return;
@@ -19,9 +19,9 @@ function ensureDom() {
   _drawer.setAttribute("aria-hidden", "true");
   _drawer.inert = true;
   _drawer.dataset.state = "closed";
+  _drawer.style.willChange = "transform";          // GPU compositing hint
 
   _drawer.innerHTML = `
-    <div class="lux-charsEdge"></div>
     <div class="lux-charsInner">
       <div class="lux-charsHeader">
         <div class="lux-charsTitle">Characters</div>
@@ -38,7 +38,6 @@ function ensureDom() {
 
   _body = _drawer.querySelector(".lux-charsBody");
 
-  // Close ONLY via the X button or Escape
   _drawer.querySelector(".lux-charsClose").addEventListener("click", closeCharsDrawer);
 
   document.addEventListener("keydown", (e) => {
@@ -54,19 +53,66 @@ function ensureDom() {
     if (_onRoleSelect) _onRoleSelect(idx);
   });
 
-  // Finalize lifecycle on animation end
-  _drawer.addEventListener("animationend", _onAnimEnd);
-
-  // Global empty-space click detection
   if (!_docClickBound) {
     _docClickBound = true;
     document.addEventListener("click", _onDocClick, true);
   }
 }
 
-/* ── Peekaboo: show drawer hint on button hover ──────────── */
+/* ── WAAPI slide animations (true 60fps on compositor) ───── */
 
-let _peekTimeout = null;
+function _animateOpen() {
+  if (_currentAnim) { _currentAnim.cancel(); _currentAnim = null; }
+
+  _currentAnim = _drawer.animate([
+    { transform: "translateX(-100%)",  offset: 0    },
+    { transform: "translateX(-12%)",   offset: 0.35 },  // fast burst
+    { transform: "translateX(0%)",     offset: 0.7  },  // arrive at target
+    { transform: "translateX(1.4%)",   offset: 0.82 },  // overshoot past
+    { transform: "translateX(-0.3%)",  offset: 0.92 },  // tiny counter-bounce
+    { transform: "translateX(0%)",     offset: 1    },  // settle
+  ], {
+    duration: 520,
+    easing: "cubic-bezier(0.16, 1, 0.3, 1)",  // emphasized decelerate
+    fill: "forwards",
+  });
+
+  _currentAnim.onfinish = () => {
+    _drawer.dataset.state = "open";
+    _drawer.style.transform = "translateX(0)";
+    _currentAnim = null;
+  };
+}
+
+function _animateClose() {
+  if (_currentAnim) { _currentAnim.cancel(); _currentAnim = null; }
+
+  _currentAnim = _drawer.animate([
+    { transform: "translateX(0)",     offset: 0   },
+    { transform: "translateX(2%)",    offset: 0.15 },  // tiny pull-back
+    { transform: "translateX(-100%)", offset: 1    },   // accelerate out
+  ], {
+    duration: 300,
+    easing: "cubic-bezier(0.4, 0, 0.85, 0.12)",  // accelerate
+    fill: "forwards",
+  });
+
+  _currentAnim.onfinish = () => {
+    _drawer.dataset.open = "0";
+    _drawer.dataset.state = "closed";
+    _drawer.setAttribute("aria-hidden", "true");
+    _drawer.inert = true;
+    _drawer.style.transform = "translateX(-100%)";
+    _currentAnim = null;
+    if (_openerEl && typeof _openerEl.focus === "function") {
+      _openerEl.focus();
+      _openerEl = null;
+    }
+  };
+}
+
+/* ── Peekaboo ───────────────────────────────────────────── */
+
 export function peekCharsDrawer() {
   ensureDom();
   if (_drawer.dataset.state !== "closed") return;
@@ -77,23 +123,23 @@ export function unpeekCharsDrawer() {
   _drawer.classList.remove("lux-charsPeek");
 }
 
-/* ── Empty-space click → X-button attention nudge ────────── */
+/* ── Empty-space click → X nudge ─────────────────────────── */
 
 function _onDocClick(e) {
-  // Check BOTH drawers
-  const charsOpen = _drawer && _drawer.dataset.state === "open";
-  const knobsDrawer = document.getElementById("luxKnobsDrawer");
-  const knobsOpen = knobsDrawer && knobsDrawer.dataset.state === "open";
-
-  if (!charsOpen) return;
-
-  // Inside either drawer? ignore
+  if (!_drawer || _drawer.dataset.state !== "open") return;
   if (_drawer.contains(e.target)) return;
+
+  const knobsDrawer = document.getElementById("luxKnobsDrawer");
   if (knobsDrawer && knobsDrawer.contains(e.target)) return;
 
-  // If click hit ANY interactive element, let it through — no nudge
+  // Broad interactive selector — anything clickable should NOT trigger nudge
   const interactive = e.target.closest(
-    "a, button, input, select, textarea, [role='button'], [tabindex]:not([tabindex='-1']), video, audio, details, summary, label, .btn, .lux-pickerKnobsRow, .lux-thumb, img[onclick], [data-scenario]"
+    "a, button, input, select, textarea, [role='button'], [role='dialog'], " +
+    "[tabindex]:not([tabindex='-1']), video, audio, details, summary, label, " +
+    ".btn, .lux-pickerKnobsRow, .lux-thumb, img[onclick], [data-scenario], " +
+    "[data-expandable], .scenario-desc, .practice-btn, .lux-scenarioDialog, " +
+    ".lux-dialogBackdrop, dialog, [aria-expanded], nav, .lux-navItem, " +
+    "[contenteditable], .lux-ttsBtn, .lux-micBtn"
   );
   if (interactive) return;
 
@@ -107,32 +153,13 @@ function _nudgeCloseBtn() {
   btn.addEventListener("animationend", () => btn.classList.remove("lux-closeNudge"), { once: true });
 }
 
-/* ── Lifecycle ───────────────────────────────────────────── */
-
-function _onAnimEnd(e) {
-  if (e.target !== _drawer) return;
-  const nm = e.animationName;
-  if (nm === "luxCharsSlideIn") {
-    _drawer.dataset.state = "open";
-  } else if (nm === "luxCharsSlideOut") {
-    _drawer.dataset.open = "0";
-    _drawer.dataset.state = "closed";
-    _drawer.setAttribute("aria-hidden", "true");
-    _drawer.inert = true;
-    if (_openerEl && typeof _openerEl.focus === "function") {
-      _openerEl.focus();
-      _openerEl = null;
-    }
-  }
-}
-
 /* ── PUBLIC API ───────────────────────────────────────────── */
 
 export function openCharsDrawer({ scenarioIdx, roleIdx, onRoleSelect }) {
   ensureDom();
-  _drawer.classList.remove("lux-charsPeek"); // cancel any peek
+  _drawer.classList.remove("lux-charsPeek");
 
-  // TOGGLE: if already open/opening, close instead
+  // TOGGLE: if already open/opening → close
   if (_drawer.dataset.state === "open" || _drawer.dataset.state === "opening") {
     closeCharsDrawer();
     return;
@@ -171,6 +198,14 @@ export function openCharsDrawer({ scenarioIdx, roleIdx, onRoleSelect }) {
   _drawer.setAttribute("aria-hidden", "false");
   _drawer.inert = false;
 
+  // Fire WAAPI animation (or instant if reduced-motion)
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    _drawer.style.transform = "translateX(0)";
+    _drawer.dataset.state = "open";
+  } else {
+    _animateOpen();
+  }
+
   requestAnimationFrame(() => {
     const closeBtn = _drawer.querySelector(".lux-charsClose");
     if (closeBtn) closeBtn.focus();
@@ -185,14 +220,14 @@ export function closeCharsDrawer() {
   _drawer.dataset.state = "closing";
 
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    _drawer.style.transform = "translateX(-100%)";
     _drawer.dataset.open = "0";
     _drawer.dataset.state = "closed";
     _drawer.setAttribute("aria-hidden", "true");
     _drawer.inert = true;
-    if (_openerEl && typeof _openerEl.focus === "function") {
-      _openerEl.focus();
-      _openerEl = null;
-    }
+    if (_openerEl) { _openerEl.focus(); _openerEl = null; }
+  } else {
+    _animateClose();
   }
 }
 

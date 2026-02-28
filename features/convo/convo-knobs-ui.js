@@ -1,6 +1,7 @@
 // features/convo/convo-knobs-ui.js
+// Wires the Scene Settings (knobs) UI: header button toggles docked drawer; picker button opens chip drawer; keeps summaries + selects in sync.
 
-import { getKnobsDrawerInstance, onKnobsChange } from "./knobs-drawer.js";
+import { getKnobsDrawerInstance, onKnobsChange, peekKnobsDrawer, unpeekKnobsDrawer } from "./knobs-drawer.js";
 
 export function wireConvoKnobsUI({
   state,
@@ -27,6 +28,11 @@ export function wireConvoKnobsUI({
       e.stopPropagation();
       getKnobsDrawerInstance().open();
     });
+  }
+
+  if (pickerKnobsBtn) {
+    pickerKnobsBtn.addEventListener("mouseenter", () => peekKnobsDrawer());
+    pickerKnobsBtn.addEventListener("mouseleave", () => unpeekKnobsDrawer());
   }
 
   closeDrawer.addEventListener("click", () => setKnobs(false));
