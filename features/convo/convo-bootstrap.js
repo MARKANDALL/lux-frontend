@@ -171,16 +171,7 @@ export function bootConvo() {
 
   // Reset role selection when scenario changes
   const origScenIdx = { val: state.scenarioIdx };
-  const observer = new MutationObserver(() => {
-    if (state.scenarioIdx !== origScenIdx.val) {
-      origScenIdx.val = state.scenarioIdx;
-      state.roleIdx = 0;
-      closeCharsDrawer();
-      renderAllSummaries();
-      try { window.dispatchEvent(new Event("lux:ttsContextChanged")); } catch (err) { globalThis.warnSwallow("./features/convo/convo-bootstrap.js", err); }
-    }
-  });
-  // Lightweight poll (MutationObserver won't catch state.scenarioIdx changes)
+  // Lightweight poll (state.scenarioIdx is JS state, not a DOM attribute)
   setInterval(() => {
     if (state.scenarioIdx !== origScenIdx.val) {
       origScenIdx.val = state.scenarioIdx;
