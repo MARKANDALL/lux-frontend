@@ -11,7 +11,7 @@ function isEnabled() {
     if (qs.has("audioDebug")) return true;
     return localStorage.getItem(LS_KEY) === "1";
   } catch (err) {
-    warnSwallow("features/recorder/audio-inspector.js", err);
+    globalThis.warnSwallow("features/recorder/audio-inspector.js", err);
     return false;
   }
 }
@@ -35,27 +35,27 @@ async function probeBlobDurationSeconds(blob) {
       el.onloadedmetadata = () => {
         const d = Number(el.duration);
         try { URL.revokeObjectURL(el.src); } catch (err) {
-          warnSwallow("features/recorder/audio-inspector.js", err);
+          globalThis.warnSwallow("features/recorder/audio-inspector.js", err);
         }
         resolve(Number.isFinite(d) ? d : null);
       };
       el.onerror = () => {
         try { URL.revokeObjectURL(el.src); } catch (err) {
-          warnSwallow("features/recorder/audio-inspector.js", err);
+          globalThis.warnSwallow("features/recorder/audio-inspector.js", err);
         }
         resolve(null);
       };
       el.src = URL.createObjectURL(blob);
     });
   } catch (err) {
-    warnSwallow("features/recorder/audio-inspector.js", err);
+    globalThis.warnSwallow("features/recorder/audio-inspector.js", err);
     return null;
   }
 }
 
 function safeJson(obj) {
   try { return JSON.stringify(obj, null, 2); } catch (err) {
-    warnSwallow("features/recorder/audio-inspector.js", err);
+    globalThis.warnSwallow("features/recorder/audio-inspector.js", err);
     return String(obj);
   }
 }
@@ -187,7 +187,7 @@ function ensurePanel() {
     try {
       await navigator.clipboard.writeText(text);
     } catch (err) {
-      warnSwallow("features/recorder/audio-inspector.js", err);
+      globalThis.warnSwallow("features/recorder/audio-inspector.js", err);
     }
   });
 
@@ -310,7 +310,7 @@ async function inferDeviceLabel(stream) {
     const hit = devices.find(d => d.kind === "audioinput" && d.deviceId === deviceId);
     return hit?.label || null;
   } catch (err) {
-    warnSwallow("features/recorder/audio-inspector.js", err);
+    globalThis.warnSwallow("features/recorder/audio-inspector.js", err);
     return null;
   }
 }
@@ -319,7 +319,7 @@ const AudioInspector = {
   enable() {
     state.enabled = true;
     try { localStorage.setItem(LS_KEY, "1"); } catch (err) {
-      warnSwallow("features/recorder/audio-inspector.js", err);
+      globalThis.warnSwallow("features/recorder/audio-inspector.js", err);
     }
     render();
   },
@@ -327,7 +327,7 @@ const AudioInspector = {
   disable() {
     state.enabled = false;
     try { localStorage.removeItem(LS_KEY); } catch (err) {
-      warnSwallow("features/recorder/audio-inspector.js", err);
+      globalThis.warnSwallow("features/recorder/audio-inspector.js", err);
     }
     const el = document.getElementById("luxAudioInspector");
     if (el) el.remove();
@@ -349,7 +349,7 @@ const AudioInspector = {
       state.trackConstraints = track?.getConstraints?.() || null;
       state.device = await inferDeviceLabel(stream);
     } catch (err) {
-      warnSwallow("features/recorder/audio-inspector.js", err);
+      globalThis.warnSwallow("features/recorder/audio-inspector.js", err);
     }
 
     render();
@@ -361,7 +361,7 @@ const AudioInspector = {
     try {
       state.recorderMimeType = recorder?.mimeType || null;
     } catch (err) {
-      warnSwallow("features/recorder/audio-inspector.js", err);
+      globalThis.warnSwallow("features/recorder/audio-inspector.js", err);
     }
     render();
   },
@@ -374,7 +374,7 @@ const AudioInspector = {
       state.blobSize = blob?.size ?? null;
       state.blobDuration = await probeBlobDurationSeconds(blob);
     } catch (err) {
-      warnSwallow("features/recorder/audio-inspector.js", err);
+      globalThis.warnSwallow("features/recorder/audio-inspector.js", err);
     }
     render();
   },
@@ -389,7 +389,7 @@ const AudioInspector = {
       state.uploadSize = blob?.size ?? null;
       state.uploadTextLen = typeof text === "string" ? text.length : null;
     } catch (err) {
-      warnSwallow("features/recorder/audio-inspector.js", err);
+      globalThis.warnSwallow("features/recorder/audio-inspector.js", err);
     }
     render();
   },
@@ -397,7 +397,8 @@ const AudioInspector = {
 
 // Auto-init on import
 try { AudioInspector.init(); } catch (err) {
-  warnSwallow("features/recorder/audio-inspector.js", err);
+  globalThis.warnSwallow("features/recorder/audio-inspector.js", err);
 }
 
 export default AudioInspector;
+

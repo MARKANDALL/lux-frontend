@@ -155,13 +155,13 @@ export function initSelfPBCore() {
     async play() {
       try {
         await audio.play();
-} catch (err) { warnSwallow("features/features/selfpb/core.js", err); }
+} catch (err) { globalThis.warnSwallow("features/features/selfpb/core.js", err); }
       st.playing = !audio.paused;
     },
     pause() {
       try {
         audio.pause();
-} catch (err) { warnSwallow("features/features/selfpb/core.js", err); }
+} catch (err) { globalThis.warnSwallow("features/features/selfpb/core.js", err); }
       st.playing = false;
     },
 
@@ -178,3 +178,4 @@ export function initSelfPBCore() {
 
   return { api, audio, refAudio, st };
 }
+

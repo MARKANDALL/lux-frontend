@@ -87,7 +87,7 @@ export function selectHarvardList({
 
   try {
     localStorage.setItem("LUX_HARVARD_LAST", String(n));
-} catch (err) { warnSwallow("features/harvard/modal-actions.js", err); }
+} catch (err) { globalThis.warnSwallow("features/harvard/modal-actions.js", err); }
 }
 
 export function selectPassage({
@@ -124,7 +124,7 @@ export function selectPassage({
 
   try {
     localStorage.setItem("LUX_PASSAGES_LAST", String(key));
-} catch (err) { warnSwallow("features/harvard/modal-actions.js", err); }
+} catch (err) { globalThis.warnSwallow("features/harvard/modal-actions.js", err); }
 }
 
 export function showHoverHarvard({
@@ -250,4 +250,5 @@ export function switchTabCore({
 
   return activeTab;
 }
+
 

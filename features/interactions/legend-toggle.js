@@ -26,7 +26,7 @@ export function initProsodyLegendToggle() {
     try {
       tip.setAttribute("aria-controls", "prosodyLegend");
       tip.setAttribute("aria-expanded", "false");
-} catch (err) { warnSwallow("features/interactions/legend-toggle.js", err); }
+} catch (err) { globalThis.warnSwallow("features/interactions/legend-toggle.js", err); }
 
     legend._legendReady = 1;
   }
@@ -68,18 +68,18 @@ export function initProsodyLegendToggle() {
 
   if (!tip._legendBound) {
     const toggle = (e) => {
-      try { e?.preventDefault?.(); e?.stopPropagation?.(); } catch (err) { warnSwallow("features/interactions/legend-toggle.js", err); }
+      try { e?.preventDefault?.(); e?.stopPropagation?.(); } catch (err) { globalThis.warnSwallow("features/interactions/legend-toggle.js", err); }
 
       const open = !wrap.classList.contains("legend-open");
       wrap.classList.toggle("legend-open", open);
       legend.setAttribute("aria-hidden", String(!open));
-      try { tip.setAttribute("aria-expanded", String(open)); } catch (err) { warnSwallow("features/interactions/legend-toggle.js", err); }
+      try { tip.setAttribute("aria-expanded", String(open)); } catch (err) { globalThis.warnSwallow("features/interactions/legend-toggle.js", err); }
 
       if (open) {
         tip.classList.remove("cue-legend");
         try {
           localStorage.setItem("seenProsodyLegendCue", "1");
-} catch (err) { warnSwallow("features/interactions/legend-toggle.js", err); }
+} catch (err) { globalThis.warnSwallow("features/interactions/legend-toggle.js", err); }
         hidePeek();
       } else {
         positionPeek();
@@ -112,9 +112,10 @@ export function initProsodyLegendToggle() {
   try {
     if (!localStorage.getItem("seenProsodyLegendCue"))
       tip.classList.add("cue-legend");
-} catch (err) { warnSwallow("features/interactions/legend-toggle.js", err); }
+} catch (err) { globalThis.warnSwallow("features/interactions/legend-toggle.js", err); }
 
   positionPeek();
   window.addEventListener("resize", positionPeek, { passive: true });
 }
+
 

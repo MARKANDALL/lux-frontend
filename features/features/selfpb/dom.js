@@ -148,7 +148,7 @@ export function buildUI() {
       const shellByClass = document.querySelector(".lux-tts-shell");
       if (shellByClass) shellByClass.classList.toggle("lux-tts-shell--empty", !!on);
     } catch (err) {
-      warnSwallow("features/features/selfpb/dom.js", err);
+      globalThis.warnSwallow("features/features/selfpb/dom.js", err);
     }
   };
 
@@ -157,7 +157,7 @@ export function buildUI() {
     try {
       document.documentElement.classList.toggle("lux-selfpb-expanded-open", !!on);
     } catch (err) {
-      warnSwallow("features/features/selfpb/dom.js", err);
+      globalThis.warnSwallow("features/features/selfpb/dom.js", err);
     }
   }
 
@@ -174,10 +174,10 @@ export function buildUI() {
     // Nudge WaveSurfer / layout-dependent renders after mount
     requestAnimationFrame(() => {
       try { window.dispatchEvent(new Event("resize")); } catch (err) {
-        warnSwallow("features/features/selfpb/dom.js", err);
+        globalThis.warnSwallow("features/features/selfpb/dom.js", err);
       }
       setTimeout(() => { try { window.dispatchEvent(new Event("resize")); } catch (err) {
-        warnSwallow("features/features/selfpb/dom.js", err);
+        globalThis.warnSwallow("features/features/selfpb/dom.js", err);
       } }, 120);
     });
 
@@ -188,7 +188,7 @@ export function buildUI() {
         await ttsBoot.ensureTTSPlayerMounted?.();
       }
     } catch (err) {
-      warnSwallow("features/features/selfpb/dom.js", err);
+      globalThis.warnSwallow("features/features/selfpb/dom.js", err);
     }
 
     // move TTS controls into expanded bottom-right mount
@@ -206,7 +206,7 @@ export function buildUI() {
         }
       }
     } catch (err) {
-      warnSwallow("features/features/selfpb/dom.js", err);
+      globalThis.warnSwallow("features/features/selfpb/dom.js", err);
     }
 
     // show placeholder in the TTS drawer while controls are moved out
@@ -220,7 +220,7 @@ export function buildUI() {
     try {
       window.dispatchEvent(new CustomEvent("lux:selfpbExpandedOpen"));
     } catch (err) {
-      warnSwallow("features/features/selfpb/dom.js", err);
+      globalThis.warnSwallow("features/features/selfpb/dom.js", err);
     }
   }
 
@@ -250,7 +250,7 @@ export function buildUI() {
 
   expandBtn?.addEventListener("click", () => {
     try { openExpanded(); } catch (err) {
-      warnSwallow("features/features/selfpb/dom.js", err);
+      globalThis.warnSwallow("features/features/selfpb/dom.js", err);
     }
   });
   floatClose?.addEventListener("click", closeExpanded);
@@ -260,7 +260,7 @@ export function buildUI() {
     try {
       openExpanded();
     } catch (err) {
-      warnSwallow("features/features/selfpb/dom.js", err);
+      globalThis.warnSwallow("features/features/selfpb/dom.js", err);
     }
   });
 
@@ -354,3 +354,4 @@ export function buildUI() {
     karaokeCursor: host.querySelector("#spb-karaokeCursor"),
   };
 }
+

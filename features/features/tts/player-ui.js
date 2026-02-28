@@ -73,7 +73,7 @@ export async function mountTTSPlayer(hostEl) {
       e.stopPropagation();
       try {
         window.dispatchEvent(new Event("lux:requestSelfPBExpanded"));
-} catch (err) { warnSwallow("features/features/tts/player-ui.js", err); }
+} catch (err) { globalThis.warnSwallow("features/features/tts/player-ui.js", err); }
     });
   }
 
@@ -346,7 +346,7 @@ export async function mountTTSPlayer(hostEl) {
       try {
         await audio.play();
         setMainLabel(true);
-} catch (err) { warnSwallow("features/features/tts/player-ui.js", err); }
+} catch (err) { globalThis.warnSwallow("features/features/tts/player-ui.js", err); }
     } else {
       await ensureAudioReadyAndPlay();
     }
@@ -368,7 +368,7 @@ export async function mountTTSPlayer(hostEl) {
           try {
             await audio.play();
             setMainLabel(true);
-} catch (err) { warnSwallow("features/features/tts/player-ui.js", err); }
+} catch (err) { globalThis.warnSwallow("features/features/tts/player-ui.js", err); }
         }
       }
       clickPending = false;
@@ -385,3 +385,4 @@ export async function mountTTSPlayer(hostEl) {
   (window.luxTTS?.nudge || (() => {}))();
   console.info("[tts-player] azure controls mounted");
 }
+

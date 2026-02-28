@@ -146,7 +146,7 @@ export function openDetailsModal(attempt, overallScore, dateStr, ctx = {}) {
     );
 
     initMetricScoreModals?.();
-} catch (err) { warnSwallow("features/progress/attempt-detail-modal.js", err); }
+} catch (err) { globalThis.warnSwallow("features/progress/attempt-detail-modal.js", err); }
 
   // "Next conversation" (session-based): uses THIS session’s trouble list
   const nextBtn = header?.querySelector?.('[data-lux-generate-next="1"]');
@@ -213,4 +213,5 @@ export function openDetailsModal(attempt, overallScore, dateStr, ctx = {}) {
   // --- Inline micro-explainer wiring (click chip => explain below section) ---
   wireAttemptDetailChipExplainers(card, { phItems, wdItems });
 }
+
 

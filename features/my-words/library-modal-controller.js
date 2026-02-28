@@ -75,12 +75,12 @@ export function ensureMyWordsLibraryModalImpl({
     // ✅ Re-render on open (prevents “blank modal” even if something failed earlier)
     try {
       panelApi?.render?.();
-} catch (err) { warnSwallow("features/my-words/library-modal-controller.js", err); }
+} catch (err) { globalThis.warnSwallow("features/my-words/library-modal-controller.js", err); }
 
     // Focus search for fast browsing
     try {
       panelApi?.focusSearch?.();
-} catch (err) { warnSwallow("features/my-words/library-modal-controller.js", err); }
+} catch (err) { globalThis.warnSwallow("features/my-words/library-modal-controller.js", err); }
   }
 
   function close() {
@@ -90,4 +90,5 @@ export function ensureMyWordsLibraryModalImpl({
 
   return { open, close, el: modalEl };
 }
+
 

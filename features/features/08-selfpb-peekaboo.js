@@ -49,7 +49,7 @@ import "./selfpb-peekaboo.css";
       panel.style.top = panel.style.top || "10px";      
 panel.style.zIndex = panel.style.zIndex || "900";
       panel.style.pointerEvents = panel.style.pointerEvents || "auto";
-} catch (err) { warnSwallow("features/features/08-selfpb-peekaboo.js", err); }
+} catch (err) { globalThis.warnSwallow("features/features/08-selfpb-peekaboo.js", err); }
 
     // Wire the click to the Lazy Loader
     const tab = panel.querySelector(".lux-sp-tab");
@@ -60,7 +60,7 @@ panel.style.zIndex = panel.style.zIndex || "900";
     try {
       tab.style.cursor = tab.style.cursor || "pointer";
       tab.style.whiteSpace = tab.style.whiteSpace || "nowrap";
-} catch (err) { warnSwallow("features/features/08-selfpb-peekaboo.js", err); }
+} catch (err) { globalThis.warnSwallow("features/features/08-selfpb-peekaboo.js", err); }
 
     // Closed panel/card click opens (never closes).
     // NOTE: We ignore clicks on the tab here only to prevent a double-trigger
@@ -70,7 +70,7 @@ panel.style.zIndex = panel.style.zIndex || "900";
       panel.addEventListener("click", (e) => {
         if (document.documentElement.classList.contains(OPEN_CLASS)) return;
         if (e && e.target && e.target.closest && e.target.closest(".lux-sp-tab")) return;
-        try { handleToggle(); } catch (err) { warnSwallow("features/features/08-selfpb-peekaboo.js", err); }
+        try { handleToggle(); } catch (err) { globalThis.warnSwallow("features/features/08-selfpb-peekaboo.js", err); }
             });
     }
   }
@@ -229,4 +229,5 @@ const module = await import("./selfpb/ui.js");
     buildShell();
   }
 })();
+
 

@@ -53,7 +53,7 @@ export function ensureHeader(data) {
         if (saved === "0") scoreAcc.open = false;
         if (saved === "1") scoreAcc.open = true;
       } catch (err) {
-        warnSwallow("features/results/header.js", err);
+        globalThis.warnSwallow("features/results/header.js", err);
       }
 
       // Save on toggle
@@ -61,7 +61,7 @@ export function ensureHeader(data) {
         try {
           localStorage.setItem(KEY, scoreAcc.open ? "1" : "0");
         } catch (err) {
-          warnSwallow("features/results/header.js", err);
+          globalThis.warnSwallow("features/results/header.js", err);
         }
       });
 
@@ -70,10 +70,10 @@ export function ensureHeader(data) {
       if (ring) {
         const stop = (e) => {
           try { e.preventDefault(); } catch (err) {
-            warnSwallow("features/results/header.js", err);
+            globalThis.warnSwallow("features/results/header.js", err);
           }
           try { e.stopPropagation(); } catch (err) {
-            warnSwallow("features/results/header.js", err);
+            globalThis.warnSwallow("features/results/header.js", err);
           }
         };
         ring.addEventListener("click", stop, true);
@@ -164,7 +164,7 @@ export function ensureHeader(data) {
       if (saved === "0") scoreAcc.open = false;
       if (saved === "1") scoreAcc.open = true;
     } catch (err) {
-      warnSwallow("features/results/header.js", err);
+      globalThis.warnSwallow("features/results/header.js", err);
     }
 
     // Save on toggle
@@ -172,7 +172,7 @@ export function ensureHeader(data) {
       try {
         localStorage.setItem(KEY, scoreAcc.open ? "1" : "0");
       } catch (err) {
-        warnSwallow("features/results/header.js", err);
+        globalThis.warnSwallow("features/results/header.js", err);
       }
     });
 
@@ -181,10 +181,10 @@ export function ensureHeader(data) {
     if (ring) {
       const stop = (e) => {
         try { e.preventDefault(); } catch (err) {
-          warnSwallow("features/results/header.js", err);
+          globalThis.warnSwallow("features/results/header.js", err);
         }
         try { e.stopPropagation(); } catch (err) {
-          warnSwallow("features/results/header.js", err);
+          globalThis.warnSwallow("features/results/header.js", err);
         }
       };
       ring.addEventListener("click", stop, true);
@@ -223,7 +223,7 @@ export function wirePostDom(data) {
 
     // Subtle "new info exists" cue (Option A): staggered nudge for CLOSED sections
     try { nudgeClosedSectionsOnce(); } catch (err) {
-      warnSwallow("features/results/header.js", err);
+      globalThis.warnSwallow("features/results/header.js", err);
     }
 
     // Persist Word & Phoneme accordion (don't force open if user closed it)
@@ -238,7 +238,7 @@ export function wirePostDom(data) {
         if (saved === "0") wpAcc.open = false;
         if (saved === "1") wpAcc.open = true;
       } catch (err) {
-        warnSwallow("features/results/header.js", err);
+        globalThis.warnSwallow("features/results/header.js", err);
       }
 
       // Save only when the user toggles
@@ -246,7 +246,7 @@ export function wirePostDom(data) {
         try {
           localStorage.setItem(KEY, wpAcc.open ? "1" : "0");
         } catch (err) {
-          warnSwallow("features/results/header.js", err);
+          globalThis.warnSwallow("features/results/header.js", err);
         }
       });
     }
@@ -264,7 +264,7 @@ export function wirePostDom(data) {
         if (saved === "0") scoreAcc.open = false;
         if (saved === "1") scoreAcc.open = true;
       } catch (err) {
-        warnSwallow("features/results/header.js", err);
+        globalThis.warnSwallow("features/results/header.js", err);
       }
 
       // Save on toggle
@@ -272,7 +272,7 @@ export function wirePostDom(data) {
         try {
           localStorage.setItem(KEY, scoreAcc.open ? "1" : "0");
         } catch (err) {
-          warnSwallow("features/results/header.js", err);
+          globalThis.warnSwallow("features/results/header.js", err);
         }
       });
 
@@ -281,10 +281,10 @@ export function wirePostDom(data) {
       if (ring) {
         const stop = (e) => {
           try { e.preventDefault(); } catch (err) {
-            warnSwallow("features/results/header.js", err);
+            globalThis.warnSwallow("features/results/header.js", err);
           }
           try { e.stopPropagation(); } catch (err) {
-            warnSwallow("features/results/header.js", err);
+            globalThis.warnSwallow("features/results/header.js", err);
           }
         };
         ring.addEventListener("click", stop, true);
@@ -316,7 +316,7 @@ function nudgeClosedSectionsOnce() {
 
   const markSeen = (k) => {
     try { sessionStorage.setItem(k, "1"); } catch (err) {
-      warnSwallow("features/results/header.js", err);
+      globalThis.warnSwallow("features/results/header.js", err);
     }
   };
 
@@ -351,7 +351,7 @@ function nudgeClosedSectionsOnce() {
       el.classList.add("lux-nudge");
       setTimeout(() => {
         try { el.classList.remove("lux-nudge"); } catch (err) {
-          warnSwallow("features/results/header.js", err);
+          globalThis.warnSwallow("features/results/header.js", err);
         }
       }, 900);
 
@@ -359,3 +359,4 @@ function nudgeClosedSectionsOnce() {
     }, baseDelay + idx * step);
   });
 }
+

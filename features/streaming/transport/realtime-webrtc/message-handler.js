@@ -31,7 +31,7 @@ export function handleOaiEventsMessage(e, ctx) {
       }
       if (DEBUG || t === "error") console.log("[oai-events]", t, msg);
     }
-} catch (err) { warnSwallow("features/streaming/transport/realtime-webrtc/message-handler.js", err); }
+} catch (err) { globalThis.warnSwallow("features/streaming/transport/realtime-webrtc/message-handler.js", err); }
 
   let evt = null;
   try { evt = JSON.parse(e.data); } catch { return; }
@@ -98,4 +98,5 @@ export function extractAssistantText(evt) {
   }
   return "";
 }
+
 

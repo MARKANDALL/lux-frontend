@@ -174,7 +174,7 @@
         try {
           await player.play();
           player.style.opacity = 1;
-} catch (err) { warnSwallow("public/lux-popover.js", err); }
+} catch (err) { globalThis.warnSwallow("public/lux-popover.js", err); }
         return;
       }
 
@@ -184,12 +184,12 @@
         try {
           await player.play();
           player.style.opacity = 1;
-} catch (err) { warnSwallow("public/lux-popover.js", err); }
+} catch (err) { globalThis.warnSwallow("public/lux-popover.js", err); }
       } else if (player.muted) {
         player.muted = false;
         try {
           await player.play();
-} catch (err) { warnSwallow("public/lux-popover.js", err); }
+} catch (err) { globalThis.warnSwallow("public/lux-popover.js", err); }
       } else {
         player.pause(); // second click pauses
       }
@@ -222,4 +222,5 @@
     });
   });
 })();
+
 

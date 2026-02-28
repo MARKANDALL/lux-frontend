@@ -331,7 +331,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let collapsed = false;
   try {
     collapsed = localStorage.getItem("bannerCollapsed") === "true";
-} catch (err) { warnSwallow("src/main.js", err); }
+} catch (err) { globalThis.warnSwallow("src/main.js", err); }
   banner.classList.toggle("is-collapsed", collapsed);
 
   // If user previously collapsed it, we still want the handle visible immediately
@@ -341,7 +341,7 @@ document.addEventListener("DOMContentLoaded", () => {
     banner.classList.toggle("is-collapsed", !!next);
     try {
       localStorage.setItem("bannerCollapsed", next ? "true" : "false");
-} catch (err) { warnSwallow("src/main.js", err); }
+} catch (err) { globalThis.warnSwallow("src/main.js", err); }
 
     requestAnimationFrame(() => {
       updateTopBannerLayout();
@@ -368,4 +368,5 @@ if (document.readyState === "loading") {
 } else {
   bootApp();
 }
+
 

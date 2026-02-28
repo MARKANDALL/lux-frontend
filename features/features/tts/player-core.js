@@ -70,7 +70,7 @@ export async function synthesize(payload) {
   const cleanPayload = { ...(payload || {}) };
   try {
     delete cleanPayload.wantWordTimings;
-} catch (err) { warnSwallow("features/features/tts/player-core.js", err); }
+} catch (err) { globalThis.warnSwallow("features/features/tts/player-core.js", err); }
 
   const url = wantTimings ? `${TTS_URL}?timings=1` : TTS_URL;
 
@@ -113,7 +113,7 @@ export async function synthesize(payload) {
     let detail = "";
     try {
       detail = await res.text();
-} catch (err) { warnSwallow("features/features/tts/player-core.js", err); }
+} catch (err) { globalThis.warnSwallow("features/features/tts/player-core.js", err); }
     const err = new Error(`TTS ${res.status}: ${detail || "synthesis failed"}`);
     err.meta = meta;
     throw err;
@@ -140,4 +140,5 @@ export async function synthesize(payload) {
   blob._meta = meta;
   return blob;
 }
+
 

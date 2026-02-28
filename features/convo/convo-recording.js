@@ -21,7 +21,7 @@ export function createConvoRecording({ state }) {
           break;
         }
       }
-} catch (err) { warnSwallow("features/convo/convo-recording.js", err); }
+} catch (err) { globalThis.warnSwallow("features/convo/convo-recording.js", err); }
 
     state.recorder = new MediaRecorder(state.stream, opts);
 
@@ -62,4 +62,5 @@ export function createConvoRecording({ state }) {
 
   return { startRecording, stopRecordingAndGetBlob };
 }
+
 

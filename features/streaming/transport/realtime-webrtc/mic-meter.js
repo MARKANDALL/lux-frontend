@@ -60,14 +60,15 @@ export function stopMicMeter(ctx) {
 
   const s = getMeterState?.() || {};
 
-  try { if (s.micTick) window.clearInterval(s.micTick); } catch (err) { warnSwallow("features/streaming/transport/realtime-webrtc/mic-meter.js", err); }
+  try { if (s.micTick) window.clearInterval(s.micTick); } catch (err) { globalThis.warnSwallow("features/streaming/transport/realtime-webrtc/mic-meter.js", err); }
 
-  try { s.micSrc?.disconnect?.(); } catch (err) { warnSwallow("features/streaming/transport/realtime-webrtc/mic-meter.js", err); }
-  try { s.micAnalyser?.disconnect?.(); } catch (err) { warnSwallow("features/streaming/transport/realtime-webrtc/mic-meter.js", err); }
-  try { s.micAC?.close?.(); } catch (err) { warnSwallow("features/streaming/transport/realtime-webrtc/mic-meter.js", err); }
+  try { s.micSrc?.disconnect?.(); } catch (err) { globalThis.warnSwallow("features/streaming/transport/realtime-webrtc/mic-meter.js", err); }
+  try { s.micAnalyser?.disconnect?.(); } catch (err) { globalThis.warnSwallow("features/streaming/transport/realtime-webrtc/mic-meter.js", err); }
+  try { s.micAC?.close?.(); } catch (err) { globalThis.warnSwallow("features/streaming/transport/realtime-webrtc/mic-meter.js", err); }
 
   setMeterState({ micAC: null, micAnalyser: null, micSrc: null, micTick: null });
 
   // reset UI calm
   pushHealth({ micLevel: 0 });
 }
+

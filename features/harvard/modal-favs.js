@@ -30,12 +30,13 @@ export function loadFavs() {
 export function saveFavs(favs, favKeys) {
   try {
     localStorage.setItem("LUX_HARVARD_FAVS", JSON.stringify(Array.from(favs || [])));
-} catch (err) { warnSwallow("features/harvard/modal-favs.js", err); }
+} catch (err) { globalThis.warnSwallow("features/harvard/modal-favs.js", err); }
   try {
     localStorage.setItem(
       "LUX_PASSAGES_FAVS",
       JSON.stringify(Array.from(favKeys || []))
     );
-} catch (err) { warnSwallow("features/harvard/modal-favs.js", err); }
+} catch (err) { globalThis.warnSwallow("features/harvard/modal-favs.js", err); }
 }
+
 

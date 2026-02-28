@@ -93,8 +93,9 @@ function publishKaraoke(source, timings) {
         },
       })
     );
-} catch (err) { warnSwallow("features/features/selfpb/karaoke.js", err); }
+} catch (err) { globalThis.warnSwallow("features/features/selfpb/karaoke.js", err); }
 }
 
 export { buildWordTimings, buildWordTimingsFromBoundaries, publishKaraoke };
+
 

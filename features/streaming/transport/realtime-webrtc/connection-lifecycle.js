@@ -64,7 +64,7 @@ export async function connectWebRTC(ctx = {}) {
     try {
       audioEl.srcObject = e.streams[0];
     } catch (err) {
-      warnSwallow("features/streaming/transport/realtime-webrtc/connection-lifecycle.js", err);
+      globalThis.warnSwallow("features/streaming/transport/realtime-webrtc/connection-lifecycle.js", err);
     }
     audioEl?.play?.().catch(() => {});
   };
@@ -151,12 +151,12 @@ export async function disconnectWebRTC(ctx = {}) {
   try {
     dc?.close();
   } catch (err) {
-    warnSwallow("features/streaming/transport/realtime-webrtc/connection-lifecycle.js", err);
+    globalThis.warnSwallow("features/streaming/transport/realtime-webrtc/connection-lifecycle.js", err);
   }
   try {
     pc?.close();
   } catch (err) {
-    warnSwallow("features/streaming/transport/realtime-webrtc/connection-lifecycle.js", err);
+    globalThis.warnSwallow("features/streaming/transport/realtime-webrtc/connection-lifecycle.js", err);
   }
 
   if (micStream) {
@@ -164,7 +164,7 @@ export async function disconnectWebRTC(ctx = {}) {
       try {
         t.stop();
       } catch (err) {
-        warnSwallow("features/streaming/transport/realtime-webrtc/connection-lifecycle.js", err);
+        globalThis.warnSwallow("features/streaming/transport/realtime-webrtc/connection-lifecycle.js", err);
       }
     }
   }
@@ -185,9 +185,10 @@ export async function disconnectWebRTC(ctx = {}) {
       audioEl.remove();
     }
   } catch (err) {
-    warnSwallow("features/streaming/transport/realtime-webrtc/connection-lifecycle.js", err);
+    globalThis.warnSwallow("features/streaming/transport/realtime-webrtc/connection-lifecycle.js", err);
   }
   setAudioEl?.(null);
 
   emit?.("disconnected");
 }
+

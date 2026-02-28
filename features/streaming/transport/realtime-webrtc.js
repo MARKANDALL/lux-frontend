@@ -87,7 +87,7 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
   let _tapCommitTimeout = null;
 
   function emit(type, extra) {
-    try { onEvent?.({ type, ...(extra || {}) }); } catch (err) { warnSwallow("features/streaming/transport/realtime-webrtc.js", err); }
+    try { onEvent?.({ type, ...(extra || {}) }); } catch (err) { globalThis.warnSwallow("features/streaming/transport/realtime-webrtc.js", err); }
   }
 
   function sendEvent(evt) {
@@ -234,7 +234,7 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
       // don’t force play()—autoplay should resume as new audio arrives
       audioEl.play?.().catch(() => {});
     } catch (err) {
-      warnSwallow("features/streaming/transport/realtime-webrtc.js", err);
+      globalThis.warnSwallow("features/streaming/transport/realtime-webrtc.js", err);
     }
     mutedByInterrupt = false;
   }
@@ -247,7 +247,7 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
       try {
         audioEl.muted = true;
         audioEl.pause();
-} catch (err) { warnSwallow("features/streaming/transport/realtime-webrtc.js", err); }
+} catch (err) { globalThis.warnSwallow("features/streaming/transport/realtime-webrtc.js", err); }
       mutedByInterrupt = true;
     }
 
@@ -305,3 +305,4 @@ export function createRealtimeWebRTCTransport({ onEvent } = {}) {
     updateSession, // Added to expose the updateSession method
   };
 }
+
