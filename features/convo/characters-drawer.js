@@ -117,10 +117,15 @@ export function peekCharsDrawer() {
   ensureDom();
   if (_drawer.dataset.state !== "closed") return;
   _drawer.classList.add("lux-charsPeek");
+  // IMPORTANT: drawer open/close uses inline transform; CSS peek transform can't win.
+  // So set the peek transform inline too.
+  _drawer.style.transform = "translateX(calc(-100% + 16px))";
 }
 export function unpeekCharsDrawer() {
   if (!_drawer) return;
   _drawer.classList.remove("lux-charsPeek");
+  // Restore the closed position inline (matches base closed state)
+  _drawer.style.transform = "translateX(-100%)";
 }
 
 /* ── Empty-space click → X nudge ─────────────────────────── */

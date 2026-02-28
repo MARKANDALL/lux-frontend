@@ -97,6 +97,12 @@
   transform: translateY(1px);
 }
 
+/* Hide "Speak: AI / Me / Auto" + Auto voice everywhere except convo chat page */
+html:not([data-lux-convo-mode="chat"]) .tts-sourceRow,
+html:not([data-lux-convo-mode="chat"]) .tts-autoVoice{
+  display: none !important;
+}
+
 /* ✅ Expand button: match SelfPB mini feel + tuck top-right */
 #tts-expand{
   position: absolute;
