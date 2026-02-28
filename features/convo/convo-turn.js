@@ -81,13 +81,13 @@ export function createConvoTurn({
     try {
       const d = document.getElementById("aiCoachDrawer");
       if (d && !d.open && state.turns.length === 1) d.open = true;
-    } catch (_) {}
+    } catch (err) { globalThis.warnSwallow("./features/convo/convo-turn.js", err); }
 
     // refresh Conversation Skills progress (if present)
     if (window.refreshConvoProgress) {
       try {
         await window.refreshConvoProgress();
-      } catch (_) {}
+      } catch (err) { globalThis.warnSwallow("./features/convo/convo-turn.js", err); }
     }
 
     // next AI response + suggestions
@@ -111,5 +111,6 @@ export function createConvoTurn({
 
   return { sendTurn };
 }
+
 
 

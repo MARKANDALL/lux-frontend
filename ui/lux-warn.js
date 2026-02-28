@@ -3,10 +3,31 @@
 
 const KEY = "LUX_WARN_SWALLOW_MODE"; // "on" | "off" | "important"
 
+function safeConsoleWarn(prefix, err) {
+  try {
+    if (typeof console !== "undefined" && console && typeof console.warn === "function") {
+      console.warn(prefix, err);
+    }
+  } catch (e) {
+    // Intentionally swallow: logger must never throw.
+  }
+}
+
+function safeConsoleLog(...args) {
+  try {
+    if (typeof console !== "undefined" && console && typeof console.log === "function") {
+      console.log(...args);
+    }
+  } catch (e) {
+    // Intentionally swallow: logger must never throw.
+  }
+}
+
 function readMode() {
   try {
     return (localStorage.getItem(KEY) || "").toLowerCase();
-  } catch {
+  } catch (err) {
+    safeConsoleWarn("[ui/lux-warn.js] swallowed error (readMode)", err);
     return "";
   }
 }
@@ -15,14 +36,21 @@ function defaultMode() {
   // Dev default: IMPORTANT only. Prod default: OFF.
   try {
     if (import.meta && import.meta.env && import.meta.env.PROD) return "off";
-  } catch {}
+  } catch (err) {
+    safeConsoleWarn("[ui/lux-warn.js] swallowed error (defaultMode)", err);
+  }
   return "important";
 }
 
 export function setWarnSwallowMode(mode) {
   const m = String(mode || "").toLowerCase();
   if (!["on", "off", "important"].includes(m)) return false;
-  try { localStorage.setItem(KEY, m); } catch {}
+
+  try {
+    localStorage.setItem(KEY, m);
+  } catch (err) {
+    safeConsoleWarn("[ui/lux-warn.js] swallowed error (setWarnSwallowMode)", err);
+  }
   return true;
 }
 
@@ -38,9 +66,11 @@ export function warnSwallow(tag, err, level = "low") {
   if (mode === "important" && String(level) !== "important") return;
 
   try {
-    console.warn(`[LUX_SWALLOW] ${tag}`, err);
-  } catch {
-    // never throw from logger
+    if (typeof console !== "undefined" && console && typeof console.warn === "function") {
+      console.warn(`[LUX_SWALLOW] ${tag}`, err);
+    }
+  } catch (e) {
+    // Intentionally swallow: logger must never throw.
   }
 }
 
@@ -54,7 +84,7 @@ try {
   // Make warnSwallow callable without imports (module scope won't see it otherwise)
   window.warnSwallow = warnSwallow;
 
-  console.log("[LuxWarn] ready:", window.LuxWarn.get());
-} catch {
-  // never throw from logger
+  safeConsoleLog("[LuxWarn] ready:", window.LuxWarn.get());
+} catch (err) {
+  safeConsoleWarn("[ui/lux-warn.js] swallowed error (global attach)", err);
 }

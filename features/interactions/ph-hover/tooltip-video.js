@@ -95,7 +95,7 @@ export function initTooltipVideoControls(globalTooltipEl, { openVideoFocusModal 
     if (!v) return;
     try {
       if (restart) v.currentTime = 0;
-    } catch (_) {}
+    } catch (err) { globalThis.warnSwallow("./features/interactions/ph-hover/tooltip-video.js", err); }
 
     // Pressing play should auto-unmute (unless user turned sound off)
     v.muted = soundOn ? false : true;
@@ -108,7 +108,7 @@ export function initTooltipVideoControls(globalTooltipEl, { openVideoFocusModal 
       try {
         v.muted = true;
         await v.play();
-      } catch (_) {}
+      } catch (err) { globalThis.warnSwallow("./features/interactions/ph-hover/tooltip-video.js", err); }
     }
   }
 
@@ -117,10 +117,10 @@ export function initTooltipVideoControls(globalTooltipEl, { openVideoFocusModal 
       if (!v) continue;
       try {
         v.pause();
-      } catch (_) {}
+      } catch (err) { globalThis.warnSwallow("./features/interactions/ph-hover/tooltip-video.js", err); }
       try {
         v.currentTime = 0;
-      } catch (_) {}
+      } catch (err) { globalThis.warnSwallow("./features/interactions/ph-hover/tooltip-video.js", err); }
     }
   }
 
@@ -182,10 +182,10 @@ export function initTooltipVideoControls(globalTooltipEl, { openVideoFocusModal 
     // Restart both to sync “as close as possible”
     try {
       if (sideVid) sideVid.currentTime = 0;
-    } catch (_) {}
+    } catch (err) { globalThis.warnSwallow("./features/interactions/ph-hover/tooltip-video.js", err); }
     try {
       if (frontVid) frontVid.currentTime = 0;
-    } catch (_) {}
+    } catch (err) { globalThis.warnSwallow("./features/interactions/ph-hover/tooltip-video.js", err); }
 
     applySound();
     applySpeed();
@@ -217,3 +217,4 @@ export function initTooltipVideoControls(globalTooltipEl, { openVideoFocusModal 
   applyLoop();
   applySpeed();
 }
+

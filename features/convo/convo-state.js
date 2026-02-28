@@ -45,5 +45,6 @@ export function tryConsumeStoredNextActivityPlan(state) {
   try {
     const plan = consumeNextActivityPlan();
     if (plan) state.nextActivity = plan;
-  } catch (_) {}
+  } catch (err) { globalThis.warnSwallow("./features/convo/convo-state.js", err); }
 }
+

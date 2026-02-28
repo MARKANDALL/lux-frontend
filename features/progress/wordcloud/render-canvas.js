@@ -37,7 +37,7 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
     if (typeof opts?.onRenderEnd === "function") {
       try {
         opts.onRenderEnd({ reason });
-      } catch (_) {}
+      } catch (err) { globalThis.warnSwallow("./features/progress/wordcloud/render-canvas.js", err); }
     }
   };
 
@@ -186,3 +186,4 @@ export function renderWordCloudCanvas(canvas, items = [], opts = {}) {
     }
   };
 }
+

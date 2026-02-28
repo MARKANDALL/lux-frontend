@@ -77,7 +77,7 @@ export function mountMyWordsCornerLauncher({ onClick } = {}) {
     e.preventDefault();
     try {
       onClick?.(e);
-    } catch (_) {}
+    } catch (err) { globalThis.warnSwallow("./features/my-words/launcher.js", err); }
   };
 
   btn.__luxMwHandler = handler;
@@ -85,3 +85,4 @@ export function mountMyWordsCornerLauncher({ onClick } = {}) {
 
   return btn;
 }
+

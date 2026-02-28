@@ -80,7 +80,7 @@ var resolveYTLink =
     try {
       if (typeof ytLink === "function") return ytLink(arg);
       if (typeof ytLink === "string") return ytLink;
-    } catch (_) {}
+    } catch (err) { globalThis.warnSwallow("./01-utils.js", err); }
     return null;
   };
 
@@ -120,3 +120,4 @@ var fmtPct =
     if (!Number.isFinite(n)) return "–";
     return Number.isInteger(n) ? n + "%" : n.toFixed(1) + "%";
   };
+

@@ -153,7 +153,7 @@ export function bootConvo() {
         onRoleSelect: (idx) => {
           state.roleIdx = idx;
           renderAllSummaries();
-          try { window.dispatchEvent(new Event("lux:ttsContextChanged")); } catch (_) {}
+          try { window.dispatchEvent(new Event("lux:ttsContextChanged")); } catch (err) { globalThis.warnSwallow("./features/convo/convo-bootstrap.js", err); }
         },
       });
     });
@@ -177,7 +177,7 @@ export function bootConvo() {
       state.roleIdx = 0;
       closeCharsDrawer();
       renderAllSummaries();
-      try { window.dispatchEvent(new Event("lux:ttsContextChanged")); } catch (_) {}
+      try { window.dispatchEvent(new Event("lux:ttsContextChanged")); } catch (err) { globalThis.warnSwallow("./features/convo/convo-bootstrap.js", err); }
     }
   });
   // Lightweight poll (MutationObserver won't catch state.scenarioIdx changes)
@@ -187,7 +187,7 @@ export function bootConvo() {
       state.roleIdx = 0;
       closeCharsDrawer();
       renderAllSummaries();
-      try { window.dispatchEvent(new Event("lux:ttsContextChanged")); } catch (_) {}
+      try { window.dispatchEvent(new Event("lux:ttsContextChanged")); } catch (err) { globalThis.warnSwallow("./features/convo/convo-bootstrap.js", err); }
     }
   }, 300);
 

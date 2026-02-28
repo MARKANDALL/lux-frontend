@@ -44,7 +44,7 @@ export function wireWordcloudSideDrawers(root, { onLayoutChange } = {}) {
   function persist() {
     try {
       localStorage.setItem(KEY, JSON.stringify(state));
-    } catch (_) {}
+    } catch (err) { globalThis.warnSwallow("./features/progress/wordcloud/side-drawers.js", err); }
   }
 
   function setOpen(side, open, { silent = false } = {}) {
@@ -72,7 +72,7 @@ export function wireWordcloudSideDrawers(root, { onLayoutChange } = {}) {
             detail: { side, open },
           })
         );
-      } catch (_) {}
+      } catch (err) { globalThis.warnSwallow("./features/progress/wordcloud/side-drawers.js", err); }
     }
   }
 
@@ -96,3 +96,4 @@ export function wireWordcloudSideDrawers(root, { onLayoutChange } = {}) {
     });
   });
 }
+

@@ -8,7 +8,7 @@ const KEY = "lux.nextActivity.v1";
 export function saveNextActivityPlan(plan) {
   try {
     localStorage.setItem(KEY, JSON.stringify(plan));
-  } catch (_) {}
+  } catch (err) { globalThis.warnSwallow("./features/next-activity/next-activity.js", err); }
 }
 
 export function consumeNextActivityPlan() {
@@ -21,7 +21,7 @@ export function consumeNextActivityPlan() {
   } catch (_) {
     try {
       localStorage.removeItem(KEY);
-    } catch (_) {}
+    } catch (err) { globalThis.warnSwallow("./features/next-activity/next-activity.js", err); }
     return null;
   }
 }
@@ -177,3 +177,4 @@ export function buildConvoTargetOverlay(plan) {
 
   return lines.filter(Boolean).join("\n");
 }
+

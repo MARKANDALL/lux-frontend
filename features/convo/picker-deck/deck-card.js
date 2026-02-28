@@ -78,7 +78,7 @@ export function makeFillDeckCard({ el, applyMediaSizingVars, safeBeginScenario }
             host.dataset.vstate = "playing";
             try {
               v.currentTime = 0;
-            } catch (_) {}
+            } catch (err) { globalThis.warnSwallow("./features/convo/picker-deck/deck-card.js", err); }
 
             const p = v.play();
             if (p && typeof p.catch === "function") {
@@ -106,7 +106,7 @@ export function makeFillDeckCard({ el, applyMediaSizingVars, safeBeginScenario }
               host.dataset.vstate = "playing";
               try {
                 v.currentTime = 0;
-              } catch (_) {}
+              } catch (err) { globalThis.warnSwallow("./features/convo/picker-deck/deck-card.js", err); }
               v.play().catch(() => {
                 if (host.dataset.vtoken !== token) return;
                 host.dataset.vstate = "error";

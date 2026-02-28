@@ -162,7 +162,7 @@ export async function drawWordcloud({
             done = true;
             try {
               console.timeEnd("[wc] render layout");
-            } catch (_) {}
+            } catch (err) { globalThis.warnSwallow("./features/progress/wordcloud/render.js", err); }
             resolve();
           }, 8000);
 
@@ -217,7 +217,7 @@ export async function drawWordcloud({
           done = true;
           try {
             console.timeEnd("[wc] render layout");
-          } catch (_) {}
+          } catch (err) { globalThis.warnSwallow("./features/progress/wordcloud/render.js", err); }
           resolve();
         }, 8000);
 
@@ -270,3 +270,4 @@ export async function drawWordcloud({
     drawing = false;
   }
 }
+

@@ -15,11 +15,12 @@ export function loadLifeRun() {
 export function saveLifeRun(run) {
   try {
     localStorage.setItem(KEY, JSON.stringify(run));
-  } catch (_) {}
+  } catch (err) { globalThis.warnSwallow("./features/life/storage.js", err); }
 }
 
 export function clearLifeRun() {
   try {
     localStorage.removeItem(KEY);
-  } catch (_) {}
+  } catch (err) { globalThis.warnSwallow("./features/life/storage.js", err); }
 }
+

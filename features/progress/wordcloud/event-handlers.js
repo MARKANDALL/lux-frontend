@@ -104,7 +104,7 @@ export function createWordcloudEventHandlers({
         a.download = `lux-cloud-${S.mode}-${Date.now()}.png`;
         a.href = dom.canvas.toDataURL("image/png");
         a.click();
-      } catch (_) {}
+      } catch (err) { globalThis.warnSwallow("./features/progress/wordcloud/event-handlers.js", err); }
     },
 
     setMix: (mix) => {
@@ -164,3 +164,4 @@ export function createWordcloudEventHandlers({
     },
   };
 }
+

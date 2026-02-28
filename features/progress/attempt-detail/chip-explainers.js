@@ -88,7 +88,7 @@ export function wireAttemptDetailChipExplainers(card, { phItems = [], wdItems = 
     panel.removeAttribute("hidden");
     try {
       panel.scrollIntoView({ block: "nearest" });
-    } catch (_) {}
+    } catch (err) { globalThis.warnSwallow("./features/progress/attempt-detail/chip-explainers.js", err); }
   }
 
   function bindChip(chip) {
@@ -112,3 +112,4 @@ export function wireAttemptDetailChipExplainers(card, { phItems = [], wdItems = 
 
   card.querySelectorAll(".lux-chip[data-kind][data-idx]").forEach(bindChip);
 }
+

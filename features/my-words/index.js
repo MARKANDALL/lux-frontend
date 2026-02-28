@@ -107,7 +107,7 @@ if (isConvo) {
     requestAnimationFrame(() => {
       try {
         drawer?.scrollIntoView({ behavior: "smooth", block: "end" });
-      } catch (_) {}
+      } catch (err) { globalThis.warnSwallow("./features/my-words/index.js", err); }
     });
 
     // show loading feedback
@@ -315,3 +315,4 @@ export function initMyWordsEverywhere() {
   const inputEl = document.getElementById("referenceText") || null;
   return initMyWordsGlobal({ uid, inputEl });
 }
+

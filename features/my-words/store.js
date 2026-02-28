@@ -56,7 +56,7 @@ export function createMyWordsStore({ uid, onMutation } = {}) {
   function persistOpen() {
     try {
       localStorage.setItem(openKey, state.open ? "1" : "0");
-    } catch (_) {}
+    } catch (err) { globalThis.warnSwallow("./features/my-words/store.js", err); }
   }
 
   function load() {
@@ -71,13 +71,13 @@ export function createMyWordsStore({ uid, onMutation } = {}) {
     try {
       const rawOpen = localStorage.getItem(openKey) || "0";
       state.open = rawOpen === "1";
-    } catch (_) {}
+    } catch (err) { globalThis.warnSwallow("./features/my-words/store.js", err); }
   }
 
   function mut(payload) {
     try {
       onMutation?.(payload);
-    } catch (_) {}
+    } catch (err) { globalThis.warnSwallow("./features/my-words/store.js", err); }
   }
 
   function getState() {
@@ -234,4 +234,5 @@ export function createMyWordsStore({ uid, onMutation } = {}) {
     hardDelete,
   };
 }
+
 

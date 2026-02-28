@@ -49,7 +49,7 @@ export function setLastRecording(blob, meta) {
             detail: { blob: _lastRecordingBlob, meta: _lastRecordingMeta },
           })
         );
-      } catch (_) {}
+      } catch (err) { globalThis.warnSwallow("./app-core/runtime.js", err); }
     }
   }
 
@@ -70,3 +70,4 @@ export function getLastRecording() {
 
   return { blob: null, meta: null };
 }
+

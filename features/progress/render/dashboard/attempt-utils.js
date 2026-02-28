@@ -19,7 +19,7 @@ function localDayKey(ts) {
   const d = new Date(ts);
   try {
     return d.toLocaleDateString("en-CA");
-  } catch (_) {}
+  } catch (err) { globalThis.warnSwallow("./features/progress/render/dashboard/attempt-utils.js", err); }
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const da = String(d.getDate()).padStart(2, "0");
@@ -46,3 +46,4 @@ export function buildAttemptsBySession(attempts) {
   }
   return bySession;
 }
+

@@ -40,19 +40,19 @@ export function createAttemptDetailModalShell() {
   function close() {
     if (!mounted) {
       // Still safe to remove if someone calls close early
-      try { modal.remove(); } catch (_) {}
+      try { modal.remove(); } catch (err) { globalThis.warnSwallow("./features/progress/attempt-detail/modal-shell.js", err); }
       return;
     }
 
     mounted = false;
-    try { modal.remove(); } catch (_) {}
+    try { modal.remove(); } catch (err) { globalThis.warnSwallow("./features/progress/attempt-detail/modal-shell.js", err); }
 
     document.removeEventListener("keydown", onKey);
     modal.removeEventListener("click", onBackdrop);
 
     try {
       document.body.style.overflow = "";
-    } catch (_) {}
+    } catch (err) { globalThis.warnSwallow("./features/progress/attempt-detail/modal-shell.js", err); }
   }
 
   closeBtn.onclick = close;
@@ -68,7 +68,7 @@ export function createAttemptDetailModalShell() {
 
     try {
       document.body.style.overflow = "hidden";
-    } catch (_) {}
+    } catch (err) { globalThis.warnSwallow("./features/progress/attempt-detail/modal-shell.js", err); }
 
     document.addEventListener("keydown", onKey);
     modal.addEventListener("click", onBackdrop);
@@ -76,3 +76,4 @@ export function createAttemptDetailModalShell() {
 
   return { modal, card, close, mount };
 }
+

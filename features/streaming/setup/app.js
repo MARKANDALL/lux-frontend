@@ -15,7 +15,7 @@ function loadPrefs() {
 function savePrefs(prefs) {
   try {
     localStorage.setItem(KEY, JSON.stringify(prefs));
-  } catch (_) {}
+  } catch (err) { globalThis.warnSwallow("./features/streaming/setup/app.js", err); }
 }
 
 function pickRandomScenarioId() {
@@ -187,3 +187,4 @@ export function mountStreamingSetupApp({ rootId }) {
     window.location.href = `./stream.html?${qp.toString()}`;
   });
 }
+

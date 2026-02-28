@@ -94,13 +94,14 @@ function hideTooltip(s = state) {
     for (const v of vids) {
       try {
         v.pause();
-      } catch (_) {}
+      } catch (err) { globalThis.warnSwallow("./features/interactions/ph-hover/index.js", err); }
       try {
         v.currentTime = 0;
-      } catch (_) {}
+      } catch (err) { globalThis.warnSwallow("./features/interactions/ph-hover/index.js", err); }
     }
   }
 
   if (s.currentChip) s.currentChip.classList.remove("lux-playing-lock");
   s.currentChip = null;
 }
+

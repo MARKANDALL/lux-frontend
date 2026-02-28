@@ -48,7 +48,7 @@ export function showTooltip(state, chip, { pinned = false } = {}, hooks = {}) {
     try {
       const parsed = JSON.parse(wordsRaw);
       if (Array.isArray(parsed)) words = parsed.filter(Boolean).slice(0, 3);
-    } catch (_) {}
+    } catch (err) { globalThis.warnSwallow("./features/interactions/ph-hover/tooltip-render.js", err); }
   }
 
   const panels = [

@@ -43,7 +43,7 @@ export function createConvoRecording({ state }) {
       rec.onstop = () => {
         try {
           state.stream?.getTracks()?.forEach((t) => t.stop());
-        } catch (_) {}
+        } catch (err) { globalThis.warnSwallow("./features/convo/convo-recording.js", err); }
         state.stream = null;
 
         const blob = new Blob(state.chunks, { type: rec.mimeType || "audio/webm" });
@@ -62,5 +62,6 @@ export function createConvoRecording({ state }) {
 
   return { startRecording, stopRecordingAndGetBlob };
 }
+
 
 

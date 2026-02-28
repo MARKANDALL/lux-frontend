@@ -229,7 +229,7 @@ async function saveToDatabase(result, text, lang) {
         if (window.refreshDashboard) {
           try {
             await window.refreshDashboard();
-          } catch (_) {}
+          } catch (err) { globalThis.warnSwallow("./features/recorder/index.js", err); }
         }
       }
     }
@@ -293,5 +293,6 @@ export function initLuxRecorder() {
   }
 }
 export const wireRecordingButtons = initLuxRecorder;
+
 
 

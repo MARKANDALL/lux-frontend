@@ -15,7 +15,7 @@ export function createConvoModeController({ root, state, setParallaxEnabled, set
       const st = { luxConvo: 1, mode };
       if (push) history.pushState(st, "", url);
       else history.replaceState(st, "", url);
-    } catch (_) {}
+    } catch (err) { globalThis.warnSwallow("./features/convo/convo-modes.js", err); }
   }
 
   function setMode(mode, opts = {}) {
@@ -28,7 +28,7 @@ export function createConvoModeController({ root, state, setParallaxEnabled, set
     document.documentElement.dataset.luxConvoMode = mode;
 
     // Broadcast mode transitions (picker uses this to randomize the default card on entry).
-    try { document.dispatchEvent(new CustomEvent("luxConvo:mode", { detail: { mode, changed } })); } catch (_) {}
+    try { document.dispatchEvent(new CustomEvent("luxConvo:mode", { detail: { mode, changed } })); } catch (err) { globalThis.warnSwallow("./features/convo/convo-modes.js", err); }
 
     // Parallax ONLY on intro screen.
     setParallaxEnabled(mode === "intro");

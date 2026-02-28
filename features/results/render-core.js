@@ -41,7 +41,7 @@ async function maybeMountSyllablesNow(words) {
   } catch (e) {
     try {
       console.warn("[render-core] syllable mount failed", e);
-    } catch (_) {}
+    } catch (err) { globalThis.warnSwallow("./features/results/render-core.js", err); }
   }
 }
 
@@ -113,3 +113,4 @@ export function renderDetailedAnalysisCore({ $out, data, nbest }) {
   const summary = ensureAnalysisSummaryContainer($out);
   summary.innerHTML = html;
 }
+

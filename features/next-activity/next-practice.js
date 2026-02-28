@@ -119,7 +119,7 @@ export async function buildNextPracticePlanFromModel(model) {
 export function saveNextPracticePlan(plan) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(plan || null));
-  } catch (_) {}
+  } catch (err) { globalThis.warnSwallow("./features/next-activity/next-practice.js", err); }
 }
 
 export function consumeNextPracticePlan() {
@@ -167,5 +167,6 @@ export async function maybeApplyStoredNextPracticePlan() {
   if (!plan) return;
   await applyNextPracticePlan(plan);
 }
+
 
 

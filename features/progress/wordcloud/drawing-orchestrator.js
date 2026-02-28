@@ -122,7 +122,7 @@ export function createWordcloudDrawer({
         usedPos = 0;
         try {
           ctx.set({ timelinePos: 0 });
-        } catch (_) {}
+        } catch (err) { globalThis.warnSwallow("./features/progress/wordcloud/drawing-orchestrator.js", err); }
 
         attemptsInRange = filterAttemptsByRange(allAttempts, range, win, 0);
 
@@ -275,3 +275,4 @@ export function createWordcloudDrawer({
     renderSeqRef: _renderSeq, // exposed for debugging if needed
   };
 }
+

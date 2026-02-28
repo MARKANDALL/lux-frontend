@@ -21,7 +21,7 @@ function readStore(key) {
 function writeStore(key, obj) {
   try {
     localStorage.setItem(key, JSON.stringify(obj));
-  } catch (_) {}
+  } catch (err) { globalThis.warnSwallow("./features/progress/wordcloud/action-sheet.js", err); }
 }
 
 function hasItem(kind, id, store) {
@@ -317,3 +317,4 @@ export function createCloudActionSheet({
 
   return { open, close };
 }
+
