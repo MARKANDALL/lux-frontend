@@ -1,5 +1,7 @@
 // features/features/selfpb/karaoke.js
 
+import { publishKaraoke } from "../tts/player-ui/karaoke.js";
+
 export function initKaraoke({ ui, api, audio, syncTime, syncScrub }) {
   /* ============================================================
      ✅ Karaoke Timeline (Expanded-only)
@@ -217,8 +219,7 @@ export function initKaraoke({ ui, api, audio, syncTime, syncScrub }) {
     const words = e?.detail?.timings || window.LuxLastWordTimings || [];
     // Learner assessments should be the default karaoke source
     try {
-      window.LuxKaraokeSource = "learner";
-      window.LuxKaraokeTimings = Array.isArray(words) ? words : [];
+      publishKaraoke("learner", Array.isArray(words) ? words : []);
 } catch (err) { globalThis.warnSwallow("features/features/tts/player-ui/karaoke.js", err); }
 
     if (isExpandedOpen()) renderKaraoke(getActiveTimings(words));
@@ -226,13 +227,6 @@ export function initKaraoke({ ui, api, audio, syncTime, syncScrub }) {
 
   // Refresh when TTS (or other sources) publish new karaoke timings
   window.addEventListener("lux:karaokeRefresh", (e) => {
-    try {
-      const src = e?.detail?.source;
-      const timings = e?.detail?.timings;
-      if (src) window.LuxKaraokeSource = String(src);
-      if (Array.isArray(timings)) window.LuxKaraokeTimings = timings;
-} catch (err) { globalThis.warnSwallow("features/features/tts/player-ui/karaoke.js", err); }
-
     const words = getActiveTimings(window.LuxLastWordTimings || []);
     if (isExpandedOpen()) renderKaraoke(words);
   });
@@ -252,5 +246,3 @@ export function initKaraoke({ ui, api, audio, syncTime, syncScrub }) {
 
   return { update, updateKaraokeAt, renderKaraoke };
 }
-
-

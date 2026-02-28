@@ -1,5 +1,7 @@
 // features/features/selfpb/controls.js
 
+import { publishKaraoke } from "../tts/player-ui/karaoke.js";
+
 export function initControls({
   ui,
   api,
@@ -16,15 +18,10 @@ export function initControls({
 }) {
   const setKaraokeLearner = () => {
     try {
-      window.LuxKaraokeSource = "learner";
-      window.LuxKaraokeTimings = Array.isArray(window.LuxLastWordTimings)
+      const timings = Array.isArray(window.LuxLastWordTimings)
         ? window.LuxLastWordTimings
         : window.LuxKaraokeTimings || [];
-      window.dispatchEvent(
-        new CustomEvent("lux:karaokeRefresh", {
-          detail: { source: "learner", timings: window.LuxKaraokeTimings || [] },
-        })
-      );
+      publishKaraoke("learner", timings);
 } catch (err) { globalThis.warnSwallow("features/features/selfpb/controls.js", err); }
   };
 
@@ -175,5 +172,3 @@ export function initControls({
     syncButtons();
   });
 }
-
-
