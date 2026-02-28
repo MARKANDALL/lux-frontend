@@ -109,9 +109,9 @@ export function openCharsDrawer({ scenarioIdx, roleIdx, onRoleSelect }) {
     _body.innerHTML = `<div class="lux-charsEmpty">No characters for this scene.</div>`;
   } else {
     _body.innerHTML = scenario.roles.map((role, i) => {
-      // Optional override supported (future-proof), otherwise fall back to convention:
-      // assets/characters/<scenarioId>-<roleId>.webp
-      const src = `assets/characters/${scenario.id}-${role.id}.jpg`;
+   // Portrait convention (JPG-only):
+// /assets/characters/<scenarioId>-<roleId>.jpg
+const src = `/assets/characters/${scenario.id}-${role.id}.jpg`;
 
       return `
         <button class="lux-charCard ${i === roleIdx ? "is-selected" : ""}"
@@ -129,7 +129,7 @@ export function openCharsDrawer({ scenarioIdx, roleIdx, onRoleSelect }) {
                class="char-avatar"
                loading="lazy"
                decoding="async"
-               onerror="this.style.display='none'">
+onerror="console.warn('[Lux] Missing portrait JPG:', this.src); this.style.display='none'"
         </button>
       `;
     }).join("");
