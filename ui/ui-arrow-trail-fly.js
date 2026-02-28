@@ -179,7 +179,7 @@ export function createFlightController({
   function cleanupFlight() {
     inFlight = false;
 
-    if (flyAnim) { try { flyAnim.cancel(); } catch {} flyAnim = null; }
+    if (flyAnim) { try { flyAnim.cancel(); } catch (err) { console.warn("[ui/ui-arrow-trail-fly.js] swallowed error", err); } flyAnim = null; }
     if (flyEl && flyEl.parentNode) { flyEl.parentNode.removeChild(flyEl); flyEl = null; }
     if (lastLaunchedEl) { lastLaunchedEl.classList.remove("is-launched"); lastLaunchedEl = null; }
     if (debugDot && debugDot.parentNode) { debugDot.parentNode.removeChild(debugDot); debugDot = null; }

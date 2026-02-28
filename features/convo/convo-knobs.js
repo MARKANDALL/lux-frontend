@@ -19,7 +19,7 @@ function saveKnobs(knobs) {
     localStorage.setItem(KNOBS_KEY, JSON.stringify(knobs));
     // Fire unified event so all listeners (chip drawer, summaries) stay in sync
     window.dispatchEvent(new CustomEvent("lux:knobs", { detail: knobs }));
-  } catch {}
+} catch (err) { console.warn("[features/convo/convo-knobs.js] swallowed error", err); }
 }
 
 function knobsSummaryText(knobs, roleLabel = null) {

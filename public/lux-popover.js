@@ -174,7 +174,7 @@
         try {
           await player.play();
           player.style.opacity = 1;
-        } catch {}
+} catch (err) { console.warn("[public/lux-popover.js] swallowed error", err); }
         return;
       }
 
@@ -184,12 +184,12 @@
         try {
           await player.play();
           player.style.opacity = 1;
-        } catch {}
+} catch (err) { console.warn("[public/lux-popover.js] swallowed error", err); }
       } else if (player.muted) {
         player.muted = false;
         try {
           await player.play();
-        } catch {}
+} catch (err) { console.warn("[public/lux-popover.js] swallowed error", err); }
       } else {
         player.pause(); // second click pauses
       }

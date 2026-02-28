@@ -61,7 +61,7 @@ function scheduleAltHover(btn, strip) {
   const t = setTimeout(() => {
     try {
       loadAltMeaningFor(btn, strip);
-    } catch {}
+} catch (err) { console.warn("[features/results/syllables/alt-meaning.js] swallowed error", err); }
   }, 750);
   _ALT_HOVER_TIMERS.set(btn, t);
 }

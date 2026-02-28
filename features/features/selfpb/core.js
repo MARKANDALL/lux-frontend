@@ -155,13 +155,13 @@ export function initSelfPBCore() {
     async play() {
       try {
         await audio.play();
-      } catch {}
+} catch (err) { console.warn("[features/features/selfpb/core.js] swallowed error", err); }
       st.playing = !audio.paused;
     },
     pause() {
       try {
         audio.pause();
-      } catch {}
+} catch (err) { console.warn("[features/features/selfpb/core.js] swallowed error", err); }
       st.playing = false;
     },
 

@@ -25,7 +25,7 @@ export function initControls({
           detail: { source: "learner", timings: window.LuxKaraokeTimings || [] },
         })
       );
-    } catch {}
+} catch (err) { console.warn("[features/features/selfpb/controls.js] swallowed error", err); }
   };
 
   const handlePlayAction = async (isRestart = false) => {

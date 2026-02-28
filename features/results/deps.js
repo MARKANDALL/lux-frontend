@@ -27,7 +27,7 @@ export const resolveYTLink =
     try {
       if (typeof G.ytLink === "function") return G.ytLink(arg);
       if (typeof G.ytLink === "string") return G.ytLink;
-    } catch {}
+} catch (err) { console.warn("[features/results/deps.js] swallowed error", err); }
     return null;
   });
 

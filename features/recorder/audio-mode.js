@@ -36,7 +36,7 @@ export function setAudioMode(mode) {
     window.dispatchEvent(
       new CustomEvent("lux:audioModeChanged", { detail: { mode: wantLower } })
     );
-  } catch {}
+} catch (err) { console.warn("[features/recorder/audio-mode.js] swallowed error", err); }
 
   return wantLower;
 }

@@ -219,7 +219,7 @@ export function initKaraoke({ ui, api, audio, syncTime, syncScrub }) {
     try {
       window.LuxKaraokeSource = "learner";
       window.LuxKaraokeTimings = Array.isArray(words) ? words : [];
-    } catch {}
+} catch (err) { console.warn("[features/features/tts/player-ui/karaoke.js] swallowed error", err); }
 
     if (isExpandedOpen()) renderKaraoke(getActiveTimings(words));
   });
@@ -231,7 +231,7 @@ export function initKaraoke({ ui, api, audio, syncTime, syncScrub }) {
       const timings = e?.detail?.timings;
       if (src) window.LuxKaraokeSource = String(src);
       if (Array.isArray(timings)) window.LuxKaraokeTimings = timings;
-    } catch {}
+} catch (err) { console.warn("[features/features/tts/player-ui/karaoke.js] swallowed error", err); }
 
     const words = getActiveTimings(window.LuxLastWordTimings || []);
     if (isExpandedOpen()) renderKaraoke(words);

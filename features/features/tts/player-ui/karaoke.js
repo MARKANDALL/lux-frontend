@@ -93,7 +93,7 @@ function publishKaraoke(source, timings) {
         },
       })
     );
-  } catch {}
+} catch (err) { console.warn("[features/features/selfpb/karaoke.js] swallowed error", err); }
 }
 
 export { buildWordTimings, buildWordTimingsFromBoundaries, publishKaraoke };

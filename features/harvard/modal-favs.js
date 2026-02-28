@@ -30,11 +30,11 @@ export function loadFavs() {
 export function saveFavs(favs, favKeys) {
   try {
     localStorage.setItem("LUX_HARVARD_FAVS", JSON.stringify(Array.from(favs || [])));
-  } catch {}
+} catch (err) { console.warn("[features/harvard/modal-favs.js] swallowed error", err); }
   try {
     localStorage.setItem(
       "LUX_PASSAGES_FAVS",
       JSON.stringify(Array.from(favKeys || []))
     );
-  } catch {}
+} catch (err) { console.warn("[features/harvard/modal-favs.js] swallowed error", err); }
 }

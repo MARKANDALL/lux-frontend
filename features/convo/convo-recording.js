@@ -21,7 +21,7 @@ export function createConvoRecording({ state }) {
           break;
         }
       }
-    } catch {}
+} catch (err) { console.warn("[features/convo/convo-recording.js] swallowed error", err); }
 
     state.recorder = new MediaRecorder(state.stream, opts);
 

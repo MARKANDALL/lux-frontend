@@ -48,7 +48,7 @@ export function createConvoTurn({
             detail: { blob: audioBlob, meta: window.LuxLastRecordingMeta },
           })
         );
-      } catch {}
+} catch (err) { console.warn("[features/convo/convo-turn.js] swallowed error", err); }
 
       if (window.__attachLearnerBlob) window.__attachLearnerBlob(audioBlob);
     }
