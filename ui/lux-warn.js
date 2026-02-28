@@ -44,18 +44,17 @@ export function warnSwallow(tag, err, level = "low") {
   }
 }
 
-try {
-  // Allow call sites to use warnSwallow(...) without imports
-  window.warnSwallow = warnSwallow;
-} catch {
-  // never throw from logger
-}
-
-// Optional convenience in DevTools:
-//   window.LuxWarn.set("on"|"off"|"important")
+// --- DevTools convenience + global access (no imports needed anywhere) ---
 try {
   window.LuxWarn = Object.assign(window.LuxWarn || {}, {
     set: setWarnSwallowMode,
     get: getWarnSwallowMode,
   });
-} catch {}
+
+  // Make warnSwallow callable without imports (module scope won't see it otherwise)
+  window.warnSwallow = warnSwallow;
+
+  console.log("[LuxWarn] ready:", window.LuxWarn.get());
+} catch {
+  // never throw from logger
+}
