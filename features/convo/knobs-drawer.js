@@ -1,22 +1,14 @@
 // features/convo/knobs-drawer.js
 
-const KNOBS_KEY = "lux_knobs_v3";  // v3: mood→tone, expanded options
-
-const DEFAULTS = {
-  level: "B1",
-  tone: "neutral",
-  length: "medium",
-};
+const KNOBS_KEY = "lux_knobs_v3";
+const DEFAULTS = { level: "B1", tone: "neutral", length: "medium" };
 
 function read() {
   try {
     const raw = localStorage.getItem(KNOBS_KEY);
     if (!raw) return { ...DEFAULTS };
-    const parsed = JSON.parse(raw);
-    return { ...DEFAULTS, ...(parsed || {}) };
-  } catch {
-    return { ...DEFAULTS };
-  }
+    return { ...DEFAULTS, ...(JSON.parse(raw) || {}) };
+  } catch { return { ...DEFAULTS }; }
 }
 
 function write(next) {
@@ -24,13 +16,10 @@ function write(next) {
   window.dispatchEvent(new CustomEvent("lux:knobs", { detail: next }));
 }
 
-export function getKnobs() {
-  return read();
-}
+export function getKnobs() { return read(); }
 
 export function setKnobs(patch) {
-  const cur = read();
-  const next = { ...cur, ...(patch || {}) };
+  const next = { ...read(), ...(patch || {}) };
   write(next);
   return next;
 }
@@ -42,172 +31,144 @@ export function onKnobsChange(fn) {
 }
 
 export function formatKnobsSummary(k) {
-  const level = (k.level || DEFAULTS.level);
-  const tone = (k.tone || DEFAULTS.tone);
-  const length = (k.length || DEFAULTS.length);
   const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
-  return `Level: ${String(level).toUpperCase()} · Tone: ${cap(tone)} · Length: ${cap(length)}`;
+  return `Level: ${String(k.level || "B1").toUpperCase()} · Tone: ${cap(k.tone || "neutral")} · Length: ${cap(k.length || "medium")}`;
 }
 
 /* ── Tone emoji map ───────────────────────────────────────── */
 const TONE_EMOJI = {
-  neutral:      "😐",
-  formal:       "👔",
-  friendly:     "😊",
-  enthusiastic: "🤩",
-  encouraging:  "💪",
-  playful:      "😜",
-  flirty:       "😏",
-  sarcastic:    "🙄",
-  tired:        "😴",
-  distracted:   "📱",
-  cold:         "🧊",
-  blunt:        "🔨",
-  impatient:    "⏱️",
-  irritable:    "😤",
-  angry:        "🔥",
-  emotional:    "🥺",
+  neutral:"😐", formal:"👔", friendly:"😊", enthusiastic:"🤩", encouraging:"💪",
+  playful:"😜", flirty:"😏", sarcastic:"🙄", tired:"😴", distracted:"📱",
+  cold:"🧊", blunt:"🔨", impatient:"⏱️", irritable:"😤", angry:"🔥", emotional:"🥺",
 };
 
-/* ── Level color map (A=red, B=yellow, C=blue + light variants) */
-/* Color logic:
-   A2, B2, C2 = full standard color (matches phoneme/word chart scoring)
-   A1, B1, C1 = lighter shade of the same hue
-   Red = #dc2626  |  Amber = #d97706  |  Blue = #2563eb
-*/
 const LEVEL_COLORS = {
-  A1: { bg: "#f87171", text: "#fff" },       // lighter red
-  A2: { bg: "#dc2626", text: "#fff" },       // standard red
-  B1: { bg: "#fbbf24", text: "#78350f" },    // lighter amber
-  B2: { bg: "#d97706", text: "#fff" },       // standard amber
-  C1: { bg: "#60a5fa", text: "#fff" },       // lighter blue
-  C2: { bg: "#2563eb", text: "#fff" },       // standard blue
+  A1: { bg: "#f87171", text: "#fff" }, A2: { bg: "#dc2626", text: "#fff" },
+  B1: { bg: "#fbbf24", text: "#78350f" }, B2: { bg: "#d97706", text: "#fff" },
+  C1: { bg: "#60a5fa", text: "#fff" }, C2: { bg: "#2563eb", text: "#fff" },
 };
 
-/* ── Length sizing (relative padding scale) ─────────────── */
 const LENGTH_SIZES = {
-  terse:    { px: "6px 10px",  fontSize: "0.78rem" },
-  short:    { px: "7px 14px",  fontSize: "0.82rem" },
-  medium:   { px: "8px 18px",  fontSize: "0.85rem" },
-  long:     { px: "9px 24px",  fontSize: "0.88rem" },
-  extended: { px: "10px 32px", fontSize: "0.90rem" },
+  terse:  { px: "6px 10px", fontSize: "0.78rem" },
+  short:  { px: "7px 14px", fontSize: "0.82rem" },
+  medium: { px: "8px 18px", fontSize: "0.85rem" },
+  long:   { px: "9px 24px", fontSize: "0.88rem" },
+  extended:{ px: "10px 32px",fontSize: "0.90rem" },
 };
 
-const LENGTH_LABELS = {
-  terse:    "Terse",
-  short:    "Short",
-  medium:   "Medium",
-  long:     "Long",
-  extended: "Extended",
-};
+const LENGTH_LABELS = { terse:"Terse", short:"Short", medium:"Medium", long:"Long", extended:"Extended" };
 
-let _openerEl = null;           // focus-return target
+let _openerEl = null;
+let _docClickBound = false;
 
 function ensureDom() {
-  let overlay = document.getElementById("luxKnobsOverlay");
   let drawer = document.getElementById("luxKnobsDrawer");
+  if (drawer) return { drawer };
 
-  if (!overlay) {
-    overlay = document.createElement("div");
-    overlay.id = "luxKnobsOverlay";
-    overlay.className = "lux-knobsOverlay";
-    document.body.appendChild(overlay);
-  }
+  drawer = document.createElement("aside");
+  drawer.id = "luxKnobsDrawer";
+  drawer.className = "lux-knobsDrawer";
+  drawer.setAttribute("aria-hidden", "true");
+  drawer.inert = true;
+  drawer.dataset.state = "closed";
 
-  if (!drawer) {
-    drawer = document.createElement("aside");
-    drawer.id = "luxKnobsDrawer";
-    drawer.className = "lux-knobsDrawer";
-    drawer.setAttribute("aria-hidden", "true");
-    drawer.inert = true;
-    drawer.dataset.state = "closed";
+  const levelChips = Object.keys(LEVEL_COLORS).map((lv) => {
+    const c = LEVEL_COLORS[lv];
+    return `<button type="button" data-value="${lv}" class="lux-levelChip" style="--lv-bg:${c.bg}; --lv-text:${c.text}">${lv}</button>`;
+  }).join("\n");
 
-    /* ── Level chips (color-coded) ─────────────────────── */
-    const levelChips = Object.keys(LEVEL_COLORS).map((lv) => {
-      const c = LEVEL_COLORS[lv];
-      return `<button type="button" data-value="${lv}" class="lux-levelChip" style="--lv-bg:${c.bg}; --lv-text:${c.text}">${lv}</button>`;
-    }).join("\n            ");
+  const toneChips = Object.entries(TONE_EMOJI).map(([val, emoji]) => {
+    const label = val === "emotional" ? "Emotional / Upset" : val.charAt(0).toUpperCase() + val.slice(1);
+    return `<button type="button" data-value="${val}" class="lux-toneChip">${emoji} ${label}</button>`;
+  }).join("\n");
 
-    /* ── Tone chips (emoji + label) ───────────────────── */
-    const toneChips = Object.entries(TONE_EMOJI).map(([val, emoji]) => {
-      const label = val === "emotional" ? "Emotional / Upset" : val.charAt(0).toUpperCase() + val.slice(1);
-      return `<button type="button" data-value="${val}" class="lux-toneChip">${emoji} ${label}</button>`;
-    }).join("\n            ");
+  const lengthChips = Object.entries(LENGTH_SIZES).map(([val, sz]) => {
+    return `<button type="button" data-value="${val}" class="lux-lengthChip" style="padding:${sz.px}; font-size:${sz.fontSize}">${LENGTH_LABELS[val]}</button>`;
+  }).join("\n");
 
-    /* ── Length chips (proportionally sized) ───────────── */
-    const lengthChips = Object.entries(LENGTH_SIZES).map(([val, sz]) => {
-      const label = LENGTH_LABELS[val];
-      return `<button type="button" data-value="${val}" class="lux-lengthChip" style="padding:${sz.px}; font-size:${sz.fontSize}">${label}</button>`;
-    }).join("\n            ");
-
-    drawer.innerHTML = `
+  drawer.innerHTML = `
+    <div class="lux-knobsEdge"></div>
+    <div class="lux-knobsInner">
       <div class="lux-knobsHeader">
         <div class="lux-knobsTitle">Scene Settings</div>
-        <button class="lux-knobsClose" type="button" aria-label="Close">✕</button>
+        <button class="lux-knobsClose" type="button" aria-label="Close">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+            <line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/>
+          </svg>
+        </button>
       </div>
-
       <div class="lux-knobsBody">
         <div class="lux-knobsGroup" data-key="level">
           <div class="lux-knobsLabel">📊 Level</div>
-          <div class="lux-knobsChips lux-levelChips">
-            ${levelChips}
-          </div>
+          <div class="lux-knobsChips lux-levelChips">${levelChips}</div>
         </div>
-
         <div class="lux-knobsGroup" data-key="tone">
           <div class="lux-knobsLabel">🎭 Tone</div>
-          <div class="lux-knobsChips lux-toneChips">
-            ${toneChips}
-          </div>
+          <div class="lux-knobsChips lux-toneChips">${toneChips}</div>
         </div>
-
         <div class="lux-knobsGroup" data-key="length">
           <div class="lux-knobsLabel">⏱️ Length</div>
-          <div class="lux-knobsChips lux-lengthChips">
-            ${lengthChips}
-          </div>
+          <div class="lux-knobsChips lux-lengthChips">${lengthChips}</div>
         </div>
       </div>
-    `;
-    document.body.appendChild(drawer);
+    </div>
+  `;
+  document.body.appendChild(drawer);
 
-    // Listen for animation/transition end for lifecycle finalization
-    drawer.addEventListener("animationend", _onKnobsAnimEnd);
-    drawer.addEventListener("transitionend", _onKnobsTransEnd);
+  drawer.addEventListener("animationend", _onAnimEnd);
+
+  if (!_docClickBound) {
+    _docClickBound = true;
+    document.addEventListener("click", _onDocClick, true);
   }
 
-  return { overlay, drawer };
+  return { drawer };
 }
 
-/* ── Lifecycle helpers ───────────────────────────────────── */
+/* ── Peekaboo ── */
+export function peekKnobsDrawer() {
+  const { drawer } = ensureDom();
+  if (drawer.dataset.state !== "closed") return;
+  drawer.classList.add("lux-knobsPeek");
+}
+export function unpeekKnobsDrawer() {
+  const drawer = document.getElementById("luxKnobsDrawer");
+  if (drawer) drawer.classList.remove("lux-knobsPeek");
+}
 
-function _onKnobsAnimEnd(e) {
+/* ── Empty-space nudge ── */
+function _onDocClick(e) {
+  const drawer = document.getElementById("luxKnobsDrawer");
+  if (!drawer || drawer.dataset.state !== "open") return;
+  if (drawer.contains(e.target)) return;
+  const charsDrawer = document.getElementById("luxCharsDrawer");
+  if (charsDrawer && charsDrawer.contains(e.target)) return;
+  const interactive = e.target.closest(
+    "a, button, input, select, textarea, [role='button'], [tabindex]:not([tabindex='-1']), video, audio, details, summary, label, .btn, .lux-pickerKnobsRow, .lux-thumb, img[onclick], [data-scenario]"
+  );
+  if (interactive) return;
+  _nudgeCloseBtn(drawer);
+}
+
+function _nudgeCloseBtn(drawer) {
+  const btn = drawer?.querySelector(".lux-knobsClose");
+  if (!btn || btn.classList.contains("lux-closeNudge")) return;
+  btn.classList.add("lux-closeNudge");
+  btn.addEventListener("animationend", () => btn.classList.remove("lux-closeNudge"), { once: true });
+}
+
+/* ── Lifecycle ── */
+function _onAnimEnd(e) {
   const drawer = document.getElementById("luxKnobsDrawer");
   if (e.target !== drawer) return;
-  _finalizeKnobs();
-}
-
-function _onKnobsTransEnd(e) {
-  const drawer = document.getElementById("luxKnobsDrawer");
-  if (e.target !== drawer || e.propertyName !== "transform") return;
-  _finalizeKnobs();
-}
-
-function _finalizeKnobs() {
-  const drawer = document.getElementById("luxKnobsDrawer");
-  const overlay = document.getElementById("luxKnobsOverlay");
-  if (!drawer) return;
-
-  const st = drawer.dataset.state;
-  if (st === "opening") {
+  const nm = e.animationName;
+  if (nm === "luxKnobsSlideIn") {
     drawer.dataset.state = "open";
-  } else if (st === "closing") {
-    if (overlay) overlay.dataset.open = "0";
+  } else if (nm === "luxKnobsSlideOut") {
     drawer.dataset.open = "0";
     drawer.dataset.state = "closed";
     drawer.setAttribute("aria-hidden", "true");
     drawer.inert = true;
-
     if (_openerEl && typeof _openerEl.focus === "function") {
       _openerEl.focus();
       _openerEl = null;
@@ -228,15 +189,20 @@ function paintSelection(drawer, knobs) {
 }
 
 export function mountKnobsDrawer() {
-  const { overlay, drawer } = ensureDom();
+  const { drawer } = ensureDom();
 
   const open = () => {
+    drawer.classList.remove("lux-knobsPeek");
+
+    // TOGGLE: if already open/opening, close
+    if (drawer.dataset.state === "open" || drawer.dataset.state === "opening") {
+      close();
+      return;
+    }
+
     _openerEl = document.activeElement || null;
+    paintSelection(drawer, getKnobs());
 
-    const knobs = getKnobs();
-    paintSelection(drawer, knobs);
-
-    overlay.dataset.open = "1";
     drawer.dataset.open = "1";
     drawer.dataset.state = "opening";
     drawer.setAttribute("aria-hidden", "false");
@@ -251,12 +217,8 @@ export function mountKnobsDrawer() {
   const close = () => {
     const st = drawer.dataset.state;
     if (st === "closing" || st === "closed") return;
-
     drawer.dataset.state = "closing";
-
-    // Reduced-motion fallback
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      overlay.dataset.open = "0";
       drawer.dataset.open = "0";
       drawer.dataset.state = "closed";
       drawer.setAttribute("aria-hidden", "true");
@@ -268,31 +230,25 @@ export function mountKnobsDrawer() {
     }
   };
 
-  overlay.addEventListener("click", close);
   drawer.querySelector(".lux-knobsClose").addEventListener("click", close);
 
   drawer.addEventListener("click", (e) => {
     const btn = e.target.closest("button[data-value]");
     if (!btn) return;
-
     const group = btn.closest(".lux-knobsGroup");
     if (!group) return;
-
     const key = group.getAttribute("data-key");
     const value = btn.getAttribute("data-value");
-    const next = setKnobs({ [key]: value });
-
-    paintSelection(drawer, next);
+    paintSelection(drawer, setKnobs({ [key]: value }));
   });
 
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && drawer.dataset.open === "1") close();
+    if (e.key === "Escape" && drawer.dataset.state === "open") close();
   });
 
   return { open, close };
 }
 
-// Singleton — safe to call from multiple modules
 let _instance = null;
 export function getKnobsDrawerInstance() {
   if (!_instance) _instance = mountKnobsDrawer();
