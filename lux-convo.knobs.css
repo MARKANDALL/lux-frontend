@@ -229,12 +229,75 @@
   background: rgba(255,255,255,0.32);
 }
 .lux-pickerKnobsSummary {
-  font-size: 0.85rem;
-  color: rgba(255,255,255,0.88);
+  /* Visible, subtle status pill above the picker deck */
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+
+  /* Works on white OR dark stages */
+  color: rgba(255,255,255,0.92);
+  background: rgba(10,14,24,0.55);
+  border: 1px solid rgba(255,255,255,0.14);
+  padding: 6px 12px;
+  border-radius: 999px;
+  box-shadow: 0 10px 22px rgba(0,0,0,0.18);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  max-width: min(560px, calc(100vw - 48px));
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 340px;
+
+  transform: translateZ(0);
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease, background-color 160ms ease;
+}
+
+/* Hover-preview “bulge” (driven by JS setting data-hover) */
+.lux-pickerKnobsSummary[data-hover]:not([data-hover=""]) {
+  transform: translateZ(0) scale(1.02);
+  box-shadow: 0 14px 30px rgba(0,0,0,0.22);
+  border-color: rgba(140,190,255,0.30);
+}
+
+/* Tiny preview tag above the pill */
+.lux-pickerKnobsSummary::after {
+  content: attr(data-hover);
+  position: absolute;
+  top: -10px;
+  left: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.70rem;
+  font-weight: 700;
+  letter-spacing: 0.25px;
+  color: rgba(255,255,255,0.86);
+  background: rgba(255,255,255,0.14);
+  border: 1px solid rgba(255,255,255,0.16);
+  opacity: 0;
+  transform: translateY(3px);
+  transition: opacity 160ms ease, transform 160ms ease;
+  pointer-events: none;
+}
+.lux-pickerKnobsSummary[data-hover]:not([data-hover=""])::after {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Click / change “pop” (driven by JS setting data-pulse="1") */
+.lux-pickerKnobsSummary[data-pulse="1"] {
+  animation: luxKnobsSummaryPulse 260ms ease-out 1;
+}
+@keyframes luxKnobsSummaryPulse {
+  0% { transform: translateZ(0) scale(1); }
+  40% { transform: translateZ(0) scale(1.06); }
+  70% { transform: translateZ(0) scale(0.99); }
+  100% { transform: translateZ(0) scale(1); }
 }
 
 

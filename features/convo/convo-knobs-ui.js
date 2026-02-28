@@ -54,6 +54,34 @@ export function wireConvoKnobsUI({
       pickerKnobsSummary.textContent = knobsSummaryText(state.knobs, roleLabel);
     }
   }
+
+  // --- Picker summary pill micro-interactions (subtle + visible) ---
+  let _pulseTimer = null;
+  function setHoverLabel(label) {
+    if (!pickerKnobsSummary) return;
+    pickerKnobsSummary.dataset.hover = label || "";
+  }
+  function clearHoverLabel() {
+    setHoverLabel("");
+  }
+  function pulseSummary() {
+    if (!pickerKnobsSummary) return;
+    pickerKnobsSummary.dataset.pulse = "1";
+    if (_pulseTimer) clearTimeout(_pulseTimer);
+    _pulseTimer = setTimeout(() => {
+      pickerKnobsSummary.dataset.pulse = "0";
+    }, 320);
+  }
+  function bindHover(el, labelFn) {
+    if (!el) return;
+    const on = () => setHoverLabel(labelFn());
+    const off = () => clearHoverLabel();
+    el.addEventListener("mouseenter", on);
+    el.addEventListener("mouseleave", off);
+    el.addEventListener("focus", on);
+    el.addEventListener("blur", off);
+  }
+
   renderAllSummaries();
 
   // --- Docked-drawer selects → update state + fire unified event ---
@@ -61,18 +89,37 @@ export function wireConvoKnobsUI({
     state.knobs.level = levelSel.sel.value;
     saveKnobs(state.knobs);        // fires lux:knobs event
     renderAllSummaries();
+    pulseSummary();
   });
 
   toneSel.sel.addEventListener("change", () => {
     state.knobs.tone = toneSel.sel.value;
     saveKnobs(state.knobs);
     renderAllSummaries();
+    pulseSummary();
   });
 
   lengthSel.sel.addEventListener("change", () => {
     state.knobs.length = lengthSel.sel.value;
     saveKnobs(state.knobs);
     renderAllSummaries();
+    pulseSummary();
+  });
+
+  // Hover-preview: when you hover the controls, the pill “bulges” + shows a tiny tag
+  bindHover(levelSel.sel, () => `Level • ${(levelSel.sel.value || "").toUpperCase()}`);
+  bindHover(toneSel.sel, () => `Tone • ${toneSel.sel.value}`);
+  bindHover(lengthSel.sel, () => `Length • ${lengthSel.sel.value}`);
+
+  // Allow other modules (characters drawer, etc.) to drive the same subtle preview/pulse
+  document.addEventListener("lux:pickerSummaryHover", (e) => {
+    setHoverLabel(e?.detail?.label || "");
+  });
+  document.addEventListener("lux:pickerSummaryHoverClear", () => {
+    clearHoverLabel();
+  });
+  document.addEventListener("lux:pickerSummaryPulse", () => {
+    pulseSummary();
   });
 
   // --- Chip drawer → sync back into state + docked-drawer selects (PASS 2) ---
@@ -87,6 +134,7 @@ export function wireConvoKnobsUI({
     lengthSel.sel.value = knobs.length;
 
     renderAllSummaries();
+    pulseSummary();
   });
 
   return { renderAllSummaries };

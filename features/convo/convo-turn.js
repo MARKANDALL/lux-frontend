@@ -1,6 +1,7 @@
 // features/convo/convo-turn.js
 import { getAudioMode } from "../recorder/audio-mode.js";
 import { persistConvoAttempt } from "./convo-persistence.js";
+import { setLastRecording } from "../../app-core/runtime.js";
 
 export function createConvoTurn({
   SCENARIOS,
@@ -34,21 +35,14 @@ export function createConvoTurn({
       // ✅ Store latest recording globally so Self Playback can download it
       try {
         const mode = getAudioMode();
-        window.LuxLastRecordingBlob = audioBlob;
-        window.LuxLastRecordingMeta = {
+        setLastRecording(audioBlob, {
           mode,
           type: audioBlob?.type || "",
           size: audioBlob?.size || 0,
           ts: Date.now(),
           scope: "convo",
-        };
-
-        window.dispatchEvent(
-          new CustomEvent("lux:lastRecording", {
-            detail: { blob: audioBlob, meta: window.LuxLastRecordingMeta },
-          })
-        );
-} catch (err) { globalThis.warnSwallow("features/convo/convo-turn.js", err); }
+        });
+      } catch (err) { globalThis.warnSwallow("features/convo/convo-turn.js", err); }
 
       if (window.__attachLearnerBlob) window.__attachLearnerBlob(audioBlob);
     }
@@ -111,6 +105,3 @@ export function createConvoTurn({
 
   return { sendTurn };
 }
-
-
-

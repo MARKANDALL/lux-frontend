@@ -9,6 +9,7 @@ let _onRoleSelect = null;
 let _openerEl = null;
 let _docClickBound = false;
 let _currentAnim = null;  // track running WAAPI animation
+let _hoverRoleCard = null;
 
 function ensureDom() {
   if (_drawer) return;
@@ -51,6 +52,27 @@ function ensureDom() {
     _drawer.querySelectorAll("[data-role-idx]").forEach((c) => c.classList.remove("is-selected"));
     card.classList.add("is-selected");
     if (_onRoleSelect) _onRoleSelect(idx);
+    document.dispatchEvent(new CustomEvent("lux:pickerSummaryPulse"));
+  });
+
+  // Hover-preview: tiny, subtle “Role • X” tag + slight pill bulge
+  _drawer.addEventListener("pointerover", (e) => {
+    const card = e.target.closest("[data-role-idx]");
+    if (!card) return;
+    if (card === _hoverRoleCard) return;
+    _hoverRoleCard = card;
+    const label = card.querySelector(".lux-charCard-label")?.textContent?.trim();
+    if (label) {
+      document.dispatchEvent(new CustomEvent("lux:pickerSummaryHover", { detail: { label: `Role • ${label}` } }));
+    }
+  });
+  _drawer.addEventListener("pointerout", (e) => {
+    const fromCard = e.target.closest("[data-role-idx]");
+    if (!fromCard) return;
+    const toCard = e.relatedTarget?.closest?.("[data-role-idx]");
+    if (toCard) return;
+    _hoverRoleCard = null;
+    document.dispatchEvent(new CustomEvent("lux:pickerSummaryHoverClear"));
   });
 
   if (!_docClickBound) {
