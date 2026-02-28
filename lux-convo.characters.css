@@ -2,96 +2,124 @@
 /* Characters drawer (left-side, mirrors knobs drawer on right) */
 
 /* ============================================================
-   Characters drawer (left-side, mirrors knobs drawer on right)
+   Characters drawer — left-side
    ============================================================ */
-
-.lux-charsOverlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.28);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 260ms cubic-bezier(0.2, 0, 0, 1);
-  z-index: 998;
-}
-.lux-charsOverlay[data-open="1"] {
-  opacity: 1;
-  pointer-events: auto;
-}
 
 .lux-charsDrawer {
   position: fixed;
   top: 0;
-  left: 0;               /* LEFT side (opposite of knobs) */
+  left: 0;
   height: 100vh;
-  width: 380px;
+  width: 384px;
   max-width: 92vw;
 
-  background: rgba(255,255,255,0.92);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border-right: 1px solid rgba(0,0,0,0.08);
-
-  /* ── Surface polish (Gemini floating-card feel) ── */
-  border-radius: 0 18px 18px 0;
-  box-shadow:
-    4px 0 24px rgba(0,0,0,0.10),
-    1px 0 6px rgba(0,0,0,0.06);
-
   /* ── Default: offscreen left ── */
-  transform: translateX(-110%);
+  transform: translateX(-100%);
   z-index: 999;
 
   display: flex;
-  flex-direction: column;
+  flex-direction: row;   /* edge strip + inner content side by side */
 
-  /* ── Disable simple transition — keyframes handle motion now ── */
+  /* no transition — keyframes drive all motion */
   transition: none;
 
   /* Responsive portrait sizing knobs (2-role drawer) */
-  --luxCharsAvatarMin: 180px;                      /* never smaller than this */
-  --luxCharsAvatarMax: 420px;                      /* cap on huge screens */
-  --luxCharsAvatarCalc: calc((100vh - 420px) / 2); /* "fill available height evenly" approximation */
-  --luxCharsNpcLines: 3;                           /* description clamp */
-
-  /* Selected vs unselected "bulge" multipliers */
-  --luxCharsAvatarMulBase: 1;     /* baseline (not used directly; kept for clarity) */
-  --luxCharsAvatarMulSmall: 0.90; /* unselected */
-  --luxCharsAvatarMulBig: 1.08;   /* selected */
+  --luxCharsAvatarMin: 180px;
+  --luxCharsAvatarMax: 420px;
+  --luxCharsAvatarCalc: calc((100vh - 420px) / 2);
+  --luxCharsNpcLines: 3;
+  --luxCharsAvatarMulBase: 1;
+  --luxCharsAvatarMulSmall: 0.90;
+  --luxCharsAvatarMulBig: 1.08;
 }
 
-/* ── data-open still positions the drawer when open ── */
-.lux-charsDrawer[data-open="1"] {
+/* ── Blue edge strip (Gemini-style) ── */
+.lux-charsEdge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, #4285f4, #6d5bf7 40%, #4285f4);
+  border-radius: 0 4px 4px 0;
+  z-index: 2;
+}
+
+/* ── Inner panel (white content area) ── */
+.lux-charsInner {
+  flex: 1;
+  min-width: 0;
+  background: rgba(255,255,255,0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 0 16px 16px 0;
+  display: flex;
+  flex-direction: column;
+
+  /* ── Heavy layered shadow ── */
+  box-shadow:
+    8px 0 40px rgba(0,0,0,0.14),
+    3px 0 14px rgba(0,0,0,0.08),
+    1px 0 4px rgba(0,0,0,0.05);
+}
+
+
+/* ================================================================
+   ANIMATION KEYFRAMES — premium physics
+   ================================================================ */
+
+/* OPEN: fast launch → decelerate → tiny overshoot → settle
+   Total 480ms. The overshoot at 82% gives the "inertia" feel. */
+@keyframes luxCharsSlideIn {
+  0%   { transform: translateX(-100%); }
+  40%  { transform: translateX(-18%); }         /* fast initial burst */
+  70%  { transform: translateX(-2%); }          /* decelerating */
+  82%  { transform: translateX(1.2%); }         /* slight overshoot past target */
+  100% { transform: translateX(0); }            /* settle */
+}
+
+/* CLOSE: accelerate out — quick and decisive */
+@keyframes luxCharsSlideOut {
+  0%   { transform: translateX(0); }
+  30%  { transform: translateX(-8%); }          /* ease into motion */
+  100% { transform: translateX(-100%); }        /* gone */
+}
+
+/* ── OPENING state ── */
+.lux-charsDrawer[data-state="opening"] {
+  animation: luxCharsSlideIn 480ms cubic-bezier(0.22, 0.6, 0.35, 1) both;
+}
+
+/* ── Keep position when OPEN ── */
+.lux-charsDrawer[data-state="open"] {
   transform: translateX(0);
 }
 
-/* ── OPENING: emphasized slide-in with subtle overshoot ── */
-.lux-charsDrawer[data-state="opening"] {
-  animation: luxCharsSlideIn 380ms cubic-bezier(0.2, 0, 0, 1.04) both;
-}
-
-/* ── CLOSING: clean exit, slightly faster ── */
+/* ── CLOSING state ── */
 .lux-charsDrawer[data-state="closing"] {
-  animation: luxCharsSlideOut 280ms cubic-bezier(0.4, 0, 1, 1) both;
+  animation: luxCharsSlideOut 260ms cubic-bezier(0.4, 0, 0.7, 0.2) both;
 }
 
-@keyframes luxCharsSlideIn {
-  0%   { transform: translateX(-110%); }
-  75%  { transform: translateX(4px); }      /* tiny overshoot */
-  100% { transform: translateX(0); }
+
+/* ================================================================
+   PEEKABOO: hover hint on trigger button
+   ================================================================ */
+.lux-charsDrawer.lux-charsPeek {
+  transform: translateX(calc(-100% + 14px));
+  transition: transform 300ms cubic-bezier(0.22, 0.6, 0.35, 1);
 }
 
-@keyframes luxCharsSlideOut {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-110%); }
+/* When peek is removed, slide back smoothly */
+.lux-charsDrawer:not(.lux-charsPeek)[data-state="closed"] {
+  transition: transform 250ms cubic-bezier(0.4, 0, 0.7, 0.2);
 }
 
-/* ── STAGED CONTENT ENTRANCE ──────────────────────────────
-   Header and cards fly in after the drawer lands.
-   Uses animation-delay so content "arrives" after container.
-   ──────────────────────────────────────────────────────── */
 
-/* Reset: content hidden while drawer is closed or closing */
+/* ================================================================
+   STAGED CONTENT ENTRANCE — cards slide from the left
+   ================================================================ */
+
+/* Hidden while closed or closing */
 .lux-charsDrawer[data-state="closed"] .lux-charsHeader,
 .lux-charsDrawer[data-state="closed"] .lux-charCard,
 .lux-charsDrawer[data-state="closed"] .lux-charsEmpty,
@@ -101,24 +129,23 @@
   opacity: 0;
 }
 
-/* Opening entrance: staggered fly-up */
+/* Header: fade + slide from left */
 .lux-charsDrawer[data-state="opening"] .lux-charsHeader {
-  animation: luxCharsFlyUp 300ms cubic-bezier(0.2, 0, 0, 1) 140ms both;
+  animation: luxCharsContentIn 340ms cubic-bezier(0.22, 0.6, 0.35, 1) 200ms both;
 }
 
+/* Cards: slide in from the left with stagger — with own tiny overshoot */
 .lux-charsDrawer[data-state="opening"] .lux-charCard:nth-child(1) {
-  animation: luxCharsFlyUp 320ms cubic-bezier(0.2, 0, 0, 1) 200ms both;
+  animation: luxCharsCardIn 420ms cubic-bezier(0.22, 0.6, 0.35, 1) 280ms both;
 }
-
 .lux-charsDrawer[data-state="opening"] .lux-charCard:nth-child(2) {
-  animation: luxCharsFlyUp 320ms cubic-bezier(0.2, 0, 0, 1) 260ms both;
+  animation: luxCharsCardIn 420ms cubic-bezier(0.22, 0.6, 0.35, 1) 380ms both;
 }
-
 .lux-charsDrawer[data-state="opening"] .lux-charsEmpty {
-  animation: luxCharsFlyUp 300ms cubic-bezier(0.2, 0, 0, 1) 200ms both;
+  animation: luxCharsContentIn 340ms cubic-bezier(0.22, 0.6, 0.35, 1) 280ms both;
 }
 
-/* Once open, content is fully visible (no animation) */
+/* Once open, content fully visible */
 .lux-charsDrawer[data-state="open"] .lux-charsHeader,
 .lux-charsDrawer[data-state="open"] .lux-charCard,
 .lux-charsDrawer[data-state="open"] .lux-charsEmpty {
@@ -126,22 +153,68 @@
   transform: none;
 }
 
-@keyframes luxCharsFlyUp {
-  0% {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@keyframes luxCharsContentIn {
+  0%   { opacity: 0; transform: translateX(-16px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes luxCharsCardIn {
+  0%   { opacity: 0; transform: translateX(-30px); }
+  75%  { opacity: 1; transform: translateX(3px); }     /* tiny overshoot */
+  100% { opacity: 1; transform: translateX(0); }
 }
 
 
-/* ──────────────────────────────────────────────────────────
-   EVERYTHING BELOW IS THE ORIGINAL LAYOUT / BULGE / AVATAR
-   SYSTEM — PRESERVED EXACTLY AS-IS
-   ────────────────────────────────────────────────────────── */
+/* ================================================================
+   CLOSE BUTTON — circular, polished
+   ================================================================ */
+
+.lux-charsClose {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: rgba(0,0,0,0.55);
+  transition: background 140ms ease, color 140ms ease, transform 100ms ease;
+  flex-shrink: 0;
+}
+.lux-charsClose:hover {
+  background: rgba(0,0,0,0.06);
+  color: rgba(0,0,0,0.8);
+}
+.lux-charsClose:active { transform: scale(0.92); }
+
+/* ── Nudge animation (red glow + spin) ── */
+@keyframes luxCloseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(220,38,38,0); }
+  25% { box-shadow: 0 0 0 6px rgba(220,38,38,0.18), 0 0 16px rgba(220,38,38,0.30); }
+  50% { box-shadow: 0 0 0 8px rgba(220,38,38,0.12), 0 0 20px rgba(220,38,38,0.22); }
+  75% { box-shadow: 0 0 0 4px rgba(220,38,38,0.08); }
+}
+@keyframes luxCloseWiggle {
+  0%, 100% { transform: rotate(0deg); }
+  15% { transform: rotate(-18deg); }
+  30% { transform: rotate(14deg); }
+  45% { transform: rotate(-10deg); }
+  60% { transform: rotate(7deg); }
+  80% { transform: rotate(-3deg); }
+}
+
+.lux-charsClose.lux-closeNudge {
+  animation: luxCloseGlow 0.8s ease-out, luxCloseWiggle 0.6s ease-in-out;
+  color: #dc2626;
+  background: rgba(220,38,38,0.08);
+}
+
+
+/* ================================================================
+   ORIGINAL LAYOUT / BULGE / AVATAR — PRESERVED EXACTLY
+   ================================================================ */
 
 .lux-charsHeader {
   display: flex;
@@ -153,34 +226,22 @@
   font-size: 1.05rem;
   font-weight: 700;
 }
-.lux-charsClose {
-  border: 0;
-  background: transparent;
-  font-size: 1.1rem;
-  cursor: pointer;
-  opacity: 0.75;
-}
-.lux-charsClose:hover { opacity: 1; }
 
 .lux-charsBody {
   padding: 16px 20px 28px;
-  overflow: hidden;          /* default: avoid scrollbars */
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: 16px;
-
-  /* critical so child sizing behaves inside a fixed-height drawer */
   flex: 1 1 auto;
   min-height: 0;
 }
 
-/* ── Character avatar (hidden until images exist) ── */
-/* Baseline rule (used if no state class matches for some reason) */
 .char-avatar {
   width: 100%;
   height: clamp(var(--luxCharsAvatarMin), var(--luxCharsAvatarCalc), var(--luxCharsAvatarMax));
   object-fit: cover;
-  object-position: 50% 22%;   /* bias crop upward for faces */
+  object-position: 50% 22%;
   border-radius: 12px;
   display: block;
   margin-top: 10px;
@@ -190,7 +251,6 @@
   transition: height 160ms ease;
 }
 
-/* Unselected = a bit smaller portrait */
 .lux-charCard:not(.is-selected) .char-avatar {
   height: clamp(
     calc(var(--luxCharsAvatarMin) * var(--luxCharsAvatarMulSmall)),
@@ -198,8 +258,6 @@
     calc(var(--luxCharsAvatarMax) * var(--luxCharsAvatarMulSmall))
   );
 }
-
-/* Selected = a bit bigger portrait */
 .lux-charCard.is-selected .char-avatar {
   height: clamp(
     calc(var(--luxCharsAvatarMin) * var(--luxCharsAvatarMulBig)),
@@ -208,7 +266,6 @@
   );
 }
 
-/* ── Character card ───────────────────────── */
 .lux-charCard {
   display: flex;
   flex-direction: column;
@@ -221,54 +278,31 @@
   cursor: pointer;
   text-align: left;
   transition: border-color 140ms ease, box-shadow 140ms ease, transform 120ms ease;
+  transform-origin: 50% 20%;
 }
-
-/* Hover = tiny lift */
 .lux-charCard:hover {
   border-color: rgba(0,120,215,0.28);
   box-shadow: 0 2px 10px rgba(0,0,0,0.08);
   transform: translateY(-1px);
 }
-
-/* Selected = "bulge" / emphasis */
 .lux-charCard.is-selected {
   border-color: #0078d7;
   box-shadow: 0 0 0 3px rgba(0,120,215,0.18), 0 4px 12px rgba(0,0,0,0.08);
   background: rgba(0,120,215,0.04);
-
-  /* the "bulge" */
   transform: translateY(-2px) scale(1.01);
 }
-
-/* Unselected = slightly de-emphasize */
 .lux-charCard:not(.is-selected) {
   transform: scale(0.995);
 }
 
-/* Prevent transform from affecting layout width/flow in odd ways */
-.lux-charCard {
-  transform-origin: 50% 20%;
-}
-
-.lux-charCard-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.lux-charCard-icon {
-  font-size: 1.3rem;
-}
-.lux-charCard-label {
-  font-weight: 700;
-  font-size: 1rem;
-}
+.lux-charCard-header { display: flex; align-items: center; gap: 8px; }
+.lux-charCard-icon { font-size: 1.3rem; }
+.lux-charCard-label { font-weight: 700; font-size: 1rem; }
 
 .lux-charCard-npc {
   font-size: 0.88rem;
   color: rgba(0,0,0,0.58);
   line-height: 1.5;
-
-  /* Clamp text so it can't blow up the layout and force scrollbars */
   display: -webkit-box;
   -webkit-line-clamp: var(--luxCharsNpcLines);
   -webkit-box-orient: vertical;
@@ -282,7 +316,6 @@
   font-size: 0.9rem;
 }
 
-/* ── "You are playing" indicator ───────── */
 .lux-charCard.is-selected .lux-charCard-label::after {
   content: " — You";
   font-weight: 400;
@@ -290,74 +323,55 @@
   font-size: 0.85rem;
 }
 
+
 /* ============================================================
    Scroll fallback (short viewports)
    ============================================================ */
 
 @media (max-height: 720px) {
-  .lux-charsDrawer{
+  .lux-charsDrawer {
     --luxCharsAvatarMin: 150px;
     --luxCharsAvatarMax: 320px;
     --luxCharsAvatarCalc: calc((100vh - 380px) / 2);
     --luxCharsNpcLines: 2;
-
-    /* Keep the bulge effect but soften it on short screens */
     --luxCharsAvatarMulSmall: 0.92;
     --luxCharsAvatarMulBig: 1.06;
   }
-
-  /* Balanced approach: allow scroll when viewport is short,
-     but still shrink + clamp so it's not instantly scroll-heavy. */
-  .lux-charsBody{
-    overflow-y: auto;
-    padding: 14px 18px 22px;
-    gap: 14px;
-  }
-
-  .lux-charCard{
-    padding: 16px;
-  }
-
-  .lux-charCard.is-selected{
-    transform: translateY(-1px) scale(1.008);
-  }
-  .lux-charCard:not(.is-selected){
-    transform: scale(0.996);
-  }
+  .lux-charsBody { overflow-y: auto; padding: 14px 18px 22px; gap: 14px; }
+  .lux-charCard { padding: 16px; }
+  .lux-charCard.is-selected { transform: translateY(-1px) scale(1.008); }
+  .lux-charCard:not(.is-selected) { transform: scale(0.996); }
 }
 
 @media (max-height: 560px) {
-  .lux-charsDrawer{
+  .lux-charsDrawer {
     --luxCharsAvatarMin: 130px;
     --luxCharsAvatarMax: 260px;
     --luxCharsAvatarCalc: calc((100vh - 360px) / 2);
     --luxCharsNpcLines: 2;
-
     --luxCharsAvatarMulSmall: 0.94;
     --luxCharsAvatarMulBig: 1.04;
   }
 }
 
+
 /* ============================================================
-   Reduced-motion: instant open/close, no keyframes
+   Reduced-motion
    ============================================================ */
 @media (prefers-reduced-motion: reduce) {
   .lux-charsDrawer,
   .lux-charsDrawer[data-state="opening"],
   .lux-charsDrawer[data-state="closing"] {
     animation: none !important;
-    transition: transform 0ms !important;
+    transition: none !important;
   }
-
+  .lux-charsDrawer[data-state="opening"] { transform: translateX(0); }
+  .lux-charsDrawer[data-state="open"] { transform: translateX(0); }
   .lux-charsDrawer[data-state="opening"] .lux-charsHeader,
   .lux-charsDrawer[data-state="opening"] .lux-charCard,
   .lux-charsDrawer[data-state="opening"] .lux-charsEmpty {
-    animation: none !important;
-    opacity: 1 !important;
-    transform: none !important;
+    animation: none !important; opacity: 1 !important; transform: none !important;
   }
-
-  .lux-charsOverlay {
-    transition: opacity 0ms !important;
-  }
+  .lux-charsClose.lux-closeNudge { animation: none !important; }
+  .lux-charsDrawer.lux-charsPeek { transition: none !important; }
 }
