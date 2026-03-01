@@ -2,6 +2,15 @@ import { supabase } from "../src/supabase.js";
 import { API_BASE } from "../src/api/util.js";
 import { setUID } from "../src/api/index.js";
 
+function escHtml(s) {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export function initAuthUI() {
   renderAuthButton();
   handleAuthStateChange();
@@ -104,7 +113,7 @@ function openLoginModal() {
           <div style="font-size:3rem; margin-bottom:16px;">📧</div>
           <h3 style="color:#10b981; margin:0 0 12px 0;">Check your email!</h3>
           <p style="color:#475569; margin-bottom:20px; line-height:1.5;">
-            We sent a magic link to <strong>${email}</strong>.<br>
+            We sent a magic link to <strong>${escHtml(email)}</strong>.<br>
             Click it to log in.
           </p>
           <button onclick="document.getElementById('lux-auth-modal').remove()" 
