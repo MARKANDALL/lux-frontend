@@ -79,8 +79,16 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  transition: transform 90ms ease-out, background 90ms ease-out, box-shadow 90ms ease-out;
 }
-.lux-deckCta:hover{ background: rgba(0,120,215,0.14); }
+.lux-deckCta:hover{
+  background: rgba(0,120,215,0.18);
+  transform: translateY(-1px) scale(1.03);
+  box-shadow: 0 6px 16px rgba(0,120,215,0.18);
+}
+.lux-deckCta:active{
+  transform: scale(0.98);
+}
 
 /* ✅ Stream CTA variant (NEW) */
 .lux-deckCta.is-stream{
