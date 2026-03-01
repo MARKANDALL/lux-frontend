@@ -10,6 +10,7 @@ let _openerEl = null;
 let _docClickBound = false;
 let _currentAnim = null; // track running WAAPI animation
 let _hoverRoleCard = null;
+let _contentAnim = null; // track running content swap animation
 
 /* ── Peekaboo (hover-preview teaser) ── */
 export function peekCharsDrawer() {
@@ -95,7 +96,9 @@ function ensureDom() {
     .addEventListener("click", closeCharsDrawer);
 
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && _drawer.dataset.state === "open") closeCharsDrawer();
+    if (e.key === "Escape" && _drawer.dataset.state === "open") {
+      closeCharsDrawer();
+    }
   });
 
   _drawer.addEventListener("click", (e) => {
@@ -139,6 +142,79 @@ function ensureDom() {
     _docClickBound = true;
     document.addEventListener("click", _onDocClick, true);
   }
+}
+
+export function isCharsDrawerOpen() {
+  ensureDom();
+  return _drawer.dataset.state === "open" || _drawer.dataset.state === "opening";
+}
+
+function _renderRolesHtml(scenarioIdx, roleIdx) {
+  const scenario = SCENARIOS[scenarioIdx];
+  if (!scenario || !scenario.roles) {
+    return `<div class="lux-charsEmpty">No characters for this scene.</div>`;
+  }
+
+  return scenario.roles
+    .map((role, i) => {
+      const src = `/assets/characters/${scenario.id}-${role.id}.jpg`;
+      return `
+      <button class="lux-charCard ${i === roleIdx ? "is-selected" : ""}"
+              data-role-idx="${i}" type="button">
+        <div class="lux-charCard-header">
+          <span class="lux-charCard-icon">${i === 0 ? "🗣️" : "👤"}</span>
+          <span class="lux-charCard-label">${escHtml(role.label)}</span>
+        </div>
+        <div class="lux-charCard-npc">${escHtml(role.npc)}</div>
+        <img src="${escHtml(src)}"
+             alt="${escHtml(role.label)}"
+             class="char-avatar"
+             loading="lazy"
+             decoding="async"
+             onerror="console.warn('[Lux] Missing portrait JPG:', this.src); this.style.display='none'">
+      </button>
+    `;
+    })
+    .join("");
+}
+
+export function swapCharsDrawerContent(scenarioIdx, roleIdx) {
+  ensureDom();
+  if (!isCharsDrawerOpen()) return;
+
+  const nextHtml = _renderRolesHtml(scenarioIdx, roleIdx);
+
+  // Cancel any in-flight content animation so fast flicking stays responsive.
+  if (_contentAnim) {
+    _contentAnim.cancel();
+    _contentAnim = null;
+  }
+
+  // OUT: fade + tiny drift (very subtle)
+  _contentAnim = _body.animate(
+    [
+      { opacity: 1, transform: "translate3d(0,0,0)" },
+      { opacity: 0, transform: "translate3d(6px,-2px,0)" },
+    ],
+    { duration: 120, easing: "ease-out", fill: "forwards" }
+  );
+
+  _contentAnim.onfinish = () => {
+    _body.innerHTML = nextHtml;
+
+    // IN: fade in + micro drift from left/down (gentle)
+    _contentAnim = _body.animate(
+      [
+        { opacity: 0, transform: "translate3d(-10px,6px,0)" },
+        { opacity: 1, transform: "translate3d(0,0,0)" },
+      ],
+      { duration: 170, easing: "cubic-bezier(0.16, 1, 0.3, 1)", fill: "forwards" }
+    );
+
+    _contentAnim.onfinish = () => {
+      _contentAnim = null;
+    };
+  };
 }
 
 /* ── WAAPI slide animations (true 60fps on compositor) ───── */
@@ -220,32 +296,7 @@ export function openCharsDrawer({ scenarioIdx, roleIdx, onRoleSelect }) {
   _openerEl = document.activeElement || null;
   _onRoleSelect = onRoleSelect || null;
 
-  const scenario = SCENARIOS[scenarioIdx];
-  if (!scenario || !scenario.roles) {
-    _body.innerHTML = `<div class="lux-charsEmpty">No characters for this scene.</div>`;
-  } else {
-    _body.innerHTML = scenario.roles
-      .map((role, i) => {
-        const src = `/assets/characters/${scenario.id}-${role.id}.jpg`;
-        return `
-        <button class="lux-charCard ${i === roleIdx ? "is-selected" : ""}"
-                data-role-idx="${i}" type="button">
-          <div class="lux-charCard-header">
-            <span class="lux-charCard-icon">${i === 0 ? "🗣️" : "👤"}</span>
-            <span class="lux-charCard-label">${escHtml(role.label)}</span>
-          </div>
-          <div class="lux-charCard-npc">${escHtml(role.npc)}</div>
-          <img src="${escHtml(src)}"
-               alt="${escHtml(role.label)}"
-               class="char-avatar"
-               loading="lazy"
-               decoding="async"
-               onerror="console.warn('[Lux] Missing portrait JPG:', this.src); this.style.display='none'">
-        </button>
-      `;
-      })
-      .join("");
-  }
+  _body.innerHTML = _renderRolesHtml(scenarioIdx, roleIdx);
 
   _drawer.dataset.open = "1";
   _drawer.dataset.state = "opening";
@@ -287,6 +338,8 @@ export function closeCharsDrawer() {
     _animateClose();
   }
 }
+
+/* ── Utility ── */
 
 function escHtml(s) {
   const d = document.createElement("div");
