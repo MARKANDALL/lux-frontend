@@ -1,5 +1,5 @@
 // FILE: features/convo/picker-deck/thumb-scroller.js
-// ONE-LINE: Adds a wrapper + left/right arrows around the thumbs strip and provides smooth 1-thumb stepping with “edge then recycle” wrap.
+// ONE-LINE: Adds a wrapper + left/right arrows around the thumbs strip and provides smooth infinite-loop stepping.
 
 export function ensureThumbScroller(thumbs) {
   if (!thumbs) return;
@@ -29,6 +29,10 @@ export function ensureThumbScroller(thumbs) {
 
   wrap.append(left, right);
 
+  // Track intended scroll target so rapid clicks don't get confused
+  // by in-flight smooth scroll animations.
+  let _targetLeft = null;
+
   function stepPx(count = 1) {
     const first = thumbs.querySelector(".lux-thumb");
     const w = first ? first.getBoundingClientRect().width : 42;
@@ -53,45 +57,46 @@ export function ensureThumbScroller(thumbs) {
     const scrollable = max > 2;
     left.style.display = scrollable ? "" : "none";
     right.style.display = scrollable ? "" : "none";
+    // Arrows stay always enabled for infinite loop
     left.disabled = false;
     right.disabled = false;
   }
 
-  function scrollEdgeWrap(dir, steps = 1) {
+  function scrollLoop(dir, steps = 1) {
     const max = maxScroll();
     if (max <= 2) return;
 
     const delta = stepPx(steps);
-    const cur = thumbs.scrollLeft;
+    // Use the tracked target when a smooth scroll is still in-flight
+    const cur = (_targetLeft != null) ? _targetLeft : thumbs.scrollLeft;
 
+    let next;
     if (dir < 0) {
-      // left
-      if (cur <= delta * 0.5) {
-        thumbs.scrollTo({ left: max, behavior: "smooth" });
-      } else {
-        thumbs.scrollTo({ left: Math.max(0, cur - delta), behavior: "smooth" });
-      }
-      return;
+      next = cur - delta;
+      if (next < 0) next = max; // wrap to end
+    } else {
+      next = cur + delta;
+      if (next > max) next = 0; // wrap to start
     }
 
-    // right
-    if (cur >= max - delta * 0.5) {
-      thumbs.scrollTo({ left: 0, behavior: "smooth" });
-    } else {
-      thumbs.scrollTo({ left: Math.min(max, cur + delta), behavior: "smooth" });
-    }
+    _targetLeft = next;
+    thumbs.scrollTo({ left: next, behavior: "smooth" });
+
+    // Clear tracked target once the scroll settles
+    clearTimeout(scrollLoop._tid);
+    scrollLoop._tid = setTimeout(() => { _targetLeft = null; }, 400);
   }
 
   left.addEventListener("click", (e) => {
     e.preventDefault();
     const n = e.shiftKey ? 6 : 1;     // hold Shift to jump faster
-    scrollEdgeWrap(-1, n);
+    scrollLoop(-1, n);
   });
 
   right.addEventListener("click", (e) => {
     e.preventDefault();
     const n = e.shiftKey ? 6 : 1;
-    scrollEdgeWrap(1, n);
+    scrollLoop(1, n);
   });
 
   thumbs.addEventListener("scroll", updateArrows, { passive: true });

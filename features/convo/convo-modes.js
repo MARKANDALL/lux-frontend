@@ -1,6 +1,9 @@
 // features/convo/convo-modes.js
 // ONE-LINE: Controls convo screen mode transitions (intro/picker/chat), history syncing, and popstate wiring.
 
+import { closeCharsDrawer } from "./characters-drawer.js";
+import { getKnobsDrawerInstance } from "./knobs-drawer.js";
+
 export function createConvoModeController({ root, state, setParallaxEnabled, setKnobs, render }) {
   const VALID_MODES = new Set(["intro", "picker", "chat"]);
 
@@ -26,6 +29,17 @@ export function createConvoModeController({ root, state, setParallaxEnabled, set
 
     // Used by lux-convo.css to gate drawers (TTS + SelfPB) until chat mode.
     document.documentElement.dataset.luxConvoMode = mode;
+
+    // Close both drawers when leaving the picker page
+    if (changed && mode !== "picker") {
+      try { closeCharsDrawer(); } catch (err) { globalThis.warnSwallow("./features/convo/convo-modes.js", err); }
+      try {
+        const knobsEl = document.getElementById("luxKnobsDrawer");
+        if (knobsEl && knobsEl.dataset.state !== "closed") {
+          getKnobsDrawerInstance().close();
+        }
+      } catch (err) { globalThis.warnSwallow("./features/convo/convo-modes.js", err); }
+    }
 
     // Broadcast mode transitions (picker uses this to randomize the default card on entry).
     try { document.dispatchEvent(new CustomEvent("luxConvo:mode", { detail: { mode, changed } })); } catch (err) { globalThis.warnSwallow("./features/convo/convo-modes.js", err); }

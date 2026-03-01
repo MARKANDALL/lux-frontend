@@ -198,23 +198,22 @@
 
 
 /* ================================================================
-   Picker bottom row (Characters / Scene Settings buttons)
+   Picker unified bottom row (Characters | Back | Next | Settings)
    ================================================================ */
 
-.lux-pickerKnobsRow {
+.lux-pickerNavRow {
+  width: min(780px, 94vw);
+  margin: 14px auto 0;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  padding: 8px 0 4px;
-  position: relative;
-  z-index: 95;
-}
-#convoApp[data-mode="picker"] .lux-pickerKnobsRow {
   position: relative;
   z-index: 80;
 }
-.lux-pickerKnobsRow .btn {
+
+/* Side buttons (Characters / Scene Settings) — glass pill style */
+.lux-pickerNavRow .btn {
   border-radius: 999px;
   padding: 7px 14px;
   font-size: 0.85rem;
@@ -225,9 +224,25 @@
   backdrop-filter: blur(6px);
   transition: background 160ms ease;
 }
-.lux-pickerKnobsRow .btn:hover {
+.lux-pickerNavRow .btn:hover {
   background: rgba(255,255,255,0.32);
 }
+
+/* Back / Next buttons inside the unified row */
+.lux-pickerNavRow .lux-navArrow,
+.lux-pickerNavRow .lux-navNext {
+  min-width: 100px;
+  text-align: center;
+}
+
+/* Mobile: shrink text + gap so all four buttons fit in one row */
+@media (max-width: 540px) {
+  .lux-pickerNavRow { gap: 6px; }
+  .lux-pickerNavRow .btn { padding: 6px 10px; font-size: 0.78rem; }
+  .lux-pickerNavRow .lux-navArrow,
+  .lux-pickerNavRow .lux-navNext { min-width: 80px; padding: 8px 10px; font-size: 0.82rem; }
+}
+
 .lux-pickerKnobsSummary {
   font-size: 0.85rem;
   color: rgba(255,255,255,0.88);

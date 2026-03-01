@@ -87,19 +87,16 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
   /* Summary badge — centered ABOVE the deck cards */
   const pickerKnobsSummary = el("div", "lux-pickerKnobsSummary", "");
 
-  /* Picker bottom row: Characters + Scene Settings (NO summary here) */
-  const pickerKnobsRow = el("div", "lux-pickerKnobsRow");
-  const pickerCharsBtn = el("button", "btn ghost", "🎭 Characters");
-  const pickerKnobsBtn = el("button", "btn ghost", "⚙️ Scene Settings");
-  pickerKnobsRow.append(pickerCharsBtn, pickerKnobsBtn);
-
-  const nav = el("div", "lux-deckNav");
+  /* Single bottom row: Characters | ← Back | Next → | Scene Settings */
+  const pickerNavRow = el("div", "lux-pickerNavRow");
+  const pickerCharsBtn = el("button", "btn ghost lux-pickerNavSide", "🎭 Characters");
   const backBtn = el("button", "lux-navArrow", "← Back");
   const nextBtn = el("button", "lux-navNext", "Next →");
-  nav.append(backBtn, nextBtn);
+  const pickerKnobsBtn = el("button", "btn ghost lux-pickerNavSide", "⚙️ Scene Settings");
+  pickerNavRow.append(pickerCharsBtn, backBtn, nextBtn, pickerKnobsBtn);
 
-/* Summary above deck, buttons below thumbs */
-  picker.append(pickerToplinks, pickerKnobsSummary, deck, thumbs, pickerKnobsRow, nav);
+  /* Summary above deck, single button row below thumbs */
+  picker.append(pickerToplinks, pickerKnobsSummary, deck, thumbs, pickerNavRow);
 
   // Chat panel (single centered)
   const chatWrap = el("div", "lux-chatwrap");
