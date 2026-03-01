@@ -8,8 +8,59 @@ let _body = null;
 let _onRoleSelect = null;
 let _openerEl = null;
 let _docClickBound = false;
-let _currentAnim = null;  // track running WAAPI animation
+let _currentAnim = null; // track running WAAPI animation
 let _hoverRoleCard = null;
+
+/* ── Peekaboo (hover-preview teaser) ── */
+export function peekCharsDrawer() {
+  ensureDom();
+  if (_drawer.dataset.state !== "closed") return;
+  _drawer.classList.add("lux-charsPeek");
+  // IMPORTANT: drawer open/close uses inline transform; CSS peek transform can't win.
+  // So set the peek transform inline too.
+  _drawer.style.transform = "translateX(calc(-100% + 16px))";
+}
+
+export function unpeekCharsDrawer() {
+  if (!_drawer) return;
+  _drawer.classList.remove("lux-charsPeek");
+  // Restore the closed position inline (matches base closed state)
+  _drawer.style.transform = "translateX(-100%)";
+}
+
+/* ── Empty-space nudge (wiggle close btn if user clicks dead space) ── */
+function _onDocClick(e) {
+  if (!_drawer || _drawer.dataset.state !== "open") return;
+  if (_drawer.contains(e.target)) return;
+
+  const knobsDrawer = document.getElementById("luxKnobsDrawer");
+  if (knobsDrawer && knobsDrawer.contains(e.target)) return;
+
+  // Broad interactive selector — anything clickable should NOT trigger nudge
+  const interactive = e.target.closest(
+    "a, button, input, select, textarea, [role='button'], [role='dialog'], " +
+      "[tabindex]:not([tabindex='-1']), video, audio, details, summary, label, " +
+      ".btn, .lux-pickerKnobsRow, .lux-pickerNavRow, .lux-thumb, img[onclick], [data-scenario], " +
+      "[data-expandable], .scenario-desc, .practice-btn, .lux-scenarioDialog, " +
+      ".lux-dialogBackdrop, dialog, [aria-expanded], nav, .lux-navItem, " +
+      "[contenteditable], .lux-ttsBtn, .lux-micBtn, " +
+      ".lux-deck-card, .lux-deckText, .lux-deckCta, .lux-deck"
+  );
+  if (interactive) return;
+
+  _nudgeCloseBtn();
+}
+
+function _nudgeCloseBtn() {
+  const btn = _drawer?.querySelector(".lux-charsClose");
+  if (!btn || btn.classList.contains("lux-closeNudge")) return;
+  btn.classList.add("lux-closeNudge");
+  btn.addEventListener(
+    "animationend",
+    () => btn.classList.remove("lux-closeNudge"),
+    { once: true }
+  );
+}
 
 function ensureDom() {
   if (_drawer) return;
@@ -20,7 +71,7 @@ function ensureDom() {
   _drawer.setAttribute("aria-hidden", "true");
   _drawer.inert = true;
   _drawer.dataset.state = "closed";
-  _drawer.style.willChange = "transform";          // GPU compositing hint
+  _drawer.style.willChange = "transform"; // GPU compositing hint
 
   _drawer.innerHTML = `
     <div class="lux-charsInner">
@@ -39,7 +90,9 @@ function ensureDom() {
 
   _body = _drawer.querySelector(".lux-charsBody");
 
-  _drawer.querySelector(".lux-charsClose").addEventListener("click", closeCharsDrawer);
+  _drawer
+    .querySelector(".lux-charsClose")
+    .addEventListener("click", closeCharsDrawer);
 
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && _drawer.dataset.state === "open") closeCharsDrawer();
@@ -49,7 +102,9 @@ function ensureDom() {
     const card = e.target.closest("[data-role-idx]");
     if (!card) return;
     const idx = Number(card.dataset.roleIdx);
-    _drawer.querySelectorAll("[data-role-idx]").forEach((c) => c.classList.remove("is-selected"));
+    _drawer
+      .querySelectorAll("[data-role-idx]")
+      .forEach((c) => c.classList.remove("is-selected"));
     card.classList.add("is-selected");
     if (_onRoleSelect) _onRoleSelect(idx);
     document.dispatchEvent(new CustomEvent("lux:pickerSummaryPulse"));
@@ -63,9 +118,14 @@ function ensureDom() {
     _hoverRoleCard = card;
     const label = card.querySelector(".lux-charCard-label")?.textContent?.trim();
     if (label) {
-      document.dispatchEvent(new CustomEvent("lux:pickerSummaryHover", { detail: { label: `Role • ${label}` } }));
+      document.dispatchEvent(
+        new CustomEvent("lux:pickerSummaryHover", {
+          detail: { label: `Role • ${label}` },
+        })
+      );
     }
   });
+
   _drawer.addEventListener("pointerout", (e) => {
     const fromCard = e.target.closest("[data-role-idx]");
     if (!fromCard) return;
@@ -84,20 +144,26 @@ function ensureDom() {
 /* ── WAAPI slide animations (true 60fps on compositor) ───── */
 
 function _animateOpen() {
-  if (_currentAnim) { _currentAnim.cancel(); _currentAnim = null; }
+  if (_currentAnim) {
+    _currentAnim.cancel();
+    _currentAnim = null;
+  }
 
-  _currentAnim = _drawer.animate([
-    { transform: "translateX(-100%)",  offset: 0    },
-    { transform: "translateX(-12%)",   offset: 0.35 },  // fast burst
-    { transform: "translateX(0%)",     offset: 0.7  },  // arrive at target
-    { transform: "translateX(1.4%)",   offset: 0.82 },  // overshoot past
-    { transform: "translateX(-0.3%)",  offset: 0.92 },  // tiny counter-bounce
-    { transform: "translateX(0%)",     offset: 1    },  // settle
-  ], {
-    duration: 520,
-    easing: "cubic-bezier(0.16, 1, 0.3, 1)",  // emphasized decelerate
-    fill: "forwards",
-  });
+  _currentAnim = _drawer.animate(
+    [
+      { transform: "translateX(-100%)", offset: 0 },
+      { transform: "translateX(-12%)", offset: 0.35 }, // fast burst
+      { transform: "translateX(0%)", offset: 0.7 }, // arrive at target
+      { transform: "translateX(1.4%)", offset: 0.82 }, // overshoot past
+      { transform: "translateX(-0.3%)", offset: 0.92 }, // tiny counter-bounce
+      { transform: "translateX(0%)", offset: 1 }, // settle
+    ],
+    {
+      duration: 520,
+      easing: "cubic-bezier(0.16, 1, 0.3, 1)", // emphasized decelerate
+      fill: "forwards",
+    }
+  );
 
   _currentAnim.onfinish = () => {
     _drawer.dataset.state = "open";
@@ -107,17 +173,23 @@ function _animateOpen() {
 }
 
 function _animateClose() {
-  if (_currentAnim) { _currentAnim.cancel(); _currentAnim = null; }
+  if (_currentAnim) {
+    _currentAnim.cancel();
+    _currentAnim = null;
+  }
 
-  _currentAnim = _drawer.animate([
-    { transform: "translateX(0)",     offset: 0   },
-    { transform: "translateX(2%)",    offset: 0.15 },  // tiny pull-back
-    { transform: "translateX(-100%)", offset: 1    },   // accelerate out
-  ], {
-    duration: 300,
-    easing: "cubic-bezier(0.4, 0, 0.85, 0.12)",  // accelerate
-    fill: "forwards",
-  });
+  _currentAnim = _drawer.animate(
+    [
+      { transform: "translateX(0)", offset: 0 },
+      { transform: "translateX(2%)", offset: 0.15 }, // tiny pull-back
+      { transform: "translateX(-100%)", offset: 1 }, // accelerate out
+    ],
+    {
+      duration: 300,
+      easing: "cubic-bezier(0.4, 0, 0.85, 0.12)", // accelerate
+      fill: "forwards",
+    }
+  );
 
   _currentAnim.onfinish = () => {
     _drawer.dataset.open = "0";
@@ -131,54 +203,6 @@ function _animateClose() {
       _openerEl = null;
     }
   };
-}
-
-/* ── Peekaboo ───────────────────────────────────────────── */
-
-export function peekCharsDrawer() {
-  ensureDom();
-  if (_drawer.dataset.state !== "closed") return;
-  _drawer.classList.add("lux-charsPeek");
-  // IMPORTANT: drawer open/close uses inline transform; CSS peek transform can't win.
-  // So set the peek transform inline too.
-  _drawer.style.transform = "translateX(calc(-100% + 16px))";
-}
-export function unpeekCharsDrawer() {
-  if (!_drawer) return;
-  _drawer.classList.remove("lux-charsPeek");
-  // Restore the closed position inline (matches base closed state)
-  _drawer.style.transform = "translateX(-100%)";
-}
-
-/* ── Empty-space click → X nudge ─────────────────────────── */
-
-function _onDocClick(e) {
-  if (!_drawer || _drawer.dataset.state !== "open") return;
-  if (_drawer.contains(e.target)) return;
-
-  const knobsDrawer = document.getElementById("luxKnobsDrawer");
-  if (knobsDrawer && knobsDrawer.contains(e.target)) return;
-
-  // Broad interactive selector — anything clickable should NOT trigger nudge
-  const interactive = e.target.closest(
-    "a, button, input, select, textarea, [role='button'], [role='dialog'], " +
-    "[tabindex]:not([tabindex='-1']), video, audio, details, summary, label, " +
-    ".btn, .lux-pickerKnobsRow, .lux-pickerNavRow, .lux-thumb, img[onclick], [data-scenario], " +
-    "[data-expandable], .scenario-desc, .practice-btn, .lux-scenarioDialog, " +
-    ".lux-dialogBackdrop, dialog, [aria-expanded], nav, .lux-navItem, " +
-    "[contenteditable], .lux-ttsBtn, .lux-micBtn, " +
-    ".lux-deck-card, .lux-deckText, .lux-deckCta, .lux-deck"
-  );
-  if (interactive) return;
-
-  _nudgeCloseBtn();
-}
-
-function _nudgeCloseBtn() {
-  const btn = _drawer?.querySelector(".lux-charsClose");
-  if (!btn || btn.classList.contains("lux-closeNudge")) return;
-  btn.classList.add("lux-closeNudge");
-  btn.addEventListener("animationend", () => btn.classList.remove("lux-closeNudge"), { once: true });
 }
 
 /* ── PUBLIC API ───────────────────────────────────────────── */
@@ -200,9 +224,10 @@ export function openCharsDrawer({ scenarioIdx, roleIdx, onRoleSelect }) {
   if (!scenario || !scenario.roles) {
     _body.innerHTML = `<div class="lux-charsEmpty">No characters for this scene.</div>`;
   } else {
-    _body.innerHTML = scenario.roles.map((role, i) => {
-      const src = `/assets/characters/${scenario.id}-${role.id}.jpg`;
-      return `
+    _body.innerHTML = scenario.roles
+      .map((role, i) => {
+        const src = `/assets/characters/${scenario.id}-${role.id}.jpg`;
+        return `
         <button class="lux-charCard ${i === roleIdx ? "is-selected" : ""}"
                 data-role-idx="${i}" type="button">
           <div class="lux-charCard-header">
@@ -218,7 +243,8 @@ export function openCharsDrawer({ scenarioIdx, roleIdx, onRoleSelect }) {
                onerror="console.warn('[Lux] Missing portrait JPG:', this.src); this.style.display='none'">
         </button>
       `;
-    }).join("");
+      })
+      .join("");
   }
 
   _drawer.dataset.open = "1";
@@ -253,7 +279,10 @@ export function closeCharsDrawer() {
     _drawer.dataset.state = "closed";
     _drawer.setAttribute("aria-hidden", "true");
     _drawer.inert = true;
-    if (_openerEl) { _openerEl.focus(); _openerEl = null; }
+    if (_openerEl) {
+      _openerEl.focus();
+      _openerEl = null;
+    }
   } else {
     _animateClose();
   }
