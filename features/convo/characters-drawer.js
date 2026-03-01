@@ -141,7 +141,7 @@ function _onDocClick(e) {
   const interactive = e.target.closest(
     "a, button, input, select, textarea, [role='button'], [role='dialog'], " +
     "[tabindex]:not([tabindex='-1']), video, audio, details, summary, label, " +
-    ".btn, .lux-pickerKnobsRow, .lux-thumb, img[onclick], [data-scenario], " +
+    ".btn, .lux-pickerKnobsRow, .lux-pickerNavRow, .lux-thumb, img[onclick], [data-scenario], " +
     "[data-expandable], .scenario-desc, .practice-btn, .lux-scenarioDialog, " +
     ".lux-dialogBackdrop, dialog, [aria-expanded], nav, .lux-navItem, " +
     "[contenteditable], .lux-ttsBtn, .lux-micBtn, " +
