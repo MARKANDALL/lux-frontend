@@ -11,6 +11,52 @@ let _docClickBound = false;
 let _currentAnim = null;  // track running WAAPI animation
 let _hoverRoleCard = null;
 
+/* ── Peekaboo (hover-preview teaser) ── */
+export function peekCharsDrawer() {
+  ensureDom();
+  if (_drawer.dataset.state !== "closed") return;
+  _drawer.classList.add("lux-charsPeek");
+  // IMPORTANT: drawer open/close uses inline transform; CSS peek transform can't win.
+  // So set the peek transform inline too.
+  _drawer.style.transform = "translateX(calc(-100% + 16px))";
+}
+
+export function unpeekCharsDrawer() {
+  if (!_drawer) return;
+  _drawer.classList.remove("lux-charsPeek");
+  // Restore the closed position inline (matches base closed state)
+  _drawer.style.transform = "translateX(-100%)";
+}
+
+/* ── Empty-space nudge (wiggle close btn if user clicks dead space) ── */
+function _onDocClick(e) {
+  if (!_drawer || _drawer.dataset.state !== "open") return;
+  if (_drawer.contains(e.target)) return;
+
+  const knobsDrawer = document.getElementById("luxKnobsDrawer");
+  if (knobsDrawer && knobsDrawer.contains(e.target)) return;
+
+  // Broad interactive selector — anything clickable should NOT trigger nudge
+  const interactive = e.target.closest(
+    "a, button, input, select, textarea, [role='button'], [role='dialog'], " +
+    "[tabindex]:not([tabindex='-1']), video, audio, details, summary, label, " +
+    ".btn, .lux-pickerKnobsRow, .lux-thumb, img[onclick], [data-scenario], " +
+    "[data-expandable], .scenario-desc, .practice-btn, .lux-scenarioDialog, " +
+    ".lux-dialogBackdrop, dialog, [aria-expanded], nav, .lux-navItem, " +
+    "[contenteditable], .lux-ttsBtn, .lux-micBtn"
+  );
+  if (interactive) return;
+
+  _nudgeCloseBtn();
+}
+
+function _nudgeCloseBtn() {
+  const btn = _drawer?.querySelector(".lux-charsClose");
+  if (!btn || btn.classList.contains("lux-closeNudge")) return;
+  btn.classList.add("lux-closeNudge");
+  btn.addEventListener("animationend", () => btn.classList.remove("lux-closeNudge"), { once: true });
+}
+
 function ensureDom() {
   if (_drawer) return;
 
@@ -131,53 +177,6 @@ function _animateClose() {
       _openerEl = null;
     }
   };
-}
-
-/* ── Peekaboo ───────────────────────────────────────────── */
-
-export function peekCharsDrawer() {
-  ensureDom();
-  if (_drawer.dataset.state !== "closed") return;
-  _drawer.classList.add("lux-charsPeek");
-  // IMPORTANT: drawer open/close uses inline transform; CSS peek transform can't win.
-  // So set the peek transform inline too.
-  _drawer.style.transform = "translateX(calc(-100% + 16px))";
-}
-export function unpeekCharsDrawer() {
-  if (!_drawer) return;
-  _drawer.classList.remove("lux-charsPeek");
-  // Restore the closed position inline (matches base closed state)
-  _drawer.style.transform = "translateX(-100%)";
-}
-
-/* ── Empty-space click → X nudge ─────────────────────────── */
-
-function _onDocClick(e) {
-  if (!_drawer || _drawer.dataset.state !== "open") return;
-  if (_drawer.contains(e.target)) return;
-
-  const knobsDrawer = document.getElementById("luxKnobsDrawer");
-  if (knobsDrawer && knobsDrawer.contains(e.target)) return;
-
-  // Broad interactive selector — anything clickable should NOT trigger nudge
-  const interactive = e.target.closest(
-    "a, button, input, select, textarea, [role='button'], [role='dialog'], " +
-    "[tabindex]:not([tabindex='-1']), video, audio, details, summary, label, " +
-    ".btn, .lux-pickerKnobsRow, .lux-thumb, img[onclick], [data-scenario], " +
-    "[data-expandable], .scenario-desc, .practice-btn, .lux-scenarioDialog, " +
-    ".lux-dialogBackdrop, dialog, [aria-expanded], nav, .lux-navItem, " +
-    "[contenteditable], .lux-ttsBtn, .lux-micBtn"
-  );
-  if (interactive) return;
-
-  _nudgeCloseBtn();
-}
-
-function _nudgeCloseBtn() {
-  const btn = _drawer?.querySelector(".lux-charsClose");
-  if (!btn || btn.classList.contains("lux-closeNudge")) return;
-  btn.classList.add("lux-closeNudge");
-  btn.addEventListener("animationend", () => btn.classList.remove("lux-closeNudge"), { once: true });
 }
 
 /* ── PUBLIC API ───────────────────────────────────────────── */
