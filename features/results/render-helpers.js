@@ -6,6 +6,15 @@ import { speechDetected } from "../../helpers/assess.js";
 import { detailedPhonemeFeedback } from "./summary-feedback.js";
 import { scoreClass as scoreClassCore } from "../../core/scoring/index.js";
 
+function esc(s) {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export function computeIssueSummary(words) {
   const issues = {};
   const majorIssues = [];
@@ -56,7 +65,7 @@ export function preparePrettyOut(data) {
   // 1. Hard API Errors
   if (!data || data.error) {
     $out.innerHTML = `<span class="score-bad">Error: ${
-      data?.error || "Unknown"
+      esc(data?.error || "Unknown")
     }</span>`;
     return { $out, nbest: null, stop: true };
   }
@@ -113,7 +122,7 @@ export function buildDetailedAnalysisHTML({
     ? worstErrors
         .map(
           (err) =>
-            `<div>&bull; <b>${err.word}</b>: <span style="color:#d43c2c;">${err.score}%</span></div>`
+            `<div>&bull; <b>${esc(err.word)}</b>: <span style="color:#d43c2c;">${esc(String(err.score))}%</span></div>`
         )
         .join("")
     : "<div>No major issues detected.</div>";
