@@ -2,6 +2,7 @@
 // DOM wiring + open/close + click/keyboard handlers.
 
 import { buildModalHtml, esc } from "./render.js";
+import { lockBodyScroll, unlockBodyScroll } from "../../../helpers/body-scroll-lock.js";
 
 let installed = false;
 let currentCtx = {
@@ -69,7 +70,7 @@ function openMetricModal(metricKey, ctx) {
 
   function close() {
     try {
-      document.body.style.overflow = "";
+      unlockBodyScroll();
 } catch (err) { globalThis.warnSwallow("features/interactions/metric-modal/events.js", err); }
     try {
       modal.remove();
@@ -113,7 +114,7 @@ function openMetricModal(metricKey, ctx) {
   document.body.appendChild(modal);
 
   try {
-    document.body.style.overflow = "hidden";
+    lockBodyScroll();
 } catch (err) { globalThis.warnSwallow("features/interactions/metric-modal/events.js", err); }
 }
 
@@ -193,5 +194,3 @@ export function initMetricScoreModals() {
 
   decorateTiles();
 }
-
-

@@ -36,7 +36,7 @@ import { initConvoModeSystem, applyInitialConvoMode } from "./convo-mode-system.
 import { createBeginScenario, initConvoPickerSystem } from "./convo-picker-system.js";
 
 import { createSetKnobs } from "./convo-knobs-system.js";
-import { openCharsDrawer, closeCharsDrawer, peekCharsDrawer, unpeekCharsDrawer } from "./characters-drawer.js";
+import { openCharsDrawer, closeCharsDrawer, peekCharsDrawer, unpeekCharsDrawer, isCharsDrawerOpen, swapCharsDrawerContent } from "./characters-drawer.js";
 import { installConvoTtsContext } from "./convo-tts-context.js";
 
 export function bootConvo() {
@@ -159,10 +159,11 @@ export function bootConvo() {
     });
   }
 
-  if (pickerCharsBtn) {
-    pickerCharsBtn.addEventListener("mouseenter", () => peekCharsDrawer());
-    pickerCharsBtn.addEventListener("mouseleave", () => unpeekCharsDrawer());
-  }
+  // Removed the duplicate hover event wiring:
+  // if (pickerCharsBtn) {
+  //   pickerCharsBtn.addEventListener("mouseenter", () => peekCharsDrawer());
+  //   pickerCharsBtn.addEventListener("mouseleave", () => unpeekCharsDrawer());
+  // }
 
   // Re-open characters drawer with fresh data when scenario changes
   window.addEventListener("lux:knobs", () => {
@@ -171,21 +172,16 @@ export function bootConvo() {
 
   // Reset role selection when scenario changes
   const origScenIdx = { val: state.scenarioIdx };
-  const observer = new MutationObserver(() => {
-    if (state.scenarioIdx !== origScenIdx.val) {
-      origScenIdx.val = state.scenarioIdx;
-      state.roleIdx = 0;
-      closeCharsDrawer();
-      renderAllSummaries();
-      try { window.dispatchEvent(new Event("lux:ttsContextChanged")); } catch (err) { globalThis.warnSwallow("./features/convo/convo-bootstrap.js", err); }
-    }
-  });
-  // Lightweight poll (MutationObserver won't catch state.scenarioIdx changes)
+  // Lightweight poll (state.scenarioIdx is JS state, not a DOM attribute)
   setInterval(() => {
     if (state.scenarioIdx !== origScenIdx.val) {
       origScenIdx.val = state.scenarioIdx;
       state.roleIdx = 0;
-      closeCharsDrawer();
+      // Keep the Characters drawer open while browsing scenarios.
+      // If it's open, swap its contents with a subtle fade + micro-drift.
+      if (isCharsDrawerOpen()) {
+        swapCharsDrawerContent(state.scenarioIdx, state.roleIdx);
+      }
       renderAllSummaries();
       try { window.dispatchEvent(new Event("lux:ttsContextChanged")); } catch (err) { globalThis.warnSwallow("./features/convo/convo-bootstrap.js", err); }
     }
@@ -230,6 +226,8 @@ export function bootConvo() {
     applyMediaSizingVars,
     applySceneVisuals,
     onBeginScenario: beginScenario,
+    pickerCharsBtn,
+    pickerKnobsBtn,  // Added pickerKnobsBtn to the parameters
   });
 
   tryConsumeStoredNextActivityPlan(state);

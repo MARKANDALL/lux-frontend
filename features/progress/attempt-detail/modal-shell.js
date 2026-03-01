@@ -1,6 +1,8 @@
 // features/progress/attempt-detail/modal-shell.js
 // Modal shell + lifecycle for Attempt Details modal.
 
+import { lockBodyScroll, unlockBodyScroll } from "../../../helpers/body-scroll-lock.js";
+
 export function createAttemptDetailModalShell() {
   const modal = document.createElement("div");
   modal.id = "lux-detail-modal";
@@ -51,7 +53,7 @@ export function createAttemptDetailModalShell() {
     modal.removeEventListener("click", onBackdrop);
 
     try {
-      document.body.style.overflow = "";
+      unlockBodyScroll();
     } catch (err) { globalThis.warnSwallow("./features/progress/attempt-detail/modal-shell.js", err); }
   }
 
@@ -67,7 +69,7 @@ export function createAttemptDetailModalShell() {
     document.body.appendChild(modal);
 
     try {
-      document.body.style.overflow = "hidden";
+      lockBodyScroll();
     } catch (err) { globalThis.warnSwallow("./features/progress/attempt-detail/modal-shell.js", err); }
 
     document.addEventListener("keydown", onKey);
@@ -76,4 +78,3 @@ export function createAttemptDetailModalShell() {
 
   return { modal, card, close, mount };
 }
-
