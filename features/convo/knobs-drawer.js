@@ -149,7 +149,8 @@ function _onDocClick(e) {
     ".btn, .lux-pickerKnobsRow, .lux-thumb, img[onclick], [data-scenario], " +
     "[data-expandable], .scenario-desc, .practice-btn, .lux-scenarioDialog, " +
     ".lux-dialogBackdrop, dialog, [aria-expanded], nav, .lux-navItem, " +
-    "[contenteditable], .lux-ttsBtn, .lux-micBtn"
+    "[contenteditable], .lux-ttsBtn, .lux-micBtn, " +
+    ".lux-deck-card, .lux-deckText, .lux-deckCta, .lux-deck"
   );
   if (interactive) return;
 
