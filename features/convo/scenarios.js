@@ -535,4 +535,4 @@ Practice targets: casual opinion sharing · reacting to surroundings · comforta
       { id: "guide", label: "Trail Guide", npc: "A thoughtful, easygoing close friend. Shares trail observations, asks what's been on your mind, and is comfortable with silence." },
     ],
   },
-];
+]; 

@@ -1,3 +1,10 @@
+/* ============================================================================
+ * File: ui/auth-dom.js
+ * What it does: Renders the “Save Progress” auth button + login modal, sends
+ *               Supabase magic-link OTP sign-in, updates the active UID, and
+ *               triggers guest→user history migration + dashboard refresh.
+ * ============================================================================ */
+
 import { supabase } from "../src/supabase.js";
 import { API_BASE } from "../src/api/util.js";
 import { setUID } from "../src/api/index.js";
