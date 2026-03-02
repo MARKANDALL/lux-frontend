@@ -11,7 +11,7 @@ export function makeFillDeckCard({ el, applyMediaSizingVars, safeBeginScenario }
     host.onpointerleave = null;
 
     // Always collapse when re-rendering a card
-    host.classList.remove("isExpanded");
+    host.dataset.expand = "0";
 
     // image background (existing behavior)
     host.classList.toggle("has-img", !!scenario.img);
@@ -124,7 +124,6 @@ export function makeFillDeckCard({ el, applyMediaSizingVars, safeBeginScenario }
     const textWrap = el("div", "lux-deckText");
 
     textWrap.append(
-      el("div", "lux-pill", "DIALOGUE"),
       el("div", "lux-deckTitle", scenario.title),
       el("div", "lux-deckDesc", scenario.desc || "")
     );
@@ -164,7 +163,7 @@ export function makeFillDeckCard({ el, applyMediaSizingVars, safeBeginScenario }
       const ctaRow = el("div", "lux-deckCtaRow");
 
       // Guided CTA (existing behavior)
-      const cta = el("button", "lux-deckCta", "Practice this dialogue");
+      const cta = el("button", "lux-deckCta", "Start the conversation");
       cta.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -174,8 +173,20 @@ export function makeFillDeckCard({ el, applyMediaSizingVars, safeBeginScenario }
       ctaRow.append(cta);
       textWrap.append(ctaRow);
 
+      host.dataset.expand = "0";
       host.onclick = () => {
-        host.classList.toggle("isExpanded");
+        const cur = parseInt(host.dataset.expand || "0", 10);
+        const next = (cur + 1) % 3;
+        host.dataset.expand = String(next);
+
+        // On reset to title-only, pulse the CTA after the collapse finishes
+        if (next === 0) {
+          cta.classList.remove("lux-cta-attn");
+          void cta.offsetWidth; // force reflow so re-trigger works
+          setTimeout(() => cta.classList.add("lux-cta-attn"), 1100);
+        } else {
+          cta.classList.remove("lux-cta-attn");
+        }
       };
     } else {
       host.onclick = null;
