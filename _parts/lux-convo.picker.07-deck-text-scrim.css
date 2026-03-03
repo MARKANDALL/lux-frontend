@@ -15,6 +15,9 @@
   padding: var(--deckSpace);
   border-radius: 18px;
 
+  /* Animate width changes driven by JS measurement */
+  transition: width 260ms ease;
+
   /* dark scrim so white text reads on ANY photo/video */
   background: linear-gradient(135deg,
     rgba(0,0,0,0.64),
@@ -55,13 +58,16 @@
   line-height: 1.4;
   margin: 0;
 
-  /* Hidden at state 0 (title only) */
+  /* Collapsed: zero contribution to BOTH height AND width */
+  width: 0;
+  min-width: 0;
   max-height: 0;
   overflow: hidden;
   opacity: 0;
   transform: translateY(-4px);
   transition:
     max-height 260ms ease,
+    width 0ms 260ms,
     opacity 200ms ease,
     transform 260ms ease,
     margin-top 260ms ease;
@@ -70,10 +76,18 @@
 /* State 1 and 2: show desc */
 .lux-deck-card[data-expand="1"] .lux-deckDesc,
 .lux-deck-card[data-expand="2"] .lux-deckDesc {
+  width: auto;
+  min-width: 0;
   max-height: 120px;
   opacity: 1;
   transform: translateY(0);
   margin-top: var(--deckSpace);
+  transition:
+    max-height 260ms ease,
+    width 0ms 0ms,
+    opacity 200ms ease,
+    transform 260ms ease,
+    margin-top 260ms ease;
 }
 
 /* Expanded "more" content — bullet-style, NOT a paragraph */
@@ -83,7 +97,9 @@
   font-size: 0.88rem;
   line-height: 1.55;
 
-  /* Collapsed: zero contribution to layout */
+  /* Collapsed: zero contribution to BOTH height AND width */
+  width: 0;
+  min-width: 0;
   margin-top: 0;
   border-top: 0 solid transparent;
   padding-top: 0;
@@ -95,6 +111,7 @@
 
   transition:
     max-height 280ms ease,
+    width 0ms 280ms,
     opacity 200ms ease,
     transform 280ms ease,
     margin-top 280ms ease,
@@ -103,12 +120,22 @@
 }
 
 .lux-deck-card[data-expand="2"] .lux-deckMore{
+  width: auto;
+  min-width: 0;
   max-height: 300px;
   opacity: 1;
   transform: translateY(0);
   margin-top: var(--deckSpace);
   border-top: 1px solid rgba(255,255,255,0.18);
   padding-top: var(--deckSpace);
+  transition:
+    max-height 280ms ease,
+    width 0ms 0ms,
+    opacity 200ms ease,
+    transform 280ms ease,
+    margin-top 280ms ease,
+    border-top 280ms ease,
+    padding-top 280ms ease;
 }
 
 /* Bullet items inside the more block */
@@ -137,4 +164,44 @@
   margin-top: var(--deckSpace);
   display: flex;
   justify-content: center;
+}
+
+.lux-deckText .lux-deckCta{
+  background: rgba(255,255,255,0.92);
+  border: 1px solid rgba(255,255,255,0.35);
+  color: rgba(0,0,0,0.86);
+  box-shadow: 0 12px 20px rgba(0,0,0,0.22);
+  padding: 10px 20px;
+  font-size: 1rem;
+  border-radius: 16px;
+  cursor: pointer;
+}
+.lux-deckText .lux-deckCta:hover{
+  background: #fff;
+  box-shadow: 0 14px 28px rgba(0,0,0,0.28), 0 0 0 2px rgba(255,255,255,0.50);
+  transform: translateY(-2px) scale(1.04);
+}
+.lux-deckText .lux-deckCta:active{
+  transform: scale(0.97);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.18);
+}
+
+/* While video is playing, strengthen the scrim a bit */
+.lux-deck-card.has-video[data-vstate="playing"] .lux-deckText{
+  background: linear-gradient(135deg,
+    rgba(0,0,0,0.72),
+    rgba(0,0,0,0.32)
+  );
+}
+
+/* CTA attention pulse — triggered by JS after reset to title-only */
+@keyframes lux-cta-attn {
+  0%   { transform: scale(1);    box-shadow: 0 12px 20px rgba(0,0,0,0.22); }
+  30%  { transform: scale(1.07); box-shadow: 0 16px 28px rgba(0,0,0,0.30), 0 0 0 4px rgba(255,255,255,0.35); }
+  60%  { transform: scale(1.03); }
+  100% { transform: scale(1);    box-shadow: 0 12px 20px rgba(0,0,0,0.22); }
+}
+
+.lux-deckText .lux-deckCta.lux-cta-attn{
+  animation: lux-cta-attn 520ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
