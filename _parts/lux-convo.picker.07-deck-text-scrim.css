@@ -4,10 +4,15 @@
    Deck text readability panel (scrim)
    ============================================================ */
 .lux-deckText{
+  --deckSpace: 8px;
+
   position: relative;
   z-index: 3;
+  width: fit-content;
   max-width: min(560px, 78%);
-  padding: 10px 14px;
+  align-self: flex-start;
+  justify-self: start;
+  padding: var(--deckSpace);
   border-radius: 18px;
 
   /* dark scrim so white text reads on ANY photo/video */
@@ -37,7 +42,7 @@
   font-size: 2rem;
   font-weight: 800;
   line-height: 1.15;
-  margin-bottom: 2px;
+  margin: 0;
 }
 
 /* One-line description: smaller, softer, clearly secondary */
@@ -48,7 +53,7 @@
   font-weight: 500;
   font-style: italic;
   line-height: 1.4;
-  margin-bottom: 2px;
+  margin: 0;
 
   /* Hidden at state 0 (title only) */
   max-height: 0;
@@ -58,7 +63,8 @@
   transition:
     max-height 260ms ease,
     opacity 200ms ease,
-    transform 260ms ease;
+    transform 260ms ease,
+    margin-top 260ms ease;
 }
 
 /* State 1 and 2: show desc */
@@ -67,17 +73,20 @@
   max-height: 120px;
   opacity: 1;
   transform: translateY(0);
+  margin-top: var(--deckSpace);
 }
 
 /* Expanded "more" content — bullet-style, NOT a paragraph */
 .lux-deckMore{
-  margin-top: 8px;
   color: rgba(255,255,255,0.88);
   text-shadow: 0 1px 6px rgba(0,0,0,0.18);
   font-size: 0.88rem;
   line-height: 1.55;
-  border-top: 1px solid rgba(255,255,255,0.18);
-  padding-top: 8px;
+
+  /* Collapsed: zero contribution to layout */
+  margin-top: 0;
+  border-top: 0 solid transparent;
+  padding-top: 0;
 
   max-height: 0;
   overflow: hidden;
@@ -87,13 +96,19 @@
   transition:
     max-height 280ms ease,
     opacity 200ms ease,
-    transform 280ms ease;
+    transform 280ms ease,
+    margin-top 280ms ease,
+    border-top 280ms ease,
+    padding-top 280ms ease;
 }
 
 .lux-deck-card[data-expand="2"] .lux-deckMore{
   max-height: 300px;
   opacity: 1;
   transform: translateY(0);
+  margin-top: var(--deckSpace);
+  border-top: 1px solid rgba(255,255,255,0.18);
+  padding-top: var(--deckSpace);
 }
 
 /* Bullet items inside the more block */
@@ -119,43 +134,7 @@
 
 /* CTA stands out (and is the only "enter" affordance) */
 .lux-deckText .lux-deckCtaRow{
-  margin-top: 10px;
-}
-
-.lux-deckText .lux-deckCta{
-  background: rgba(255,255,255,0.92);
-  border: 1px solid rgba(255,255,255,0.35);
-  color: rgba(0,0,0,0.86);
-  box-shadow: 0 12px 20px rgba(0,0,0,0.22);
-  padding: 13px 22px;
-  font-size: 1rem;
-  border-radius: 16px;
-}
-.lux-deckText .lux-deckCta:hover{
-  background: #fff;
-  box-shadow: 0 14px 28px rgba(0,0,0,0.28), 0 0 0 2px rgba(255,255,255,0.50);
-  transform: translateY(-2px) scale(1.04);
-}
-.lux-deckText .lux-deckCta:active{
-  transform: scale(0.97);
-  box-shadow: 0 6px 12px rgba(0,0,0,0.18);
-}
-
-/* While video is playing, strengthen the scrim a bit */
-.lux-deck-card.has-video[data-vstate="playing"] .lux-deckText{
-  background: linear-gradient(135deg,
-    rgba(0,0,0,0.72),
-    rgba(0,0,0,0.32)
-  );
-}
-/* CTA attention pulse — triggered by JS after reset to title-only */
-@keyframes lux-cta-attn {
-  0%   { transform: scale(1);    box-shadow: 0 12px 20px rgba(0,0,0,0.22); }
-  30%  { transform: scale(1.07); box-shadow: 0 16px 28px rgba(0,0,0,0.30), 0 0 0 4px rgba(255,255,255,0.35); }
-  60%  { transform: scale(1.03); }
-  100% { transform: scale(1);    box-shadow: 0 12px 20px rgba(0,0,0,0.22); }
-}
-
-.lux-deckText .lux-deckCta.lux-cta-attn{
-  animation: lux-cta-attn 520ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  margin-top: var(--deckSpace);
+  display: flex;
+  justify-content: center;
 }

@@ -163,7 +163,7 @@ export function makeFillDeckCard({ el, applyMediaSizingVars, safeBeginScenario }
       const ctaRow = el("div", "lux-deckCtaRow");
 
       // Guided CTA (existing behavior)
-      const cta = el("button", "lux-deckCta", "Start the conversation");
+      const cta = el("button", "lux-deckCta", "Start Conversation");
       cta.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
