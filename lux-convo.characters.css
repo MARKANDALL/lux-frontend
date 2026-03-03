@@ -23,8 +23,8 @@
 
   /* ── Default: offscreen left ── */
   transform: translateX(-100%);
-  z-index: 999;
-
+  z-index: var(--z-modal);
+  
   display: flex;
   flex-direction: column;
 
