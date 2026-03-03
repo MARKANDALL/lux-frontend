@@ -148,6 +148,35 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
   stage.id = "convoStage";
   stage.append(mid);
 
+  // Floating portraits (NOT drawers)
+  const portraits = el("div", "lux-convoPortraits");
+
+  const meChip = el("div", "lux-portraitChip lux-portraitChip--me");
+  const meImg = document.createElement("img");
+  meImg.className = "lux-portraitImg";
+  meImg.alt = "You";
+  meImg.loading = "lazy";
+  meImg.decoding = "async";
+  const meBadge = el("div", "lux-portraitBadge", "YOU");
+  meChip.append(meImg, meBadge);
+
+  const aiChip = el("div", "lux-portraitChip lux-portraitChip--ai");
+  const aiImg = document.createElement("img");
+  aiImg.className = "lux-portraitImg";
+  aiImg.alt = "AI";
+  aiImg.loading = "lazy";
+  aiImg.decoding = "async";
+
+  // thinking dots overlay
+  const aiDots = el("div", "lux-portraitDots");
+  aiDots.innerHTML = `<span></span><span></span><span></span>`;
+
+  const aiBadge = el("div", "lux-portraitBadge", "AI");
+  aiChip.append(aiImg, aiDots, aiBadge);
+
+  portraits.append(meChip, aiChip);
+  stage.append(portraits);
+
   // Local scrim (dims ONLY the convo box area)
   const scrim = el("button", "lux-knobsScrim");
   scrim.type = "button";
@@ -235,6 +264,9 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
     chatWrap,
     mid,
     stage,
+    portraits,
+    meImg,
+    aiImg,
     knobsDock,
     scenBtn,
     knobsBtn,

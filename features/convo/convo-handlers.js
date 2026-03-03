@@ -1,4 +1,5 @@
 // features/convo/convo-handlers.js
+// One-line: Handles user interactions like recording, stop/send, etc.
 
 // ---------------------------------------------------------------------------
 // Tiny self-contained toast — no external deps, respects --z-toast CSS token
@@ -66,6 +67,8 @@ export function attachConvoHandlers({
       try {
         const blob = await stopRecordingAndGetBlob();
         state.isRecording = false;
+        root.dataset.speaker = "assistant";
+        root.dataset.speakerState = "thinking";
         root.classList.remove("is-recording");
         talkBtn.textContent = "🎙 Record";
         if (blob) await sendTurn({ audioBlob: blob });
@@ -85,6 +88,8 @@ export function attachConvoHandlers({
     try {
       await startRecording();
       state.isRecording = true;
+      root.dataset.speaker = "user";
+      root.dataset.speakerState = "recording";
       root.classList.add("is-recording");
       talkBtn.textContent = "■ Stop & Send";
     } catch (e) {

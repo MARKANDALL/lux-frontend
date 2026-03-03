@@ -40,9 +40,34 @@ export function wireConvoFlow({
     }
 
     // Default: regular scenario list
-    const s = SCENARIOS[state.scenarioIdx];
+    const list = Array.isArray(SCENARIOS) ? SCENARIOS : [];
 
-// ✅ Resolve the selected role (default to first role)
+    let idx = Number(state.scenarioIdx);
+    if (!Number.isFinite(idx)) idx = 0;
+    idx = Math.trunc(idx);
+
+    if (idx < 0 || idx >= list.length) {
+      console.warn(`[Lux] Invalid scenarioIdx=${state.scenarioIdx} (len=${list.length}); resetting to 0.`);
+      idx = 0;
+      state.scenarioIdx = 0;
+      state.roleIdx = 0;
+    }
+
+    const s = list[idx];
+
+    // If scenarios somehow failed to load, don't crash the whole page
+    if (!s) {
+      return {
+        id: "missing",
+        title: "AI Conversation",
+        desc: overlay || "",
+        more: "",
+        role: null,
+        otherRole: null,
+      };
+    }
+
+    // ✅ Resolve the selected role (default to first role)
     const roleIdx = state.roleIdx ?? 0;
     const role = s.roles?.[roleIdx] || s.roles?.[0] || null;
 
@@ -106,6 +131,7 @@ export function wireConvoFlow({
     SCENARIOS,
     state,
     input,
+    root,
     renderMessages,
     renderSuggestions,
     convoTurn,

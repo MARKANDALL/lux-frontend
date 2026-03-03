@@ -1,4 +1,6 @@
 // features/convo/convo-turn.js
+// One-line: Manages a full user turn → persistence → assistant response.
+
 import { getAudioMode } from "../recorder/audio-mode.js";
 import { persistConvoAttempt } from "./convo-persistence.js";
 import { setLastRecording } from "../../app-core/runtime.js";
@@ -7,6 +9,7 @@ export function createConvoTurn({
   SCENARIOS,
   state,
   input,
+  root,
 
   // render hooks
   renderMessages,
@@ -50,6 +53,10 @@ export function createConvoTurn({
     // show user msg in chat immediately (natural flow)
     state.messages.push({ role: "user", content: userText });
     renderMessages();
+    if (root) {
+      root.dataset.speaker = "assistant";
+      root.dataset.speakerState = "thinking";
+    }
     input.value = "";
 
     // Azure assessment (silent) - only if we actually have audio
@@ -100,6 +107,10 @@ export function createConvoTurn({
 
     state.messages.push({ role: "assistant", content: rsp.assistant });
     renderMessages();
+    if (root) {
+      root.dataset.speaker = "assistant";
+      root.dataset.speakerState = "idle";
+    }
     renderSuggestions(rsp.suggested_replies);
   }
 

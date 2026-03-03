@@ -88,7 +88,44 @@ export function bootConvo() {
     levelSel,
     toneSel,
     lengthSel,
+    meImg,
+    aiImg,
   } = view;
+
+  function syncConvoPortraits() {
+    const s = SCENARIOS[state.scenarioIdx];
+    const roles = s?.roles || [];
+
+    const meRoleIdx = state.roleIdx ?? 0;
+    const meRole = roles[meRoleIdx] || roles[0];
+
+    // Pick the “other” role as AI (works for 2+ roles; prefers first non-me)
+    const aiRole =
+      roles.find((r, i) => i !== meRoleIdx) ||
+      roles[1] ||
+      roles[0];
+
+    const meSrc = (s && meRole) ? `/assets/characters/${s.id}-${meRole.id}.jpg` : "";
+    const aiSrc = (s && aiRole) ? `/assets/characters/${s.id}-${aiRole.id}.jpg` : "";
+
+    if (meImg) {
+      meImg.src = meSrc;
+      meImg.onerror = () => {
+        console.warn("[Lux] Missing portrait:", meSrc);
+        meImg.style.visibility = "hidden";
+      };
+      meImg.style.visibility = "";
+    }
+
+    if (aiImg) {
+      aiImg.src = aiSrc;
+      aiImg.onerror = () => {
+        console.warn("[Lux] Missing portrait:", aiSrc);
+        aiImg.style.visibility = "hidden";
+      };
+      aiImg.style.visibility = "";
+    }
+  }
 
   // ✅ Give the global TTS drawer a convo-aware source (AI/Me/Selection) + character-matched voices
   installConvoTtsContext({ state, input, msgs, SCENARIOS });
@@ -153,6 +190,7 @@ export function bootConvo() {
         onRoleSelect: (idx) => {
           state.roleIdx = idx;
           renderAllSummaries();
+          syncConvoPortraits();
           try { window.dispatchEvent(new Event("lux:ttsContextChanged")); } catch (err) { globalThis.warnSwallow("./features/convo/convo-bootstrap.js", err); }
         },
       });
@@ -183,6 +221,7 @@ export function bootConvo() {
         swapCharsDrawerContent(state.scenarioIdx, state.roleIdx);
       }
       renderAllSummaries();
+      syncConvoPortraits();
       try { window.dispatchEvent(new Event("lux:ttsContextChanged")); } catch (err) { globalThis.warnSwallow("./features/convo/convo-bootstrap.js", err); }
     }
   }, 300);
@@ -233,6 +272,8 @@ export function bootConvo() {
   tryConsumeStoredNextActivityPlan(state);
 
   applyInitialConvoMode({ normalizeMode, setMode });
+
+  syncConvoPortraits();
 
   // If we landed directly in chat (e.g., from "Generate my next practice"),
   // show the start tip immediately.
