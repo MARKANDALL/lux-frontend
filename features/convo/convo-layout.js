@@ -2,6 +2,8 @@
 // Builds the convo UI skeleton and returns DOM handles.
 // No event wiring here — index.js remains the orchestrator.
 
+import { attachClickRipple } from "../../ui/ui-click-ripple.js";
+
 export function buildConvoLayout({ root, el, mode, sessionId }) {
   // --- Layout (single stage) ---
   root.innerHTML = "";
@@ -122,6 +124,7 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
   const scenBtn = el("button", "btn ghost", "Scenarios");
   const knobsBtn = el("button", "btn ghost", "⚙️ Settings");
   const endBtn = el("button", "btn danger", "End Session");
+  attachClickRipple(endBtn);
   actions.append(scenBtn, knobsBtn, endBtn);
 
   midHd.append(titleWrap, actions);
