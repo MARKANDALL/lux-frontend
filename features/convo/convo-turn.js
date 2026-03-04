@@ -53,11 +53,15 @@ export function createConvoTurn({
     // show user msg in chat immediately (natural flow)
     state.messages.push({ role: "user", content: userText });
     renderMessages();
+    input.value = "";
+
+    // Portrait state: AI is thinking (make it visible)
+    const root = document.getElementById("convoApp");
+    const thinkingStart = performance.now();
     if (root) {
       root.dataset.speaker = "assistant";
       root.dataset.speakerState = "thinking";
     }
-    input.value = "";
 
     // Azure assessment (silent) - only if we actually have audio
     let azureResult = null;
@@ -107,10 +111,19 @@ export function createConvoTurn({
 
     state.messages.push({ role: "assistant", content: rsp.assistant });
     renderMessages();
+
+    // Portrait state: it's now the user's turn (but keep "thinking" visible briefly)
     if (root) {
-      root.dataset.speaker = "assistant";
-      root.dataset.speakerState = "idle";
+      const dt = performance.now() - thinkingStart;
+      const minMs = 700; // makes dots/ring actually noticeable
+      const wait = Math.max(0, minMs - dt);
+
+      window.setTimeout(() => {
+        root.dataset.speaker = "user";
+        root.dataset.speakerState = "ready";
+      }, wait);
     }
+
     renderSuggestions(rsp.suggested_replies);
   }
 
