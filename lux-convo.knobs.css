@@ -161,7 +161,8 @@
   font-weight: 700;
 }
 
-.lux-knobsBody { padding: 12px 20px 20px; overflow: auto; }
+.lux-knobsBody { padding: 12px 20px 20px; overflow: auto; scrollbar-width: none; }
+.lux-knobsBody::-webkit-scrollbar { display: none; }
 
 .lux-knobsGroup { padding: 10px 0 12px; border-top: 1px solid rgba(0,0,0,0.06); }
 .lux-knobsGroup:first-child { border-top: 0; }

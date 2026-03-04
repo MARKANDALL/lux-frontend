@@ -131,33 +131,25 @@ export function makeFillDeckCard({ el, applyMediaSizingVars, safeBeginScenario }
       el("div", "lux-deckDesc", scenario.desc || "")
     );
 
-    // "more" content — break into bullet-style items for ESL readability
-    const moreRaw =
-      scenario.more ||
-      "More details coming next: goals, moves, and what to listen for.";
+// "more" content — split on bullet markers (•) for clean left-aligned list
+const moreRaw =
+  scenario.more ||
+  "More details coming next: goals, moves, and what to listen for.";
 
-    const moreWrap = el("div", "lux-deckMore");
+const moreWrap = el("div", "lux-deckMore");
 
-    // Split on sentence boundaries (period + space, or end of string)
-    const sentences = moreRaw
-      .split(/(?<=\.)\s+/)
-      .map(s => s.trim())
-      .filter(s => s.length > 0);
+const bullets = moreRaw
+  .split(/•/)
+  .map(s => s.trim())
+  .filter(s => s.length > 0);
 
-    // Group into chunks of ~2 sentences for readable bullet items
-    const chunks = [];
-    for (let i = 0; i < sentences.length; i += 2) {
-      const chunk = sentences.slice(i, i + 2).join(" ");
-      if (chunk) chunks.push(chunk);
-    }
-
-    chunks.forEach(chunk => {
-      const item = el("div", "lux-deckMore-item");
-      const bullet = el("div", "lux-deckMore-bullet");
-      const text = el("div", "lux-deckMore-text", chunk);
-      item.append(bullet, text);
-      moreWrap.append(item);
-    });
+bullets.forEach(text => {
+  const item = el("div", "lux-deckMore-item");
+  const dot = el("div", "lux-deckMore-bullet");
+  const span = el("div", "lux-deckMore-text", text);
+  item.append(dot, span);
+  moreWrap.append(item);
+});
 
     textWrap.append(moreWrap);
 

@@ -183,12 +183,14 @@
 .lux-charsBody {
   padding: 12px 16px 24px;
   overflow-y: auto;              /* ← always scrollable, prevents overlap */
+  scrollbar-width: none;         /* Firefox: hide scrollbar */
   display: flex;
   flex-direction: column;
   gap: 16px;                     /* ← guaranteed separation between cards */
   flex: 1 1 auto;
   min-height: 0;
 }
+.lux-charsBody::-webkit-scrollbar { display: none; } /* Chrome/Safari/Edge: hide scrollbar */
 
 /* ── Character card ── */
 .lux-charCard {
