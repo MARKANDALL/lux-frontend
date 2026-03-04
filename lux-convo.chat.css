@@ -261,34 +261,6 @@
   box-shadow: inset 0 0 0 1.5px rgba(0, 120, 215, 0.28);
 }
 
-/* ── Click-origin ripple circle ── */
-.lux-click-ripple-circle{
-  position: absolute;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    rgba(0, 120, 215, 0.32) 0%,
-    rgba(0, 120, 215, 0.08) 60%,
-    transparent 100%
-  );
-  pointer-events: none;
-  transform: scale(0);
-  animation: luxClickRippleExpand 520ms ease-out forwards;
-}
-
-@keyframes luxClickRippleExpand{
-  0%   { transform: scale(0);   opacity: 0.7; }
-  60%  { opacity: 0.35; }
-  100% { transform: scale(1);   opacity: 0; }
-}
-
-/* Respect reduced motion */
-@media (prefers-reduced-motion: reduce){
-  .lux-click-ripple-circle{
-    animation: none !important;
-  }
-}
-
 
 /* Chat typography bump (parity w/ lux-convo.full.css) */
 #convoApp[data-mode="chat"] .lux-title{ font-size: 20px; }
@@ -442,30 +414,48 @@
 /* Responsive: on narrow screens, hide the flank portraits so drawers win space */
 @media (max-width: 920px){
   #convoApp[data-mode="chat"] .lux-convoPortraits{ display:none; }
-}/* ── Click-origin ripple circle (lives in #luxRipplePortal, not inside button) ── */
-.lux-click-ripple-circle{
-  position: fixed;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    rgba(0, 120, 215, 0.30) 0%,
-    rgba(0, 120, 215, 0.12) 40%,
-    rgba(0, 120, 215, 0.04) 65%,
-    transparent 100%
-  );
-  pointer-events: none;
-  transform: scale(0);
-  animation: luxClickRippleExpand 600ms ease-out forwards;
 }
 
-@keyframes luxClickRippleExpand{
-  0%   { transform: scale(0);    opacity: 0.75; }
-  40%  { opacity: 0.45; }
-  100% { transform: scale(1);    opacity: 0; }
+/* ── Water ripple rings (concentric, staggered, from click point) ──
+   Each ring is a thin circular border that expands outward.
+   Lives in #luxRipplePortal so it overflows past the button.         */
+
+.lux-water-ring{
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+
+  /* The ring is drawn as a border, not a fill */
+  background: transparent;
+  border: var(--ring-width, 2px) solid rgba(0, 120, 215, var(--ring-opacity, 0.45));
+  box-shadow:
+    0 0 6px 1px rgba(0, 120, 215, calc(var(--ring-opacity, 0.45) * 0.4)),
+    inset 0 0 4px 0px rgba(0, 120, 215, calc(var(--ring-opacity, 0.45) * 0.2));
+
+  transform: scale(0);
+  opacity: 1;
+  animation: luxWaterRingExpand 700ms ease-out both;
+}
+
+@keyframes luxWaterRingExpand{
+  0%{
+    transform: scale(0);
+    opacity: 1;
+  }
+  30%{
+    opacity: 0.7;
+  }
+  70%{
+    opacity: 0.3;
+  }
+  100%{
+    transform: scale(1);
+    opacity: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce){
-  .lux-click-ripple-circle{
+  .lux-water-ring{
     animation: none !important;
   }
 }
