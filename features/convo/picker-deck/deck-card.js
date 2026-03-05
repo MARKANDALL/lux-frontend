@@ -1,6 +1,8 @@
 // features/convo/picker-deck/deck-card.js
 // ONE-LINE: Builds and renders the active/preview deck card DOM (media layer, optional video lifecycle, text blocks, CTA wiring).
 
+import { mountCefrHintBadge } from "./cefr-hint-badge.js";   // ← ADD THIS LINE
+
 export function makeFillDeckCard({ el, applyMediaSizingVars, safeBeginScenario }) {
   return function fillDeckCard(host, scenario, isActive) {
     if (!host) return;
@@ -10,8 +12,11 @@ export function makeFillDeckCard({ el, applyMediaSizingVars, safeBeginScenario }
     host.onpointerenter = null;
     host.onpointerleave = null;
 
-    // Clean up previous scrim ResizeObserver if any
+// Clean up previous scrim ResizeObserver if any
     if (host._luxScrimRO) { host._luxScrimRO.disconnect(); host._luxScrimRO = null; }
+
+    // Clean up previous CEFR badge if any
+    if (host._luxCefrBadge) { host._luxCefrBadge.destroy(); host._luxCefrBadge = null; }
 
     // Always collapse when re-rendering a card
     host.dataset.expand = "0";
@@ -247,11 +252,19 @@ bullets.forEach(text => {
       ctaRow.append(cta);
       textWrap.append(ctaRow);
 
-      host.dataset.expand = "0";
+host.dataset.expand = "0";
+
+      // ── CEFR hint badge (peek/bob on 0–1, flight on 2) ──
+      const cefrBadge = mountCefrHintBadge(textWrap, host);
+      host._luxCefrBadge = cefrBadge;
+
       host.onclick = () => {
         const cur = parseInt(host.dataset.expand || "0", 10);
         const next = (cur + 1) % 3;
         host.dataset.expand = String(next);
+
+        // Update CEFR badge animation for new state
+        cefrBadge.update(next);
 
         // Re-measure scrim after content transitions settle
         // Expanding: content width:auto kicks in instantly (0ms transition),
