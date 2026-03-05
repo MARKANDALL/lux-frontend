@@ -8,4 +8,4 @@
 @import "./_parts/lux-convo.picker.08-picker-thumbs-upgrade.css";
 @import "./_parts/lux-convo.picker.09-base-thumbs-and-nav.css";
 @import "./_parts/lux-convo.picker.10-deck-states-and-atoms.css";
-@import "./_parts/lux-convo.picker.11-cefr-hint-badge.css";
+@import "./features/convo/picker-deck/cefr-hint-badge.css";

@@ -1,0 +1,147 @@
+/* features/convo/picker-deck/cefr-hint-badge.css
+   CEFR hint badge — peeks from bottom of .lux-deckText to teach users
+   that expanded bullets are tied to the selected CEFR level. */
+
+/* ── Badge (anchored inside .lux-deckText, positioned at bottom) ── */
+
+.lux-cefrBadge {
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100%);
+  z-index: 5;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1;
+
+  color: var(--lux-cefrBadge-text, #fff);
+  background: var(--lux-cefrBadge-bg, rgba(37, 99, 235, 0.72));
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+
+  pointer-events: none;
+  user-select: none;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+/* ── Peek / bob / retract for state 0 (title-only) ── */
+
+.lux-cefrBadge.is-peeking-s0 {
+  animation: luxCefrPeek0 2.6s ease both;
+}
+
+@keyframes luxCefrPeek0 {
+  0%   { opacity: 0;    transform: translateX(-50%) translateY(100%); }
+  14%  { opacity: 0.55; transform: translateX(-50%) translateY(30%); }
+  /* bob up */
+  24%  { opacity: 0.60; transform: translateX(-50%) translateY(22%); }
+  /* bob down */
+  36%  { opacity: 0.55; transform: translateX(-50%) translateY(34%); }
+  /* bob up (second beat) */
+  48%  { opacity: 0.58; transform: translateX(-50%) translateY(26%); }
+  /* settle */
+  60%  { opacity: 0.50; transform: translateX(-50%) translateY(32%); }
+  /* retract */
+  82%  { opacity: 0.25; transform: translateX(-50%) translateY(70%); }
+  100% { opacity: 0;    transform: translateX(-50%) translateY(100%); }
+}
+
+/* ── Peek / bob / retract for state 1 (desc visible) — slightly closer ── */
+
+.lux-cefrBadge.is-peeking-s1 {
+  animation: luxCefrPeek1 2.4s ease both;
+}
+
+@keyframes luxCefrPeek1 {
+  0%   { opacity: 0;    transform: translateX(-50%) translateY(100%); }
+  12%  { opacity: 0.62; transform: translateX(-50%) translateY(18%); }
+  /* bob up */
+  22%  { opacity: 0.68; transform: translateX(-50%) translateY(10%); }
+  /* bob down */
+  34%  { opacity: 0.62; transform: translateX(-50%) translateY(22%); }
+  /* bob up (more insistent) */
+  44%  { opacity: 0.66; transform: translateX(-50%) translateY(12%); }
+  /* bob down */
+  54%  { opacity: 0.62; transform: translateX(-50%) translateY(20%); }
+  /* settle */
+  66%  { opacity: 0.50; transform: translateX(-50%) translateY(26%); }
+  /* retract */
+  84%  { opacity: 0.20; transform: translateX(-50%) translateY(70%); }
+  100% { opacity: 0;    transform: translateX(-50%) translateY(100%); }
+}
+
+/* ── Flying badge (fixed overlay — mirrors .lux-arrow-fly pattern) ── */
+
+.lux-cefrBadge-fly {
+  position: fixed;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1;
+
+  color: var(--lux-cefrBadge-text, #fff);
+  background: var(--lux-cefrBadge-bg, rgba(37, 99, 235, 0.72));
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+
+  pointer-events: none;
+  user-select: none;
+  z-index: 9999;
+  will-change: transform, opacity;
+  opacity: 0.90;
+}
+
+/* Landing pop ring — reuses pattern from .lux-arrow-pop */
+.lux-cefrBadge-pop {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 12px;
+  height: 12px;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  pointer-events: none;
+  z-index: 9999;
+  will-change: transform, opacity;
+  opacity: 0.7;
+  animation: luxCefrPop 480ms ease-out forwards;
+}
+
+@keyframes luxCefrPop {
+  0%   { opacity: 0.6; transform: translate(-50%, -50%) scale(0.5); border: 2px solid rgba(37, 99, 235, 0.5); }
+  70%  { opacity: 0.2; transform: translate(-50%, -50%) scale(2.2); border: 2px solid rgba(37, 99, 235, 0.2); }
+  100% { opacity: 0;   transform: translate(-50%, -50%) scale(2.8); border: 2px solid rgba(37, 99, 235, 0.0); }
+}
+
+/* ── Respect reduced motion ── */
+
+@media (prefers-reduced-motion: reduce) {
+  .lux-cefrBadge.is-peeking-s0,
+  .lux-cefrBadge.is-peeking-s1 {
+    animation: none !important;
+    opacity: 0 !important;
+  }
+}
