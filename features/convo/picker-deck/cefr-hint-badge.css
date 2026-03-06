@@ -1,6 +1,6 @@
 /* features/convo/picker-deck/cefr-hint-badge.css
-   CEFR hint badge — peeks from bottom of .lux-deckText to teach users
-   that expanded bullets are tied to the selected CEFR level. */
+   CEFR hint badge — peeks/bobs on states 0–1, flies to the level chip on state 2
+   (max 2 flights per session), then subtle nudge only. */
 
 /* ── Badge (anchored inside .lux-deckText, positioned at bottom) ── */
 
@@ -81,6 +81,25 @@
   100% { opacity: 0;    transform: translateX(-50%) translateY(100%); }
 }
 
+/* ── Subtle nudge for state 2 AFTER flight limit reached ──
+   Much gentler than s0/s1 — barely peeks, single soft bob, quick retract.
+   No flight, no clone, no pop ring. Just a quiet "hey, remember me?" */
+
+.lux-cefrBadge.is-nudge-s2 {
+  animation: luxCefrNudge2 1.6s ease both;
+}
+
+@keyframes luxCefrNudge2 {
+  0%   { opacity: 0;    transform: translateX(-50%) translateY(100%); }
+  18%  { opacity: 0.30; transform: translateX(-50%) translateY(55%); }
+  /* single gentle bob */
+  36%  { opacity: 0.35; transform: translateX(-50%) translateY(48%); }
+  52%  { opacity: 0.28; transform: translateX(-50%) translateY(56%); }
+  /* retract quickly */
+  74%  { opacity: 0.12; transform: translateX(-50%) translateY(78%); }
+  100% { opacity: 0;    transform: translateX(-50%) translateY(100%); }
+}
+
 /* ── Flying badge (fixed overlay — mirrors .lux-arrow-fly pattern) ── */
 
 .lux-cefrBadge-fly {
@@ -140,7 +159,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .lux-cefrBadge.is-peeking-s0,
-  .lux-cefrBadge.is-peeking-s1 {
+  .lux-cefrBadge.is-peeking-s1,
+  .lux-cefrBadge.is-nudge-s2 {
     animation: none !important;
     opacity: 0 !important;
   }

@@ -1,5 +1,5 @@
 // features/convo/picker-deck/cefr-hint-badge.js
-// ONE-LINE: CEFR hint badge that peeks/bobs on states 0–1, then flies to the level chip on state 2.
+// ONE-LINE: CEFR hint badge that peeks/bobs on states 0–1, flies to the level chip on state 2 (max 2 flights per session), then subtle nudge only.
 
 import { getKnobs } from "../knobs-drawer.js";
 
@@ -24,6 +24,11 @@ function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
 const REDUCED = typeof window !== "undefined" &&
   window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+// ── Session-scoped flight counter (resets on page reload) ──
+// Shared across all card instances so the total is per-session, not per-card.
+const MAX_FLIGHTS = 2;
+let _sessionFlightCount = 0;
 
 // ── Public API ──
 
@@ -71,7 +76,7 @@ export function mountCefrHintBadge(textWrap, host) {
 
   function clearPeek() {
     if (peekTimer) { clearTimeout(peekTimer); peekTimer = null; }
-    badge.classList.remove("is-peeking-s0", "is-peeking-s1");
+    badge.classList.remove("is-peeking-s0", "is-peeking-s1", "is-nudge-s2");
   }
 
   function startPeek(expandState) {
@@ -84,14 +89,28 @@ export function mountCefrHintBadge(textWrap, host) {
 
     peekTimer = setTimeout(() => {
       if (destroyed) return;
-      // reset animation
-      badge.classList.remove("is-peeking-s0", "is-peeking-s1");
+      badge.classList.remove("is-peeking-s0", "is-peeking-s1", "is-nudge-s2");
       void badge.offsetWidth;
       badge.classList.add(cls);
     }, delayMs);
   }
 
-  // ── Flight to knobs drawer (state 2) — reuses arrow-trail-fly trajectory math ──
+  // ── Subtle nudge (state 2 after flight limit reached) ──
+
+  function startNudge() {
+    clearPeek();
+    cleanupFlight();
+    paintBadge();
+
+    peekTimer = setTimeout(() => {
+      if (destroyed) return;
+      badge.classList.remove("is-peeking-s0", "is-peeking-s1", "is-nudge-s2");
+      void badge.offsetWidth;
+      badge.classList.add("is-nudge-s2");
+    }, 600);
+  }
+
+  // ── Flight to knobs drawer (state 2) ──
 
   function cleanupFlight() {
     if (flyAnim) { try { flyAnim.cancel(); } catch (_) {} flyAnim = null; }
@@ -99,48 +118,103 @@ export function mountCefrHintBadge(textWrap, host) {
   }
 
   /**
-   * Find the currently-selected level chip in the knobs drawer.
-   * Falls back to the knobs group container if nothing else is visible.
+   * Visibility check that also rejects elements pushed offscreen by transforms.
+   * The knobs drawer when closed has transform: translateX(100%) which puts it
+   * entirely off the right edge — getClientRects still returns entries for fixed
+   * elements but the coordinates are beyond the viewport.
+   */
+  function isOnScreen(el) {
+    if (!el) return false;
+    const r = el.getBoundingClientRect();
+    if (!r || r.width === 0 || r.height === 0) return false;
+    const cs = window.getComputedStyle(el);
+    if (cs.display === "none" || cs.visibility === "hidden" || Number(cs.opacity) === 0) return false;
+    // Reject elements whose center is offscreen (drawer closed = translateX(100%))
+    const cx = r.left + r.width / 2;
+    if (cx > window.innerWidth + 20 || cx < -20) return false;
+    return true;
+  }
+
+  /**
+   * Find the best flight target. Cascade:
+   *  1) Active level chip in the open knobs drawer
+   *  2) Level group container in the open knobs drawer
+   *  3) The knobs drawer element itself (only if actually on-screen / open)
+   *  4) The "Scene Settings" button in the picker nav row
+   *
+   * BUG FIX: The old fallback #4 used selectors ".lux-pickerKnobs" and
+   * "[data-picker-knobs]" but the actual button has classes
+   * "btn ghost lux-pickerNavSide" with NO unique class or data attribute.
+   * We now find it by scanning .lux-pickerNavRow buttons for text content.
    */
   function findLevelTarget() {
     const lvl = currentLevel();
 
-    // 1) Try the chip-pill knobs drawer (right-hand side)
+    // 1) Try the chip-pill in the open knobs drawer
     const chip = document.querySelector(
       `#luxKnobsDrawer .lux-levelChip.is-on, ` +
       `#luxKnobsDrawer .lux-levelChip[data-value="${lvl}"]`
     );
-    if (chip && isVisible(chip)) return chip;
+    if (chip && isOnScreen(chip)) return chip;
 
     // 2) Try the level group header
     const group = document.querySelector('#luxKnobsDrawer .lux-knobsGroup[data-key="level"]');
-    if (group && isVisible(group)) return group;
+    if (group && isOnScreen(group)) return group;
 
-    // 3) Try the knobs drawer itself (peek handle / tab)
+    // 3) Try the drawer itself — only if on-screen (open state)
     const drawer = document.getElementById("luxKnobsDrawer");
-    if (drawer && isVisible(drawer)) return drawer;
+    if (drawer && isOnScreen(drawer)) return drawer;
 
-    // 4) Try the picker knobs button
-    const pBtn = document.querySelector(".lux-pickerKnobs, [data-picker-knobs]");
-    if (pBtn && isVisible(pBtn)) return pBtn;
+    // 4) Scene Settings button — text-content scan (the reliable fallback)
+    const navBtns = document.querySelectorAll(".lux-pickerNavRow button");
+    for (const btn of navBtns) {
+      if (btn.textContent.includes("Scene Settings") && isOnScreen(btn)) return btn;
+    }
+
+    // 5) Broader sweep: any .lux-pickerNavSide whose text mentions "Setting"
+    const sides = document.querySelectorAll(".lux-pickerNavSide");
+    for (const s of sides) {
+      if (s.textContent.includes("Setting") && isOnScreen(s)) return s;
+    }
 
     return null;
   }
 
-  function isVisible(el) {
-    if (!el) return false;
-    const r = el.getClientRects();
-    if (!r || r.length === 0) return false;
-    const cs = window.getComputedStyle(el);
-    if (cs.display === "none" || cs.visibility === "hidden" || Number(cs.opacity) === 0) return false;
-    return true;
-  }
-
-  function launchFlight() {
+  /**
+   * Launch the flight with retry logic.
+   * Uses rAF + short delay for layout to settle, then retries up to 2 more
+   * times if no target is found (button may still be rendering/settling).
+   */
+  function launchFlightWithRetry() {
     clearPeek();
     cleanupFlight();
     paintBadge();
 
+    let attempts = 0;
+    const MAX_ATTEMPTS = 3;
+    const RETRY_DELAY = 250;
+
+    function tryFlight() {
+      if (destroyed) return;
+      attempts++;
+
+      requestAnimationFrame(() => {
+        if (destroyed) return;
+        const target = findLevelTarget();
+        if (target) {
+          _doFlight(target);
+        } else if (attempts < MAX_ATTEMPTS) {
+          setTimeout(tryFlight, RETRY_DELAY);
+        }
+        // All attempts exhausted → silently skip
+      });
+    }
+
+    // Initial delay: let the card's state-2 expansion start
+    setTimeout(tryFlight, 60);
+  }
+
+  function _doFlight(target) {
     // ── Start point: badge's current position ──
     const badgeRect = badge.getBoundingClientRect();
     if (badgeRect.width === 0) return;
@@ -148,13 +222,13 @@ export function mountCefrHintBadge(textWrap, host) {
     const startX = badgeRect.left + badgeRect.width / 2;
     const startY = badgeRect.top + badgeRect.height / 2;
 
-    // ── End point: level chip in knobs drawer ──
-    const target = findLevelTarget();
-    if (!target) return; // drawer not visible — skip flight silently
-
+    // ── End point: target element ──
     const tRect = target.getBoundingClientRect();
     const endX = tRect.left + tRect.width / 2;
     const endY = tRect.top + tRect.height / 2;
+
+    // Sanity: skip if start and end are nearly the same spot
+    if (Math.hypot(endX - startX, endY - startY) < 20) return;
 
     // Hide the static badge while the clone flies
     badge.style.opacity = "0";
@@ -205,7 +279,6 @@ export function mountCefrHintBadge(textWrap, host) {
       const x = dx * t + px * wobble;
       const y = dy * t + py * wobble + float;
 
-      // Slight shrink as it approaches target
       const sc = 1.0 - 0.25 * t;
 
       frames.push({
@@ -241,6 +314,9 @@ export function mountCefrHintBadge(textWrap, host) {
         cleanupFlight();
       }, 500);
     };
+
+    // ── Increment session counter ──
+    _sessionFlightCount++;
   }
 
   // ── Public: call on every expand-state change ──
@@ -251,7 +327,11 @@ export function mountCefrHintBadge(textWrap, host) {
     if (expandState === 0 || expandState === 1) {
       startPeek(expandState);
     } else if (expandState === 2) {
-      launchFlight();
+      if (_sessionFlightCount < MAX_FLIGHTS) {
+        launchFlightWithRetry();
+      } else {
+        startNudge();
+      }
     }
   }
 
@@ -266,7 +346,6 @@ export function mountCefrHintBadge(textWrap, host) {
   function onKnobsEvt() { paintBadge(); }
   window.addEventListener("lux:knobs", onKnobsEvt);
 
-  // Store removal on destroy
   const origDestroy = destroy;
   const wrappedDestroy = () => {
     window.removeEventListener("lux:knobs", onKnobsEvt);
