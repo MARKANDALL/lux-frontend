@@ -8,6 +8,8 @@
 //  - window.lastAttemptId
 //  - window.LuxLastRecordingBlob / window.LuxLastRecordingMeta
 
+import { luxBus } from './lux-bus.js';
+
 let _lastAttemptId = null;
 let _lastRecordingBlob = null;
 let _lastRecordingMeta = null;
@@ -19,12 +21,15 @@ function hasWindow() {
 // ---------- Attempt ----------
 export function setLastAttemptId(id) {
   _lastAttemptId = id ?? null;
+  luxBus.set('lastAttemptId', _lastAttemptId);
   if (hasWindow()) window.lastAttemptId = _lastAttemptId;
   return _lastAttemptId;
 }
 
 export function getLastAttemptId() {
   if (_lastAttemptId != null) return _lastAttemptId;
+  const busVal = luxBus.get('lastAttemptId');
+  if (busVal != null) return busVal;
   if (hasWindow() && window.lastAttemptId != null) return window.lastAttemptId;
   return null;
 }
@@ -37,6 +42,7 @@ export function clearLastAttemptId() {
 export function setLastRecording(blob, meta) {
   _lastRecordingBlob = blob || null;
   _lastRecordingMeta = meta || null;
+  luxBus.set('lastRecording', { blob: _lastRecordingBlob, meta: _lastRecordingMeta });
 
   if (hasWindow()) {
     window.LuxLastRecordingBlob = _lastRecordingBlob;
@@ -61,6 +67,9 @@ export function getLastRecording() {
     return { blob: _lastRecordingBlob, meta: _lastRecordingMeta };
   }
 
+  const busVal = luxBus.get('lastRecording');
+  if (busVal?.blob) return busVal;
+
   if (hasWindow() && window.LuxLastRecordingBlob) {
     return {
       blob: window.LuxLastRecordingBlob,
@@ -70,4 +79,3 @@ export function getLastRecording() {
 
   return { blob: null, meta: null };
 }
-
