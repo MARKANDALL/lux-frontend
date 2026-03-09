@@ -1,4 +1,5 @@
 // features/convo/knobs-drawer.js
+import { guardedListener, removeGuardedListener } from '../../app-core/lux-listeners.js';
 
 const KNOBS_KEY = "lux_knobs_v3";
 const DEFAULTS = { level: "B1", tone: "neutral", length: "medium" };
@@ -20,7 +21,6 @@ const LENGTH_SIZES = {terse:{px:"6px 10px",fs:"0.78rem"},short:{px:"7px 14px",fs
 const LENGTH_LABELS = {terse:"Terse",short:"Short",medium:"Medium",long:"Long",extended:"Extended"};
 
 let _openerEl = null;
-let _docClickBound = false;
 let _currentAnim = null;
 
 function ensureDom() {
@@ -66,11 +66,6 @@ function ensureDom() {
     </div>
   `;
   document.body.appendChild(drawer);
-
-  if (!_docClickBound) {
-    _docClickBound = true;
-    document.addEventListener("click", _onDocClick, true);
-  }
 
   return { drawer };
 }
@@ -173,6 +168,7 @@ function paintSelection(drawer, knobs) {
 
 export function mountKnobsDrawer() {
   const { drawer } = ensureDom();
+  const _onEsc = (e) => { if (e.key === "Escape" && drawer.dataset.state === "open") close(); };
 
   const open = () => {
     drawer.classList.remove("lux-knobsPeek");
@@ -191,10 +187,15 @@ export function mountKnobsDrawer() {
       _animateOpen(drawer);
     }
 
+    guardedListener('knobsDrawer:docClick', document, 'click', _onDocClick, { capture: true });
+    guardedListener('knobsDrawer:escKey', document, 'keydown', _onEsc);
     requestAnimationFrame(() => { const c = drawer.querySelector(".lux-knobsClose"); if (c) c.focus(); });
   };
 
   const close = () => {
+    removeGuardedListener('knobsDrawer:docClick');
+    removeGuardedListener('knobsDrawer:escKey');
+
     const st = drawer.dataset.state;
     if (st === "closing" || st === "closed") return;
     drawer.dataset.state = "closing";
@@ -212,7 +213,6 @@ export function mountKnobsDrawer() {
     const g = btn.closest(".lux-knobsGroup"); if (!g) return;
     paintSelection(drawer, setKnobs({ [g.getAttribute("data-key")]: btn.getAttribute("data-value") }));
   });
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && drawer.dataset.state === "open") close(); });
 
   return { open, close };
 }

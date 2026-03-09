@@ -95,12 +95,6 @@ function ensureDom() {
     .querySelector(".lux-charsClose")
     .addEventListener("click", closeCharsDrawer);
 
-  guardedListener('charsDrawer:escKey', document, 'keydown', (e) => {
-    if (e.key === "Escape" && _drawer.dataset.state === "open") {
-      closeCharsDrawer();
-    }
-  });
-
   _drawer.addEventListener("click", (e) => {
     const card = e.target.closest("[data-role-idx]");
     if (!card) return;
@@ -137,8 +131,6 @@ function ensureDom() {
     _hoverRoleCard = null;
     document.dispatchEvent(new CustomEvent("lux:pickerSummaryHoverClear"));
   });
-
-  guardedListener('charsDrawer:docClick', document, 'click', _onDocClick);
 }
 
 export function isCharsDrawerOpen() {
@@ -307,6 +299,13 @@ export function openCharsDrawer({ scenarioIdx, roleIdx, onRoleSelect }) {
   } else {
     _animateOpen();
   }
+
+  guardedListener('charsDrawer:docClick', document, 'click', _onDocClick);
+  guardedListener('charsDrawer:escKey', document, 'keydown', (e) => {
+    if (e.key === "Escape" && _drawer.dataset.state === "open") {
+      closeCharsDrawer();
+    }
+  });
 
   requestAnimationFrame(() => {
     const closeBtn = _drawer.querySelector(".lux-charsClose");
