@@ -6,8 +6,8 @@
  * ============================================================================ */
 
 import { supabase } from "../src/supabase.js";
-import { API_BASE } from "../src/api/util.js";
-import { setUID } from "../src/api/index.js";
+import { API_BASE } from "../api/util.js";
+import { setUID } from "../api/index.js";
 
 function escHtml(s) {
   return String(s ?? "")
