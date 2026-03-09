@@ -58,12 +58,14 @@ export function wirePickerDeck({
     if (!list.length) return;
     state.scenarioIdx = (state.scenarioIdx - 1 + list.length) % list.length;
     renderDeck();
+    window.dispatchEvent(new Event("lux:scenarioChanged"));
   });
 
   nextBtn?.addEventListener("click", () => {
     if (!list.length) return;
     state.scenarioIdx = (state.scenarioIdx + 1) % list.length;
     renderDeck();
+    window.dispatchEvent(new Event("lux:scenarioChanged"));
   });
 
   // Preview click behaves like Next (Edge feel)
@@ -71,6 +73,7 @@ export function wirePickerDeck({
     if (!list.length) return;
     state.scenarioIdx = (state.scenarioIdx + 1) % list.length;
     renderDeck();
+    window.dispatchEvent(new Event("lux:scenarioChanged"));
   });
 
   return { renderDeck };

@@ -121,8 +121,9 @@ export function initConvoPickerSystem({
 
   function randomizeDefaultSelectionAndRender() {
     if (!listLen) return;
-    state.scenarioIdx = pickNextRandomScenarioIdx(listLen);
+state.scenarioIdx = pickNextRandomScenarioIdx(listLen);
     renderDeck();
+    window.dispatchEvent(new Event("lux:scenarioChanged"));
   }
 
   // boot (randomize once so the deck doesn't always start on Coffee)

@@ -203,28 +203,16 @@ export function bootConvo() {
   //   pickerCharsBtn.addEventListener("mouseleave", () => unpeekCharsDrawer());
   // }
 
-  // Re-open characters drawer with fresh data when scenario changes
-  window.addEventListener("lux:knobs", () => {
-    // no-op: knobs don't affect characters, but keep this hook if needed later
-  });
-
   // Reset role selection when scenario changes
-  const origScenIdx = { val: state.scenarioIdx };
-  // Lightweight poll (state.scenarioIdx is JS state, not a DOM attribute)
-  setInterval(() => {
-    if (state.scenarioIdx !== origScenIdx.val) {
-      origScenIdx.val = state.scenarioIdx;
-      state.roleIdx = 0;
-      // Keep the Characters drawer open while browsing scenarios.
-      // If it's open, swap its contents with a subtle fade + micro-drift.
-      if (isCharsDrawerOpen()) {
-        swapCharsDrawerContent(state.scenarioIdx, state.roleIdx);
-      }
-      renderAllSummaries();
-      syncConvoPortraits();
-      try { window.dispatchEvent(new Event("lux:ttsContextChanged")); } catch (err) { globalThis.warnSwallow("./features/convo/convo-bootstrap.js", err); }
+  window.addEventListener("lux:scenarioChanged", () => {
+    state.roleIdx = 0;
+    if (isCharsDrawerOpen()) {
+      swapCharsDrawerContent(state.scenarioIdx, state.roleIdx);
     }
-  }, 300);
+    renderAllSummaries();
+    syncConvoPortraits();
+    try { window.dispatchEvent(new Event("lux:ttsContextChanged")); } catch (err) { globalThis.warnSwallow("./features/convo/convo-bootstrap.js", err); }
+  });
 
   // --- Convo flow (extracted) ---
   const { startScenario } = wireConvoFlow({

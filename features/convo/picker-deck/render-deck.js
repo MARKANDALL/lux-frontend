@@ -41,6 +41,7 @@ export function makeRenderDeck({
       onPickIndex: (i) => {
         state.scenarioIdx = i;
         renderDeck();
+        window.dispatchEvent(new Event("lux:scenarioChanged"));
       },
     });
 

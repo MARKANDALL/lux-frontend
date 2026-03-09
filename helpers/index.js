@@ -1,7 +1,6 @@
 // helpers/index.js (optional barrel)
 export {
   LUX_USER_ID,
-  scoreClass,
   buildYouglishUrl,
   isCorrupt,
   encouragingLine,
