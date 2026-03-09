@@ -4,6 +4,8 @@
 // - capture-phase click "trap door" pins tooltip (mobile-friendly)
 // - CRITICAL: never swallow header pill clicks (#phonemeTitle)
 
+import { guardedListener } from '../../../app-core/lux-listeners.js';
+
 export function installChipEvents(state, { showTooltip, handleChipClick, scheduleHide, bindOutsideCloseOnce }) {
   const root = document.body;
 
@@ -40,9 +42,7 @@ export function installChipEvents(state, { showTooltip, handleChipClick, schedul
   // === CRITICAL: Capture-phase click handler ("trap door") ===
   // Never swallow header pill clicks.
   // Row chip click pins the tooltip and NEVER autoplays.
-  root.addEventListener(
-    "click",
-    (e) => {
+  guardedListener('phHover:chipClick', root, 'click', (e) => {
       const chip = e.target.closest(".phoneme-chip[data-hydrated]");
       if (!chip) return;
 
@@ -62,9 +62,7 @@ export function installChipEvents(state, { showTooltip, handleChipClick, schedul
       if (state.hideTimeout) clearTimeout(state.hideTimeout);
 
       handleChipClick?.(chip);
-    },
-    { capture: true }
-  );
+    }, { capture: true });
 
   // Ensure outside-close exists (once)
   bindOutsideCloseOnce?.(state, state.hideTooltip);

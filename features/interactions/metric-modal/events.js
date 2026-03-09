@@ -3,6 +3,7 @@
 
 import { buildModalHtml, esc } from "./render.js";
 import { lockBodyScroll, unlockBodyScroll } from "../../../helpers/body-scroll-lock.js";
+import { guardedListener } from '../../../app-core/lux-listeners.js';
 
 let installed = false;
 let currentCtx = {
@@ -189,8 +190,8 @@ export function initMetricScoreModals() {
   if (installed) return;
   installed = true;
 
-  document.addEventListener("click", onDocClick, true);
-  document.addEventListener("keydown", onDocKeyDown, true);
+  guardedListener('metricModal:docClick', document, 'click', onDocClick, { capture: true });
+  guardedListener('metricModal:docKeyDown', document, 'keydown', onDocKeyDown, { capture: true });
 
   decorateTiles();
 }

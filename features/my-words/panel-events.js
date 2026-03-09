@@ -1,4 +1,5 @@
 // features/my-words/panel-events.js
+import { guardedListener } from '../../app-core/lux-listeners.js';
 
 export function bindMyWordsPanelEvents({
   root,
@@ -119,7 +120,7 @@ export function bindMyWordsPanelEvents({
   store.subscribe(() => render());
 
   // ✅ Wiggle close button when user clicks blank space outside the My Words panel
-  document.addEventListener("click", (e) => {
+  guardedListener('myWords:blankClick', document, 'click', (e) => {
     // Only when panel is open
     if (!root.isConnected || root.style.display === "none") return;
     // Check panel is actually visible (has is-open or is mounted in sidecar)
@@ -145,7 +146,7 @@ export function bindMyWordsPanelEvents({
       closeBtn.classList.remove("wiggle");
     }, { once: true });
 
-  }, true); // useCapture — fires before other handlers
+  }, { capture: true });
 
   return {};
 }
