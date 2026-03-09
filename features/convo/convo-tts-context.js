@@ -1,6 +1,8 @@
 // features/convo/convo-tts-context.js
 // ONE-LINE: Installs a LuxTTSContext adapter for AI Conversations so the TTS drawer can speak AI/user/selected turns with character-matched voices.
 
+import { luxBus } from '../../app-core/lux-bus.js';
+
 function norm(s) {
   return String(s || "").trim();
 }
@@ -91,10 +93,11 @@ export function installConvoTtsContext({ state, input, msgs, SCENARIOS }) {
   if (!state) return;
 
   // Default behavior in convo: speaking "AI" is the most common first action.
-  window.luxTTS = Object.assign(window.luxTTS || {}, {
-    sourceMode: window.luxTTS?.sourceMode || "ai",
-    autoVoice: window.luxTTS?.autoVoice !== false,
+  luxBus.update('tts', {
+    sourceMode: luxBus.get('tts')?.sourceMode || "ai",
+    autoVoice: luxBus.get('tts')?.autoVoice !== false,
   });
+  window.luxTTS = Object.assign(window.luxTTS || {}, luxBus.get('tts'));
 
   const ctx = {
     kind: "convo",

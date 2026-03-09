@@ -2,6 +2,8 @@
 // Logic: Event wiring, audio state management, and API orchestration.
 // UPDATED: simplified Waveform handoff (passes Blob directly to WaveSurfer).
 
+import { luxBus } from '../../../app-core/lux-bus.js';
+
 import {
   VOICES,
   DEFAULT_SPEED,
@@ -100,11 +102,12 @@ export async function mountTTSPlayer(hostEl) {
   if (autoVoiceEl && typeof initialAuto === "boolean") autoVoiceEl.checked = initialAuto;
 
   // Expose audio + tts UI state for other panels (like Self Playback sync)
-  window.luxTTS = Object.assign(window.luxTTS || {}, {
+  luxBus.update('tts', {
     audioEl: audio,
     sourceMode: sourceSel?.value || initialMode,
     autoVoice: autoVoiceEl?.checked !== false,
   });
+  window.luxTTS = Object.assign(window.luxTTS || {}, luxBus.get('tts'));
 
   function applyVoiceHint(voiceId, caps) {
     if (!voiceId || !voiceSel) return;
@@ -148,21 +151,24 @@ export async function mountTTSPlayer(hostEl) {
     // Manual voice change implies “I’m overriding auto”
     if (autoVoiceEl && autoVoiceEl.checked) {
       autoVoiceEl.checked = false;
-      window.luxTTS = Object.assign(window.luxTTS || {}, { autoVoice: false });
+      luxBus.update('tts', { autoVoice: false });
+      window.luxTTS = Object.assign(window.luxTTS || {}, luxBus.get('tts'));
     }
     populateStyles(styleSel, caps, voiceSel.value);
   });
 
   if (sourceSel) {
     sourceSel.addEventListener("change", () => {
-      window.luxTTS = Object.assign(window.luxTTS || {}, { sourceMode: sourceSel.value || "auto" });
+      luxBus.update('tts', { sourceMode: sourceSel.value || "auto" });
+      window.luxTTS = Object.assign(window.luxTTS || {}, luxBus.get('tts'));
       syncVoiceFromContext("source-change", caps);
     });
   }
 
   if (autoVoiceEl) {
     autoVoiceEl.addEventListener("change", () => {
-      window.luxTTS = Object.assign(window.luxTTS || {}, { autoVoice: !!autoVoiceEl.checked });
+      luxBus.update('tts', { autoVoice: !!autoVoiceEl.checked });
+      window.luxTTS = Object.assign(window.luxTTS || {}, luxBus.get('tts'));
       if (autoVoiceEl.checked) syncVoiceFromContext("autovoice-on", caps);
     });
   }
@@ -380,9 +386,9 @@ export async function mountTTSPlayer(hostEl) {
 
   // If Lux ever remounts the player, stop any old RAF loop (defensive)
   // (Right now mount only happens once, but this keeps it safe)
+  luxBus.update('tts', { stopProgress });
   window.luxTTS = Object.assign(window.luxTTS || {}, { stopProgress });
 
   (window.luxTTS?.nudge || (() => {}))();
   console.info("[tts-player] azure controls mounted");
 }
-
