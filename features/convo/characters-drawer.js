@@ -1,13 +1,13 @@
 // features/convo/characters-drawer.js
 // Left-side drawer – character selection.
 
+import { guardedListener, removeGuardedListener } from '../../app-core/lux-listeners.js';
 import { SCENARIOS } from "./scenarios.js";
 
 let _drawer = null;
 let _body = null;
 let _onRoleSelect = null;
 let _openerEl = null;
-let _docClickBound = false;
 let _currentAnim = null; // track running WAAPI animation
 let _hoverRoleCard = null;
 let _contentAnim = null; // track running content swap animation
@@ -95,7 +95,7 @@ function ensureDom() {
     .querySelector(".lux-charsClose")
     .addEventListener("click", closeCharsDrawer);
 
-  document.addEventListener("keydown", (e) => {
+  guardedListener('charsDrawer:escKey', document, 'keydown', (e) => {
     if (e.key === "Escape" && _drawer.dataset.state === "open") {
       closeCharsDrawer();
     }
@@ -138,10 +138,7 @@ function ensureDom() {
     document.dispatchEvent(new CustomEvent("lux:pickerSummaryHoverClear"));
   });
 
-  if (!_docClickBound) {
-    _docClickBound = true;
-    document.addEventListener("click", _onDocClick, true);
-  }
+  guardedListener('charsDrawer:docClick', document, 'click', _onDocClick);
 }
 
 export function isCharsDrawerOpen() {
@@ -321,6 +318,9 @@ export function closeCharsDrawer() {
   if (!_drawer) return;
   const st = _drawer.dataset.state;
   if (st === "closing" || st === "closed") return;
+
+  removeGuardedListener('charsDrawer:docClick');
+  removeGuardedListener('charsDrawer:escKey');
 
   _drawer.dataset.state = "closing";
 
