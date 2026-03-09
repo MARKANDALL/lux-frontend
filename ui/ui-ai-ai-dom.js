@@ -2,6 +2,8 @@
 // Handles DOM updates for the AI feedback panel.
 // UPDATED: Implements persistent Sidebar and SCROLLABLE content area.
 
+import { escapeHtml } from "../helpers/escape-html.js";
+
 function getSectionAndBox() {
   const section = document.getElementById("aiFeedbackSection");
   const box = document.getElementById("aiFeedback");
@@ -292,15 +294,6 @@ export function clearAIFeedback() {
   contentArea.innerHTML = "";
 }
 
-function escapeHtml(s) {
-  return String(s ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
 // RESTORED FUNCTION
 export function renderAIFeedbackMarkdown(md) {
   const { box } = getSectionAndBox();
@@ -327,4 +320,4 @@ function mdToHtml(md = "") {
       .join("<br>");
   }
   return html;
-}
+}   

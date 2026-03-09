@@ -4,6 +4,7 @@ import { computeRollups } from "../progress/rollups.js";
 import { promptUserForAI } from "../../ui/ui-ai-ai-logic.js";
 import { setLastAttemptId } from "../../app-core/runtime.js";
 import { scoreClass as scoreClassCore } from "../../core/scoring/index.js";
+import { escapeHtml } from "../../helpers/escape-html.js";
 
 // --- Deck card sizing: make the CARD match the media's natural aspect ratio ---
 const _luxMediaMeta = new Map();
@@ -44,15 +45,6 @@ export function el(tag, cls, text) {
   if (cls) n.className = cls;
   if (text != null) n.textContent = text;
   return n;
-}
-
-function escapeHtml(s) {
-  return String(s)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
 }
 
 function wordSetFromText(text) {

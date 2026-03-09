@@ -23,15 +23,7 @@ import {
   applyStressClasses,
 } from "./syllables/cmu-stress.js";
 import { bindSyllableAltInteractions } from "./syllables/alt-meaning.js";
-
-function escapeHtml(s) {
-  return String(s || "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
+import { escapeHtml } from "../../helpers/escape-html.js";
 
 /* ------------------------------------------------------------
  * Public renderer

@@ -4,6 +4,7 @@ import {
   scoreClass as scoreClassCore,
   coachingPreface,
 } from "../core/scoring/index.js";
+import { escapeHtml } from "./escape-html.js";
 
 // Single source of truth for UID:
 // - api/identity.js owns generation + persistence + migration
@@ -38,15 +39,6 @@ export function encouragingLine(score) {
 }
 
 /** Tiny MD → HTML tailored for the AI feedback */
-
-function escapeHtml(s) {
-  return String(s ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
 
 export function mdToHtml(md) {
   md = escapeHtml(md)

@@ -4,6 +4,7 @@
 import { SEEN_KEY, STEPS } from "./onboarding-steps.js";
 import { stopMic, stopMeterOnly, resumeMeterIfPossible } from "./onboarding-mic.js";
 import { runAction } from "./onboarding-actions.js";
+import { escapeHtml } from "../../helpers/escape-html.js";
 
 export function maybeShowOnboarding() {
   // Force open via ?onboard=1
@@ -194,14 +195,4 @@ function showOnboarding() {
   }
 
   render();
-}
-
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, (c) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;",
-  }[c]));
 }
