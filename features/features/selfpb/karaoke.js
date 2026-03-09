@@ -1,5 +1,6 @@
 // features/features/selfpb/karaoke.js
 
+import { luxBus } from '../../../app-core/lux-bus.js';
 import { publishKaraoke } from "../tts/player-ui/karaoke.js";
 
 export function initKaraoke({ ui, api, audio, syncTime, syncScrub }) {
@@ -28,7 +29,10 @@ export function initKaraoke({ ui, api, audio, syncTime, syncScrub }) {
 
   const clamp01 = (v) => Math.max(0, Math.min(1, v));
 
-  const karaokeSource = () => String(window.LuxKaraokeSource || "learner");
+  const karaokeSource = () => {
+    const bus = luxBus.get('karaoke');
+    return String(bus?.source || window.LuxKaraokeSource || "learner");
+  };
 
   const getActiveAudio = () => {
     const src = karaokeSource();
@@ -40,6 +44,11 @@ export function initKaraoke({ ui, api, audio, syncTime, syncScrub }) {
   const shouldSyncSelfPB = () => karaokeSource() === "learner";
 
   const getActiveTimings = (fallback = []) => {
+    const bus = luxBus.get('karaoke');
+    const busTms = bus?.timings;
+    if (Array.isArray(busTms) && busTms.length) {
+      return busTms;
+    }
     if (Array.isArray(window.LuxKaraokeTimings) && window.LuxKaraokeTimings.length) {
       return window.LuxKaraokeTimings;
     }

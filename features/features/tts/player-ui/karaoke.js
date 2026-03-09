@@ -1,6 +1,8 @@
 // features/features/tts/player-ui/karaoke.js
 // Logic: Karaoke/word-sync helpers for TTS playback timing + refresh events.
 
+import { luxBus } from '../../../../app-core/lux-bus.js';
+
 // ------------------------------------------------------------
 // Karaoke / Word Sync (TTS): simple word timings (even spacing)
 // ------------------------------------------------------------
@@ -80,10 +82,17 @@ function buildWordTimingsFromBoundaries(boundaries, durSec) {
 
 function publishKaraoke(source, timings) {
   try {
-    window.LuxKaraokeSource = String(source || "learner");
-    window.LuxKaraokeTimings = Array.isArray(timings) ? timings : [];
-    if (window.LuxKaraokeSource === "tts") {
-      window.LuxTTSWordTimings = window.LuxKaraokeTimings;
+    const src = String(source || "learner");
+    const tms = Array.isArray(timings) ? timings : [];
+
+    // Bus is the source of truth
+    luxBus.set('karaoke', { source: src, timings: tms });
+
+    // Window globals kept as backward-compat mirrors
+    window.LuxKaraokeSource = src;
+    window.LuxKaraokeTimings = tms;
+    if (src === "tts") {
+      window.LuxTTSWordTimings = tms;
     }
     window.dispatchEvent(
       new CustomEvent("lux:karaokeRefresh", {
@@ -97,5 +106,3 @@ function publishKaraoke(source, timings) {
 }
 
 export { buildWordTimings, buildWordTimingsFromBoundaries, publishKaraoke };
-
-

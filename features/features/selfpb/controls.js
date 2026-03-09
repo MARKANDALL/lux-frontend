@@ -1,5 +1,6 @@
 // features/features/selfpb/controls.js
 
+import { luxBus } from '../../../app-core/lux-bus.js';
 import { publishKaraoke } from "../tts/player-ui/karaoke.js";
 
 export function initControls({
@@ -20,7 +21,7 @@ export function initControls({
     try {
       const timings = Array.isArray(window.LuxLastWordTimings)
         ? window.LuxLastWordTimings
-        : window.LuxKaraokeTimings || [];
+        : luxBus.get('karaoke')?.timings || window.LuxKaraokeTimings || [];
       publishKaraoke("learner", timings);
 } catch (err) { globalThis.warnSwallow("features/features/selfpb/controls.js", err); }
   };
