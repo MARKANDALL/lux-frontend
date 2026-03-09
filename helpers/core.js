@@ -1,18 +1,11 @@
 // helpers/core.js
 import { getUID } from "../api/identity.js";
-import {
-  scoreClass as scoreClassCore,
-  coachingPreface,
-} from "../core/scoring/index.js";
+import { coachingPreface } from "../core/scoring/index.js";
 import { escapeHtml } from "./escape-html.js";
 
 // Single source of truth for UID:
 // - api/identity.js owns generation + persistence + migration
 export const LUX_USER_ID = typeof window !== "undefined" ? getUID() : null;
-
-export function scoreClass(score) {
-  return scoreClassCore(score);
-}
 
 export const buildYouglishUrl = (w) =>
   `https://youglish.com/pronounce/${encodeURIComponent(w)}/english`;
