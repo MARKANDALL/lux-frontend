@@ -2,6 +2,8 @@
 // LAZY LOADER: Creates the tab immediately, but loads the heavy UI/WaveSurfer only on click.
 import "./selfpb-peekaboo.css";
 
+import { luxBus } from '../../app-core/lux-bus.js';
+
 (() => {
   const OPEN_CLASS = "lux-sp-open";
   const PANEL_SEL = ".lux-sp-panel";
@@ -203,7 +205,7 @@ const module = await import("./selfpb/ui.js");
 
 
   // ✅ External request (used by TTS Expand): load SelfPB if needed, then open the shared expanded modal
-  window.addEventListener("lux:requestSelfPBExpanded", async () => {
+  luxBus.on('requestSelfPBExpanded', async () => {
     try {
       const isOpen = document.documentElement.classList.contains(OPEN_CLASS);
 
@@ -215,7 +217,7 @@ const module = await import("./selfpb/ui.js");
 
       // Ask the heavy UI to open its expanded floating window / modal
       setTimeout(() => {
-        try { window.dispatchEvent(new Event("lux:openSelfPBExpanded")); } catch (err) { globalThis.warnSwallow("./features/features/08-selfpb-peekaboo.js", err); }
+        try { luxBus.set('openSelfPBExpanded', true); } catch (err) { globalThis.warnSwallow("./features/features/08-selfpb-peekaboo.js", err); }
       }, 0);
     } catch (e) {
       console.error("[Lux] requestSelfPBExpanded failed:", e);
@@ -229,6 +231,3 @@ const module = await import("./selfpb/ui.js");
     buildShell();
   }
 })();
-
-
-

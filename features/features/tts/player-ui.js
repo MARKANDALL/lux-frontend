@@ -74,7 +74,7 @@ export async function mountTTSPlayer(hostEl) {
       e.preventDefault();
       e.stopPropagation();
       try {
-        window.dispatchEvent(new Event("lux:requestSelfPBExpanded"));
+luxBus.set('requestSelfPBExpanded', true);
 } catch (err) { globalThis.warnSwallow("features/features/tts/player-ui.js", err); }
     });
   }

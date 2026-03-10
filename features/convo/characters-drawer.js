@@ -3,6 +3,7 @@
 
 import { guardedListener, removeGuardedListener } from '../../app-core/lux-listeners.js';
 import { SCENARIOS } from "./scenarios.js";
+import { luxBus } from '../../app-core/lux-bus.js';
 
 let _drawer = null;
 let _body = null;
@@ -104,7 +105,7 @@ function ensureDom() {
       .forEach((c) => c.classList.remove("is-selected"));
     card.classList.add("is-selected");
     if (_onRoleSelect) _onRoleSelect(idx);
-    document.dispatchEvent(new CustomEvent("lux:pickerSummaryPulse"));
+    luxBus.set('pickerSummaryPulse', true);
   });
 
   // Hover-preview: tiny, subtle “Role • X” tag + slight pill bulge
@@ -115,11 +116,7 @@ function ensureDom() {
     _hoverRoleCard = card;
     const label = card.querySelector(".lux-charCard-label")?.textContent?.trim();
     if (label) {
-      document.dispatchEvent(
-        new CustomEvent("lux:pickerSummaryHover", {
-          detail: { label: `Role • ${label}` },
-        })
-      );
+      luxBus.set('pickerSummaryHover', { label: `Role • ${label}` });
     }
   });
 
@@ -129,7 +126,7 @@ function ensureDom() {
     const toCard = e.relatedTarget?.closest?.("[data-role-idx]");
     if (toCard) return;
     _hoverRoleCard = null;
-    document.dispatchEvent(new CustomEvent("lux:pickerSummaryHoverClear"));
+    luxBus.set('pickerSummaryHoverClear', true);
   });
 }
 

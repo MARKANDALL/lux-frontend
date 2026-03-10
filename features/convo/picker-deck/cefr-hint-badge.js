@@ -1,6 +1,7 @@
 // features/convo/picker-deck/cefr-hint-badge.js
 // ONE-LINE: CEFR hint badge that peeks/bobs on states 0–1, flies to the level chip on state 2 (max 2 flights per session), then subtle nudge only.
 
+import { luxBus } from '../../../app-core/lux-bus.js';
 import { getKnobs } from "../knobs-drawer.js";
 
 // ── Color map (mirrors knobs-drawer.js LEVEL_COLORS) ──
@@ -343,12 +344,11 @@ export function mountCefrHintBadge(textWrap, host) {
   }
 
   // ── Listen for knobs changes (level might change while badge is mounted) ──
-  function onKnobsEvt() { paintBadge(); }
-  window.addEventListener("lux:knobs", onKnobsEvt);
+const unsubKnobs = luxBus.on('knobs', () => paintBadge());
 
   const origDestroy = destroy;
   const wrappedDestroy = () => {
-    window.removeEventListener("lux:knobs", onKnobsEvt);
+    unsubKnobs();
     origDestroy();
   };
 

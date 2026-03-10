@@ -1,6 +1,8 @@
 // features/features/selfpb/dom.js
 // Builds the Self Playback UI DOM (mini + expanded floating window) and wires its interactions.
 
+import { luxBus } from '../../../app-core/lux-bus.js';
+
 export function buildUI() {
   const host = document.createElement("div");
   host.id = "selfpb-lite";
@@ -218,7 +220,7 @@ export function buildUI() {
 
     // ✅ Karaoke refresh hook
     try {
-      window.dispatchEvent(new CustomEvent("lux:selfpbExpandedOpen"));
+      luxBus.set('selfpbExpandedOpen', true);
     } catch (err) {
       globalThis.warnSwallow("features/features/selfpb/dom.js", err);
     }
@@ -256,7 +258,7 @@ export function buildUI() {
   floatClose?.addEventListener("click", closeExpanded);
 
   // ✅ Robust external trigger (used by TTS expand)
-  window.addEventListener("lux:openSelfPBExpanded", () => {
+  luxBus.on('openSelfPBExpanded', () => {
     try {
       openExpanded();
     } catch (err) {
@@ -354,4 +356,3 @@ export function buildUI() {
     karaokeCursor: host.querySelector("#spb-karaokeCursor"),
   };
 }
-

@@ -218,14 +218,14 @@ export function initKaraoke({ ui, api, audio, syncTime, syncScrub }) {
   });
 
   // refresh on expanded open
-  window.addEventListener("lux:selfpbExpandedOpen", () => {
+  luxBus.on('selfpbExpandedOpen', () => {
     const words = getActiveTimings(window.LuxLastWordTimings || []);
     renderKaraoke(words);
   });
 
   // refresh when a new assessment comes in (even if expanded is already open)
-  window.addEventListener("lux:lastAssessment", (e) => {
-    const words = e?.detail?.timings || window.LuxLastWordTimings || [];
+  luxBus.on('lastAssessment', (val) => {
+    const words = val?.timings || window.LuxLastWordTimings || [];
     // Learner assessments should be the default karaoke source
     try {
       publishKaraoke("learner", Array.isArray(words) ? words : []);
@@ -235,7 +235,7 @@ export function initKaraoke({ ui, api, audio, syncTime, syncScrub }) {
   });
 
   // Refresh when TTS (or other sources) publish new karaoke timings
-  window.addEventListener("lux:karaokeRefresh", (e) => {
+  luxBus.on('karaokeRefresh', () => {
     const words = getActiveTimings(window.LuxLastWordTimings || []);
     if (isExpandedOpen()) renderKaraoke(words);
   });

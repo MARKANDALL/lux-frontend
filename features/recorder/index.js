@@ -18,6 +18,7 @@ import { showPrettyResults } from "../results/index.js";
 import { markPartCompleted } from "../passages/index.js";
 import { bringInputToTop } from "../../helpers/index.js";
 import { promptUserForAI, mountAICoachAlwaysOn } from "../../ui/ui-ai-ai-logic.js";
+import { luxBus } from '../../app-core/lux-bus.js';
 
 import { mountAudioModeSwitch } from "./audio-mode-switch.js";
 import { getAudioMode, initAudioModeDataset } from "./audio-mode-core.js";
@@ -155,9 +156,7 @@ async function handleRecordingComplete(audioBlob) {
       window.LuxLastAzureResult = result;
       window.LuxLastWordTimings = timings;
 
-      window.dispatchEvent(
-        new CustomEvent("lux:lastAssessment", { detail: { result, timings } })
-      );
+      luxBus.set('lastAssessment', { result, timings });
 } catch (err) { globalThis.warnSwallow("features/recorder/index.js", err); }
 
     // Guardrail 2: Bad Score / No Speech Detected?
@@ -293,6 +292,3 @@ export function initLuxRecorder() {
   }
 }
 export const wireRecordingButtons = initLuxRecorder;
-
-
-

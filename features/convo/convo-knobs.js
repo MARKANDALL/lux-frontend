@@ -1,5 +1,7 @@
 // features/convo/convo-knobs.js
 
+import { luxBus } from '../../app-core/lux-bus.js';
+
 const KNOBS_KEY = "lux_knobs_v3";  // v3: mood→tone, expanded options
 const KNOBS_DEFAULTS = { level: "B1", tone: "neutral", length: "medium" };
 
@@ -18,7 +20,7 @@ function saveKnobs(knobs) {
   try {
     localStorage.setItem(KNOBS_KEY, JSON.stringify(knobs));
     // Fire unified event so all listeners (chip drawer, summaries) stay in sync
-    window.dispatchEvent(new CustomEvent("lux:knobs", { detail: knobs }));
+    luxBus.set('knobs', knobs);
 } catch (err) { globalThis.warnSwallow("features/convo/convo-knobs.js", err); }
 }
 

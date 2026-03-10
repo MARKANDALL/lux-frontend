@@ -1,5 +1,6 @@
 // features/convo/knobs-drawer.js
 import { guardedListener, removeGuardedListener } from '../../app-core/lux-listeners.js';
+import { luxBus } from '../../app-core/lux-bus.js';
 
 const KNOBS_KEY = "lux_knobs_v3";
 const DEFAULTS = { level: "B1", tone: "neutral", length: "medium" };
@@ -8,11 +9,11 @@ function read() {
   try { const r = localStorage.getItem(KNOBS_KEY); return r ? { ...DEFAULTS, ...JSON.parse(r) } : { ...DEFAULTS }; }
   catch { return { ...DEFAULTS }; }
 }
-function write(n) { localStorage.setItem(KNOBS_KEY, JSON.stringify(n)); window.dispatchEvent(new CustomEvent("lux:knobs", { detail: n })); }
+function write(n) { localStorage.setItem(KNOBS_KEY, JSON.stringify(n)); luxBus.set('knobs', n); }
 
 export function getKnobs() { return read(); }
 export function setKnobs(p) { const n = { ...read(), ...p }; write(n); return n; }
-export function onKnobsChange(fn) { const h = (e) => fn(e.detail || read()); window.addEventListener("lux:knobs", h); return () => window.removeEventListener("lux:knobs", h); }
+export function onKnobsChange(fn) { return luxBus.on('knobs', (val) => fn(val || read())); }
 export function formatKnobsSummary(k) { const c = s => s.charAt(0).toUpperCase()+s.slice(1); return `Level: ${String(k.level||"B1").toUpperCase()} · Tone: ${c(k.tone||"neutral")} · Length: ${c(k.length||"medium")}`; }
 
 const TONE_EMOJI = {neutral:"😐",formal:"👔",friendly:"😊",enthusiastic:"🤩",encouraging:"💪",playful:"😜",flirty:"😏",sarcastic:"🙄",tired:"😴",distracted:"📱",cold:"🧊",blunt:"🔨",impatient:"⏱️",irritable:"😤",angry:"🔥",emotional:"🥺"};

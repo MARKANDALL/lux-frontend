@@ -3,6 +3,8 @@
 
 import { getKnobsDrawerInstance, onKnobsChange, peekKnobsDrawer, unpeekKnobsDrawer } from "./knobs-drawer.js";
 
+import { luxBus } from '../../app-core/lux-bus.js';
+
 export function wireConvoKnobsUI({
   state,
   setKnobs,
@@ -112,13 +114,13 @@ export function wireConvoKnobsUI({
   bindHover(lengthSel.sel, () => `Length • ${lengthSel.sel.value}`);
 
   // Allow other modules (characters drawer, etc.) to drive the same subtle preview/pulse
-  document.addEventListener("lux:pickerSummaryHover", (e) => {
-    setHoverLabel(e?.detail?.label || "");
+  luxBus.on('pickerSummaryHover', (val) => {
+    setHoverLabel(val?.label || "");
   });
-  document.addEventListener("lux:pickerSummaryHoverClear", () => {
+  luxBus.on('pickerSummaryHoverClear', () => {
     clearHoverLabel();
   });
-  document.addEventListener("lux:pickerSummaryPulse", () => {
+  luxBus.on('pickerSummaryPulse', () => {
     pulseSummary();
   });
 
