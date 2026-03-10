@@ -1,6 +1,8 @@
 // features/convo/picker-deck/render-deck.js
 // ONE-LINE: Orchestrates deck rendering (active/preview cards + thumbs + hydration + scroller) and returns a renderDeck() function.
 
+import { luxBus } from '../../../app-core/lux-bus.js';
+
 export function makeRenderDeck({
   list,
   state,
@@ -38,10 +40,10 @@ export function makeRenderDeck({
       state,
       el,
       scenarioThumbUrl,
-      onPickIndex: (i) => {
+    onPickIndex: (i) => {
         state.scenarioIdx = i;
         renderDeck();
-        window.dispatchEvent(new Event("lux:scenarioChanged"));
+        luxBus.set('scenario', { idx: state.scenarioIdx });
       },
     });
 

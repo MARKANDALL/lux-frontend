@@ -4,6 +4,7 @@
 import { wirePickerDeck } from "./picker-deck.js";
 import { openCharsDrawer, closeCharsDrawer, peekCharsDrawer, unpeekCharsDrawer } from "./characters-drawer.js";
 import { getKnobsDrawerInstance, onKnobsChange, peekKnobsDrawer, unpeekKnobsDrawer } from "./knobs-drawer.js";
+import { luxBus } from '../../app-core/lux-bus.js';
 
 const PICKER_BAG_KEY = "lux_convo_picker_bag_v1";
 const PICKER_LAST_KEY = "lux_convo_picker_last_idx_v1";
@@ -121,9 +122,9 @@ export function initConvoPickerSystem({
 
   function randomizeDefaultSelectionAndRender() {
     if (!listLen) return;
-state.scenarioIdx = pickNextRandomScenarioIdx(listLen);
+    state.scenarioIdx = pickNextRandomScenarioIdx(listLen);
     renderDeck();
-    window.dispatchEvent(new Event("lux:scenarioChanged"));
+    luxBus.set('scenario', { idx: state.scenarioIdx });
   }
 
   // boot (randomize once so the deck doesn't always start on Coffee)

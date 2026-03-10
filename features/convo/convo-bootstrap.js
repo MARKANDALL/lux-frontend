@@ -38,6 +38,7 @@ import { createBeginScenario, initConvoPickerSystem } from "./convo-picker-syste
 import { createSetKnobs } from "./convo-knobs-system.js";
 import { openCharsDrawer, closeCharsDrawer, peekCharsDrawer, unpeekCharsDrawer, isCharsDrawerOpen, swapCharsDrawerContent } from "./characters-drawer.js";
 import { installConvoTtsContext } from "./convo-tts-context.js";
+import { luxBus } from '../../app-core/lux-bus.js';
 
 export function bootConvo() {
   const root = document.getElementById("convoApp");
@@ -203,8 +204,8 @@ export function bootConvo() {
   //   pickerCharsBtn.addEventListener("mouseleave", () => unpeekCharsDrawer());
   // }
 
-  // Reset role selection when scenario changes
-  window.addEventListener("lux:scenarioChanged", () => {
+  // Reset role selection when scenario changes (reads from bus, window mirror kept as fallback)
+  luxBus.on('scenario', () => {
     state.roleIdx = 0;
     if (isCharsDrawerOpen()) {
       swapCharsDrawerContent(state.scenarioIdx, state.roleIdx);

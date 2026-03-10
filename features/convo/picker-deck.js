@@ -6,6 +6,7 @@ import { makeThumbHydrator } from "./picker-deck/thumbs-hydrator.js";
 import { makeFillDeckCard } from "./picker-deck/deck-card.js";
 import { renderThumbs } from "./picker-deck/thumbs-render.js";
 import { makeRenderDeck } from "./picker-deck/render-deck.js";
+import { luxBus } from '../../app-core/lux-bus.js';
 
 export function wirePickerDeck({
   scenarios,
@@ -58,14 +59,14 @@ export function wirePickerDeck({
     if (!list.length) return;
     state.scenarioIdx = (state.scenarioIdx - 1 + list.length) % list.length;
     renderDeck();
-    window.dispatchEvent(new Event("lux:scenarioChanged"));
+    luxBus.set('scenario', { idx: state.scenarioIdx });
   });
 
   nextBtn?.addEventListener("click", () => {
     if (!list.length) return;
     state.scenarioIdx = (state.scenarioIdx + 1) % list.length;
     renderDeck();
-    window.dispatchEvent(new Event("lux:scenarioChanged"));
+    luxBus.set('scenario', { idx: state.scenarioIdx });
   });
 
   // Preview click behaves like Next (Edge feel)
@@ -73,7 +74,7 @@ export function wirePickerDeck({
     if (!list.length) return;
     state.scenarioIdx = (state.scenarioIdx + 1) % list.length;
     renderDeck();
-    window.dispatchEvent(new Event("lux:scenarioChanged"));
+    luxBus.set('scenario', { idx: state.scenarioIdx });
   });
 
   return { renderDeck };
