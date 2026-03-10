@@ -1,5 +1,7 @@
 // features/features/selfpb/download-latest.js
 
+import { luxBus } from '../../../app-core/lux-bus.js';
+
 export function initLatestDownload(ui) {
   // ✅ Download Latest Recording button wiring
   const dlBtn = ui.dlBtn;
@@ -56,13 +58,16 @@ export function initLatestDownload(ui) {
     });
   }
 
-  // Pull from global if it exists already
-  if (window.LuxLastRecordingBlob) {
+  // Pull from bus first, fall back to global
+  const cur = luxBus.get('lastRecording');
+  if (cur?.blob) {
+    setLatest(cur.blob, cur.meta || null);
+  } else if (window.LuxLastRecordingBlob) {
     setLatest(window.LuxLastRecordingBlob, window.LuxLastRecordingMeta || null);
   }
 
-  // Listen for new recordings
-  window.addEventListener("lux:lastRecording", (e) => {
-    setLatest(e?.detail?.blob, e?.detail?.meta || null);
+  // Listen for new recordings via bus
+  luxBus.on('lastRecording', (val) => {
+    setLatest(val?.blob, val?.meta || null);
   });
 }

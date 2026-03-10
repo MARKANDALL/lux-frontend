@@ -173,7 +173,7 @@ export async function mountTTSPlayer(hostEl) {
     });
   }
 
-  window.addEventListener("lux:ttsContextChanged", () => syncVoiceFromContext("ctx-event", caps));
+luxBus.on('ttsContext', () => syncVoiceFromContext("ctx-event", caps));
 
   // 5. Wire Inputs
   const updateSpeedOut = () => {

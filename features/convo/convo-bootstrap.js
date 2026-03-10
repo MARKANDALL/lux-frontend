@@ -192,7 +192,7 @@ export function bootConvo() {
           state.roleIdx = idx;
           renderAllSummaries();
           syncConvoPortraits();
-          try { window.dispatchEvent(new Event("lux:ttsContextChanged")); } catch (err) { globalThis.warnSwallow("./features/convo/convo-bootstrap.js", err); }
+luxBus.set('ttsContext', { changed: true });
         },
       });
     });
@@ -212,7 +212,7 @@ export function bootConvo() {
     }
     renderAllSummaries();
     syncConvoPortraits();
-    try { window.dispatchEvent(new Event("lux:ttsContextChanged")); } catch (err) { globalThis.warnSwallow("./features/convo/convo-bootstrap.js", err); }
+luxBus.set('ttsContext', { changed: true });
   });
 
   // --- Convo flow (extracted) ---

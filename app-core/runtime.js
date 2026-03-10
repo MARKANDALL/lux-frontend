@@ -48,15 +48,7 @@ export function setLastRecording(blob, meta) {
     window.LuxLastRecordingBlob = _lastRecordingBlob;
     window.LuxLastRecordingMeta = _lastRecordingMeta;
 
-    if (_lastRecordingBlob) {
-      try {
-        window.dispatchEvent(
-          new CustomEvent("lux:lastRecording", {
-            detail: { blob: _lastRecordingBlob, meta: _lastRecordingMeta },
-          })
-        );
-      } catch (err) { globalThis.warnSwallow("./app-core/runtime.js", err); }
-    }
+    
   }
 
   return { blob: _lastRecordingBlob, meta: _lastRecordingMeta };

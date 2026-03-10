@@ -108,7 +108,7 @@ export function installConvoTtsContext({ state, input, msgs, SCENARIOS }) {
       const t = norm(sel?.text);
       if (!t) return;
       this._selected = { role: sel?.role || "", text: t };
-      safeDispatch("lux:ttsContextChanged");
+luxBus.set('ttsContext', { changed: true });
     },
 
     getScenario() {
@@ -199,6 +199,6 @@ export function installConvoTtsContext({ state, input, msgs, SCENARIOS }) {
   }
 
   window.LuxTTSContext = ctx;
-  safeDispatch("lux:ttsContextChanged");
+luxBus.set('ttsContext', { changed: true });
   return ctx;
 }
