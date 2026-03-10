@@ -337,8 +337,3 @@ export function closeCharsDrawer() {
 
 /* ── Utility ── */
 
-function escHtml(s) {
-  const d = document.createElement("div");
-  d.textContent = s || "";
-  return d.innerHTML;
-}

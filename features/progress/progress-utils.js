@@ -3,14 +3,8 @@
 
 import { scoreClass as scoreClassCore } from "../../core/scoring/index.js";
 
-export function esc(s) {
-  return String(s ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
+import { escapeHtml } from "../../helpers/escape-html.js";
+export const esc = escapeHtml;
 
 export function getColorConfig(s) {
   const n = Number(s) || 0;

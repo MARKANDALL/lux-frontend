@@ -5,15 +5,8 @@ import { speechDetected } from "../../helpers/assess.js";
 // UPDATED IMPORT: Circular dependency resolved by using the new leaf module
 import { detailedPhonemeFeedback } from "./summary-feedback.js";
 import { scoreClass as scoreClassCore } from "../../core/scoring/index.js";
+import { escapeHtml as esc } from "../../helpers/escape-html.js";
 
-function esc(s) {
-  return String(s ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
 
 export function computeIssueSummary(words) {
   const issues = {};

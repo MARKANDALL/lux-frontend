@@ -51,11 +51,5 @@ export function titleFromPassageKey(pk = "") {
   return hit?.name || s || "Practice";
 }
 
-export function esc(s) {
-  return String(s ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
+import { escapeHtml } from "../../../helpers/escape-html.js";
+export const esc = escapeHtml;

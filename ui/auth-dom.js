@@ -9,14 +9,7 @@ import { supabase } from "../src/supabase.js";
 import { API_BASE, apiFetch } from "../api/util.js";
 import { setUID } from "../api/index.js";
 
-function escHtml(s) {
-  return String(s ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
+import { escapeHtml as escHtml } from "../helpers/escape-html.js";
 
 export function initAuthUI() {
   renderAuthButton();
