@@ -31,13 +31,6 @@ export function setAudioMode(mode) {
   // Ensure dataset is stamped (core already does this, but safe)
   initCoreDataset(savedCore);
 
-  // Broadcast in legacy lower-case (listeners may expect "pro"/"normal")
-  try {
-    window.dispatchEvent(
-      new CustomEvent("lux:audioModeChanged", { detail: { mode: wantLower } })
-    );
-} catch (err) { globalThis.warnSwallow("features/recorder/audio-mode.js", err); }
-
   return wantLower;
 }
 
@@ -97,5 +90,3 @@ export function getAudioConstraints() {
 export function buildAudioConstraints() {
   return getAudioConstraints();
 }
-
-

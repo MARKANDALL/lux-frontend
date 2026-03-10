@@ -132,9 +132,9 @@ export function initConvoPickerSystem({
 
   // Every time we ENTER the picker section, randomize again.
   // (Changed-only prevents re-randomizing if setMode("picker") is called redundantly.)
-  document.addEventListener("luxConvo:mode", (e) => {
-    const mode = e?.detail?.mode;
-    const changed = e?.detail?.changed;
+  luxBus.on('convoMode', (val) => {
+    const mode = val?.mode;
+    const changed = val?.changed;
     if (mode !== "picker" || !changed) return;
     randomizeDefaultSelectionAndRender();
   });

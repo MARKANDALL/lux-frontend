@@ -4,6 +4,8 @@
 import { closeCharsDrawer } from "./characters-drawer.js";
 import { getKnobsDrawerInstance } from "./knobs-drawer.js";
 
+import { luxBus } from '../../app-core/lux-bus.js';
+
 export function createConvoModeController({ root, state, setParallaxEnabled, setKnobs, render }) {
   const VALID_MODES = new Set(["intro", "picker", "chat"]);
 
@@ -42,7 +44,7 @@ export function createConvoModeController({ root, state, setParallaxEnabled, set
     }
 
     // Broadcast mode transitions (picker uses this to randomize the default card on entry).
-    try { document.dispatchEvent(new CustomEvent("luxConvo:mode", { detail: { mode, changed } })); } catch (err) { globalThis.warnSwallow("./features/convo/convo-modes.js", err); }
+    try { luxBus.set('convoMode', { mode, changed }); } catch (err) { globalThis.warnSwallow("./features/convo/convo-modes.js", err); }
 
     // Parallax ONLY on intro screen.
     setParallaxEnabled(mode === "intro");

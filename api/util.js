@@ -76,11 +76,17 @@ export function getAdminToken({
 // For JSON, pass body: JSON.stringify(payload) and it will set Content-Type automatically.
 // ─────────────────────────────────────────────────────────────────────────────
 export async function apiFetch(url, opts = {}) {
-  // Build-time env token takes priority, then storage, then nothing.
-  const envToken = (import.meta?.env?.VITE_ADMIN_TOKEN || "").toString().trim();
-  const token = envToken || getAdminToken({ promptIfMissing: false });
+  const {
+    headers: callerHeaders,
+    body,
+    promptIfMissing = false,
+    promptLabel,
+    ...rest
+  } = opts;
 
-  const { headers: callerHeaders, body, ...rest } = opts;
+  // Build-time env token takes priority, then storage, then optionally prompt.
+  const envToken = (import.meta?.env?.VITE_ADMIN_TOKEN || "").toString().trim();
+  const token = envToken || getAdminToken({ promptIfMissing, promptLabel });
 
   // Auto Content-Type for JSON strings; leave FormData alone (browser handles it).
   const contentType =
