@@ -1,15 +1,14 @@
 // api/attempts.js
 // UPDATED: Added updateAttempt() to save AI feedback
 
-import { API_BASE, dbg, jsonOrThrow, getAdminToken } from "./util.js";
+import { API_BASE, dbg, apiFetch, getAdminToken } from "./util.js";
 
 const ATTEMPT_URL = `${API_BASE}/api/attempt`;
 const HISTORY_URL = `${API_BASE}/api/user-recent`;
-const UPDATE_URL  = `${API_BASE}/api/update-attempt`; // New!
-
-const ENV_ADMIN_TOKEN = (import.meta?.env?.VITE_ADMIN_TOKEN || "").toString().trim();
+const UPDATE_URL  = `${API_BASE}/api/update-attempt`;
 
 function getTokenForWrites() {
+  const ENV_ADMIN_TOKEN = (import.meta?.env?.VITE_ADMIN_TOKEN || "").toString().trim();
   return (
     ENV_ADMIN_TOKEN ||
     getAdminToken({
@@ -38,11 +37,7 @@ export async function saveAttempt({
   l1,
   sessionId,
   localTime,
-
-  // NEW (optional): allow callers to pass extra summary fields later
   summary,
-
-  // NEW (optional): gated raw Azure storage (only if you set true)
   storeRawAzure
 }) {
   const effectiveLocalTime = localTime || new Date().toISOString();
@@ -76,24 +71,16 @@ export async function saveAttempt({
     l1,
     sessionId,
     localTime: effectiveLocalTime,
-
-    // NEW: this is what enables Patch B’s merge on the backend
     summary: outSummary,
-
-    // NEW (optional): only send if explicitly enabled
     ...(storeRawAzure === true ? { storeRawAzure: true } : {})
   };
 
   dbg("POST", ATTEMPT_URL, { uid, passageKey, partIndex, l1 });
 
-  const resp = await fetch(ATTEMPT_URL, {
+  return apiFetch(ATTEMPT_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-
-  // We need to return the ID so we can update this record later!
-  return jsonOrThrow(resp);
 }
 
 export async function fetchHistory(uid) {
@@ -102,12 +89,9 @@ export async function fetchHistory(uid) {
   const url = `${HISTORY_URL}?uid=${encodeURIComponent(uid)}`;
   dbg("GET", url);
 
-  const resp = await fetch(url, {
+  const json = await apiFetch(url, {
     method: "GET",
-    headers: { "Content-Type": "application/json" }
   });
-
-  const json = await jsonOrThrow(resp);
   return json.rows || [];
 }
 
@@ -127,21 +111,14 @@ export async function updateAttempt(id, aiFeedbackData) {
 
   dbg("POST", UPDATE_URL, body);
 
-  const token = getTokenForWrites();
-
   try {
-    const resp = await fetch(UPDATE_URL, {
+    return await apiFetch(UPDATE_URL, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { "x-admin-token": token } : {}),
-      },
+      promptIfMissing: true,
+      promptLabel: "Admin Token required to save attempts",
       body: JSON.stringify(body),
     });
-    return jsonOrThrow(resp);
   } catch (err) {
     console.error("Failed to update attempt:", err);
-    // Don't throw, just log. It's not critical if saving feedback fails.
   }
 }
-
