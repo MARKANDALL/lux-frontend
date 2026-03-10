@@ -1,5 +1,5 @@
 // features/features/tts/player-core.js
-import { API_BASE, getAdminToken } from "../../../api/util.js";
+import { API_BASE, getAdminToken, apiFetch } from "../../../api/util.js";
 
 // Core: networking, constants, voice caps (no DOM writes)
 export const TTS_URL = `${API_BASE}/api/tts`;
@@ -29,11 +29,7 @@ export async function getVoiceCaps() {
     const token = getAdminToken({ promptIfMissing: false });
     if (!token) return {};
 
-    const res = await fetch(`${TTS_URL}?voices=1`, {
-      headers: { "x-admin-token": token },
-    });
-    if (!res.ok) return {};
-    const data = await res.json();
+    const data = await apiFetch(`${TTS_URL}?voices=1`);
     const out = {};
     for (const v of data.voices || []) {
       if (!String(v.ShortName).startsWith("en-US-")) continue;
@@ -74,31 +70,25 @@ export async function synthesize(payload) {
 
   const url = wantTimings ? `${TTS_URL}?timings=1` : TTS_URL;
 
-  const doFetch = (token) =>
-    fetch(url, {
+  const doFetch = () =>
+    apiFetch(url, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { "x-admin-token": token } : {}),
-      },
       body: JSON.stringify(cleanPayload),
+      promptIfMissing: true,
+      promptLabel: "Admin Token required for TTS",
+      responseType: "response",
     });
 
-  // Only prompt when the user actually tries to synthesize.
-  let token = getAdminToken({
-    promptIfMissing: true,
-    promptLabel: "Admin Token required for TTS",
-  });
-
-  let res = await doFetch(token);
+  let res = await doFetch();
 
   // If token was missing/expired/wrong, allow one reprompt + retry.
   if (res.status === 401) {
-    token = getAdminToken({
+    // Force a fresh prompt by updating the stored token
+    getAdminToken({
       promptIfMissing: true,
       promptLabel: "TTS token rejected (401). Paste a valid Admin Token",
     });
-    if (token) res = await doFetch(token);
+    res = await doFetch();
   }
 
   const hdr = (k) => res.headers.get(k) || "";

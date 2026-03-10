@@ -6,7 +6,7 @@
  * ============================================================================ */
 
 import { supabase } from "../src/supabase.js";
-import { API_BASE } from "../api/util.js";
+import { API_BASE, apiFetch } from "../api/util.js";
 import { setUID } from "../api/index.js";
 
 function escHtml(s) {
@@ -191,12 +191,10 @@ function handleAuthStateChange() {
 // 4. Migration API Call
 async function migrateHistory(guestUid, userUid) {
     try {
-        const res = await fetch(`${API_BASE}/api/migrate`, {
+        const data = await apiFetch("/api/migrate", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ guestUid, userUid })
+            body: JSON.stringify({ guestUid, userUid }),
         });
-        const data = await res.json();
         console.log("[Auth] Migration result:", data);
     } catch (e) {
         console.error("[Auth] Migration failed:", e);

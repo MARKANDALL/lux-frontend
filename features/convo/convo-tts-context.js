@@ -83,11 +83,6 @@ function lastMessageText(messages, role) {
   return "";
 }
 
-function safeDispatch(name) {
-  try {
-    window.dispatchEvent(new Event(name));
-  } catch (err) { globalThis.warnSwallow("./features/convo/convo-tts-context.js", err); }
-}
 
 export function installConvoTtsContext({ state, input, msgs, SCENARIOS }) {
   if (!state) return;

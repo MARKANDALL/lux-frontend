@@ -74,6 +74,12 @@ export function getAdminToken({
 //
 // For multipart FormData, do NOT pass Content-Type — the browser sets it.
 // For JSON, pass body: JSON.stringify(payload) and it will set Content-Type automatically.
+//
+// responseType (default "json"):
+//   "json" — parse via jsonOrThrow (existing behavior, all current callers)
+//   "blob" — return resp.blob() (for binary audio, images, etc.)
+//   "text" — return resp.text() (for plain-text or HTML responses)
+//   "response" — return the raw Response object (for custom handling)
 // ─────────────────────────────────────────────────────────────────────────────
 export async function apiFetch(url, opts = {}) {
   const {
@@ -81,6 +87,7 @@ export async function apiFetch(url, opts = {}) {
     body,
     promptIfMissing = false,
     promptLabel,
+    responseType = "json",
     ...rest
   } = opts;
 
@@ -99,5 +106,28 @@ export async function apiFetch(url, opts = {}) {
   };
 
   const resp = await fetch(url, { headers, body, ...rest });
+
+  if (responseType === "blob") {
+    if (!resp.ok) {
+      const err = new Error(`Request failed (${resp.status})`);
+      err.status = resp.status;
+      throw err;
+    }
+    return resp.blob();
+  }
+
+  if (responseType === "text") {
+    if (!resp.ok) {
+      const err = new Error(`Request failed (${resp.status})`);
+      err.status = resp.status;
+      throw err;
+    }
+    return resp.text();
+  }
+
+  if (responseType === "response") {
+    return resp;
+  }
+
   return jsonOrThrow(resp);
 }
