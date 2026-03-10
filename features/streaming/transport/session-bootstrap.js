@@ -1,4 +1,8 @@
+// features/streaming/transport/session-bootstrap.js
+// WHAT: Bootstraps the Streaming WebRTC session by reading the admin token, building session params, and posting the SDP offer to the realtime backend.
+
 import { API_BASE } from "../../../api/util.js";
+import { K_ADMIN_TOKEN } from '../../../app-core/lux-storage.js';
 
 function clampNumber(v, fallback, min, max) {
   const n = Number.parseFloat(v);
@@ -17,15 +21,15 @@ function getClientToken() {
   if (typeof window === "undefined") return "";
   
   // Try storage first
-  let t = sessionStorage.getItem("lux_admin_token") || localStorage.getItem("lux_admin_token");
+  let t = sessionStorage.getItem(K_ADMIN_TOKEN) || localStorage.getItem(K_ADMIN_TOKEN);
   
   // If missing, ASK the user and save it
   if (!t) {
     t = prompt("⚠️ Admin Token required for Streaming. Please paste it here:");
     if (t) {
       t = t.trim();
-      sessionStorage.setItem("lux_admin_token", t); // Save for this session
-      localStorage.setItem("lux_admin_token", t);   // Save forever
+      sessionStorage.setItem(K_ADMIN_TOKEN, t); // Save for this session
+      localStorage.setItem(K_ADMIN_TOKEN, t);   // Save forever
     }
   }
   return t || "";

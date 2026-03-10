@@ -2,7 +2,7 @@
 import { guardedListener, removeGuardedListener } from '../../app-core/lux-listeners.js';
 import { luxBus } from '../../app-core/lux-bus.js';
 
-const KNOBS_KEY = "lux_knobs_v3";
+import { K_CONVO_KNOBS as KNOBS_KEY } from '../../app-core/lux-storage.js';
 const DEFAULTS = { level: "B1", tone: "neutral", length: "medium" };
 
 function read() {

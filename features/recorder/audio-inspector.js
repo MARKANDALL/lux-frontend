@@ -3,6 +3,7 @@
 // Enable with:  ?audioDebug=1
 // or in console: localStorage.setItem("luxAudioInspector","1"); location.reload();
 
+import { K_AUDIO_MODE } from '../../app-core/lux-storage.js';
 const LS_KEY = "luxAudioInspector";
 
 function isEnabled() {
@@ -192,9 +193,9 @@ function ensurePanel() {
   });
 
   root.querySelector('[data-act="mode"]')?.addEventListener("click", () => {
-    const cur = (localStorage.getItem("luxAudioMode") || "normal").toLowerCase();
+    const cur = (localStorage.getItem(K_AUDIO_MODE) || "normal").toLowerCase();
     const next = cur === "pro" ? "normal" : "pro";
-    localStorage.setItem("luxAudioMode", next);
+    localStorage.setItem(K_AUDIO_MODE, next);
 
     // ✅ Reload so next getUserMedia uses new constraints
     location.reload();
@@ -238,7 +239,7 @@ function render() {
   const pre = root.querySelector("#luxAudioInspectorPre");
   if (!pre) return;
 
-  const mode = (localStorage.getItem("luxAudioMode") || "normal").toLowerCase() === "pro"
+  const mode = (localStorage.getItem(K_AUDIO_MODE) || "normal").toLowerCase() === "pro"
     ? "pro"
     : "normal";
 

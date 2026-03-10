@@ -2,7 +2,7 @@
 
 import { luxBus } from '../../app-core/lux-bus.js';
 
-const KNOBS_KEY = "lux_knobs_v3";  // v3: mood→tone, expanded options
+import { K_CONVO_KNOBS as KNOBS_KEY } from '../../app-core/lux-storage.js';
 const KNOBS_DEFAULTS = { level: "B1", tone: "neutral", length: "medium" };
 
 function loadKnobs() {

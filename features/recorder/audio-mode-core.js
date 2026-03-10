@@ -6,7 +6,7 @@ export const AUDIO_MODES = {
   PRO: "PRO",
 };
 
-const KEY = "luxAudioMode";
+import { K_AUDIO_MODE as KEY } from '../../app-core/lux-storage.js';
 
 /**
  * Convert "NORMAL"/"PRO" -> html dataset value: "normal"/"pro"

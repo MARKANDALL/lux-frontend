@@ -4,6 +4,8 @@
 import { setPassage, updatePartsInfoTip } from "../passages/index.js";
 import { ensureHarvardPassages } from "../../src/data/index.js";
 
+import { K_HARVARD_LAST } from '../../app-core/lux-storage.js';
+
 function pad2(n) {
   return String(n).padStart(2, "0");
 }
@@ -83,7 +85,7 @@ export function wireHarvardPicker() {
 
     if (num) num.value = String(n);
     try {
-      localStorage.setItem("LUX_HARVARD_LAST", String(n));
+localStorage.setItem(K_HARVARD_LAST, String(n));
 } catch (err) { globalThis.warnSwallow("features/harvard/index.js", err, "important"); }
 
     // ✅ Delegate actual loading to exported helper (keeps behavior consistent)
@@ -184,7 +186,7 @@ export function wireHarvardPicker() {
 
   // restore last used
   try {
-    const last = localStorage.getItem("LUX_HARVARD_LAST");
+const last = localStorage.getItem(K_HARVARD_LAST);
     if (last) num.value = String(clamp(parseInt(last, 10) || 1, 1, 72));
 } catch (err) { globalThis.warnSwallow("features/harvard/index.js", err, "important"); }
 

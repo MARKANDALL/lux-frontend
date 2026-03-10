@@ -1,4 +1,5 @@
 // features/harvard/modal-actions.js
+import { K_HARVARD_LAST, K_PASSAGES_LAST } from '../../app-core/lux-storage.js';
 
 export function ensurePhonemeOptions({
   focusSel,
@@ -86,7 +87,7 @@ export function selectHarvardList({
   practiceBtn.disabled = false;
 
   try {
-    localStorage.setItem("LUX_HARVARD_LAST", String(n));
+    localStorage.setItem(K_HARVARD_LAST, String(n));
 } catch (err) { globalThis.warnSwallow("features/harvard/modal-actions.js", err, "important"); }
 }
 
@@ -123,7 +124,7 @@ export function selectPassage({
   practiceBtn.disabled = false;
 
   try {
-    localStorage.setItem("LUX_PASSAGES_LAST", String(key));
+    localStorage.setItem(K_PASSAGES_LAST, String(key));
 } catch (err) { globalThis.warnSwallow("features/harvard/modal-actions.js", err, "important"); }
 }
 

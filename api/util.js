@@ -1,4 +1,6 @@
 // api/util.js
+import { K_ADMIN_TOKEN } from '../app-core/lux-storage.js';
+
 const PROD_API = "https://luxury-language-api.vercel.app";
 
 export const API_BASE = (() => {
@@ -40,7 +42,7 @@ export async function jsonOrThrow(resp) {
 }
 
 // Reuse the same admin token storage Streaming uses.
-// (Streaming saves to sessionStorage/localStorage key: "lux_admin_token")
+// (Streaming saves to sessionStorage/localStorage via K_ADMIN_TOKEN)
 export function getAdminToken({
   promptIfMissing = false,
   promptLabel = "Admin Token required.",
@@ -48,16 +50,16 @@ export function getAdminToken({
   if (typeof window === "undefined") return "";
 
   let t =
-    sessionStorage.getItem("lux_admin_token") ||
-    localStorage.getItem("lux_admin_token") ||
+    sessionStorage.getItem(K_ADMIN_TOKEN) ||
+    localStorage.getItem(K_ADMIN_TOKEN) ||
     "";
 
   if (!t && promptIfMissing) {
     t = prompt(`⚠️ ${promptLabel} Please paste it here:`) || "";
     t = t.trim();
     if (t) {
-      sessionStorage.setItem("lux_admin_token", t);
-      localStorage.setItem("lux_admin_token", t);
+      sessionStorage.setItem(K_ADMIN_TOKEN, t);
+      localStorage.setItem(K_ADMIN_TOKEN, t);
     }
   }
 

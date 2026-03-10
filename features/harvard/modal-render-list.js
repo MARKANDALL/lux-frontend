@@ -1,4 +1,5 @@
 // features/harvard/modal-render-list.js
+import { K_HARVARD_LAST, K_PASSAGES_LAST } from '../../app-core/lux-storage.js';
 // Renders the left list UI (Harvard / Passages) based on current modal state.
 // This is a surgical move-out of the big renderList() body from modal.js.
 
@@ -286,13 +287,13 @@ export async function renderHarvardModalList(ctx = {}) {
   // pre-select last used, but don't auto-practice
   if (isHarvard) {
     try {
-      const last = localStorage.getItem("LUX_HARVARD_LAST");
+      const last = localStorage.getItem(K_HARVARD_LAST);
       const n = last ? Number.parseInt(last, 10) : null;
       if (n && n >= 1 && n <= 72) setSelected(n);
 } catch (err) { globalThis.warnSwallow("features/harvard/modal-render-list.js", err, "important"); }
   } else {
     try {
-      const last = localStorage.getItem("LUX_PASSAGES_LAST");
+      const last = localStorage.getItem(K_PASSAGES_LAST);
       const key = last ? String(last) : "";
       if (key && data?.some?.((r) => String(r.key) === String(key)))
         setSelectedPassage(key);
