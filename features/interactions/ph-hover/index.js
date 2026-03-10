@@ -94,10 +94,10 @@ function hideTooltip(s = state) {
     for (const v of vids) {
       try {
         v.pause();
-      } catch (err) { globalThis.warnSwallow("./features/interactions/ph-hover/index.js", err); }
+      } catch (err) { globalThis.warnSwallow("features/interactions/ph-hover/index.js", err); }
       try {
         v.currentTime = 0;
-      } catch (err) { globalThis.warnSwallow("./features/interactions/ph-hover/index.js", err); }
+      } catch (err) { globalThis.warnSwallow("features/interactions/ph-hover/index.js", err); }
     }
   }
 

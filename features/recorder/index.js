@@ -228,7 +228,7 @@ async function saveToDatabase(result, text, lang) {
         if (window.refreshDashboard) {
           try {
             await window.refreshDashboard();
-          } catch (err) { globalThis.warnSwallow("./features/recorder/index.js", err); }
+          } catch (err) { globalThis.warnSwallow("features/recorder/index.js", err); }
         }
       }
     }

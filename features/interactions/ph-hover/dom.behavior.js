@@ -9,7 +9,7 @@ export function scheduleHide(state, hideTooltip) {
   state.hideTimeout = setTimeout(() => {
     try {
       hideTooltip?.();
-    } catch (err) { globalThis.warnSwallow("./features/interactions/ph-hover/dom.behavior.js", err); }
+    } catch (err) { globalThis.warnSwallow("features/interactions/ph-hover/dom.behavior.js", err); }
   }, 200);
 }
 
@@ -37,7 +37,7 @@ export function bindOutsideCloseOnce(state, hideTooltip) {
       // Otherwise close
       try {
         hideTooltip?.();
-      } catch (err) { globalThis.warnSwallow("./features/interactions/ph-hover/dom.behavior.js", err); }
+      } catch (err) { globalThis.warnSwallow("features/interactions/ph-hover/dom.behavior.js", err); }
     },
     { capture: true }
   );

@@ -122,7 +122,7 @@ export function createWordcloudDrawer({
         usedPos = 0;
         try {
           ctx.set({ timelinePos: 0 });
-        } catch (err) { globalThis.warnSwallow("./features/progress/wordcloud/drawing-orchestrator.js", err); }
+        } catch (err) { globalThis.warnSwallow("features/progress/wordcloud/drawing-orchestrator.js", err); }
 
         attemptsInRange = filterAttemptsByRange(allAttempts, range, win, 0);
 

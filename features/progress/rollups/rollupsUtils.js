@@ -45,7 +45,7 @@ function localDayKey(ts) {
   // "en-CA" gives YYYY-MM-DD in most browsers
   try {
     return d.toLocaleDateString("en-CA");
-  } catch (err) { globalThis.warnSwallow("./features/progress/rollups/rollupsUtils.js", err); }
+  } catch (err) { globalThis.warnSwallow("features/progress/rollups/rollupsUtils.js", err); }
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const da = String(d.getDate()).padStart(2, "0");

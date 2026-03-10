@@ -95,13 +95,13 @@ export function stopMic(state) {
   stopMeterOnly(state);
 
   if (state.mic.audioCtx) {
-    try { state.mic.audioCtx.close(); } catch (err) { globalThis.warnSwallow("./features/onboarding/onboarding-mic.js", err); }
+    try { state.mic.audioCtx.close(); } catch (err) { globalThis.warnSwallow("features/onboarding/onboarding-mic.js", err); }
   }
   state.mic.audioCtx = null;
   state.mic.analyser = null;
 
   if (state.mic.stream) {
-    try { state.mic.stream.getTracks().forEach((t) => t.stop()); } catch (err) { globalThis.warnSwallow("./features/onboarding/onboarding-mic.js", err); }
+    try { state.mic.stream.getTracks().forEach((t) => t.stop()); } catch (err) { globalThis.warnSwallow("features/onboarding/onboarding-mic.js", err); }
   }
   state.mic.stream = null;
   state.mic.ready = false;

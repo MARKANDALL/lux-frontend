@@ -217,7 +217,7 @@ const module = await import("./selfpb/ui.js");
 
       // Ask the heavy UI to open its expanded floating window / modal
       setTimeout(() => {
-        try { luxBus.set('openSelfPBExpanded', true); } catch (err) { globalThis.warnSwallow("./features/features/08-selfpb-peekaboo.js", err); }
+        try { luxBus.set('openSelfPBExpanded', true); } catch (err) { globalThis.warnSwallow("features/features/08-selfpb-peekaboo.js", err); }
       }, 0);
     } catch (e) {
       console.error("[Lux] requestSelfPBExpanded failed:", e);

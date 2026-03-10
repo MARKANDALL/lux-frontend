@@ -41,7 +41,7 @@ async function maybeMountSyllablesNow(words) {
   } catch (e) {
     try {
       console.warn("[render-core] syllable mount failed", e);
-    } catch (err) { globalThis.warnSwallow("./features/results/render-core.js", err); }
+    } catch (err) { globalThis.warnSwallow("features/results/render-core.js", err); }
   }
 }
 

@@ -149,7 +149,7 @@ export function createWordcloudContext() {
     // theme is stored separately (but state owns it)
     try {
       localStorage.setItem(THEME_KEY, state.theme);
-    } catch (err) { globalThis.warnSwallow("./features/progress/wordcloud/context.js", err); }
+    } catch (err) { globalThis.warnSwallow("features/progress/wordcloud/context.js", err); }
   }
 
   function syncUrl() {
@@ -199,7 +199,7 @@ export function createWordcloudContext() {
 
     try {
       localStorage.setItem(THEME_KEY, state.theme);
-    } catch (err) { globalThis.warnSwallow("./features/progress/wordcloud/context.js", err); }
+    } catch (err) { globalThis.warnSwallow("features/progress/wordcloud/context.js", err); }
   }
 
   function toggleTheme(dom) {

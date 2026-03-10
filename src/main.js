@@ -62,7 +62,7 @@ function applyMyWordsWarpPrefill() {
     url.searchParams.delete("mw");
     if (url.hash === "#mw") url.hash = "";
     window.history.replaceState({}, "", url.toString());
-  } catch (err) { globalThis.warnSwallow("./src/main.js", err); }
+  } catch (err) { globalThis.warnSwallow("src/main.js", err); }
 }
 
 // --- VISUALS: Typewriter Effect ---

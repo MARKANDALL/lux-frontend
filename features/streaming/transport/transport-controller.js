@@ -208,7 +208,7 @@ export function createTransportController({ store, route }) {
       if (typeof provider.updateSession === "function") {
         provider.updateSession(sessionParams || {});
       }
-    } catch (err) { globalThis.warnSwallow("./features/streaming/transport/transport-controller.js", err); }
+    } catch (err) { globalThis.warnSwallow("features/streaming/transport/transport-controller.js", err); }
   }
 
   return {

@@ -61,7 +61,7 @@ function startLevelMeter(stream, onMeter, bars = 10) {
 
     try {
       onMeter(levels);
-    } catch (err) { globalThis.warnSwallow("./features/recorder/media.js", err); }
+    } catch (err) { globalThis.warnSwallow("features/recorder/media.js", err); }
 
     rafId = requestAnimationFrame(tick);
   };
@@ -73,7 +73,7 @@ function startLevelMeter(stream, onMeter, bars = 10) {
     if (rafId) cancelAnimationFrame(rafId);
     try {
       ctx.close();
-    } catch (err) { globalThis.warnSwallow("./features/recorder/media.js", err); }
+    } catch (err) { globalThis.warnSwallow("features/recorder/media.js", err); }
   };
 }
 

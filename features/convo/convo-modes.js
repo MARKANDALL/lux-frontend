@@ -20,7 +20,7 @@ export function createConvoModeController({ root, state, setParallaxEnabled, set
       const st = { luxConvo: 1, mode };
       if (push) history.pushState(st, "", url);
       else history.replaceState(st, "", url);
-    } catch (err) { globalThis.warnSwallow("./features/convo/convo-modes.js", err); }
+    } catch (err) { globalThis.warnSwallow("features/convo/convo-modes.js", err); }
   }
 
   function setMode(mode, opts = {}) {
@@ -34,17 +34,17 @@ export function createConvoModeController({ root, state, setParallaxEnabled, set
 
     // Close both drawers when leaving the picker page
     if (changed && mode !== "picker") {
-      try { closeCharsDrawer(); } catch (err) { globalThis.warnSwallow("./features/convo/convo-modes.js", err); }
+      try { closeCharsDrawer(); } catch (err) { globalThis.warnSwallow("features/convo/convo-modes.js", err); }
       try {
         const knobsEl = document.getElementById("luxKnobsDrawer");
         if (knobsEl && knobsEl.dataset.state !== "closed") {
           getKnobsDrawerInstance().close();
         }
-      } catch (err) { globalThis.warnSwallow("./features/convo/convo-modes.js", err); }
+      } catch (err) { globalThis.warnSwallow("features/convo/convo-modes.js", err); }
     }
 
     // Broadcast mode transitions (picker uses this to randomize the default card on entry).
-    try { luxBus.set('convoMode', { mode, changed }); } catch (err) { globalThis.warnSwallow("./features/convo/convo-modes.js", err); }
+    try { luxBus.set('convoMode', { mode, changed }); } catch (err) { globalThis.warnSwallow("features/convo/convo-modes.js", err); }
 
     // Parallax ONLY on intro screen.
     setParallaxEnabled(mode === "intro");

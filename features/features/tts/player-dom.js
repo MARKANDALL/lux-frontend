@@ -17,7 +17,7 @@ export function getCurrentText() {
       const t = String(ctx.getText({ mode }) || "").trim();
       if (t) return t;
     }
-  } catch (err) { globalThis.warnSwallow("./features/features/tts/player-dom.js", err); }
+  } catch (err) { globalThis.warnSwallow("features/features/tts/player-dom.js", err); }
 
   const el =
     document.querySelector("#referenceText") ||

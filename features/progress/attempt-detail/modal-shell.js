@@ -42,19 +42,19 @@ export function createAttemptDetailModalShell() {
   function close() {
     if (!mounted) {
       // Still safe to remove if someone calls close early
-      try { modal.remove(); } catch (err) { globalThis.warnSwallow("./features/progress/attempt-detail/modal-shell.js", err); }
+      try { modal.remove(); } catch (err) { globalThis.warnSwallow("features/progress/attempt-detail/modal-shell.js", err); }
       return;
     }
 
     mounted = false;
-    try { modal.remove(); } catch (err) { globalThis.warnSwallow("./features/progress/attempt-detail/modal-shell.js", err); }
+    try { modal.remove(); } catch (err) { globalThis.warnSwallow("features/progress/attempt-detail/modal-shell.js", err); }
 
     document.removeEventListener("keydown", onKey);
     modal.removeEventListener("click", onBackdrop);
 
     try {
       unlockBodyScroll();
-    } catch (err) { globalThis.warnSwallow("./features/progress/attempt-detail/modal-shell.js", err); }
+    } catch (err) { globalThis.warnSwallow("features/progress/attempt-detail/modal-shell.js", err); }
   }
 
   closeBtn.onclick = close;
@@ -70,7 +70,7 @@ export function createAttemptDetailModalShell() {
 
     try {
       lockBodyScroll();
-    } catch (err) { globalThis.warnSwallow("./features/progress/attempt-detail/modal-shell.js", err); }
+    } catch (err) { globalThis.warnSwallow("features/progress/attempt-detail/modal-shell.js", err); }
 
     document.addEventListener("keydown", onKey);
     modal.addEventListener("click", onBackdrop);

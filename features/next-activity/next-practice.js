@@ -119,7 +119,7 @@ export async function buildNextPracticePlanFromModel(model) {
 export function saveNextPracticePlan(plan) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(plan || null));
-  } catch (err) { globalThis.warnSwallow("./features/next-activity/next-practice.js", err); }
+  } catch (err) { globalThis.warnSwallow("features/next-activity/next-practice.js", err); }
 }
 
 export function consumeNextPracticePlan() {

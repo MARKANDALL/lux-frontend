@@ -19,7 +19,7 @@ export function computeConfidence(list, sid) {
         // Use en-CA if available (YYYY-MM-DD), otherwise manual.
         try {
           return d.toLocaleDateString("en-CA");
-        } catch (err) { globalThis.warnSwallow("./features/progress/attempt-detail/derive.js", err); }
+        } catch (err) { globalThis.warnSwallow("features/progress/attempt-detail/derive.js", err); }
 
         const y = d.getFullYear();
         const m = String(d.getMonth() + 1).padStart(2, "0");

@@ -25,12 +25,12 @@ async function ensureSyllablesMounted(table) {
         "[score-collapse] syllables module loaded but mountSyllablesForTable missing",
         { keys: Object.keys(mod || {}) }
       );
-    } catch (err) { globalThis.warnSwallow("./features/interactions/score-collapse.js", err); }
+    } catch (err) { globalThis.warnSwallow("features/interactions/score-collapse.js", err); }
   } catch (e) {
     try {
       console.warn("[score-collapse] syllable mount failed", e);
       console.warn("[score-collapse] import path was: ../results/syllables.js");
-    } catch (err) { globalThis.warnSwallow("./features/interactions/score-collapse.js", err); }
+    } catch (err) { globalThis.warnSwallow("features/interactions/score-collapse.js", err); }
   }
 }
 

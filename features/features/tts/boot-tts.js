@@ -144,7 +144,7 @@ export async function ensureTTSPlayerMounted() {
   if (_playerBooted) return true;
   _playerBooted = true;
 
-  try { ensureCSS(CSS_CORE, "tts.css", CSS_CORE_ID); } catch (err) { globalThis.warnSwallow("./features/features/tts/boot-tts.js", err); }
+  try { ensureCSS(CSS_CORE, "tts.css", CSS_CORE_ID); } catch (err) { globalThis.warnSwallow("features/features/tts/boot-tts.js", err); }
 
   try {
     const mod = await import("./player-ui.js");

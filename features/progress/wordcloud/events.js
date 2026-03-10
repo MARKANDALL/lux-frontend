@@ -122,7 +122,7 @@ export function bindWordcloudEvents(root, api) {
       api.clearQuery?.();
       try {
         search?.focus?.();
-      } catch (err) { globalThis.warnSwallow("./features/progress/wordcloud/events.js", err); }
+      } catch (err) { globalThis.warnSwallow("features/progress/wordcloud/events.js", err); }
     },
     { passive: true }
   );
