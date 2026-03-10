@@ -26,9 +26,6 @@ export function initAudioSink() {
       audio.src = url;
       audio.load();
 
-      // 1. Dispatch legacy event
-      document.dispatchEvent(new CustomEvent("lux:new-learner-audio", { detail: { blob, url } }));
-
       // 2. Pass Blob to WaveSurfer (Simple!)
       if (blob && loadLearnerBlob) {
           loadLearnerBlob(blob);
