@@ -15,7 +15,7 @@ function loadPrefs() {
 function savePrefs(prefs) {
   try {
     localStorage.setItem(KEY, JSON.stringify(prefs));
-  } catch (err) { globalThis.warnSwallow("features/streaming/setup/app.js", err); }
+  } catch (err) { globalThis.warnSwallow("features/streaming/setup/app.js", err, "important"); }
 }
 
 function pickRandomScenarioId() {

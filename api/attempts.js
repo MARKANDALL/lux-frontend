@@ -21,7 +21,7 @@ function getTokenForWrites() {
 // Helper: YYYY-MM-DD in the user's local day (best-effort)
 function localDayKey(ts) {
   const d = new Date(ts);
-  try { return d.toLocaleDateString("en-CA"); } catch (err) { globalThis.warnSwallow("api/attempts.js", err); }
+  try { return d.toLocaleDateString("en-CA"); } catch (err) { globalThis.warnSwallow("api/attempts.js", err, "important"); }
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const da = String(d.getDate()).padStart(2, "0");

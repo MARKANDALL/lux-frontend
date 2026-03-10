@@ -45,7 +45,7 @@ export function getAudioMode() {
     // Default for everyone (first run / invalid value): NORMAL
     try {
       localStorage.setItem(KEY, AUDIO_MODES.NORMAL);
-} catch (err) { globalThis.warnSwallow("features/recorder/audio-mode-core.js", err); }
+} catch (err) { globalThis.warnSwallow("features/recorder/audio-mode-core.js", err, "important"); }
 
     return AUDIO_MODES.NORMAL;
   } catch {

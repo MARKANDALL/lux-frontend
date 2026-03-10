@@ -8,7 +8,7 @@ const KEY = "lux.nextActivity.v1";
 export function saveNextActivityPlan(plan) {
   try {
     localStorage.setItem(KEY, JSON.stringify(plan));
-  } catch (err) { globalThis.warnSwallow("features/next-activity/next-activity.js", err); }
+  } catch (err) { globalThis.warnSwallow("features/next-activity/next-activity.js", err, "important"); }
 }
 
 export function consumeNextActivityPlan() {
@@ -21,7 +21,7 @@ export function consumeNextActivityPlan() {
   } catch (_) {
     try {
       localStorage.removeItem(KEY);
-    } catch (err) { globalThis.warnSwallow("features/next-activity/next-activity.js", err); }
+    } catch (err) { globalThis.warnSwallow("features/next-activity/next-activity.js", err, "important"); }
     return null;
   }
 }

@@ -119,7 +119,7 @@ export async function buildNextPracticePlanFromModel(model) {
 export function saveNextPracticePlan(plan) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(plan || null));
-  } catch (err) { globalThis.warnSwallow("features/next-activity/next-practice.js", err); }
+  } catch (err) { globalThis.warnSwallow("features/next-activity/next-practice.js", err, "important"); }
 }
 
 export function consumeNextPracticePlan() {
@@ -143,7 +143,7 @@ export async function applyNextPracticePlan(plan, opts = {}) {
     await loadHarvardList(plan.harvardN);
     try {
       document.getElementById("referenceText")?.focus();
-} catch (err) { globalThis.warnSwallow("features/next-activity/next-practice.js", err); }
+} catch (err) { globalThis.warnSwallow("features/next-activity/next-practice.js", err, "important"); }
     return;
   }
 
@@ -158,7 +158,7 @@ export async function applyNextPracticePlan(plan, opts = {}) {
     updatePartsInfoTip();
     try {
       document.getElementById("referenceText")?.focus();
-} catch (err) { globalThis.warnSwallow("features/next-activity/next-practice.js", err); }
+} catch (err) { globalThis.warnSwallow("features/next-activity/next-practice.js", err, "important"); }
   }
 }
 

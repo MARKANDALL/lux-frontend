@@ -62,7 +62,7 @@ function applyMyWordsWarpPrefill() {
     url.searchParams.delete("mw");
     if (url.hash === "#mw") url.hash = "";
     window.history.replaceState({}, "", url.toString());
-  } catch (err) { globalThis.warnSwallow("src/main.js", err); }
+  } catch (err) { globalThis.warnSwallow("src/main.js", err, "important"); }
 }
 
 // --- VISUALS: Typewriter Effect ---
@@ -331,7 +331,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let collapsed = false;
   try {
     collapsed = localStorage.getItem("bannerCollapsed") === "true";
-} catch (err) { globalThis.warnSwallow("src/main.js", err); }
+} catch (err) { globalThis.warnSwallow("src/main.js", err, "important"); }
   banner.classList.toggle("is-collapsed", collapsed);
 
   // If user previously collapsed it, we still want the handle visible immediately
@@ -341,7 +341,7 @@ document.addEventListener("DOMContentLoaded", () => {
     banner.classList.toggle("is-collapsed", !!next);
     try {
       localStorage.setItem("bannerCollapsed", next ? "true" : "false");
-} catch (err) { globalThis.warnSwallow("src/main.js", err); }
+} catch (err) { globalThis.warnSwallow("src/main.js", err, "important"); }
 
     requestAnimationFrame(() => {
       updateTopBannerLayout();

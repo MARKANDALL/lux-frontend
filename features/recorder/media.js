@@ -61,7 +61,7 @@ function startLevelMeter(stream, onMeter, bars = 10) {
 
     try {
       onMeter(levels);
-    } catch (err) { globalThis.warnSwallow("features/recorder/media.js", err); }
+    } catch (err) { globalThis.warnSwallow("features/recorder/media.js", err, "important"); }
 
     rafId = requestAnimationFrame(tick);
   };
@@ -73,7 +73,7 @@ function startLevelMeter(stream, onMeter, bars = 10) {
     if (rafId) cancelAnimationFrame(rafId);
     try {
       ctx.close();
-    } catch (err) { globalThis.warnSwallow("features/recorder/media.js", err); }
+    } catch (err) { globalThis.warnSwallow("features/recorder/media.js", err, "important"); }
   };
 }
 
@@ -93,7 +93,7 @@ export async function startMic(onStopCallback, { onMeter } = {}) {
           break;
         }
       }
-} catch (err) { globalThis.warnSwallow("features/recorder/media.js", err); }
+} catch (err) { globalThis.warnSwallow("features/recorder/media.js", err, "important"); }
     mediaRecorder = new MediaRecorder(stream, opts);
 
     // ✅ Inspector: note recorder right after creation

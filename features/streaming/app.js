@@ -34,7 +34,7 @@ export function mountStreamingApp({ rootId = "lux-stream-root" } = {}) {
       refs.healthDetails.style.display = "none";
     }
   } catch (err) {
-    globalThis.warnSwallow("features/streaming/app.js", err);
+    globalThis.warnSwallow("features/streaming/app.js", err, "important");
   }
 
   // Debug toggle (query param ?debug=1 or persisted localStorage)
@@ -66,7 +66,7 @@ export function mountStreamingApp({ rootId = "lux-stream-root" } = {}) {
     try {
       window.localStorage.setItem("LUX_STREAM_DEBUG", debugEnabled ? "1" : "0");
     } catch (err) {
-      globalThis.warnSwallow("features/streaming/app.js", err);
+      globalThis.warnSwallow("features/streaming/app.js", err, "important");
     }
 
     // keep store in sync (health.debug)
@@ -148,7 +148,7 @@ export function mountStreamingApp({ rootId = "lux-stream-root" } = {}) {
     try {
       await transport.disconnect();
     } catch (err) {
-      globalThis.warnSwallow("features/streaming/app.js", err);
+      globalThis.warnSwallow("features/streaming/app.js", err, "important");
     }
     await new Promise((r) => setTimeout(r, 150));
     try {
@@ -353,7 +353,7 @@ export function mountStreamingApp({ rootId = "lux-stream-root" } = {}) {
       try {
         transport.disconnect();
       } catch (err) {
-        globalThis.warnSwallow("features/streaming/app.js", err);
+        globalThis.warnSwallow("features/streaming/app.js", err, "important");
       }
     }
   });
@@ -363,17 +363,17 @@ export function mountStreamingApp({ rootId = "lux-stream-root" } = {}) {
     try {
       audio.dispose();
     } catch (err) {
-      globalThis.warnSwallow("features/streaming/app.js", err);
+      globalThis.warnSwallow("features/streaming/app.js", err, "important");
     }
     try {
       transport.disconnect();
     } catch (err) {
-      globalThis.warnSwallow("features/streaming/app.js", err);
+      globalThis.warnSwallow("features/streaming/app.js", err, "important");
     }
     try {
       stopTimer();
     } catch (err) {
-      globalThis.warnSwallow("features/streaming/app.js", err);
+      globalThis.warnSwallow("features/streaming/app.js", err, "important");
     }
   });
 }

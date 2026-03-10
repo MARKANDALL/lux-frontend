@@ -47,7 +47,7 @@ export function createPushToTalkMode({ onUtterance, onState, onError } = {}) {
 
   function stopRecording() {
     if (rec && rec.state !== "inactive") {
-      try { rec.stop(); } catch (err) { globalThis.warnSwallow("features/streaming/audio/mode.push-to-talk.js", err); }
+      try { rec.stop(); } catch (err) { globalThis.warnSwallow("features/streaming/audio/mode.push-to-talk.js", err, "important"); }
     }
     rec = null;
     onState?.("idle");
@@ -96,7 +96,7 @@ export function createPushToTalkMode({ onUtterance, onState, onError } = {}) {
   function dispose() {
     stop();
     if (stream) {
-      try { stream.getTracks().forEach((t) => t.stop()); } catch (err) { globalThis.warnSwallow("features/streaming/audio/mode.push-to-talk.js", err); }
+      try { stream.getTracks().forEach((t) => t.stop()); } catch (err) { globalThis.warnSwallow("features/streaming/audio/mode.push-to-talk.js", err, "important"); }
       stream = null;
     }
   }

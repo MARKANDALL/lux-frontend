@@ -45,7 +45,7 @@ export function createConvoTurn({
           ts: Date.now(),
           scope: "convo",
         });
-      } catch (err) { globalThis.warnSwallow("features/convo/convo-turn.js", err); }
+      } catch (err) { globalThis.warnSwallow("features/convo/convo-turn.js", err, "important"); }
 
       if (window.__attachLearnerBlob) window.__attachLearnerBlob(audioBlob);
     }
@@ -86,13 +86,13 @@ export function createConvoTurn({
     try {
       const d = document.getElementById("aiCoachDrawer");
       if (d && !d.open && state.turns.length === 1) d.open = true;
-    } catch (err) { globalThis.warnSwallow("features/convo/convo-turn.js", err); }
+    } catch (err) { globalThis.warnSwallow("features/convo/convo-turn.js", err, "important"); }
 
     // refresh Conversation Skills progress (if present)
     if (window.refreshConvoProgress) {
       try {
         await window.refreshConvoProgress();
-      } catch (err) { globalThis.warnSwallow("features/convo/convo-turn.js", err); }
+      } catch (err) { globalThis.warnSwallow("features/convo/convo-turn.js", err, "important"); }
     }
 
     // next AI response + suggestions

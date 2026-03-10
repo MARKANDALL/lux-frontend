@@ -50,7 +50,7 @@ export function ensureUID() {
   try {
     fromKey = localStorage.getItem(KEY) || "";
     fromLegacy = localStorage.getItem(LEGACY_KEY) || "";
-  } catch (err) { globalThis.warnSwallow("api/identity.js", err); }
+  } catch (err) { globalThis.warnSwallow("api/identity.js", err, "important"); }
 
   // Precedence (strongest → weakest):
   // 1) ?uid= (explicit override)
@@ -75,7 +75,7 @@ export function ensureUID() {
     localStorage.setItem(KEY, finalUID);
     // Keep legacy in sync temporarily (so any straggler code still sees the same UID).
     localStorage.setItem(LEGACY_KEY, finalUID);
-  } catch (err) { globalThis.warnSwallow("api/identity.js", err); }
+  } catch (err) { globalThis.warnSwallow("api/identity.js", err, "important"); }
 
   // Set attribute for CSS/DOM queries
   document.documentElement.setAttribute("data-uid", finalUID);
@@ -106,7 +106,7 @@ export function setUID(uid) {
   // Respect existing validation if the file already has a looksValid() helper.
   try {
     if (typeof looksValid === "function" && !looksValid(u)) return getUID();
-  } catch (err) { globalThis.warnSwallow("api/identity.js", err); }
+  } catch (err) { globalThis.warnSwallow("api/identity.js", err, "important"); }
 
   window.LUX_USER_ID = u;
 
@@ -119,11 +119,11 @@ export function setUID(uid) {
     // Fallback if those constants don't exist (harmless, and keeps behavior consistent).
     localStorage.setItem("lux.uid", u);
     localStorage.setItem("LUX_USER_ID", u);
-  } catch (err) { globalThis.warnSwallow("api/identity.js", err); }
+  } catch (err) { globalThis.warnSwallow("api/identity.js", err, "important"); }
 
   try {
     document.documentElement.setAttribute("data-uid", u);
-  } catch (err) { globalThis.warnSwallow("api/identity.js", err); }
+  } catch (err) { globalThis.warnSwallow("api/identity.js", err, "important"); }
 
   return u;
 }

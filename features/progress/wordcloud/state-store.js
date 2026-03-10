@@ -22,7 +22,7 @@ export function readState() {
 export function writeState(next) {
   try {
     localStorage.setItem(STATE_KEY, JSON.stringify(next || {}));
-  } catch (err) { globalThis.warnSwallow("features/progress/wordcloud/state-store.js", err); }
+  } catch (err) { globalThis.warnSwallow("features/progress/wordcloud/state-store.js", err, "important"); }
 }
 
 function readSaved(key) {
@@ -41,7 +41,7 @@ function readSaved(key) {
 function writeSaved(key, next) {
   try {
     localStorage.setItem(key, JSON.stringify(next));
-  } catch (err) { globalThis.warnSwallow("features/progress/wordcloud/state-store.js", err); }
+  } catch (err) { globalThis.warnSwallow("features/progress/wordcloud/state-store.js", err, "important"); }
 }
 
 export function savedListForMode(key, mode) {

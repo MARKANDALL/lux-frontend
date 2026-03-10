@@ -14,14 +14,14 @@ export async function getStreamingUID() {
     const uid = await getCanonicalUID();
     if (uid) return uid;
   } catch (err) {
-    globalThis.warnSwallow("features/streaming/auth-bridge.js", err);
+    globalThis.warnSwallow("features/streaming/auth-bridge.js", err, "important");
   }
 
   try {
     const guest = getUID();
     if (guest) return guest;
   } catch (err) {
-    globalThis.warnSwallow("features/streaming/auth-bridge.js", err);
+    globalThis.warnSwallow("features/streaming/auth-bridge.js", err, "important");
   }
 
   return null;

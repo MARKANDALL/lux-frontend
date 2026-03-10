@@ -22,7 +22,7 @@ function getLuxSessionInt(key) {
 function setLuxSessionInt(key, n) {
   try {
     sessionStorage.setItem(key, String(n));
-} catch (err) { globalThis.warnSwallow("ui/ui-ai-logics/attempt-policy.js", err); }
+} catch (err) { globalThis.warnSwallow("ui/ui-ai-logics/attempt-policy.js", err, "important"); }
 }
 
 function bumpPracticeAttemptCount() {
@@ -62,7 +62,7 @@ export function ensureAICoachAttemptPolicyBound() {
       try {
         if (sessionStorage.getItem(flagKey) === "1") return;
         sessionStorage.setItem(flagKey, "1");
-} catch (err) { globalThis.warnSwallow("ui/ui-ai-logics/attempt-policy.js", err); }
+} catch (err) { globalThis.warnSwallow("ui/ui-ai-logics/attempt-policy.js", err, "important"); }
 
       const cur = getLuxSessionInt(LUX_AICOACH_EARLY_CLOSE_KEY);
       const next = cur + 1;
@@ -72,7 +72,7 @@ export function ensureAICoachAttemptPolicyBound() {
       if (next >= 2) {
         try {
           localStorage.setItem(LUX_AICOACH_PREF_KEY, "0");
-} catch (err) { globalThis.warnSwallow("ui/ui-ai-logics/attempt-policy.js", err); }
+} catch (err) { globalThis.warnSwallow("ui/ui-ai-logics/attempt-policy.js", err, "important"); }
       }
       return;
     }
@@ -80,7 +80,7 @@ export function ensureAICoachAttemptPolicyBound() {
     // Attempt 3+: persist user preference.
     try {
       localStorage.setItem(LUX_AICOACH_PREF_KEY, d.open ? "1" : "0");
-} catch (err) { globalThis.warnSwallow("ui/ui-ai-logics/attempt-policy.js", err); }
+} catch (err) { globalThis.warnSwallow("ui/ui-ai-logics/attempt-policy.js", err, "important"); }
   });
 }
 
@@ -104,7 +104,7 @@ function applyAICoachAttemptOpenPolicy(attempt) {
   let pref = null;
   try {
     pref = localStorage.getItem(LUX_AICOACH_PREF_KEY);
-} catch (err) { globalThis.warnSwallow("ui/ui-ai-logics/attempt-policy.js", err); }
+} catch (err) { globalThis.warnSwallow("ui/ui-ai-logics/attempt-policy.js", err, "important"); }
 
   if (pref === "1") {
     openAICoachDrawer();

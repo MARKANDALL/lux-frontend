@@ -40,7 +40,7 @@ export function createMyWordsStore({ uid, onMutation } = {}) {
       try {
         fn(state);
       } catch (err) {
-        globalThis.warnSwallow("features/my-words/store.js", err);
+        globalThis.warnSwallow("features/my-words/store.js", err, "important");
       }
     });
   }
@@ -49,14 +49,14 @@ export function createMyWordsStore({ uid, onMutation } = {}) {
     try {
       localStorage.setItem(key, JSON.stringify(state.entries));
     } catch (err) {
-      globalThis.warnSwallow("features/my-words/store.js", err);
+      globalThis.warnSwallow("features/my-words/store.js", err, "important");
     }
   }
 
   function persistOpen() {
     try {
       localStorage.setItem(openKey, state.open ? "1" : "0");
-    } catch (err) { globalThis.warnSwallow("features/my-words/store.js", err); }
+    } catch (err) { globalThis.warnSwallow("features/my-words/store.js", err, "important"); }
   }
 
   function load() {
@@ -65,19 +65,19 @@ export function createMyWordsStore({ uid, onMutation } = {}) {
       const arr = safeParse(raw, []);
       state.entries = Array.isArray(arr) ? arr : [];
     } catch (err) {
-      globalThis.warnSwallow("features/my-words/store.js", err);
+      globalThis.warnSwallow("features/my-words/store.js", err, "important");
     }
 
     try {
       const rawOpen = localStorage.getItem(openKey) || "0";
       state.open = rawOpen === "1";
-    } catch (err) { globalThis.warnSwallow("features/my-words/store.js", err); }
+    } catch (err) { globalThis.warnSwallow("features/my-words/store.js", err, "important"); }
   }
 
   function mut(payload) {
     try {
       onMutation?.(payload);
-    } catch (err) { globalThis.warnSwallow("features/my-words/store.js", err); }
+    } catch (err) { globalThis.warnSwallow("features/my-words/store.js", err, "important"); }
   }
 
   function getState() {
@@ -119,7 +119,7 @@ export function createMyWordsStore({ uid, onMutation } = {}) {
     try {
       state.entries = Array.isArray(entries) ? entries : [];
     } catch (err) {
-      globalThis.warnSwallow("features/my-words/store.js", err);
+      globalThis.warnSwallow("features/my-words/store.js", err, "important");
     }
     persist();
     emit();

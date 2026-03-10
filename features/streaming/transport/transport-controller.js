@@ -127,7 +127,7 @@ export function createTransportController({ store, route }) {
     try {
       await provider.disconnect();
     } catch (err) {
-      globalThis.warnSwallow("features/streaming/transport/transport-controller.js", err);
+      globalThis.warnSwallow("features/streaming/transport/transport-controller.js", err, "important");
     }
     setConnection({ status: "disconnected", error: null });
   }
@@ -183,7 +183,7 @@ export function createTransportController({ store, route }) {
         provider.setTurnTaking({ mode });
       }
     } catch (err) {
-      globalThis.warnSwallow("features/streaming/transport/transport-controller.js", err);
+      globalThis.warnSwallow("features/streaming/transport/transport-controller.js", err, "important");
     }
   }
 
@@ -191,7 +191,7 @@ export function createTransportController({ store, route }) {
     try {
       if (typeof provider.setDebug === "function") provider.setDebug(!!enabled);
     } catch (err) {
-      globalThis.warnSwallow("features/streaming/transport/transport-controller.js", err);
+      globalThis.warnSwallow("features/streaming/transport/transport-controller.js", err, "important");
     }
   }
 
@@ -208,7 +208,7 @@ export function createTransportController({ store, route }) {
       if (typeof provider.updateSession === "function") {
         provider.updateSession(sessionParams || {});
       }
-    } catch (err) { globalThis.warnSwallow("features/streaming/transport/transport-controller.js", err); }
+    } catch (err) { globalThis.warnSwallow("features/streaming/transport/transport-controller.js", err, "important"); }
   }
 
   return {
