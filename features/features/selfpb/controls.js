@@ -23,7 +23,7 @@ export function initControls({
         ? window.LuxLastWordTimings
         : luxBus.get('karaoke')?.timings || window.LuxKaraokeTimings || [];
       publishKaraoke("learner", timings);
-} catch (err) { globalThis.warnSwallow("features/features/selfpb/controls.js", err); }
+} catch (err) { globalThis.warnSwallow("features/features/selfpb/controls.js", err, "important"); }
   };
 
   const handlePlayAction = async (isRestart = false) => {

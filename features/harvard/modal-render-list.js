@@ -289,14 +289,14 @@ export async function renderHarvardModalList(ctx = {}) {
       const last = localStorage.getItem("LUX_HARVARD_LAST");
       const n = last ? Number.parseInt(last, 10) : null;
       if (n && n >= 1 && n <= 72) setSelected(n);
-} catch (err) { globalThis.warnSwallow("features/harvard/modal-render-list.js", err); }
+} catch (err) { globalThis.warnSwallow("features/harvard/modal-render-list.js", err, "important"); }
   } else {
     try {
       const last = localStorage.getItem("LUX_PASSAGES_LAST");
       const key = last ? String(last) : "";
       if (key && data?.some?.((r) => String(r.key) === String(key)))
         setSelectedPassage(key);
-} catch (err) { globalThis.warnSwallow("features/harvard/modal-render-list.js", err); }
+} catch (err) { globalThis.warnSwallow("features/harvard/modal-render-list.js", err, "important"); }
   }
 }
   

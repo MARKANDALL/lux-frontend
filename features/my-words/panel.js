@@ -83,13 +83,13 @@ export function mountMyWordsPanel({
   function focusComposer() {
     try {
       elTa?.focus();
-} catch (err) { globalThis.warnSwallow("features/my-words/panel.js", err); }
+} catch (err) { globalThis.warnSwallow("features/my-words/panel.js", err, "important"); }
   }
 
   function focusSearch() {
     try {
       elSearch?.focus();
-} catch (err) { globalThis.warnSwallow("features/my-words/panel.js", err); }
+} catch (err) { globalThis.warnSwallow("features/my-words/panel.js", err, "important"); }
   }
 
   bindMyWordsPanelEvents({

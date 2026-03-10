@@ -36,17 +36,17 @@ export function mountSelfPlaybackLite() {
     try {
       const prev = audioEl?.dataset?.luxBlobUrl;
       if (prev && String(prev).startsWith("blob:")) URL.revokeObjectURL(prev);
-    } catch (err) { globalThis.warnSwallow("features/features/selfpb/ui.js", err); }
+    } catch (err) { globalThis.warnSwallow("features/features/selfpb/ui.js", err, "important"); }
 
     try {
       const url = URL.createObjectURL(blob);
       audioEl.dataset.luxBlobUrl = url;
       audioEl.src = url;
-      try { audioEl.load?.(); } catch (err) { globalThis.warnSwallow("features/features/selfpb/ui.js", err); }
-    } catch (err) { globalThis.warnSwallow("features/features/selfpb/ui.js", err); }
+      try { audioEl.load?.(); } catch (err) { globalThis.warnSwallow("features/features/selfpb/ui.js", err, "important"); }
+    } catch (err) { globalThis.warnSwallow("features/features/selfpb/ui.js", err, "important"); }
 
     // Draw waveform from the blob as well
-    try { loadLearnerBlob(blob); } catch (err) { globalThis.warnSwallow("features/features/selfpb/ui.js", err); }
+    try { loadLearnerBlob(blob); } catch (err) { globalThis.warnSwallow("features/features/selfpb/ui.js", err, "important"); }
   }
 
   // Recorder will call this if present
@@ -57,7 +57,7 @@ export function mountSelfPlaybackLite() {
     if (window.LuxLastRecordingBlob) {
       attachLearnerBlob(window.LuxLastRecordingBlob, window.LuxLastRecordingMeta || null);
     }
-  } catch (err) { globalThis.warnSwallow("features/features/selfpb/ui.js", err); }
+  } catch (err) { globalThis.warnSwallow("features/features/selfpb/ui.js", err, "important"); }
 
   // Also listen for the event (belt + suspenders)
   if (!window.__luxSelfPBLastRecordingBound) {

@@ -27,7 +27,7 @@ export const resolveYTLink =
     try {
       if (typeof G.ytLink === "function") return G.ytLink(arg);
       if (typeof G.ytLink === "string") return G.ytLink;
-} catch (err) { globalThis.warnSwallow("features/results/deps.js", err); }
+} catch (err) { globalThis.warnSwallow("features/results/deps.js", err, "important"); }
     return null;
   });
 

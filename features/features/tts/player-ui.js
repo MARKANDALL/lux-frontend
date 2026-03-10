@@ -75,7 +75,7 @@ export async function mountTTSPlayer(hostEl) {
       e.stopPropagation();
       try {
 luxBus.set('requestSelfPBExpanded', true);
-} catch (err) { globalThis.warnSwallow("features/features/tts/player-ui.js", err); }
+} catch (err) { globalThis.warnSwallow("features/features/tts/player-ui.js", err, "important"); }
     });
   }
 
@@ -352,7 +352,7 @@ luxBus.on('ttsContext', () => syncVoiceFromContext("ctx-event", caps));
       try {
         await audio.play();
         setMainLabel(true);
-} catch (err) { globalThis.warnSwallow("features/features/tts/player-ui.js", err); }
+} catch (err) { globalThis.warnSwallow("features/features/tts/player-ui.js", err, "important"); }
     } else {
       await ensureAudioReadyAndPlay();
     }
@@ -374,7 +374,7 @@ luxBus.on('ttsContext', () => syncVoiceFromContext("ctx-event", caps));
           try {
             await audio.play();
             setMainLabel(true);
-} catch (err) { globalThis.warnSwallow("features/features/tts/player-ui.js", err); }
+} catch (err) { globalThis.warnSwallow("features/features/tts/player-ui.js", err, "important"); }
         }
       }
       clickPending = false;

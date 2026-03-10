@@ -24,7 +24,7 @@ function ensureCmuDict() {
       _CMU_DICT = {};
       try {
         console.warn("[syllables] CMU dict failed to load; keeping heuristic.", err);
-      } catch (err) { globalThis.warnSwallow("features/results/syllables/cmu-stress.js", err); }
+      } catch (err) { globalThis.warnSwallow("features/results/syllables/cmu-stress.js", err, "important"); }
       return _CMU_DICT;
     })
     .finally(() => {
@@ -47,7 +47,7 @@ function scheduleStressUpgrade() {
     _upgradeScheduled = false;
     try {
       upgradePendingStressStrips();
-    } catch (err) { globalThis.warnSwallow("features/results/syllables/cmu-stress.js", err); }
+    } catch (err) { globalThis.warnSwallow("features/results/syllables/cmu-stress.js", err, "important"); }
   });
 }
 

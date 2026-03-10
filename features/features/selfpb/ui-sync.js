@@ -27,7 +27,7 @@ export function makeUISync({ ui, api, audio, refAudio, st }) {
         ],
         { duration: 200 }
       );
-    } catch (err) { globalThis.warnSwallow("features/features/selfpb/ui-sync.js", err); }
+    } catch (err) { globalThis.warnSwallow("features/features/selfpb/ui-sync.js", err, "important"); }
 
     setTimeout(() => {
       toastEl.style.display = "none";

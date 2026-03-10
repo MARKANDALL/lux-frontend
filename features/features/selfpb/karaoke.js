@@ -229,7 +229,7 @@ export function initKaraoke({ ui, api, audio, syncTime, syncScrub }) {
     // Learner assessments should be the default karaoke source
     try {
       publishKaraoke("learner", Array.isArray(words) ? words : []);
-} catch (err) { globalThis.warnSwallow("features/features/selfpb/karaoke.js", err); }
+} catch (err) { globalThis.warnSwallow("features/features/selfpb/karaoke.js", err, "important"); }
 
     if (isExpandedOpen()) renderKaraoke(getActiveTimings(words));
   });

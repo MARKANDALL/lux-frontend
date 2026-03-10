@@ -98,7 +98,7 @@ function publishKaraoke(source, timings) {
       source: window.LuxKaraokeSource,
       timings: window.LuxKaraokeTimings,
     });
-} catch (err) { globalThis.warnSwallow("features/features/tts/player-ui/karaoke.js", err); }
+} catch (err) { globalThis.warnSwallow("features/features/tts/player-ui/karaoke.js", err, "important"); }
 }
 
 export { buildWordTimings, buildWordTimingsFromBoundaries, publishKaraoke };

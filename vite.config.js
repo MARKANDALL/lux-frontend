@@ -106,7 +106,7 @@ export default defineConfig(({ mode }) => {
                       `Tip: confirm backend is running on Target port.\n`
                   );
                 }
-              } catch (err) { globalThis.warnSwallow("vite.config.js", err); }
+              } catch (err) { globalThis.warnSwallow("vite.config.js", err, "important"); }
             });
 
             // Optional: log non-2xx from target (helps distinguish target 401/500 vs proxy failure)

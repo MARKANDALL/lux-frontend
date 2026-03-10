@@ -146,7 +146,7 @@ export function openDetailsModal(attempt, overallScore, dateStr, ctx = {}) {
     );
 
     initMetricScoreModals?.();
-} catch (err) { globalThis.warnSwallow("features/progress/attempt-detail-modal.js", err); }
+} catch (err) { globalThis.warnSwallow("features/progress/attempt-detail-modal.js", err, "important"); }
 
   // "Next conversation" (session-based): uses THIS session’s trouble list
   const nextBtn = header?.querySelector?.('[data-lux-generate-next="1"]');

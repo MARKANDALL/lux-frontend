@@ -77,7 +77,7 @@ export function mountMyWordsCornerLauncher({ onClick } = {}) {
     e.preventDefault();
     try {
       onClick?.(e);
-    } catch (err) { globalThis.warnSwallow("features/my-words/launcher.js", err); }
+    } catch (err) { globalThis.warnSwallow("features/my-words/launcher.js", err, "important"); }
   };
 
   btn.__luxMwHandler = handler;

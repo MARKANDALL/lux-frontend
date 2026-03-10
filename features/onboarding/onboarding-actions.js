@@ -49,7 +49,7 @@ export function trySamplePhrase() {
   }
 
   // Fallback: copy to clipboard
-  try { navigator.clipboard.writeText(sample); } catch (err) { globalThis.warnSwallow("features/onboarding/onboarding-actions.js", err); }
+  try { navigator.clipboard.writeText(sample); } catch (err) { globalThis.warnSwallow("features/onboarding/onboarding-actions.js", err, "important"); }
 }
 
 export function tryBrowseLessons() {

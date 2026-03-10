@@ -107,7 +107,7 @@ if (isConvo) {
     requestAnimationFrame(() => {
       try {
         drawer?.scrollIntoView({ behavior: "smooth", block: "end" });
-      } catch (err) { globalThis.warnSwallow("features/my-words/index.js", err); }
+      } catch (err) { globalThis.warnSwallow("features/my-words/index.js", err, "important"); }
     });
 
     // show loading feedback

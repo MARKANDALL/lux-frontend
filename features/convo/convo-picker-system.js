@@ -64,7 +64,7 @@ function pickNextRandomScenarioIdx(n) {
   try {
     localStorage.setItem(PICKER_BAG_KEY, JSON.stringify(bag));
     localStorage.setItem(PICKER_LAST_KEY, String(idx));
-  } catch (err) { globalThis.warnSwallow("features/convo/convo-picker-system.js", err); }
+  } catch (err) { globalThis.warnSwallow("features/convo/convo-picker-system.js", err, "important"); }
 
   return idx;
 }

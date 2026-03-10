@@ -72,10 +72,10 @@ function openMetricModal(metricKey, ctx) {
   function close() {
     try {
       unlockBodyScroll();
-} catch (err) { globalThis.warnSwallow("features/interactions/metric-modal/events.js", err); }
+} catch (err) { globalThis.warnSwallow("features/interactions/metric-modal/events.js", err, "important"); }
     try {
       modal.remove();
-} catch (err) { globalThis.warnSwallow("features/interactions/metric-modal/events.js", err); }
+} catch (err) { globalThis.warnSwallow("features/interactions/metric-modal/events.js", err, "important"); }
     document.removeEventListener("keydown", onKey);
   }
 
@@ -116,7 +116,7 @@ function openMetricModal(metricKey, ctx) {
 
   try {
     lockBodyScroll();
-} catch (err) { globalThis.warnSwallow("features/interactions/metric-modal/events.js", err); }
+} catch (err) { globalThis.warnSwallow("features/interactions/metric-modal/events.js", err, "important"); }
 }
 
 function shouldIgnoreClick(target) {
@@ -174,7 +174,7 @@ export function setMetricModalData(data, scopeEl = null) {
     try {
       scopeEl.dataset.luxMetricScope = "1";
       scopeEl.__luxMetricCtx = ctx;
-} catch (err) { globalThis.warnSwallow("features/interactions/metric-modal/events.js", err); }
+} catch (err) { globalThis.warnSwallow("features/interactions/metric-modal/events.js", err, "important"); }
     decorateTiles(scopeEl);
   } else {
     currentCtx = ctx;

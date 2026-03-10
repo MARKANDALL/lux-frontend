@@ -88,7 +88,7 @@ export function wireAttemptDetailChipExplainers(card, { phItems = [], wdItems = 
     panel.removeAttribute("hidden");
     try {
       panel.scrollIntoView({ block: "nearest" });
-    } catch (err) { globalThis.warnSwallow("features/progress/attempt-detail/chip-explainers.js", err); }
+    } catch (err) { globalThis.warnSwallow("features/progress/attempt-detail/chip-explainers.js", err, "important"); }
   }
 
   function bindChip(chip) {

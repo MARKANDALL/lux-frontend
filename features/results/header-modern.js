@@ -104,7 +104,7 @@ export function renderResultsHeaderModern(data) {
   } catch (err) {
     // If you have warnSwallow globally, keep this; otherwise swallow quietly.
     if (typeof globalThis.warnSwallow === "function") {
-      globalThis.warnSwallow("features/results/header-modern.js", err);
+      globalThis.warnSwallow("features/results/header-modern.js", err, "important");
     }
   }
 

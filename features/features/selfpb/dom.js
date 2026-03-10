@@ -150,7 +150,7 @@ export function buildUI() {
       const shellByClass = document.querySelector(".lux-tts-shell");
       if (shellByClass) shellByClass.classList.toggle("lux-tts-shell--empty", !!on);
     } catch (err) {
-      globalThis.warnSwallow("features/features/selfpb/dom.js", err);
+      globalThis.warnSwallow("features/features/selfpb/dom.js", err, "important");
     }
   };
 
@@ -159,7 +159,7 @@ export function buildUI() {
     try {
       document.documentElement.classList.toggle("lux-selfpb-expanded-open", !!on);
     } catch (err) {
-      globalThis.warnSwallow("features/features/selfpb/dom.js", err);
+      globalThis.warnSwallow("features/features/selfpb/dom.js", err, "important");
     }
   }
 
@@ -176,10 +176,10 @@ export function buildUI() {
     // Nudge WaveSurfer / layout-dependent renders after mount
     requestAnimationFrame(() => {
       try { window.dispatchEvent(new Event("resize")); } catch (err) {
-        globalThis.warnSwallow("features/features/selfpb/dom.js", err);
+        globalThis.warnSwallow("features/features/selfpb/dom.js", err, "important");
       }
       setTimeout(() => { try { window.dispatchEvent(new Event("resize")); } catch (err) {
-        globalThis.warnSwallow("features/features/selfpb/dom.js", err);
+        globalThis.warnSwallow("features/features/selfpb/dom.js", err, "important");
       } }, 120);
     });
 
@@ -190,7 +190,7 @@ export function buildUI() {
         await ttsBoot.ensureTTSPlayerMounted?.();
       }
     } catch (err) {
-      globalThis.warnSwallow("features/features/selfpb/dom.js", err);
+      globalThis.warnSwallow("features/features/selfpb/dom.js", err, "important");
     }
 
     // move TTS controls into expanded bottom-right mount
@@ -208,7 +208,7 @@ export function buildUI() {
         }
       }
     } catch (err) {
-      globalThis.warnSwallow("features/features/selfpb/dom.js", err);
+      globalThis.warnSwallow("features/features/selfpb/dom.js", err, "important");
     }
 
     // show placeholder in the TTS drawer while controls are moved out
@@ -222,7 +222,7 @@ export function buildUI() {
     try {
       luxBus.set('selfpbExpandedOpen', true);
     } catch (err) {
-      globalThis.warnSwallow("features/features/selfpb/dom.js", err);
+      globalThis.warnSwallow("features/features/selfpb/dom.js", err, "important");
     }
   }
 
@@ -252,7 +252,7 @@ export function buildUI() {
 
   expandBtn?.addEventListener("click", () => {
     try { openExpanded(); } catch (err) {
-      globalThis.warnSwallow("features/features/selfpb/dom.js", err);
+      globalThis.warnSwallow("features/features/selfpb/dom.js", err, "important");
     }
   });
   floatClose?.addEventListener("click", closeExpanded);
@@ -262,7 +262,7 @@ export function buildUI() {
     try {
       openExpanded();
     } catch (err) {
-      globalThis.warnSwallow("features/features/selfpb/dom.js", err);
+      globalThis.warnSwallow("features/features/selfpb/dom.js", err, "important");
     }
   });
 
