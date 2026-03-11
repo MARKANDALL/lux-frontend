@@ -59,6 +59,8 @@ export function mountCefrHintBadge(textWrap, host) {
   let flyEl = null;
   let flyAnim = null;
   let destroyed = false;
+  let lastLevel = currentLevel();
+  let levelChangedSinceFlight = false;
 
   function currentLevel() {
     try { return (getKnobs().level || "B1").toUpperCase(); }
@@ -328,7 +330,8 @@ export function mountCefrHintBadge(textWrap, host) {
     if (expandState === 0 || expandState === 1) {
       startPeek(expandState);
     } else if (expandState === 2) {
-      if (_sessionFlightCount < MAX_FLIGHTS) {
+      if (_sessionFlightCount < MAX_FLIGHTS || levelChangedSinceFlight) {
+        levelChangedSinceFlight = false;
         launchFlightWithRetry();
       } else {
         startNudge();
@@ -344,7 +347,16 @@ export function mountCefrHintBadge(textWrap, host) {
   }
 
   // ── Listen for knobs changes (level might change while badge is mounted) ──
-const unsubKnobs = luxBus.on('knobs', () => paintBadge());
+  const unsubKnobs = luxBus.on('knobs', (val) => {
+    const nextLevel = String(val?.level || currentLevel() || "B1").toUpperCase();
+
+    if (nextLevel !== lastLevel) {
+      lastLevel = nextLevel;
+      levelChangedSinceFlight = true;
+    }
+
+    paintBadge();
+  });
 
   const origDestroy = destroy;
   const wrappedDestroy = () => {
