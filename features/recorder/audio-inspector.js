@@ -1,10 +1,10 @@
 // features/recorder/audio-inspector.js
 // Tiny Audio Pipeline Inspector (Lux)
 // Enable with:  ?audioDebug=1
-// or in console: localStorage.setItem("luxAudioInspector","1"); location.reload();
+// or in console: localStorage.setItem("luxAudioInspector","1"); location.reload();  (key = K_AUDIO_INSPECTOR)
 
-import { K_AUDIO_MODE } from '../../app-core/lux-storage.js';
-const LS_KEY = "luxAudioInspector";
+import { K_AUDIO_MODE, K_AUDIO_INSPECTOR } from '../../app-core/lux-storage.js';
+const LS_KEY = K_AUDIO_INSPECTOR;
 
 function isEnabled() {
   try {

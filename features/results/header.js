@@ -4,6 +4,7 @@
    with legacy globals supported only as fallback.
 ============================================================================ */
 import { renderResultsHeaderModern } from "./header-modern.js";
+import { K_ACCORDION_SCORE, K_ACCORDION_WP } from "../../app-core/lux-storage.js";
 
 // Direct ES-module interaction boots (idempotent in their own modules)
 import { setupYGHover } from "../interactions/yg-hover.js";
@@ -45,7 +46,7 @@ export function ensureHeader(data) {
     if (scoreAcc && scoreAcc.dataset.luxPersistBound !== "1") {
       scoreAcc.dataset.luxPersistBound = "1";
 
-      const KEY = "lux:scoreAccordionOpen";
+      const KEY = K_ACCORDION_SCORE;
 
       // Apply saved state (default: open)
       try {
@@ -156,7 +157,7 @@ export function ensureHeader(data) {
   if (scoreAcc && scoreAcc.dataset.luxPersistBound !== "1") {
     scoreAcc.dataset.luxPersistBound = "1";
 
-    const KEY = "lux:scoreAccordionOpen";
+    const KEY = K_ACCORDION_SCORE;
 
     // Apply saved state (default: open)
     try {
@@ -230,7 +231,7 @@ export function wirePostDom(data) {
     const wpAcc = document.getElementById("luxWpAccordion");
     if (wpAcc && wpAcc.dataset.luxPersistBound !== "1") {
       wpAcc.dataset.luxPersistBound = "1";
-      const KEY = "lux:wpAccordionOpen";
+      const KEY = K_ACCORDION_WP;
 
       // Apply saved state (default behavior remains whatever markup says)
       try {
@@ -256,7 +257,7 @@ export function wirePostDom(data) {
     if (scoreAcc && scoreAcc.dataset.luxPersistBound !== "1") {
       scoreAcc.dataset.luxPersistBound = "1";
 
-      const KEY = "lux:scoreAccordionOpen";
+      const KEY = K_ACCORDION_SCORE;
 
       // Apply saved state (default: open)
       try {

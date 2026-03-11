@@ -1,6 +1,8 @@
 // features/onboarding/onboarding-steps.js
 
-export const SEEN_KEY = "LUX_ONBOARD_V1_SEEN";
+import { K_ONBOARD_SEEN } from '../../app-core/lux-storage.js';
+
+export const SEEN_KEY = K_ONBOARD_SEEN;
 
 export const STEPS = [
   {

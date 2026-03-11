@@ -1,4 +1,6 @@
 // helpers/dom.js
+import { K_UI_CLICK_HINTS_SEEN } from '../app-core/lux-storage.js';
+
 export function bringInputToTop(elOrSelector = "#referenceText", offset = 0) {
   const el =
     typeof elOrSelector === "string"
@@ -48,7 +50,7 @@ export function initUnderlineObserver(root = document) {
 }
 
 export function showClickHint(targetEl, msg, { delay = 1000 } = {}) {
-  if (!targetEl || localStorage.getItem("seenClickHints")) return;
+  if (!targetEl || localStorage.getItem(K_UI_CLICK_HINTS_SEEN)) return;
   const visibleMs = 7500,
     fadeMs = 400;
   setTimeout(() => targetEl.classList.add("pulse-once"), delay);
@@ -72,7 +74,7 @@ export function showClickHint(targetEl, msg, { delay = 1000 } = {}) {
     setTimeout(() => {
       hint.remove();
       targetEl.classList.remove("pulse-once");
-      localStorage.setItem("seenClickHints", "yes");
+      localStorage.setItem(K_UI_CLICK_HINTS_SEEN, "yes");
     }, fadeMs);
   }, delay + visibleMs);
 }

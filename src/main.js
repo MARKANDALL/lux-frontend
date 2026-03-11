@@ -3,6 +3,7 @@
 
 // ✅ Swallowed-error warning toggle (IMPORTANT-only by default in dev; OFF in prod)
 import "../ui/lux-warn.js";
+import { K_UI_BANNER_COLLAPSED } from '../app-core/lux-storage.js';
 
 import { wirePassageSelect, wireNextBtn } from "../features/passages/index.js";
 import { wireHarvardPicker } from "../features/harvard/index.js";
@@ -330,7 +331,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Load state
   let collapsed = false;
   try {
-    collapsed = localStorage.getItem("bannerCollapsed") === "true";
+    collapsed = localStorage.getItem(K_UI_BANNER_COLLAPSED) === "true";
 } catch (err) { globalThis.warnSwallow("src/main.js", err, "important"); }
   banner.classList.toggle("is-collapsed", collapsed);
 
@@ -340,7 +341,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const setCollapsed = (next) => {
     banner.classList.toggle("is-collapsed", !!next);
     try {
-      localStorage.setItem("bannerCollapsed", next ? "true" : "false");
+      localStorage.setItem(K_UI_BANNER_COLLAPSED, next ? "true" : "false");
 } catch (err) { globalThis.warnSwallow("src/main.js", err, "important"); }
 
     requestAnimationFrame(() => {

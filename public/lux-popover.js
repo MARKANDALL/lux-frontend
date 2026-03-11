@@ -1,5 +1,6 @@
 // lux-popover.js
 (() => {
+  // Mirrors K_IDENTITY_UID from app-core/lux-storage.js
   const KEY = "LUX_USER_ID";
   const uid = window.LUX_USER_ID || localStorage.getItem(KEY) || "";
 

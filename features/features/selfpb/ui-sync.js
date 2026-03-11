@@ -1,6 +1,8 @@
 // features/features/selfpb/ui-sync.js
 // UI syncing helpers for SelfPB (toast/warnings, state-to-UI updates, small orchestration).
 
+import { K_SELFPB_HINT_SEEN } from '../../../app-core/lux-storage.js';
+
 export function makeUISync({ ui, api, audio, refAudio, st }) {
   // --- Logic helpers ---
   const showToast = (msg, duration = 2000) => {
@@ -35,11 +37,11 @@ export function makeUISync({ ui, api, audio, refAudio, st }) {
   };
 
   const showLoopHint = () => {
-    if (localStorage.getItem("spb-hint-seen") !== "true") {
+    if (localStorage.getItem(K_SELFPB_HINT_SEEN) !== "true") {
       ui.loopTip.classList.add("visible");
       setTimeout(() => {
         ui.loopTip.classList.remove("visible");
-        localStorage.setItem("spb-hint-seen", "true");
+        localStorage.setItem(K_SELFPB_HINT_SEEN, "true");
       }, 4000);
     }
   };

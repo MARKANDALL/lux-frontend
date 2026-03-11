@@ -1,13 +1,15 @@
 // features/features/selfpb/core.js
 // Core: audio engine, AB loop, rate persistence, reference handling, public API
 
+import { K_SELFPB_RATE } from '../../../app-core/lux-storage.js';
+
 if (window.LuxSelfPB?.__mounted) {
   console.warn("[self-pb] already mounted, aborting second mount");
   throw new Error("self-pb double mount");
 }
 window.LuxSelfPB = Object.assign(window.LuxSelfPB || {}, { __mounted: true });
 
-const LS_RATE = "selfpb_rate_v1";
+const LS_RATE = "const LS_RATE = K_SELFPB_RATE;selfpb_rate_v1";
 const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
 const fmt = (t) => {
   if (!isFinite(t) || t < 0) t = 0;

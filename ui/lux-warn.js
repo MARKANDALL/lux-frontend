@@ -1,7 +1,9 @@
 // ui/lux-warn.js
 // Centralized swallowed-error warning control (ON / OFF / IMPORTANT-ONLY)
 
-const KEY = "LUX_WARN_SWALLOW_MODE"; // "on" | "off" | "important"
+import { K_WARN_MODE } from '../app-core/lux-storage.js';
+
+const KEY = K_WARN_MODE; // "on" | "off" | "important"
 
 function safeConsoleWarn(prefix, err) {
   try {
