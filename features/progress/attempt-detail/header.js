@@ -4,7 +4,7 @@
 // Builds the header element for Attempt Details modal (Session Report top area).
 
 import { esc, getColorConfig, mean } from "../progress-utils.js";
-import { fmtPctCefr } from "../../../core/scoring/index.js";
+import { fmtPct, cefrBand } from "../../../core/scoring/index.js";
 
 export function buildAttemptDetailHeader({
   title,
@@ -35,8 +35,23 @@ export function buildAttemptDetailHeader({
   const fmtRoundPct = (v) =>
     v == null || !Number.isFinite(+v) ? "—" : `${Math.round(+v)}%`;
 
-  const fmtRoundPctCefr = (v) =>
-    v == null || !Number.isFinite(+v) ? "—" : fmtPctCefr(Math.round(+v));
+  const renderOverallRing = (v, ringColor) => {
+    const pct = v == null || !Number.isFinite(+v) ? "—" : fmtPct(Math.round(+v));
+    const band = v == null || !Number.isFinite(+v) ? "" : (cefrBand(Math.round(+v)) || "");
+
+    return `
+      <div
+        class="lux-scoreRing lux-scoreRing--overall lux-scoreRing--coin"
+        style="--lux-score-ring:${ringColor};"
+        ${band ? `data-cefr="${band}"` : ""}
+      >
+        <span class="lux-scoreRingFlip">
+          <span class="lux-scoreRingFace lux-scoreRingFace--front">${pct}</span>
+          <span class="lux-scoreRingFace lux-scoreRingFace--back">${band || pct}</span>
+        </span>
+      </div>
+    `;
+  };
 
   // New: overall aggregate circle for the modal
   const overallAgg = Number.isFinite(+pronAvg)
@@ -110,9 +125,7 @@ export function buildAttemptDetailHeader({
     <div class="lux-scoreSummary lux-scoreSummary--pyramid" style="margin-bottom:14px;">
       <div class="lux-scoreMain">
         <div class="lux-scoreMainLabel">Overall</div>
-<div class="lux-scoreRing lux-scoreRing--overall" style="--lux-score-ring:${overallColor};">
-          ${fmtRoundPctCefr(overallAgg)}
-        </div>
+        ${renderOverallRing(overallAgg, overallColor)}
       </div>
 
       <div class="lux-scorePyramid">

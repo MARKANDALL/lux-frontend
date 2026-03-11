@@ -1,20 +1,22 @@
 /* =============================================================================
    FILE: features/results/header-modern.js
-   ONE-LINE: Builds the “Word & Phoneme chart” accordion markup (summary handle + chart body).
+   ONE-LINE: Builds the results header, overall score accordion, and Word & Phoneme chart shell.
 ============================================================================= */
 
 /* ============================================================================
    MODERN HEADER BUILDER
-   ---------------------------------------------------------------------------
+   ----------------------------------------------------------------------------
    - Fixed White Space Issue (Bottom of results).
    - Unified Phoneme Tooltips (Using shared Global logic).
    - Sticky Header + Contained Scroll.
+   - Overall score ring now renders as a two-face coin shell:
+     front = percent, back = CEFR band (for CSS hover flip styling).
 ============================================================================ */
 
 import {
   scoreClass,
   fmtPct,
-  fmtPctCefr,
+  cefrBand,
   getAzureScores,
   deriveFallbackScores,
 } from "../../core/scoring/index.js";
@@ -51,9 +53,6 @@ export function renderResultsHeaderModern(data) {
   const fmtRoundPct = (v) =>
     v == null || !Number.isFinite(+v) ? "—" : `${Math.round(+v)}%`;
 
-  const fmtRoundPctCefr = (v) =>
-    v == null || !Number.isFinite(+v) ? "—" : fmtPctCefr(Math.round(+v));
-
   const meanAvail = (...vals) => {
     const v = vals.map((x) => +x).filter((x) => Number.isFinite(x));
     if (!v.length) return null;
@@ -63,7 +62,7 @@ export function renderResultsHeaderModern(data) {
   // Treat "overall" from Azure as Pronunciation (tile)
   const pronunciation = overall;
 
-  // Overall aggregate (your new blue circle)
+  // Overall aggregate (blue circle)
   const overallAgg = Number.isFinite(+pronunciation)
     ? pronunciation
     : meanAvail(accuracy, fluency, completeness, prosody, pronunciation);
@@ -78,6 +77,22 @@ export function renderResultsHeaderModern(data) {
   };
 
   const overallRingColor = getRingColor(overallAgg);
+
+  const renderOverallRing = (v, ringColor, extraClass = "") => {
+    const pct = v == null || !Number.isFinite(+v) ? "—" : fmtPct(Math.round(+v));
+    const band = v == null || !Number.isFinite(+v) ? "" : (cefrBand(Math.round(+v)) || "");
+    const extra = extraClass ? ` ${extraClass}` : "";
+    const cefrAttr = band ? ` data-cefr="${band}"` : "";
+
+    return `
+      <div class="lux-scoreRing lux-scoreRing--overall lux-scoreRing--coin${extra}" style="--lux-score-ring:${ringColor};"${cefrAttr}>
+        <span class="lux-scoreRingFlip" aria-hidden="true">
+          <span class="lux-scoreRingFace lux-scoreRingFace--front">${pct}</span>
+          <span class="lux-scoreRingFace lux-scoreRingFace--back">${band || pct}</span>
+        </span>
+      </div>
+    `;
+  };
 
   const renderMetricTile = (label, val, key, meta = "") => {
     const labelHtml = label;
@@ -102,7 +117,6 @@ export function renderResultsHeaderModern(data) {
   try {
     window.LuxLastSaidText = saidText;
   } catch (err) {
-    // If you have warnSwallow globally, keep this; otherwise swallow quietly.
     if (typeof globalThis.warnSwallow === "function") {
       globalThis.warnSwallow("features/results/header-modern.js", err, "important");
     }
@@ -173,9 +187,7 @@ export function renderResultsHeaderModern(data) {
           <summary class="lux-results-accordion-handle lux-scoreAccordion-handle" title="Show/hide score breakdown">
             <span class="lux-scoreAccWord lux-scoreAccWord--left">Overall</span>
 
-            <div class="lux-scoreRing lux-scoreRing--overall lux-scoreAccRing" style="--lux-score-ring:${overallRingColor};">
-              ${fmtRoundPctCefr(overallAgg)}
-            </div>
+            ${renderOverallRing(overallAgg, overallRingColor, "lux-scoreAccRing")}
 
             <span class="lux-scoreAccWord lux-scoreAccWord--right">Score</span>
           </summary>
@@ -245,4 +257,3 @@ export function renderResultsHeaderModern(data) {
     </details>
   `;
 }
-

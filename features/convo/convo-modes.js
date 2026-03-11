@@ -32,15 +32,20 @@ export function createConvoModeController({ root, state, setParallaxEnabled, set
     // Used by lux-convo.css to gate drawers (TTS + SelfPB) until chat mode.
     document.documentElement.dataset.luxConvoMode = mode;
 
-    // Close both drawers when leaving the picker page
-    if (changed && mode !== "picker") {
-      try { closeCharsDrawer(); } catch (err) { globalThis.warnSwallow("features/convo/convo-modes.js", err, "important"); }
+    // Close both picker drawers anytime we are not in picker mode.
+    // Keep this unconditional so chat/picker transitions cannot leave
+    // stale drawer shells visible due to timing or repeated mode sets.
+    if (mode !== "picker") {
+      try { closeCharsDrawer(); } catch (err) {
+        globalThis.warnSwallow("features/convo/convo-modes.js", err, "important");
+      }
+
       try {
-        const knobsEl = document.getElementById("luxKnobsDrawer");
-        if (knobsEl && knobsEl.dataset.state !== "closed") {
-          getKnobsDrawerInstance().close();
-        }
-      } catch (err) { globalThis.warnSwallow("features/convo/convo-modes.js", err, "important"); }
+        const knobs = getKnobsDrawerInstance();
+        knobs?.close?.();
+      } catch (err) {
+        globalThis.warnSwallow("features/convo/convo-modes.js", err, "important");
+      }
     }
 
     // Broadcast mode transitions (picker uses this to randomize the default card on entry).

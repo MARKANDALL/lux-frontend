@@ -71,6 +71,20 @@ function pickNextRandomScenarioIdx(n) {
 
 export function createBeginScenario({ warpSwap, setMode, startScenario }) {
   return async function beginScenario() {
+    // Hard-close picker drawers before we leave the picker view.
+    // This prevents blank drawer shells from bleeding into chat if
+    // a transition/render timing race leaves them visually mounted.
+    try { closeCharsDrawer(); } catch (err) {
+      globalThis.warnSwallow("features/convo/convo-picker-system.js", err, "important");
+    }
+
+    try {
+      const knobs = getKnobsDrawerInstance();
+      knobs?.close?.();
+    } catch (err) {
+      globalThis.warnSwallow("features/convo/convo-picker-system.js", err, "important");
+    }
+
     await warpSwap(() => setMode("chat"), { outMs: 200, inMs: 240 });
     await startScenario(); // fetch opening line + suggested replies
   };
