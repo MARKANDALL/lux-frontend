@@ -119,6 +119,7 @@ export const K_CONVO_PICKER_LAST    = "lux_convo_picker_last_idx_v1";
 
 // ── Harvard / Passages ──
 export const K_HARVARD_LAST         = "LUX_HARVARD_LAST";    // last-selected list number
+export const K_HARVARD_RANDOM_BAG   = "lux_harvard_random_bag_v1"; // remaining shuffled Harvard lists in current cycle
 export const K_HARVARD_FAVS         = "LUX_HARVARD_FAVS";    // favorites array
 export const K_PASSAGES_LAST        = "LUX_PASSAGES_LAST";   // last-selected passage key
 export const K_PASSAGES_FAVS        = "LUX_PASSAGES_FAVS";   // favorites array

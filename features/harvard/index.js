@@ -4,7 +4,44 @@
 import { setPassage, updatePartsInfoTip } from "../passages/index.js";
 import { ensureHarvardPassages } from "../../src/data/index.js";
 
-import { K_HARVARD_LAST } from '../../app-core/lux-storage.js';
+import { K_HARVARD_LAST, K_HARVARD_RANDOM_BAG } from '../../app-core/lux-storage.js';
+
+const HARVARD_COUNT = 72;
+
+function safeParseJson(raw, fallback) {
+  try { return JSON.parse(raw); } catch { return fallback; }
+}
+
+function readRandomBag() {
+  try {
+    let bag = safeParseJson(localStorage.getItem(K_HARVARD_RANDOM_BAG) || "[]", []);
+    if (!Array.isArray(bag)) bag = [];
+
+    const seen = new Set();
+    return bag.filter((x) =>
+      Number.isInteger(x) &&
+      x >= 1 &&
+      x <= HARVARD_COUNT &&
+      !seen.has(x) &&
+      seen.add(x)
+    );
+  } catch {
+    return [];
+  }
+}
+
+function writeRandomBag(bag) {
+  try {
+    localStorage.setItem(K_HARVARD_RANDOM_BAG, JSON.stringify(bag));
+  } catch (err) {
+    globalThis.warnSwallow("features/harvard/index.js", err, "important");
+  }
+}
+
+function removeFromRandomBag(n) {
+  const bag = readRandomBag().filter((x) => x !== n);
+  writeRandomBag(bag);
+}
 
 function pad2(n) {
   return String(n).padStart(2, "0");
@@ -48,8 +85,6 @@ export function wireHarvardPicker() {
     out.style.display = "none";
   }
 
-  let randBag = [];
-
   function cryptoUint32() {
     if (globalThis.crypto?.getRandomValues) {
       const a = new Uint32Array(1);
@@ -71,11 +106,36 @@ export function wireHarvardPicker() {
   }
 
   function nextRandomList() {
-    if (randBag.length === 0) {
-      randBag = Array.from({ length: 72 }, (_, i) => i + 1);
-      shuffleInPlace(randBag);
+    let bag = readRandomBag();
+
+    if (!bag.length) {
+      bag = Array.from({ length: HARVARD_COUNT }, (_, i) => i + 1);
+      shuffleInPlace(bag);
     }
-    return randBag.pop();
+
+    const current = clamp(
+      parseInt(num?.value, 10) ||
+      parseInt(localStorage.getItem(K_HARVARD_LAST), 10) ||
+      1,
+      1,
+      HARVARD_COUNT
+    );
+
+    let n = bag.pop();
+
+    // avoid immediate repeat at cycle boundary
+    if (n === current && HARVARD_COUNT > 1) {
+      if (bag.length) {
+        const alt = bag.pop();
+        bag.unshift(n); // keep current list available later in the cycle
+        n = alt;
+      } else {
+        n = (n % HARVARD_COUNT) + 1;
+      }
+    }
+
+    writeRandomBag(bag);
+    return n;
   }
 
   const loadLabel = load?.textContent || "Load";
@@ -84,6 +144,7 @@ export function wireHarvardPicker() {
     const n = clamp(parseInt(raw, 10) || 1, 1, 72);
 
     if (num) num.value = String(n);
+    removeFromRandomBag(n);
     try {
 localStorage.setItem(K_HARVARD_LAST, String(n));
 } catch (err) { globalThis.warnSwallow("features/harvard/index.js", err, "important"); }
@@ -207,5 +268,3 @@ const last = localStorage.getItem(K_HARVARD_LAST);
     await apply(n);
   });
 }
-
-
