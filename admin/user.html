@@ -42,6 +42,7 @@
 
 <script>
 const API_BASE = "";
+  // Mirrors K_ADMIN_TOKEN from app-core/lux-storage.js
   const TOKEN = sessionStorage.getItem('lux_admin_token');
   const headers = TOKEN ? { 'x-admin-token': TOKEN } : {};
 
@@ -54,13 +55,15 @@ const API_BASE = "";
     const rows = json.rows || [];
     
     document.getElementById('count').textContent = rows.length;
+    const esc = (s) => String(s || '').replace(/[<>&"]/g, c => ({ '<':'&lt;', '>':'&gt;', '&':'&amp;', '"':'&quot;' }[c]));
+
     document.getElementById('rows').innerHTML = rows.map(r => `
       <tr>
-        <td>${new Date(r.ts).toLocaleString()}</td>
-        <td>${r.label || r.uid}</td>
-        <td>${r.passage_key}</td>
-        <td>${r.summary?.pron || '-'}</td>
-        <td>${r.text}</td>
+        <td>${esc(new Date(r.ts).toLocaleString())}</td>
+        <td>${esc(r.label || r.uid)}</td>
+        <td>${esc(r.passage_key)}</td>
+        <td>${esc(r.summary?.pron || '-')}</td>
+        <td>${esc(r.text)}</td>
       </tr>
     `).join('');
   }
@@ -69,7 +72,11 @@ const API_BASE = "";
   if (TOKEN) loadAttempts();
   else {
     const t = prompt('Admin Token');
+     else {
+    // Mirrors K_ADMIN_TOKEN from app-core/lux-storage.js
+    const t = prompt('Admin Token');
     if(t) { sessionStorage.setItem('lux_admin_token', t); location.reload(); }
+  } if(t) { sessionStorage.setItem('lux_admin_token', t); location.reload(); }
   }
 </script>
 </body>

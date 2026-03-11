@@ -37,6 +37,7 @@
 
 <script>
 const API_BASE = "";
+  // Mirrors K_ADMIN_TOKEN from app-core/lux-storage.js
   const TOKEN = sessionStorage.getItem('lux_admin_token');
   
   async function loadCohort() {
@@ -68,11 +69,13 @@ const API_BASE = "";
     for(const u of map.values()) {
         const avg = u.scores.length ? (u.sum / u.scores.length).toFixed(1) : '-';
         const tr = document.createElement('tr');
+        const esc = (s) => String(s || '').replace(/[<>&"]/g, c => ({ '<':'&lt;', '>':'&gt;', '&':'&amp;', '"':'&quot;' }[c]));
+
         tr.innerHTML = `
-            <td><a href="/admin/index.html?uid=${u.uid}">${u.label || u.uid}</a></td>
+            <td><a href="/admin/index.html?uid=${encodeURIComponent(u.uid)}">${esc(u.label || u.uid)}</a></td>
             <td>${u.attempts}</td>
             <td>${avg}</td>
-            <td>${new Date(u.last).toLocaleString()}</td>
+            <td>${esc(new Date(u.last).toLocaleString())}</td>
             <td><canvas class="spark" width="100" height="26"></canvas></td>
         `;
         tbody.appendChild(tr);
@@ -91,6 +94,7 @@ const API_BASE = "";
   document.getElementById('reload').onclick = loadCohort;
   if(TOKEN) loadCohort();
   else {
+      // Mirrors K_ADMIN_TOKEN from app-core/lux-storage.js
       const t = prompt('Admin Token');
       if(t) { sessionStorage.setItem('lux_admin_token', t); location.reload(); }
   }

@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <script>
+    // Mirrors K_ADMIN_TOKEN from app-core/lux-storage.js
     (function ensureToken() {
       if (!sessionStorage.getItem('lux_admin_token')) {
         const entered = prompt('Enter admin token');
@@ -139,6 +140,7 @@
 <script>
 (function () {
   const API_BASE = "";
+  // Mirrors K_ADMIN_TOKEN from app-core/lux-storage.js
   const TOKEN = sessionStorage.getItem('lux_admin_token') || '';
   const headers = TOKEN ? { 'x-admin-token': TOKEN } : {};
 
