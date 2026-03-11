@@ -4,6 +4,7 @@
 import { guardedListener, removeGuardedListener } from '../../app-core/lux-listeners.js';
 import { SCENARIOS } from "./scenarios.js";
 import { luxBus } from '../../app-core/lux-bus.js';
+import { escapeHtml as escHtml } from "../../helpers/escape-html.js";
 
 let _drawer = null;
 let _body = null;
@@ -342,9 +343,4 @@ export function closeCharsDrawer() {
 }
 
 /* ── Utility ── */
-
-function escHtml(str) {
-  const d = document.createElement("div");
-  d.textContent = str ?? "";
-  return d.innerHTML;
-}
+// escHtml imported from helpers/escape-html.js

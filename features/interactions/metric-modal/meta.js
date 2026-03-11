@@ -1,3 +1,4 @@
+/* AUDIT 2026-03-10: commented out — zero importers after panels.js redirect
 // features/interactions/metric-modal/meta.js
 // Shared metadata and HTML escaping utilities for metric modal rendering.
 
@@ -35,3 +36,5 @@ export const esc = (s) =>
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+
+*/

@@ -1,6 +1,6 @@
 // features/convo/convo-highlight.js
 import { norm } from "../../src/data/phonemes/core.js";
-
+import { escapeHtml as escHtml } from "../../helpers/escape-html.js";
 
 
 function escapeRegExp(s) {
