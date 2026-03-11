@@ -92,7 +92,6 @@ export function installConvoTtsContext({ state, input, msgs, SCENARIOS }) {
     sourceMode: luxBus.get('tts')?.sourceMode || "ai",
     autoVoice: luxBus.get('tts')?.autoVoice !== false,
   });
-  window.luxTTS = Object.assign(window.luxTTS || {}, luxBus.get('tts'));
 
   const ctx = {
     kind: "convo",
@@ -124,7 +123,7 @@ luxBus.set('ttsContext', { changed: true });
     },
 
     getText({ mode } = {}) {
-      const m = String(mode || window.luxTTS?.sourceMode || "auto");
+      const m = String(mode || luxBus.get('tts')?.sourceMode || "auto");
 
       if (m === "selection") return norm(this._selected?.text);
 
@@ -150,7 +149,7 @@ luxBus.set('ttsContext', { changed: true });
     },
 
     getVoiceId({ mode } = {}) {
-      const m = String(mode || window.luxTTS?.sourceMode || "auto");
+      const m = String(mode || luxBus.get('tts')?.sourceMode || "auto");
       const { roles, userIdx, aiIdx } = this.getRolePair();
 
       const userRole = roles[userIdx] || null;

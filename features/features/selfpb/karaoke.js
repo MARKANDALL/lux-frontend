@@ -36,7 +36,7 @@ export function initKaraoke({ ui, api, audio, syncTime, syncScrub }) {
 
   const getActiveAudio = () => {
     const src = karaokeSource();
-    if (src === "tts") return window.luxTTS?.audioEl || api.getRefAudio?.() || audio;
+    if (src === "tts") return luxBus.get('tts')?.audioEl || api.getRefAudio?.() || audio;
     if (src === "ref") return api.getRefAudio?.() || audio;
     return audio;
   };

@@ -91,14 +91,14 @@ luxBus.set('requestSelfPBExpanded', true);
   audio.preload = "auto";
   audio.playbackRate = DEFAULT_SPEED;
 
-  // Apply default source mode (pages like convo can pre-seed window.luxTTS.sourceMode)
+  // Apply default source mode (pages like convo can pre-seed via luxBus 'tts')
   const initialMode =
-    window.luxTTS?.sourceMode ||
+    luxBus.get('tts')?.sourceMode ||
     window.LuxTTSContext?.defaultSourceMode ||
     "auto";
   if (sourceSel) sourceSel.value = initialMode;
 
-  const initialAuto = window.luxTTS?.autoVoice;
+  const initialAuto = luxBus.get('tts')?.autoVoice;
   if (autoVoiceEl && typeof initialAuto === "boolean") autoVoiceEl.checked = initialAuto;
 
   // Expose audio + tts UI state for other panels (like Self Playback sync)
@@ -107,7 +107,6 @@ luxBus.set('requestSelfPBExpanded', true);
     sourceMode: sourceSel?.value || initialMode,
     autoVoice: autoVoiceEl?.checked !== false,
   });
-  window.luxTTS = Object.assign(window.luxTTS || {}, luxBus.get('tts'));
 
   function applyVoiceHint(voiceId, caps) {
     if (!voiceId || !voiceSel) return;
@@ -118,11 +117,11 @@ luxBus.set('requestSelfPBExpanded', true);
   }
 
   function syncVoiceFromContext(reason, caps) {
-    const autoOn = autoVoiceEl ? autoVoiceEl.checked : (window.luxTTS?.autoVoice !== false);
+    const autoOn = autoVoiceEl ? autoVoiceEl.checked : (luxBus.get('tts')?.autoVoice !== false);
     if (!autoOn) return;
     const ctx = window.LuxTTSContext;
     if (!ctx || typeof ctx.getVoiceId !== "function") return;
-    const mode = sourceSel?.value || window.luxTTS?.sourceMode || "auto";
+    const mode = sourceSel?.value || luxBus.get('tts')?.sourceMode || "auto";
     const hint = ctx.getVoiceId({ mode });
     applyVoiceHint(hint, caps);
   }
@@ -152,7 +151,6 @@ luxBus.set('requestSelfPBExpanded', true);
     if (autoVoiceEl && autoVoiceEl.checked) {
       autoVoiceEl.checked = false;
       luxBus.update('tts', { autoVoice: false });
-      window.luxTTS = Object.assign(window.luxTTS || {}, luxBus.get('tts'));
     }
     populateStyles(styleSel, caps, voiceSel.value);
   });
@@ -160,7 +158,6 @@ luxBus.set('requestSelfPBExpanded', true);
   if (sourceSel) {
     sourceSel.addEventListener("change", () => {
       luxBus.update('tts', { sourceMode: sourceSel.value || "auto" });
-      window.luxTTS = Object.assign(window.luxTTS || {}, luxBus.get('tts'));
       syncVoiceFromContext("source-change", caps);
     });
   }
@@ -168,7 +165,6 @@ luxBus.set('requestSelfPBExpanded', true);
   if (autoVoiceEl) {
     autoVoiceEl.addEventListener("change", () => {
       luxBus.update('tts', { autoVoice: !!autoVoiceEl.checked });
-      window.luxTTS = Object.assign(window.luxTTS || {}, luxBus.get('tts'));
       if (autoVoiceEl.checked) syncVoiceFromContext("autovoice-on", caps);
     });
   }
@@ -387,8 +383,9 @@ luxBus.on('ttsContext', () => syncVoiceFromContext("ctx-event", caps));
   // If Lux ever remounts the player, stop any old RAF loop (defensive)
   // (Right now mount only happens once, but this keeps it safe)
   luxBus.update('tts', { stopProgress });
-  window.luxTTS = Object.assign(window.luxTTS || {}, { stopProgress });
 
-  (window.luxTTS?.nudge || (() => {}))();
+  // Frozen compat shim — luxBus is the real owner; this is for console debugging only.
+  window.luxTTS = luxBus.get('tts');
+
   console.info("[tts-player] azure controls mounted");
 }

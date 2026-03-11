@@ -2,6 +2,7 @@
 // Pure DOM: HTML templates and element selection helpers.
 
 import { VOICES, DEFAULT_SPEED, DEFAULT_PITCH_ST } from "./player-core.js";
+import { luxBus } from '../../../app-core/lux-bus.js';
 
 // Helper: Scoped query selector
 export const $ = (root, sel) => root.querySelector(sel);
@@ -11,7 +12,7 @@ export function getCurrentText() {
   // If a page installs a TTS context adapter (e.g., AI Conversations),
   // let it provide the “current” text (AI / Me / Selection / Auto).
   try {
-    const mode = window.luxTTS?.sourceMode || "auto";
+    const mode = luxBus.get('tts')?.sourceMode || "auto";
     const ctx = window.LuxTTSContext;
     if (ctx && typeof ctx.getText === "function") {
       const t = String(ctx.getText({ mode }) || "").trim();
