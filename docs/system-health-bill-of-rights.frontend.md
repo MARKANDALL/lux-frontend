@@ -184,7 +184,7 @@
 | `window.LuxTTSWordTimings` | `publishKaraoke()` | `tts/player-ui/karaoke.js:86` | `selfpb/karaoke.js` |
 | `window.LuxLastWordTimings` | `recorder/index.js` | `features/recorder/index.js:156` | `selfpb/karaoke.js`, `selfpb/controls.js` |
 | `window.LuxLastAzureResult` | `recorder/index.js` | `features/recorder/index.js:155` | Results UI |
-| `window.luxTTS` | `tts/player-ui.js` | `features/features/tts/player-ui.js:103` | `convo-tts-context.js`, `selfpb/karaoke.js`, `tts/player-dom.js` |
+| `window.luxTTS` | `luxBus 'tts'` (frozen shim only) | End of `mountTTSPlayer` — `window.luxTTS = luxBus.get('tts')` | No direct readers — all migrated to `luxBus.get('tts')` |
 | `window.LuxTTSContext` | `installConvoTtsContext()` | `convo/convo-tts-context.js:198` | `tts/player-ui.js` |
 | `window.LuxSelfPB` | `selfpb/core.js` + `selfpb/ui.js` | `features/features/selfpb/core.js:177`, `selfpb/ui.js:123` | `tts/player-ui.js` |
 | `window.LuxMyWords` | `my-words/index.js` | `features/my-words/index.js:297` | `panel-events.js` |
@@ -209,15 +209,15 @@ rg -n 'window\.LuxKaraokeTimings\s*=' --type js
 rg -n 'document\.body\.style\.overflow' --type js
 ```
 
-### Notes on `window.luxTTS` Dual-Init
+### Notes on `window.luxTTS` — RESOLVED
 
-`window.luxTTS` is written by two modules:
-1. `convo-tts-context.js:94` — sets defaults (`sourceMode: "ai"`, `autoVoice: true`) with `||` guards.
-2. `tts/player-ui.js:103` — sets runtime values (`audioEl`, `sourceMode`, `autoVoice`).
+`window.luxTTS` is no longer an active state carrier. Phase A (tag `v-luxTTS-bus-only`) eliminated all 6 `Object.assign` mirror writes. The sole source of truth is `luxBus.get('tts')`.
 
-**Why this is currently safe:** Both use `Object.assign(window.luxTTS || {}, {...})` which is additive, not destructive. The convo context runs first and seeds defaults; the player UI runs later and adds `audioEl` while preserving existing values. The `||` guards in the context module prevent overwriting runtime values.
-
-**Risk:** If init order changes, defaults could overwrite runtime values. Consider consolidating into a single init function.
+**Current state:**
+- `convo-tts-context.js` writes defaults via `luxBus.update('tts', {...})` — no window write.
+- `player-ui.js` writes runtime state via `luxBus.update('tts', {...})` — no window write.
+- All readers (`player-dom.js`, `convo-tts-context.js`, `selfpb/karaoke.js`, `player-ui.js`) use `luxBus.get('tts')?.sourceMode` etc.
+- One frozen compat shim: `window.luxTTS = luxBus.get('tts')` at end of `mountTTSPlayer` (live reference, not a copy).
 
 ---
 
@@ -331,7 +331,7 @@ rg -n 'document\.body\.style\.overflow' --type js
 | Karaoke highlights wrong | `LuxKaraokeSource` mismatch | `tts/player-ui/karaoke.js`, `selfpb/karaoke.js` |
 | Scroll behind modal | Body scroll lock mismatch | `helpers/body-scroll-lock.js`, modal open/close handlers |
 | SelfPB doesn't show recording | `LuxLastRecordingBlob` not set | `app-core/runtime.js`, `convo-turn.js`, `recorder/index.js` |
-| TTS voice wrong in convo | `luxTTS.sourceMode` overwritten | `convo-tts-context.js`, `tts/player-ui.js` |
+| TTS voice wrong in convo | Check `luxBus.get('tts')?.sourceMode` — was dual-write issue, now resolved (Phase A) | `convo-tts-context.js`, `tts/player-ui.js` |
 | Click does nothing on score tile | Capture handler swallowing event | `chip-events.js`, `metric-modal/events.js` |
 | Double init / duplicate listeners | Missing guard flag | Check `installed`/`luxBooted` flags in the feature module |
 
@@ -345,7 +345,7 @@ rg -n 'document\.body\.style\.overflow' --type js
 | B.2 | `window.LuxKaraokeSource` / `LuxKaraokeTimings` written by 3 modules | **FIXED** | `publishKaraoke()` in `tts/player-ui/karaoke.js:81-97` is now the sole writer. `selfpb/controls.js:3` imports and calls `publishKaraoke("learner", timings)`. `selfpb/karaoke.js:3` imports and calls `publishKaraoke`. No direct `window.LuxKaraokeSource =` outside `publishKaraoke`. Commit `aaa3832`. | LOW | None — verified canonical writer pattern. |
 | B.3 | `document.body.style.overflow` toggled by 2 modals | **FIXED** | `helpers/body-scroll-lock.js` implements ref-counted `lockBodyScroll()`/`unlockBodyScroll()`. `metric-modal/events.js:5` and `attempt-detail/modal-shell.js:4` both import from this helper. No direct `document.body.style.overflow` in modal files. Commit `2f3292b`. | LOW | None — verified ref-counted lock. |
 | B.4 | 3 capture-phase click handlers competing (my-words, metric-modal, chip-events) | **PARTIAL** | `chip-events.js:46-54` guards with `if (!chip) return` before `stopPropagation()` — safe. `metric-modal/events.js:134-145` does NOT call `stopPropagation` — safe. `my-words/panel-events.js:122-148` does NOT call `stopPropagation` — safe. However, no documentation of handler interaction exists. | LOW | Add comments documenting capture-handler interaction matrix. |
-| B.5 | `window.luxTTS` dual-init (convo-tts-context vs player-ui) | **PARTIAL** | Both still write to `window.luxTTS` via `Object.assign`. `convo-tts-context.js:94` uses `||` guards to avoid overwriting. `player-ui.js:103` is additive. Currently safe due to init order, but fragile. | MED | Document init-order dependency; consider a unified `initLuxTTS()` function. |
+| B.5 | `window.luxTTS` dual-init (convo-tts-context vs player-ui) | **FIXED** | All 6 `Object.assign` mirror writes removed. All readers migrated to `luxBus.get('tts')`. Frozen compat shim remains. Tag: `v-luxTTS-bus-only`. | LOW | None — resolved. |
 | B.6 | Double-init guard in convo-bootstrap.js (MutationObserver + setInterval) | **PARTIAL** | MutationObserver removed (commit `6285941`). `setInterval` at line 176 still runs forever (300ms poll of `state.scenarioIdx`) with no `clearInterval`. | MED | Replace 300ms poll with `lux:scenarioChanged` event dispatch from picker system. |
 | B.7 | Global/window ownership map (inventory of globals) | **FIXED** | Documented in this Bill of Rights (Part A.2). | LOW | Keep the charter updated as new globals are added. |
 | B.8 | z-index stack conflicts (selfpb float above modals) | **PARTIAL** | z-index inventory compiled (Part A, Right 7). SelfPB expanded float at 200000 is intentional. Metric modal at 10050 vs attempt-detail at 9999 is a minor ordering issue. | LOW | Promote attempt-detail modal z-index to 10050 to match metric-modal. |
@@ -547,13 +547,9 @@ These use either static string templates (no interpolation) or properly escape d
 
 ---
 
-### Fix 8: Document `window.luxTTS` init-order dependency (LOW — clarity)
+### Fix 8: Document `window.luxTTS` init-order dependency — ✅ SUPERSEDED
 
-**Why:** `convo-tts-context.js` and `tts/player-ui.js` both write to `window.luxTTS` using `Object.assign`. Currently safe but fragile if init order changes.
-
-**Minimal patch:** Add comments in both files documenting the expected init order and why `||` guards protect against overwrites.
-
-**Risk:** ZERO (comments only)
+**Status:** Resolved by Phase A (`v-luxTTS-bus-only`). The dual-write was eliminated entirely — all mirror writes removed, all readers migrated to `luxBus.get('tts')`. No init-order dependency exists anymore.
 
 ---
 

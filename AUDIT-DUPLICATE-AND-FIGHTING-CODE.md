@@ -16,7 +16,7 @@
 | 2 | **`window.LuxKaraokeSource` / `window.LuxKaraokeTimings` written by 3 competing modules** — TTS karaoke (`tts/player-ui/karaoke.js:83-84`), SelfPB controls (`selfpb/controls.js:19-20`), and SelfPB karaoke (`selfpb/karaoke.js:220-233`). Each overwrites the other's values, causing karaoke highlight flicker when both drawers are open. | `features/features/tts/player-ui/karaoke.js`, `features/features/selfpb/controls.js`, `features/features/selfpb/karaoke.js` | High |
 | 3 | **`document.body.style.overflow` toggled by 2 independent modal systems** — Metric modal (`interactions/metric-modal/events.js:72,116`) and Attempt Detail modal (`progress/attempt-detail/modal-shell.js:54,70`). If both open, closing one resets body overflow to `""` while the other expects `"hidden"`, causing scroll-under-modal. | `features/interactions/metric-modal/events.js`, `features/progress/attempt-detail/modal-shell.js` | High |
 | 4 | **3 capture-phase document click handlers competing** — `my-words/panel-events.js:122` (wiggle logic), `interactions/metric-modal/events.js:191` (score tile open), `interactions/ph-hover/chip-events.js:43` (phoneme chip pin). All use `capture: true` and call `stopPropagation()`, so whichever fires first can swallow clicks intended for the others. | `features/my-words/panel-events.js`, `features/interactions/metric-modal/events.js`, `features/interactions/ph-hover/chip-events.js` | Medium |
-| 5 | **`window.luxTTS` mutated by 2 modules at boot** — `convo-tts-context.js:94` sets `sourceMode`/`autoVoice`, and `tts/player-ui.js:103` does the same. On the convo page both run, and whichever completes last wins, potentially overwriting the other's intent. | `features/convo/convo-tts-context.js`, `features/features/tts/player-ui.js` | Medium |
+| 5 | ~~**`window.luxTTS` mutated by 2 modules at boot**~~ **FIXED (Phase A).** `window.luxTTS` mirror eliminated. All readers now use `luxBus.get('tts')`. One frozen compat shim remains. | `features/convo/convo-tts-context.js`, `features/features/tts/player-ui.js` | ~~Medium~~ Resolved |
 
 ### Top 5 Highest-Impact Duplicates Likely Causing Inconsistency
 
@@ -92,18 +92,13 @@
 | **Minimal fix plan** | Audit the guard logic in `chip-events.js:47-54`. If the chip guard (`if (!chip) return`) runs before `stopPropagation`, no code change needed — just add a comment documenting the interaction. If not, move `stopPropagation` after the guard. |
 | **Risk & rollback** | Very low. |
 
-### B.5 — Fighting Code: `window.luxTTS` dual-init on convo page
+### B.5 — Fighting Code: `window.luxTTS` dual-init on convo page — ✅ RESOLVED
 
 | Field | Detail |
 |-------|--------|
 | **Category** | Fighting code / Double-init |
-| **Impact** | Medium |
-| **Confidence** | Medium |
-| **Evidence** | `convo-tts-context.js:94`: `window.luxTTS = Object.assign(window.luxTTS \|\| {}, { sourceMode: "ai", autoVoice: true })`. `tts/player-ui.js:103`: `window.luxTTS = Object.assign(window.luxTTS \|\| {}, { audioEl, voiceSel, ... })`. |
-| **Why it's a problem** | Both use `Object.assign` with `window.luxTTS \|\| {}`, which merges rather than overwrites. This is currently SAFE because they write different keys. However, both write `sourceMode` and `autoVoice` — `convo-tts-context.js` guards with `window.luxTTS?.sourceMode \|\| "ai"` (preserves existing), while `player-ui.js` writes `sourceMode` via a `change` listener. The boot-time race is benign NOW but fragile. |
-| **Recommended canonical source** | `tts/player-ui.js` should own the runtime properties; `convo-tts-context.js` should only set defaults if not already present (which it mostly does). |
-| **Minimal fix plan** | No code change needed yet — add a comment block in both files documenting the merge contract. If symptoms appear, centralize `window.luxTTS` initialization into a single `tts-state.js` module. |
-| **Risk & rollback** | N/A (documentation only). |
+| **Impact** | ~~Medium~~ **Resolved** |
+| **Resolution** | Phase A eliminated all 6 `window.luxTTS = Object.assign(...)` mirror writes across `convo-tts-context.js` and `player-ui.js`. All readers (player-dom, convo-tts-context, selfpb/karaoke, player-ui) now use `luxBus.get('tts')` directly. One frozen compat shim `window.luxTTS = luxBus.get('tts')` remains at end of `mountTTSPlayer` for console debugging. Dead `window.luxTTS.nudge()` call removed (was always a no-op). Tag: `v-luxTTS-bus-only`. |
 
 ### B.6 — Duplicate: Postgres pool singleton (API, 6 copies)
 

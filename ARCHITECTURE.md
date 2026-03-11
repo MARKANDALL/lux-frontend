@@ -13,11 +13,11 @@ Lux is a browser-based English pronunciation and conversation training platform.
 - **Build:** Vite (multi-page app, dev server with API proxy)
 - **Language:** Vanilla JS (ES modules), no TypeScript, no React
 - **Styling:** Plain CSS, no preprocessor, `lux-` prefixed class convention
-- **State:** Custom pub/sub bus (`luxBus`), plus some window globals as backward-compat mirrors
+- **State:** Custom pub/sub bus (`luxBus`) is the sole source of truth. Legacy window globals survive as frozen compat shims only (e.g. `window.luxTTS = luxBus.get('tts')`)
 - **Auth:** Supabase magic-link OTP, guest UID with migration on login
 - **Backend:** `luxury-language-api` on Vercel — Node.js serverless router
 - **External APIs:** Azure Speech (assessment + TTS), OpenAI GPT (coaching + convo), OpenAI Realtime (streaming)
-- **Testing:** Vitest (configured, minimal coverage — 1 test file)
+- **Testing:** Vitest — 5 test files / 59 tests covering lux-bus, identity, apiFetch, lux-storage, and attempts contract
 - **Tooling:** ESLint, hygiene scripts, no-silent-catches scanner, import checker
 
 ---
@@ -269,15 +269,15 @@ User clicks Record → convo-handlers.js
 
 ### Window Globals Still Present (as backward-compat mirrors)
 
-These are NOT the source of truth — `luxBus` is. But some reader code still accesses these:
+These are NOT the source of truth — `luxBus` is. Reader code should use `luxBus.get()`, not the window global.
 
-| Global | References | Real Owner |
+| Global | Status | Real Owner |
 |---|---|---|
-| `window.luxTTS` | 16 | `player-ui.js` writes, `convo-tts-context.js` seeds defaults |
-| `window.LuxLastRecordingBlob` | 5 | `runtime.js` |
-| `window.LuxMyWords` | 4 | `my-words/index.js` |
-| `window.LuxSelfPB` | 3 | `selfpb/dom.js` |
-| `window.LUX_USER_ID` | 2 | `identity.js` |
+| `window.luxTTS` | **Frozen shim** — `luxBus.get('tts')` is sole owner. All readers migrated to bus. One `window.luxTTS = luxBus.get('tts')` compat shim remains at end of `mountTTSPlayer`. | `luxBus 'tts'` key |
+| `window.LuxLastRecordingBlob` | Active mirror | `runtime.js` via `setLastRecording()` |
+| `window.LuxMyWords` | Active — self-contained island | `my-words/index.js` |
+| `window.LuxSelfPB` | Active — selfpb family only | `selfpb/core.js` + `selfpb/ui.js` |
+| `window.LUX_USER_ID` | Active mirror | `identity.js` via `ensureUID()` / `setUID()` |
 
 ---
 
@@ -343,6 +343,7 @@ npm run hygiene      # Hygiene report + no-silent-catches scan
 4. **warnSwallow, never silent catch.** Every catch block uses `globalThis.warnSwallow(fileLabel, err)` with appropriate level.
 5. **Surgical changes only.** Follow Lux Refactor Constitution v2 — `.GOLD` backups, Risk Gate, sequential peels, rollback path always documented.
 6. **No framework migration.** Vanilla JS is the architecture. No React, no grand rewrite.
+7. **Run `npm test` after touching plumbing.** Protection ring tests cover lux-bus, identity, apiFetch, and lux-storage. Run after any session that modifies these shared modules.
 
 ---
 
@@ -352,4 +353,4 @@ npm run hygiene      # Hygiene report + no-silent-catches scan
 - **Character encoding** garbled symbols in some results displays
 - **Expanded tooltip** video/audio desync
 - **4 duplicate `escHtml` functions** — should consolidate to `helpers/dom.js`
-- **94 scattered localStorage accesses** — no centralized storage layer yet
+- ~~**94 scattered localStorage accesses** — no centralized storage layer yet~~ **RESOLVED:** `app-core/lux-storage.js` provides `K_` constants + typed helpers. 11 files migrated from bare key strings to constants (Phase D). Remaining bare strings are in `identity.js` (key owner) and `public/lux-popover.js` / admin HTML (classic scripts, cannot import).
