@@ -1,4 +1,3 @@
-/* AUDIT 2026-03-10: commented out — zero importers after panels.js redirect
 // features/interactions/metric-modal/meta.js
 // Shared metadata and HTML escaping utilities for metric modal rendering.
 
@@ -26,7 +25,7 @@ export const METRIC_META = {
   },
   Prosody: {
     title: "Prosody",
-    blurb: "Stress, rhythm, intonation, and pacing — how your speech “sounds as a whole,” not just individual sounds.",
+blurb: "Stress, rhythm, intonation, and pacing \u2014 how your speech \u201Csounds as a whole,\u201D not just individual sounds.",
   },
 };
 
@@ -36,5 +35,3 @@ export const esc = (s) =>
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
-
-*/
