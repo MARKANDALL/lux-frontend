@@ -32,10 +32,6 @@ export function wireConvoKnobsUI({
     });
   }
 
-  if (pickerKnobsBtn) {
-    pickerKnobsBtn.addEventListener("mouseenter", () => peekKnobsDrawer());
-    pickerKnobsBtn.addEventListener("mouseleave", () => unpeekKnobsDrawer());
-  }
 
   closeDrawer.addEventListener("click", () => setKnobs(false));
   scrim.addEventListener("click", () => setKnobs(false));

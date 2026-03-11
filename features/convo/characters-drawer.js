@@ -17,16 +17,17 @@ let _contentAnim = null; // track running content swap animation
 export function peekCharsDrawer() {
   ensureDom();
   if (_drawer.dataset.state !== "closed") return;
+  // Clear any stale inline transform left by close animation's onfinish,
+  // so the CSS class rule can take effect.
+  _drawer.style.transform = "";
   _drawer.classList.add("lux-charsPeek");
-  // IMPORTANT: drawer open/close uses inline transform; CSS peek transform can't win.
-  // So set the peek transform inline too.
-  _drawer.style.transform = "translateX(calc(-100% + 16px))";
 }
 
 export function unpeekCharsDrawer() {
   if (!_drawer) return;
   _drawer.classList.remove("lux-charsPeek");
-  // Restore the closed position inline (matches base closed state)
+  // Restore closed position inline (close animation's onfinish sets this,
+  // but if we peeked we cleared it, so put it back).
   _drawer.style.transform = "translateX(-100%)";
 }
 
@@ -108,7 +109,7 @@ function ensureDom() {
     luxBus.set('pickerSummaryPulse', true);
   });
 
-  // Hover-preview: tiny, subtle “Role • X” tag + slight pill bulge
+  // Hover-preview: tiny, subtle "Role • X" tag + slight pill bulge
   _drawer.addEventListener("pointerover", (e) => {
     const card = e.target.closest("[data-role-idx]");
     if (!card) return;
@@ -259,6 +260,9 @@ function _animateClose() {
     _drawer.setAttribute("aria-hidden", "true");
     _drawer.inert = true;
     _drawer.style.transform = "translateX(-100%)";
+    // Kill the finished animation so its fill:forwards doesn't
+    // permanently override CSS classes (e.g. peek on next hover).
+    try { _currentAnim.cancel(); } catch (_) {}
     _currentAnim = null;
     if (_openerEl && typeof _openerEl.focus === "function") {
       _openerEl.focus();
@@ -272,6 +276,8 @@ function _animateClose() {
 export function openCharsDrawer({ scenarioIdx, roleIdx, onRoleSelect }) {
   ensureDom();
   _drawer.classList.remove("lux-charsPeek");
+  _drawer.style.transform = "";           // clear any stale inline transform
+  if (_currentAnim) { _currentAnim.cancel(); _currentAnim = null; }
 
   // TOGGLE: if already open/opening → close
   if (_drawer.dataset.state === "open" || _drawer.dataset.state === "opening") {
@@ -337,3 +343,8 @@ export function closeCharsDrawer() {
 
 /* ── Utility ── */
 
+function escHtml(str) {
+  const d = document.createElement("div");
+  d.textContent = str ?? "";
+  return d.innerHTML;
+}

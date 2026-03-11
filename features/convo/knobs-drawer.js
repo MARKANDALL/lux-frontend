@@ -115,6 +115,9 @@ function _animateClose(drawer) {
     drawer.setAttribute("aria-hidden", "true");
     drawer.inert = true;
     drawer.style.transform = "translateX(100%)";
+    // Kill the finished animation so its fill:forwards doesn't
+    // permanently override CSS classes (e.g. peek on next hover).
+    try { _currentAnim.cancel(); } catch (_) {}
     _currentAnim = null;
     if (_openerEl) { _openerEl.focus(); _openerEl = null; }
   };
@@ -124,11 +127,18 @@ function _animateClose(drawer) {
 export function peekKnobsDrawer() {
   const { drawer } = ensureDom();
   if (drawer.dataset.state !== "closed") return;
+  // Clear stale inline transform left by close animation's onfinish,
+  // so the .lux-knobsPeek CSS class rule can take effect.
+  drawer.style.transform = "";
   drawer.classList.add("lux-knobsPeek");
 }
 export function unpeekKnobsDrawer() {
   const d = document.getElementById("luxKnobsDrawer");
-  if (d) d.classList.remove("lux-knobsPeek");
+  if (!d) return;
+  d.classList.remove("lux-knobsPeek");
+  // Restore closed position inline (close animation's onfinish sets this,
+  // but peek cleared it, so put it back).
+  d.style.transform = "translateX(100%)";
 }
 
 /* ── Empty-space nudge ── */
@@ -173,6 +183,9 @@ export function mountKnobsDrawer() {
 
   const open = () => {
     drawer.classList.remove("lux-knobsPeek");
+    drawer.style.transform = "";           // clear any stale inline transform
+    if (_currentAnim) { _currentAnim.cancel(); _currentAnim = null; }
+
     if (drawer.dataset.state === "open" || drawer.dataset.state === "opening") { close(); return; }
     _openerEl = document.activeElement || null;
     paintSelection(drawer, getKnobs());
