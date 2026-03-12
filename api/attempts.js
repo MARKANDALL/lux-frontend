@@ -1,22 +1,11 @@
 // api/attempts.js
 // UPDATED: Added updateAttempt() to save AI feedback
 
-import { API_BASE, dbg, apiFetch, getAdminToken } from "./util.js";
+import { API_BASE, dbg, apiFetch } from "./util.js";
 
 const ATTEMPT_URL = `${API_BASE}/api/attempt`;
 const HISTORY_URL = `${API_BASE}/api/user-recent`;
 const UPDATE_URL  = `${API_BASE}/api/update-attempt`;
-
-function getTokenForWrites() {
-  const ENV_ADMIN_TOKEN = (import.meta?.env?.VITE_ADMIN_TOKEN || "").toString().trim();
-  return (
-    ENV_ADMIN_TOKEN ||
-    getAdminToken({
-      promptIfMissing: true,
-      promptLabel: "Admin Token required to save attempts",
-    })
-  );
-}
 
 // Helper: YYYY-MM-DD in the user's local day (best-effort)
 function localDayKey(ts) {

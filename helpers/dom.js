@@ -79,7 +79,8 @@ export function showClickHint(targetEl, msg, { delay = 1000 } = {}) {
   }, delay + visibleMs);
 }
 
-/** Placeholder to avoid errors if somebody calls it. */
-export function keepTooltipInView(_el, _padding = 8) {
-  console.warn("keepTooltipInView placeholder triggered");
-}
+/**
+ * Intentionally a no-op for now.
+ * Kept only so older imports do not break during cleanup.
+ */
+export function keepTooltipInView(_el, _padding = 8) {}

@@ -108,7 +108,6 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
   const chatHomePill = el("a", "lux-toplink lux-navpill", "Practice Skills");
   chatHomePill.href = "./index.html";
   chatHomePill.setAttribute("data-lux-ripple", "");
-  chatHomePill.setAttribute("data-lux-ripple", "");
   chatToplinks.append(chatHomePill);
 
   const mid = el("div", "lux-panel lux-chat");
