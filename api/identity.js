@@ -2,9 +2,16 @@
 // Single source of truth for User Identity (UID).
 // Handles generation, persistence (localStorage), and global exposure.
 
-const KEY = "LUX_USER_ID";
+import {
+  K_IDENTITY_UID,
+  K_IDENTITY_UID_ALIAS,
+  K_IDENTITY_UID_LEGACY,
+} from "../app-core/lux-storage.js";
+
+const KEY = K_IDENTITY_UID;
 // Legacy key that older code wrote to. We'll migrate + keep in sync for now.
-const LEGACY_KEY = "lux_user_id";
+const LEGACY_KEY = K_IDENTITY_UID_LEGACY;
+const ALIAS_KEY = K_IDENTITY_UID_ALIAS;
 
 function isUUID(u) {
   const s = String(u || "").trim();
@@ -46,9 +53,11 @@ export function ensureUID() {
   const fromQuery = (qs.get("uid") || "").trim();
 
   let fromKey = "";
+  let fromAlias = "";
   let fromLegacy = "";
   try {
     fromKey = localStorage.getItem(KEY) || "";
+    fromAlias = localStorage.getItem(ALIAS_KEY) || "";
     fromLegacy = localStorage.getItem(LEGACY_KEY) || "";
   } catch (err) { globalThis.warnSwallow("api/identity.js", err, "important"); }
 
@@ -56,7 +65,8 @@ export function ensureUID() {
   // 1) ?uid= (explicit override)
   // 2) localStorage KEY (canonical persisted)
   // 3) window.LUX_USER_ID (runtime)
-  // 4) legacy localStorage key (migration)
+  // 4) alias localStorage key (older migration path)
+  // 5) legacy localStorage key (migration)
   const existingWin = (window.LUX_USER_ID || "").trim();
 
   const finalUID = looksValid(fromQuery)
@@ -65,6 +75,8 @@ export function ensureUID() {
     ? fromKey
     : looksValid(existingWin)
     ? existingWin
+    : looksValid(fromAlias)
+    ? fromAlias
     : looksValid(fromLegacy)
     ? fromLegacy
     : makeUUID();
@@ -73,6 +85,7 @@ export function ensureUID() {
   window.LUX_USER_ID = finalUID;
   try {
     localStorage.setItem(KEY, finalUID);
+    localStorage.setItem(ALIAS_KEY, finalUID);
     // Keep legacy in sync temporarily (so any straggler code still sees the same UID).
     localStorage.setItem(LEGACY_KEY, finalUID);
   } catch (err) { globalThis.warnSwallow("api/identity.js", err, "important"); }
@@ -111,14 +124,9 @@ export function setUID(uid) {
   window.LUX_USER_ID = u;
 
   try {
-    // Use same keys the file already uses; if these identifiers exist in the module,
-    // this will match your current behavior.
-    if (typeof KEY !== "undefined") localStorage.setItem(KEY, u);
-    if (typeof LEGACY_KEY !== "undefined") localStorage.setItem(LEGACY_KEY, u);
-
-    // Fallback if those constants don't exist (harmless, and keeps behavior consistent).
-    localStorage.setItem("lux.uid", u);
-    localStorage.setItem("LUX_USER_ID", u);
+    localStorage.setItem(KEY, u);
+    localStorage.setItem(ALIAS_KEY, u);
+    localStorage.setItem(LEGACY_KEY, u);
   } catch (err) { globalThis.warnSwallow("api/identity.js", err, "important"); }
 
   try {
@@ -127,4 +135,3 @@ export function setUID(uid) {
 
   return u;
 }
-

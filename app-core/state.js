@@ -1,11 +1,12 @@
 // app-core/state.js
 import { passages } from "../src/data/index.js";
+import { K_DEBUG_MAIN, getBool } from "./lux-storage.js";
 
 // --- global debug hook (browser only)
 if (typeof window !== "undefined") {
   const qs = new URLSearchParams(window.location.search);
   const flag =
-    qs.has("luxdebug") || window.localStorage.getItem("luxdebug") === "1";
+    qs.has(K_DEBUG_MAIN) || getBool(K_DEBUG_MAIN);
 
   // default OFF; only enable in dev *and* when opted-in
   window.LUX_DEBUG = !!(import.meta?.env?.DEV && flag);

@@ -5,9 +5,14 @@ import { wirePickerDeck } from "./picker-deck.js";
 import { openCharsDrawer, closeCharsDrawer, peekCharsDrawer, unpeekCharsDrawer } from "./characters-drawer.js";
 import { getKnobsDrawerInstance, onKnobsChange, peekKnobsDrawer, unpeekKnobsDrawer } from "./knobs-drawer.js";
 import { luxBus } from '../../app-core/lux-bus.js';
-
-const PICKER_BAG_KEY = "lux_convo_picker_bag_v1";
-const PICKER_LAST_KEY = "lux_convo_picker_last_idx_v1";
+import {
+  K_CONVO_PICKER_BAG,
+  K_CONVO_PICKER_LAST,
+  getJSON,
+  getString,
+  setJSON,
+  setString,
+} from "../../app-core/lux-storage.js";
 
 function shuffleInPlace(arr) {
   for (let i = arr.length - 1; i > 0; i--) {
@@ -16,20 +21,11 @@ function shuffleInPlace(arr) {
   }
 }
 
-function safeParseJson(raw, fallback) {
-  try { return JSON.parse(raw); } catch (_) { return fallback; }
-}
-
 function pickNextRandomScenarioIdx(n) {
   if (!Number.isFinite(n) || n <= 1) return 0;
 
-  let bag = [];
-  try {
-    bag = safeParseJson(localStorage.getItem(PICKER_BAG_KEY) || "[]", []);
-    if (!Array.isArray(bag)) bag = [];
-  } catch (_) {
-    bag = [];
-  }
+  let bag = getJSON(K_CONVO_PICKER_BAG, []);
+  if (!Array.isArray(bag)) bag = [];
 
   // sanitize bag -> keep only valid, unique ints in-range
   const seen = new Set();
@@ -41,13 +37,9 @@ function pickNextRandomScenarioIdx(n) {
   }
 
   let last = -1;
-  try {
-    const rawLast = localStorage.getItem(PICKER_LAST_KEY);
-    const parsed = rawLast == null ? NaN : Number(rawLast);
-    last = Number.isInteger(parsed) ? parsed : -1;
-  } catch (_) {
-    last = -1;
-  }
+  const rawLast = getString(K_CONVO_PICKER_LAST);
+  const parsed = rawLast == null ? NaN : Number(rawLast);
+  last = Number.isInteger(parsed) ? parsed : -1;
 
   let idx = bag.pop();
   if (idx === last && n > 1) {
@@ -61,10 +53,8 @@ function pickNextRandomScenarioIdx(n) {
     }
   }
 
-  try {
-    localStorage.setItem(PICKER_BAG_KEY, JSON.stringify(bag));
-    localStorage.setItem(PICKER_LAST_KEY, String(idx));
-  } catch (err) { globalThis.warnSwallow("features/convo/convo-picker-system.js", err, "important"); }
+  setJSON(K_CONVO_PICKER_BAG, bag);
+  setString(K_CONVO_PICKER_LAST, idx);
 
   return idx;
 }

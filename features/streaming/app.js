@@ -11,6 +11,7 @@ import { createAudioController } from "./audio/audio-controller.js";
 import { ensureUID } from "../../api/identity.js";
 import { saveAttempt } from "../../api/attempts.js";
 import { buildStreamingInstructions } from "./prompt/contract.js";
+import { K_DEBUG_STREAM, getBool, setBool } from "../../app-core/lux-storage.js";
 
 export function mountStreamingApp({ rootId = "lux-stream-root" } = {}) {
   const root = document.getElementById(rootId);
@@ -41,7 +42,7 @@ export function mountStreamingApp({ rootId = "lux-stream-root" } = {}) {
   function readDebugFlag() {
     try {
       if (/[?&]debug=1(?:&|$)/.test(window.location.search)) return true;
-      return window.localStorage.getItem("LUX_STREAM_DEBUG") === "1";
+      return getBool(K_DEBUG_STREAM);
     } catch {
       return false;
     }
@@ -64,7 +65,7 @@ export function mountStreamingApp({ rootId = "lux-stream-root" } = {}) {
   function applyDebug(enabled) {
     debugEnabled = !!enabled;
     try {
-      window.localStorage.setItem("LUX_STREAM_DEBUG", debugEnabled ? "1" : "0");
+      setBool(K_DEBUG_STREAM, debugEnabled);
     } catch (err) {
       globalThis.warnSwallow("features/streaming/app.js", err, "important");
     }

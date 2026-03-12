@@ -1,5 +1,7 @@
 // features/convo/convo-highlight.js
+
 import { norm } from "../../src/data/phonemes/core.js";
+import { K_DEBUG_CONVO_MARKS, getBool } from "../../app-core/lux-storage.js";
 import { escapeHtml as escHtml } from "../../helpers/escape-html.js";
 
 
@@ -80,7 +82,7 @@ export function highlightHtml(text, opts = {}) {
   const focusIpa = norm(String(opts.focusIpa || ""));
   const focusTester = focusIpa ? makeFocusTester(focusIpa) : null;
 
-  const dbgOn = localStorage.getItem("lux.debugMarks") === "1";
+  const dbgOn = getBool(K_DEBUG_CONVO_MARKS);
   const dbg =
     dbgOn && autoBlue
       ? { focusIpa, wbCount: wbSet.size, gotBlue: 0, okBlue: 0, badBlue: 0 }
