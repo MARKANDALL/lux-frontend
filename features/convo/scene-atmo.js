@@ -116,6 +116,12 @@ export function initSceneAtmo({ root, atmo, state, scenarios = [] }) {
     }, ROTATE_MS);
   }
 
+  function stopRotation() {
+    if (!rotTimer) return;
+    window.clearInterval(rotTimer);
+    rotTimer = 0;
+  }
+
   const sRand = (a, b) => a + Math.random() * (b - a);
   const sClamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const sShuffle = (arr) => {
@@ -379,7 +385,9 @@ export function initSceneAtmo({ root, atmo, state, scenarios = [] }) {
       par.raf = 0;
       root.style.setProperty("--lux-mx", "0");
       root.style.setProperty("--lux-my", "0");
+      stopRotation();
     } else {
+      ensureRotation();
       layoutSceneCards(true); // <-- ADD THIS
     }
   }
