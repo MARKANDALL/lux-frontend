@@ -1,7 +1,7 @@
 // features/interactions/metric-modal/render-parts/content.js
 // One-line: Shared content blocks (note/explain/interpret/help) for metric modal.
 
-import { esc } from "./meta.js";
+import { esc } from "../meta.js";
 
 function bullets(items = []) {
   return `<ul class="lux-metricBullets">${(items || [])

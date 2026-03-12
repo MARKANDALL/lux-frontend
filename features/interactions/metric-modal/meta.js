@@ -1,6 +1,8 @@
 // features/interactions/metric-modal/meta.js
 // Shared metadata and HTML escaping utilities for metric modal rendering.
 
+import { escapeHtml } from "../../../helpers/escape-html.js";
+
 export const METRIC_META = {
   Overall: {
     title: "Overall",
@@ -29,9 +31,4 @@ blurb: "Stress, rhythm, intonation, and pacing \u2014 how your speech \u201Csoun
   },
 };
 
-export const esc = (s) =>
-  String(s ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+export const esc = escapeHtml;
