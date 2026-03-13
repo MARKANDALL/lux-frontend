@@ -153,7 +153,11 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
   // Floating portraits (NOT drawers)
   const portraits = el("div", "lux-convoPortraits");
 
-  const meChip = el("div", "lux-portraitChip lux-portraitChip--me");
+  const meChip = document.createElement("button");
+  meChip.type = "button";
+  meChip.className = "lux-portraitChip lux-portraitChip--me";
+  meChip.setAttribute("aria-label", "Show your character card");
+  meChip.setAttribute("aria-expanded", "false");
   const meImg = document.createElement("img");
   meImg.className = "lux-portraitImg";
   meImg.alt = "You";
@@ -162,7 +166,11 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
   const meBadge = el("div", "lux-portraitBadge", "YOU");
   meChip.append(meImg, meBadge);
 
-  const aiChip = el("div", "lux-portraitChip lux-portraitChip--ai");
+  const aiChip = document.createElement("button");
+  aiChip.type = "button";
+  aiChip.className = "lux-portraitChip lux-portraitChip--ai";
+  aiChip.setAttribute("aria-label", "Show the AI character card");
+  aiChip.setAttribute("aria-expanded", "false");
   const aiImg = document.createElement("img");
   aiImg.className = "lux-portraitImg";
   aiImg.alt = "AI";
@@ -177,7 +185,14 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
   aiChip.append(aiImg, aiDots, aiBadge);
 
   portraits.append(meChip, aiChip);
-  stage.append(portraits);
+
+  // FIX: class + side values now match lux-convo.characters.css selectors
+  const profileLayer = el("div", "lux-charProfilesLayer");
+  const mePanelUi = mkProfilePanel(el, { side: "left", badge: "YOU" });
+  const aiPanelUi = mkProfilePanel(el, { side: "right", badge: "AI" });
+  profileLayer.append(mePanelUi.panel, aiPanelUi.panel);
+
+  stage.append(portraits, profileLayer);
 
   // Local scrim (dims ONLY the convo box area)
   const scrim = el("button", "lux-knobsScrim");
@@ -267,8 +282,20 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
     mid,
     stage,
     portraits,
+    meChip,
+    aiChip,
     meImg,
     aiImg,
+    mePanel: mePanelUi.panel,
+    aiPanel: aiPanelUi.panel,
+    mePanelClose: mePanelUi.close,
+    aiPanelClose: aiPanelUi.close,
+    mePanelImg: mePanelUi.img,
+    aiPanelImg: aiPanelUi.img,
+    mePanelTitle: mePanelUi.title,
+    aiPanelTitle: aiPanelUi.title,
+    mePanelDesc: mePanelUi.desc,
+    aiPanelDesc: aiPanelUi.desc,
     knobsDock,
     scenBtn,
     knobsBtn,
@@ -301,4 +328,55 @@ function mkSelect(el, label, options) {
   });
   wrap.append(lab, sel);
   return { wrap, sel };
+}
+
+// FIX: DOM structure + class names now match lux-convo.characters.css selectors.
+// Old version used lux-convoProfile* classes; CSS targets lux-charProfile* classes.
+// Old version used --me/--ai sides; CSS targets --left/--right.
+// Old version had flat children; CSS expects header/body wrapper structure.
+function mkProfilePanel(el, { side, badge }) {
+  // side = "left" | "right",  badge = "YOU" | "AI"
+  const panel = el(
+    "section",
+    `lux-charProfilePanel lux-charProfilePanel--${side}`
+  );
+  panel.setAttribute("aria-hidden", "true");
+
+  /* ── Header row: eyebrow badge + name … close button ── */
+  const head = el("div", "lux-charProfileHd");
+
+  const titleWrap = el("div", "lux-charProfileTitleWrap");
+  const eyebrow = el("div", "lux-charProfileEyebrow", badge);
+  const title = el("div", "lux-charProfileName", "");
+  titleWrap.append(eyebrow, title);
+
+  const close = el("button", "lux-charProfileClose", "×");
+  close.type = "button";
+  close.setAttribute("aria-label", "Close character card");
+
+  head.append(titleWrap, close);
+
+  /* ── Scrollable body: portrait image + NPC description ── */
+  const body = el("div", "lux-charProfileBody");
+
+  const img = document.createElement("img");
+  img.className = "lux-charProfileImg";
+  img.alt = badge === "YOU" ? "You" : "AI";
+  img.loading = "lazy";
+  img.decoding = "async";
+
+  const desc = el("div", "lux-charProfileNpc", "");
+
+  body.append(img, desc);
+
+  panel.append(head, body);
+
+  return {
+    panel,
+    close,
+    img,
+    title,
+    desc,
+    badge: eyebrow,
+  };
 }

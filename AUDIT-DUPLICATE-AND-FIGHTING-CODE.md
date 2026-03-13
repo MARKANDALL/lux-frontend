@@ -4,9 +4,25 @@
 **Date:** 2026-02-26
 **Auditor:** Automated repo-wide analysis (senior engineer perspective)
 
+> ## Status Notice — Read This First
+> This document is a historical audit baseline, not a live unresolved-bugs list.
+> Several findings below describe issues that were real at audit time but have since been reduced, migrated, or fully resolved in later hardening passes.
+> Always treat the “updated status / resolution” notes and the current architecture docs as higher priority than older finding prose.
+> In particular, do **not** reopen the already-verified 4-file bus-first migration family unless new evidence shows a real regression.
+
 ---
 
 ## A) Executive Summary
+
+This audit captured the frontend’s major duplicate and fighting-code risks at the time of the February 2026 review. It remains useful as a map of where the repo was fragile, but it should not be read as a current “all of these are still broken” status page.
+
+As of the March 2026 hardening pass:
+- several high-risk ownership conflicts were normalized or reduced through bus-first/runtime-first cleanup
+- refresh hooks were migrated toward bus-first access patterns
+- shared runtime and learner-blob behavior now have focused protection-ring coverage
+- some deeper cleanup opportunities remain, but they are optional later work rather than blockers
+
+Use this document to understand historical fault lines and ownership decisions, not to re-open already-verified migrations.
 
 ### Top 5 Highest-Confidence "Fighting Code" Conflicts
 
@@ -42,6 +58,8 @@
 
 ### B.1 — Fighting Code: `window.LuxLastRecordingBlob` dual-write
 
+> **Historical note:** this finding was accurate at audit time, but the remaining migration family around runtime / learner-blob handoff was later re-checked and verified as complete for the requested cleanup set. Keep this section as provenance, not as an instruction to re-do the migration.
+
 | Field | Detail |
 |-------|--------|
 | **Category** | Fighting code |
@@ -54,6 +72,8 @@
 | **Risk & rollback** | Low risk: `setLastRecording` already does everything the manual code does. Rollback: revert the single file. |
 
 ### B.2 — Fighting Code: Karaoke globals written by 3 modules
+
+> **Historical note:** this section documents the original ownership conflict that motivated the karaoke cleanup work. Treat it as background/provenance unless a fresh regression is observed in current behavior.
 
 | Field | Detail |
 |-------|--------|

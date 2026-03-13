@@ -17,14 +17,41 @@ Lux is a browser-based English pronunciation and conversation training platform.
 - **Auth:** Supabase magic-link OTP, guest UID with migration on login
 - **Backend:** `luxury-language-api` on Vercel — Node.js serverless router
 - **External APIs:** Azure Speech (assessment + TTS), OpenAI GPT (coaching + convo), OpenAI Realtime (streaming)
-- **Testing:** Vitest — 5 test files / 59 tests covering lux-bus, identity, apiFetch, lux-storage, and attempts contract
+- **Testing:** Vitest — protection-ring coverage now includes lux-bus, identity, apiFetch, lux-storage, attempts contract, shared runtime state, and learner-blob attach lifecycle
 - **Tooling:** ESLint, hygiene scripts, no-silent-catches scanner, import checker
+
+---
+
+## Current Hardening Status (March 2026)
+
+The frontend is in structured hardening mode, not rescue mode and not broad feature-refactor mode.
+
+Completed and verified in the current stabilization wave:
+- storage normalization pass
+- safe residue / dead-code cleanup
+- scene-atmo interval lifecycle cleanup
+- metric-modal safe cleanup
+- TTS / karaoke / SelfPB bridge cleanup
+- refresh-hook migration to bus-first patterns
+- small protection-ring expansion around shared runtime and learner-blob plumbing
+
+Important verification outcome:
+- the remaining meaningful `window.*` migration family was re-checked and verified as already done in:
+  - `features/features/selfpb/ui.js`
+  - `features/recorder/index.js`
+  - `features/convo/convo-turn.js`
+  - `features/features/tts/player-ui.js`
+
+Parked side issues remain parked unless they clearly reproduce or block core flow:
+- convo SelfPB learner karaoke words in AI Conversations
+- End Session / overlay contract issue
+- picker drawer carry-over bug appears improved / likely resolved, but is not an active hardening target
 
 ---
 
 ## Directory Structure
 
-```
+```text
 LUX_GEMINI/
 ├── src/                        Page entry bootstraps (one per HTML page)
 │   ├── main.js                 Practice Skills page
@@ -96,83 +123,72 @@ LUX_GEMINI/
 ├── *.css                       Global and feature CSS (61 files, ~12K lines)
 ├── vite.config.js              Multi-page Vite config with API proxy
 └── package.json                Scripts: dev, build, lint, test, hygiene
-```
+Pages and Entry Points
 
----
+Lux is a multi-page app (not SPA). Each HTML page has its own Vite entry point. Page navigation is a full reload.
 
-## Pages and Entry Points
+HTML Page	Entry Script	What It Does
+index.html	src/main.js	Practice Skills — record speech, get Azure scores, AI coaching
+convo.html	src/convo.js	AI Conversations — scenario-based chat with GPT
+progress.html	src/progress.js	Dashboard — practice history, stats
+wordcloud.html	src/wordcloud.js	Wordcloud visualization of practice data
+stream.html	src/stream.js	Real-time streaming conversation (WebRTC + OpenAI Realtime)
+stream-setup.html	src/stream-setup.js	Stream setup/config page
+life.html	src/life.js	Life Journey — gamified practice paths
+admin/index.html	Inline JS	Admin dashboard
+admin/overview.html	Inline JS	Admin overview/analytics
+admin/user.html	Inline JS	Admin per-user view
 
-Lux is a **multi-page app** (not SPA). Each HTML page has its own Vite entry point. Page navigation is a full reload.
+Common boot sequence (most pages follow this pattern):
 
-| HTML Page | Entry Script | What It Does |
-|---|---|---|
-| `index.html` | `src/main.js` | Practice Skills — record speech, get Azure scores, AI coaching |
-| `convo.html` | `src/convo.js` | AI Conversations — scenario-based chat with GPT |
-| `progress.html` | `src/progress.js` | Dashboard — practice history, stats |
-| `wordcloud.html` | `src/wordcloud.js` | Wordcloud visualization of practice data |
-| `stream.html` | `src/stream.js` | Real-time streaming conversation (WebRTC + OpenAI Realtime) |
-| `stream-setup.html` | `src/stream-setup.js` | Stream setup/config page |
-| `life.html` | `src/life.js` | Life Journey — gamified practice paths |
-| `admin/index.html` | Inline JS | Admin dashboard |
-| `admin/overview.html` | Inline JS | Admin overview/analytics |
-| `admin/user.html` | Inline JS | Admin per-user view |
+ensureUID() — generate or recover user identity
 
-**Common boot sequence** (most pages follow this pattern):
-1. `ensureUID()` — generate or recover user identity
-2. `initAuthUI()` — render login/logout button
-3. Feature-specific mount (e.g., `bootConvo()`, `mountStreamingApp()`)
-4. `bootRippleButtons()` — UI polish
+initAuthUI() — render login/logout button
 
----
+Feature-specific mount (e.g., bootConvo(), mountStreamingApp())
 
-## The Spine: app-core/
+bootRippleButtons() — UI polish
+
+The Spine: app-core/
 
 These modules are the foundation everything else builds on.
 
-### `lux-bus.js` — The Pub/Sub Bus
+lux-bus.js — The Pub/Sub Bus
 
-The single source of truth for cross-feature shared state. Replaces the old pattern of `window.dispatchEvent(new CustomEvent("lux:..."))`.
+The single source of truth for cross-feature shared state. Replaces the old pattern of window.dispatchEvent(new CustomEvent("lux:...")).
 
-```javascript
 import { luxBus } from '../app-core/lux-bus.js';
 
 luxBus.set('scenario', { id: 'coffee-shop', idx: 3 });  // write + notify
 luxBus.get('scenario');                                    // read
 luxBus.on('scenario', (val) => { ... });                   // subscribe (returns unsub fn)
 luxBus.update('tts', { autoVoice: true });                 // shallow merge
-```
 
-**Bus channels currently in use:** `scenario`, `ttsContext`, `lastRecording`, `lastAssessment`, `knobs`, `karaoke`, `karaokeRefresh`, `selfpbExpandedOpen`, `requestSelfPBExpanded`, `openSelfPBExpanded`, `pickerSummaryPulse`, `pickerSummaryHover`, `pickerSummaryHoverClear`, `convoMode`.
+Bus channels currently in use: scenario, ttsContext, lastRecording, lastAssessment, knobs, karaoke, karaokeRefresh, selfpbExpandedOpen, requestSelfPBExpanded, openSelfPBExpanded, pickerSummaryPulse, pickerSummaryHover, pickerSummaryHoverClear, convoMode.
 
-### `lux-listeners.js` — Guarded Listener Registry
+lux-listeners.js — Guarded Listener Registry
 
 Prevents duplicate event listeners from stacking across hot reloads or repeated init calls.
 
-```javascript
 import { guardedListener } from '../app-core/lux-listeners.js';
 guardedListener('convo:escapeKey', document, 'keydown', handler);
 // Second call with same key is a no-op
-```
+runtime.js — Current Run State
 
-### `runtime.js` — Current Run State
+Tracks lastAttemptId and lastRecording (blob + meta). Writes to the bus and maintains window global mirrors for backward compatibility.
 
-Tracks `lastAttemptId` and `lastRecording` (blob + meta). Writes to the bus and maintains window global mirrors for backward compatibility.
+state.js — Passage State
 
-### `state.js` — Passage State
+Holds allPartsResults, currentParts, and global debug flags.
 
-Holds `allPartsResults`, `currentParts`, and global debug flags.
+API Layer
 
----
+All API calls go through apiFetch() in api/util.js — except api/convo.js which has its own retry/abort logic.
 
-## API Layer
+apiFetch(url, opts)
 
-All API calls go through `apiFetch()` in `api/util.js` — except `api/convo.js` which has its own retry/abort logic.
+Canonical request helper. Automatically attaches x-admin-token, sets Content-Type for JSON, and parses responses.
 
-### `apiFetch(url, opts)`
-
-Canonical request helper. Automatically attaches `x-admin-token`, sets `Content-Type` for JSON, and parses responses.
-
-```javascript
 import { apiFetch } from '../api/util.js';
 
 // JSON (default)
@@ -186,77 +202,67 @@ const resp = await apiFetch(url, { ..., responseType: 'response' });
 
 // With token prompt
 const data = await apiFetch(url, { promptIfMissing: true, promptLabel: 'Token needed' });
-```
 
-**Response types:** `"json"` (default), `"blob"`, `"text"`, `"response"` (raw).
+Response types: "json" (default), "blob", "text", "response" (raw).
 
-### Backend Endpoints
+Backend Endpoints
+Frontend File	Endpoint	Purpose
+api/assess.js	/api/assess	Azure pronunciation assessment (multipart FormData)
+api/ai.js	/api/pronunciation-gpt	GPT coaching feedback
+api/attempts.js	/api/attempt, /api/user-recent	Save/fetch/update attempts
+api/convo.js	/api/convo-turn	AI conversation turn (retry + abort)
+api/convo-report.js	/api/convo-report	End-of-session report
+api/alt-meaning.js	/api/router?route=alt-meaning	Word meaning lookup
+features/features/tts/player-core.js	/api/tts, /api/tts?voices=1	TTS synthesis + voice capabilities
+ui/auth-dom.js	/api/migrate	Guest → user history migration
+Auth
 
-| Frontend File | Endpoint | Purpose |
-|---|---|---|
-| `api/assess.js` | `/api/assess` | Azure pronunciation assessment (multipart FormData) |
-| `api/ai.js` | `/api/pronunciation-gpt` | GPT coaching feedback |
-| `api/attempts.js` | `/api/attempt`, `/api/user-recent` | Save/fetch/update attempts |
-| `api/convo.js` | `/api/convo-turn` | AI conversation turn (retry + abort) |
-| `api/convo-report.js` | `/api/convo-report` | End-of-session report |
-| `api/alt-meaning.js` | `/api/router?route=alt-meaning` | Word meaning lookup |
-| `features/features/tts/player-core.js` | `/api/tts`, `/api/tts?voices=1` | TTS synthesis + voice capabilities |
-| `ui/auth-dom.js` | `/api/migrate` | Guest → user history migration |
+Admin token: prompted at runtime, stored in sessionStorage/localStorage under lux_admin_token
 
-### Auth
+User identity: UUID generated client-side, stored in localStorage under LUX_USER_ID
 
-- Admin token: prompted at runtime, stored in `sessionStorage`/`localStorage` under `lux_admin_token`
-- User identity: UUID generated client-side, stored in `localStorage` under `LUX_USER_ID`
-- Supabase: magic-link OTP auth, client in `src/supabase.js`
+Supabase: magic-link OTP auth, client in src/supabase.js
 
----
+Error Handling: warnSwallow System
 
-## Error Handling: warnSwallow System
+All try/catch blocks use globalThis.warnSwallow(fileLabel, err, level) instead of silent catches.
 
-All try/catch blocks use `globalThis.warnSwallow(fileLabel, err, level)` instead of silent catches.
-
-```javascript
 } catch (err) { globalThis.warnSwallow("features/recorder/index.js", err, "important"); }
-```
 
-**Modes** (set via `LuxWarn.set("on" | "off" | "important")` in DevTools):
-- `"on"` — show all 235 swallowed errors
-- `"important"` — show only the 166 critical/medium catches (persistence, API, recording, state)
-- `"off"` — silence everything
+Modes (set via LuxWarn.set("on" | "off" | "important") in DevTools):
 
-Default: `"important"` in dev, `"off"` in prod.
+"on" — show all 235 swallowed errors
 
----
+"important" — show only the 166 critical/medium catches (persistence, API, recording, state)
 
-## The Convo Feature (Largest Surface)
+"off" — silence everything
 
-AI Conversations is the biggest and most complex feature — 36 files in `features/convo/`. It has a scenario picker with a card deck UI, character role selection drawers, knobs (CEFR level, tone, response length), and a chat interface with pronunciation assessment on each turn.
+Default: "important" in dev, "off" in prod.
 
-### Key Convo Files
+The Convo Feature (Largest Surface)
 
-| File | Role |
-|---|---|
-| `convo-bootstrap.js` | Main orchestrator — builds layout, wires everything |
-| `convo-state.js` | Creates the mutable state object |
-| `convo-flow.js` | Wires the turn cycle: picker → recording → assessment → AI response |
-| `convo-turn.js` | Single turn logic: assess → persist → get AI reply |
-| `convo-handlers.js` | Button click handlers (record, stop, end session) |
-| `convo-render.js` | Chat bubble rendering |
-| `convo-layout.js` | DOM construction for the entire convo page |
-| `convo-picker-system.js` | Scenario picker state and transitions |
-| `convo-knobs.js` / `convo-knobs-ui.js` / `convo-knobs-system.js` | Level/tone/length controls |
-| `convo-modes.js` / `convo-mode-system.js` | Picker ↔ chat mode switching |
-| `characters-drawer.js` / `knobs-drawer.js` | Slide-out drawers for role and settings |
-| `picker-deck/` | Card deck UI (7 files — rendering, thumbnails, CEFR badge) |
-| `scenarios.js` | 25 conversation scenario definitions |
-| `convo-api.js` | UI-friendly wrapper around `api/convo.js` (never throws) |
-| `convo-tts-context.js` | TTS context setup for convo page |
-| `convo-persistence.js` | Save convo attempts |
-| `convo-shared.js` | Shared helpers (uid, el, showConvoReportOverlay) |
+AI Conversations is the biggest and most complex feature — 36 files in features/convo/. It has a scenario picker with a card deck UI, character role selection drawers, knobs (CEFR level, tone, response length), and a chat interface with pronunciation assessment on each turn.
 
-### Convo Data Flow
-
-```
+Key Convo Files
+File	Role
+convo-bootstrap.js	Main orchestrator — builds layout, wires everything
+convo-state.js	Creates the mutable state object
+convo-flow.js	Wires the turn cycle: picker → recording → assessment → AI response
+convo-turn.js	Single turn logic: assess → persist → get AI reply
+convo-handlers.js	Button click handlers (record, stop, end session)
+convo-render.js	Chat bubble rendering
+convo-layout.js	DOM construction for the entire convo page
+convo-picker-system.js	Scenario picker state and transitions
+convo-knobs.js / convo-knobs-ui.js / convo-knobs-system.js	Level/tone/length controls
+convo-modes.js / convo-mode-system.js	Picker ↔ chat mode switching
+characters-drawer.js / knobs-drawer.js	Slide-out drawers for role and settings
+picker-deck/	Card deck UI (7 files — rendering, thumbnails, CEFR badge)
+scenarios.js	25 conversation scenario definitions
+convo-api.js	UI-friendly wrapper around api/convo.js (never throws)
+convo-tts-context.js	TTS context setup for convo page
+convo-persistence.js	Save convo attempts
+convo-shared.js	Shared helpers (uid, el, showConvoReportOverlay)
+Convo Data Flow
 User clicks Record → convo-handlers.js
   → startRecording (convo-recording.js)
   → stopRecordingAndGetBlob
@@ -265,92 +271,77 @@ User clicks Record → convo-handlers.js
     → persistConvoAttempt (convo-persistence.js → api/attempts.js)
     → convoTurn (convo-api.js → api/convo.js → GPT)
     → renderMessages + renderSuggestions
-```
+Window Globals Still Present (as backward-compat mirrors)
 
-### Window Globals Still Present (as backward-compat mirrors)
+These are NOT the source of truth — luxBus is. Reader code should use luxBus.get(), not the window global.
 
-These are NOT the source of truth — `luxBus` is. Reader code should use `luxBus.get()`, not the window global.
+Global	Status	Real Owner
+window.luxTTS	Frozen shim — luxBus.get('tts') is sole owner. All readers migrated to bus. One window.luxTTS = luxBus.get('tts') compat shim remains at end of mountTTSPlayer.	luxBus 'tts' key
+window.LuxLastRecordingBlob	Active mirror	runtime.js via setLastRecording()
+window.LuxMyWords	Active — self-contained island	my-words/index.js
+window.LuxSelfPB	Active — selfpb family only	selfpb/core.js + selfpb/ui.js
+window.LUX_USER_ID	Active mirror	identity.js via ensureUID() / setUID()
+Streaming Feature (Reference Architecture)
 
-| Global | Status | Real Owner |
-|---|---|---|
-| `window.luxTTS` | **Frozen shim** — `luxBus.get('tts')` is sole owner. All readers migrated to bus. One `window.luxTTS = luxBus.get('tts')` compat shim remains at end of `mountTTSPlayer`. | `luxBus 'tts'` key |
-| `window.LuxLastRecordingBlob` | Active mirror | `runtime.js` via `setLastRecording()` |
-| `window.LuxMyWords` | Active — self-contained island | `my-words/index.js` |
-| `window.LuxSelfPB` | Active — selfpb family only | `selfpb/core.js` + `selfpb/ui.js` |
-| `window.LUX_USER_ID` | Active mirror | `identity.js` via `ensureUID()` / `setUID()` |
+The Streaming feature (features/streaming/) is the cleanest feature island in the codebase. It's a good model for how future features should be structured: isolated mount, dedicated state store, transport controller, and render loop.
 
----
-
-## Streaming Feature (Reference Architecture)
-
-The Streaming feature (`features/streaming/`) is the cleanest feature island in the codebase. It's a good model for how future features should be structured: isolated mount, dedicated state store, transport controller, and render loop.
-
----
-
-## Build and Dev
-
-```bash
+Build and Dev
 npm run dev          # Vite dev server on port 3000 with API proxy
 npm run build        # Production build
 npm run lint         # ESLint
 npm run test         # Vitest
 npm run hygiene      # Hygiene report + no-silent-catches scan
-```
 
-**Dev proxy:** `/api/*` requests are proxied to the backend (configurable via `LUX_API_ORIGIN` or `VITE_LUX_API_ORIGIN` env vars, defaults to `https://luxury-language-api.vercel.app`).
+Dev proxy: /api/* requests are proxied to the backend (configurable via LUX_API_ORIGIN or VITE_LUX_API_ORIGIN env vars, defaults to https://luxury-language-api.vercel.app).
 
----
+localStorage Keys
+Key	Purpose	Owner
+LUX_USER_ID / lux_user_id	User identity UUID	api/identity.js
+lux_admin_token	Admin API token	api/util.js
+luxAudioMode	Recording mode (normal/pro)	recorder/audio-mode-core.js
+LUX_HARVARD_LAST	Last Harvard list index	features/harvard/
+LUX_HARVARD_FAVS	Harvard favorites	features/harvard/
+LUX_PASSAGES_LAST / LUX_PASSAGES_FAVS	Passage selection state	features/passages/
+bannerCollapsed	UI preference	various
+spb-hint-seen	Self-playback hint shown	selfpb/
+seenClickHints / seenProsodyLegendCue	Onboarding hints	interactions/
+LUX_STREAM_DEBUG	Streaming debug mode	streaming/
+LUX_WARN_SWALLOW_MODE	warnSwallow verbosity	ui/lux-warn.js
+Git Tags (Stabilization Campaign)
+Tag	Description
+v2.1-scenario-bus	scenarioChanged migrated to bus
+v2.2-bus-migration-complete	All lux: events on bus
+v3.0-apifetch-begin	Phase 3 started
+v3.1-apifetch-core-complete	5 core API helpers on apiFetch
+v3.2-sidecar-cleanup	Orphan dispatch removed, warnSwallow labels fixed
+v3.3-apifetch-full	apiFetch responseType upgrade, TTS + auth migrated
+v4.0-warnswallow-normalize	170 warnSwallow path labels normalized
+v4.1-warnswallow-critical-tagged	91 critical catches tagged "important"
+v4.2-warnswallow-medium-tagged	69 medium catches tagged "important"
+Architecture Rules (Enforced)
 
-## localStorage Keys
+Bus is truth, globals are mirrors. luxBus.set() is the canonical write. Window globals may survive temporarily but are never the primary source.
 
-| Key | Purpose | Owner |
-|---|---|---|
-| `LUX_USER_ID` / `lux_user_id` | User identity UUID | `api/identity.js` |
-| `lux_admin_token` | Admin API token | `api/util.js` |
-| `luxAudioMode` | Recording mode (normal/pro) | `recorder/audio-mode-core.js` |
-| `LUX_HARVARD_LAST` | Last Harvard list index | `features/harvard/` |
-| `LUX_HARVARD_FAVS` | Harvard favorites | `features/harvard/` |
-| `LUX_PASSAGES_LAST` / `LUX_PASSAGES_FAVS` | Passage selection state | `features/passages/` |
-| `bannerCollapsed` | UI preference | various |
-| `spb-hint-seen` | Self-playback hint shown | `selfpb/` |
-| `seenClickHints` / `seenProsodyLegendCue` | Onboarding hints | `interactions/` |
-| `LUX_STREAM_DEBUG` | Streaming debug mode | `streaming/` |
-| `LUX_WARN_SWALLOW_MODE` | warnSwallow verbosity | `ui/lux-warn.js` |
+apiFetch is the front door. All new API calls go through apiFetch(). The only exception is api/convo.js (has its own retry/abort).
 
----
+guardedListener for document/window events. Prevents duplicate listener stacking.
 
-## Git Tags (Stabilization Campaign)
+warnSwallow, never silent catch. Every catch block uses globalThis.warnSwallow(fileLabel, err) with appropriate level.
 
-| Tag | Description |
-|---|---|
-| `v2.1-scenario-bus` | scenarioChanged migrated to bus |
-| `v2.2-bus-migration-complete` | All lux: events on bus |
-| `v3.0-apifetch-begin` | Phase 3 started |
-| `v3.1-apifetch-core-complete` | 5 core API helpers on apiFetch |
-| `v3.2-sidecar-cleanup` | Orphan dispatch removed, warnSwallow labels fixed |
-| `v3.3-apifetch-full` | apiFetch responseType upgrade, TTS + auth migrated |
-| `v4.0-warnswallow-normalize` | 170 warnSwallow path labels normalized |
-| `v4.1-warnswallow-critical-tagged` | 91 critical catches tagged "important" |
-| `v4.2-warnswallow-medium-tagged` | 69 medium catches tagged "important" |
+Surgical changes only. Follow Lux Refactor Constitution v2 — .GOLD backups, Risk Gate, sequential peels, rollback path always documented.
 
----
+No framework migration. Vanilla JS is the architecture. No React, no grand rewrite.
 
-## Architecture Rules (Enforced)
+Run npm test after touching plumbing. Protection ring tests cover lux-bus, identity, apiFetch, lux-storage, and attempts contract. Run after any session that modifies these shared modules.
 
-1. **Bus is truth, globals are mirrors.** `luxBus.set()` is the canonical write. Window globals may survive temporarily but are never the primary source.
-2. **apiFetch is the front door.** All new API calls go through `apiFetch()`. The only exception is `api/convo.js` (has its own retry/abort).
-3. **guardedListener for document/window events.** Prevents duplicate listener stacking.
-4. **warnSwallow, never silent catch.** Every catch block uses `globalThis.warnSwallow(fileLabel, err)` with appropriate level.
-5. **Surgical changes only.** Follow Lux Refactor Constitution v2 — `.GOLD` backups, Risk Gate, sequential peels, rollback path always documented.
-6. **No framework migration.** Vanilla JS is the architecture. No React, no grand rewrite.
-7. **Run `npm test` after touching plumbing.** Protection ring tests cover lux-bus, identity, apiFetch, and lux-storage. Run after any session that modifies these shared modules.
+Known Issues
 
----
+End Session in AI Conversations doesn't show the report overlay (pre-existing, not from stabilization)
 
-## Known Issues
+Character encoding garbled symbols in some results displays
 
-- **End Session** in AI Conversations doesn't show the report overlay (pre-existing, not from stabilization)
-- **Character encoding** garbled symbols in some results displays
-- **Expanded tooltip** video/audio desync
-- **4 duplicate `escHtml` functions** — should consolidate to `helpers/dom.js`
-- ~~**94 scattered localStorage accesses** — no centralized storage layer yet~~ **RESOLVED:** `app-core/lux-storage.js` provides `K_` constants + typed helpers. 11 files migrated from bare key strings to constants (Phase D). Remaining bare strings are in `identity.js` (key owner) and `public/lux-popover.js` / admin HTML (classic scripts, cannot import).
+Expanded tooltip video/audio desync
+
+4 duplicate escHtml functions — should consolidate to helpers/dom.js
+
+94 scattered localStorage accesses — no centralized storage layer yet RESOLVED: app-core/lux-storage.js provides K_ constants + typed helpers. 11 files migrated from bare key strings to constants (Phase D). Remaining bare strings are in identity.js (key owner) and public/lux-popover.js / admin HTML (classic scripts, cannot import).
