@@ -9,6 +9,7 @@ import { computeRollups } from "../progress/rollups.js";
 import { renderProgressDashboard } from "../progress/render.js";
 import { mountAICoachAlwaysOn } from "../../ui/ui-ai-ai-logic.js";
 import { bringBoxBottomToViewport } from "../../helpers/index.js";
+import { luxBus } from "../../app-core/lux-bus.js";
 
 const ROOT_ID = "dashboard-root";
 const HUB_HREF = "./progress.html";
@@ -143,7 +144,10 @@ export async function initDashboard() {
   const root = document.getElementById(ROOT_ID);
   if (!root) return;
 
-  // expose refresh for auth + other flows
+  // Canonical in-memory API via bus
+  luxBus.set("dashboardApi", { refresh: refreshHistory });
+
+  // Window compat shim (keep for now)
   window.refreshDashboard = refreshHistory;
 
   const isHub =

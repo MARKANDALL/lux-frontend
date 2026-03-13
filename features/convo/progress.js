@@ -5,6 +5,7 @@
 import { fetchHistory, ensureUID } from "../../api/index.js";
 import { computeRollups } from "../progress/rollups.js";
 import { renderProgressDashboard } from "../progress/render.js";
+import { luxBus } from "../../app-core/lux-bus.js";
 
 const HUB_HREF = "./progress.html";
 
@@ -54,7 +55,10 @@ export async function initConvoProgress() {
   const host = document.getElementById("convoProgress");
   if (!host) return;
 
-  // expose refresh hook so convo/index.js can call it after saveAttempt
+  // Canonical in-memory API via bus
+  luxBus.set("convoProgressApi", { refresh: refreshConvoProgress });
+
+  // Window compat shim (keep for now)
   window.refreshConvoProgress = refreshConvoProgress;
 
   host.innerHTML = `

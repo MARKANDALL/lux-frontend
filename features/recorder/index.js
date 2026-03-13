@@ -108,7 +108,7 @@ async function handleRecordingComplete(audioBlob) {
         ts: Date.now(),
         scope: "practice",
       });
-} catch (err) { globalThis.warnSwallow("features/recorder/index.js", err, "important"); }
+    } catch (err) { globalThis.warnSwallow("features/recorder/index.js", err, "important"); }
 
     // Guardrail 1 Check: Audio Size
     if (audioBlob.size < 1000) {
@@ -147,7 +147,7 @@ async function handleRecordingComplete(audioBlob) {
     try {
       setMetricModalData({ azureResult: result, referenceText: text });
       initMetricScoreModals();
-} catch (err) { globalThis.warnSwallow("features/recorder/index.js", err, "important"); }
+    } catch (err) { globalThis.warnSwallow("features/recorder/index.js", err, "important"); }
 
     // ✅ expose word timings for SelfPB Expanded "karaoke"
     try {
@@ -157,7 +157,7 @@ async function handleRecordingComplete(audioBlob) {
       window.LuxLastWordTimings = timings;
 
       luxBus.set('lastAssessment', { result, timings });
-} catch (err) { globalThis.warnSwallow("features/recorder/index.js", err, "important"); }
+    } catch (err) { globalThis.warnSwallow("features/recorder/index.js", err, "important"); }
 
     // Guardrail 2: Bad Score / No Speech Detected?
     const score = result?.NBest?.[0]?.PronScore || 0;
@@ -224,10 +224,12 @@ async function saveToDatabase(result, text, lang) {
         setLastAttemptId(saved.id);
         console.log("[Lux] Saved Attempt ID:", saved.id);
 
-        // REFRESH DASHBOARD (keeps the drawer intact)
-        if (window.refreshDashboard) {
+        // REFRESH DASHBOARD (bus-first, window compat fallback)
+        const refreshDashboard =
+          luxBus.get("dashboardApi")?.refresh || window.refreshDashboard;
+        if (typeof refreshDashboard === "function") {
           try {
-            await window.refreshDashboard();
+            await refreshDashboard();
           } catch (err) { globalThis.warnSwallow("features/recorder/index.js", err, "important"); }
         }
       }

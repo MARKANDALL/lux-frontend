@@ -9,6 +9,7 @@ import { supabase } from "../src/supabase.js";
 import { API_BASE, apiFetch } from "../api/util.js";
 import { setUID } from "../api/index.js";
 import { K_IDENTITY_UID } from "../app-core/lux-storage.js";
+import { luxBus } from "../app-core/lux-bus.js";
 
 import { escapeHtml as escHtml } from "../helpers/escape-html.js";
 
@@ -163,12 +164,15 @@ function handleAuthStateChange() {
       // Update global ID to the Real ID
       setUID(realUid);
 
-      // Refresh Dashboard
-      if (window.refreshDashboard) window.refreshDashboard();
-      else {
-          import('../features/dashboard/index.js').then(mod => {
-              if (mod.refreshHistory) mod.refreshHistory();
-          });
+      // Refresh Dashboard (bus-first, window compat fallback, then lazy import)
+      const refreshDashboard =
+        luxBus.get("dashboardApi")?.refresh || window.refreshDashboard;
+      if (typeof refreshDashboard === "function") {
+        await refreshDashboard();
+      } else {
+        import("../features/dashboard/index.js").then((mod) => {
+          if (mod.refreshHistory) mod.refreshHistory();
+        });
       }
       
     } else {

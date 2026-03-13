@@ -4,6 +4,7 @@
 import { getAudioMode } from "../recorder/audio-mode.js";
 import { persistConvoAttempt } from "./convo-persistence.js";
 import { setLastRecording } from "../../app-core/runtime.js";
+import { luxBus } from "../../app-core/lux-bus.js";
 
 export function createConvoTurn({
   SCENARIOS,
@@ -88,10 +89,12 @@ export function createConvoTurn({
       if (d && !d.open && state.turns.length === 1) d.open = true;
     } catch (err) { globalThis.warnSwallow("features/convo/convo-turn.js", err, "important"); }
 
-    // refresh Conversation Skills progress (if present)
-    if (window.refreshConvoProgress) {
+    // refresh Conversation Skills progress (bus-first, window compat fallback)
+    const refreshConvoProgress =
+      luxBus.get("convoProgressApi")?.refresh || window.refreshConvoProgress;
+    if (typeof refreshConvoProgress === "function") {
       try {
-        await window.refreshConvoProgress();
+        await refreshConvoProgress();
       } catch (err) { globalThis.warnSwallow("features/convo/convo-turn.js", err, "important"); }
     }
 
