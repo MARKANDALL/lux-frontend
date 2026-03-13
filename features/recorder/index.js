@@ -129,7 +129,9 @@ async function handleRecordingComplete(audioBlob) {
       audioEl.src = URL.createObjectURL(audioBlob);
     }
 
-    if (window.__attachLearnerBlob) window.__attachLearnerBlob(audioBlob);
+    const attachLearnerBlob =
+      luxBus.get("selfpbApi")?.attachLearnerBlob || window.__attachLearnerBlob;
+    if (typeof attachLearnerBlob === "function") attachLearnerBlob(audioBlob);
 
     DOM.setStatus("Analyzing...");
 

@@ -37,6 +37,18 @@ function normalizeSourceMode(mode) {
   return m === "ai" || m === "me" || m === "selection" ? m : "me";
 }
 
+function getTtsContext() {
+  return luxBus.get("ttsContextApi") || window.LuxTTSContext || null;
+}
+
+function getSelfPBApi() {
+  return luxBus.get("selfpbApi") || window.LuxSelfPB || null;
+}
+
+function isTtsKaraokeActive() {
+  return String(luxBus.get("karaoke")?.source || window.LuxKaraokeSource || "") === "tts";
+}
+
 export async function mountTTSPlayer(hostEl) {
   const host = hostEl || document.getElementById("tts-controls");
   if (!host) return;
@@ -79,8 +91,8 @@ export async function mountTTSPlayer(hostEl) {
       e.preventDefault();
       e.stopPropagation();
       try {
-luxBus.set('requestSelfPBExpanded', true);
-} catch (err) { globalThis.warnSwallow("features/features/tts/player-ui.js", err, "important"); }
+        luxBus.set('requestSelfPBExpanded', true);
+      } catch (err) { globalThis.warnSwallow("features/features/tts/player-ui.js", err, "important"); }
     });
   }
 
@@ -99,7 +111,7 @@ luxBus.set('requestSelfPBExpanded', true);
   // Apply default source mode (pages like convo can pre-seed via luxBus 'tts')
   const initialMode = normalizeSourceMode(
     luxBus.get('tts')?.sourceMode ||
-    window.LuxTTSContext?.defaultSourceMode ||
+    getTtsContext()?.defaultSourceMode ||
     "me"
   );
   if (sourceSel) sourceSel.value = initialMode;
@@ -125,7 +137,7 @@ luxBus.set('requestSelfPBExpanded', true);
   function syncVoiceFromContext(reason, caps) {
     const autoOn = autoVoiceEl ? autoVoiceEl.checked : (luxBus.get('tts')?.autoVoice !== false);
     if (!autoOn) return;
-    const ctx = window.LuxTTSContext;
+    const ctx = getTtsContext();
     if (!ctx || typeof ctx.getVoiceId !== "function") return;
     const mode = normalizeSourceMode(
       sourceSel?.value || luxBus.get('tts')?.sourceMode || "me"
@@ -139,14 +151,12 @@ luxBus.set('requestSelfPBExpanded', true);
   const stopProgress = wireTtsProgress(audio, progressFill);
 
   // Keep SelfPB karaoke cursor synced while TTS plays (no-op if SelfPB isn't mounted)
-  audio.addEventListener("timeupdate", () => {
-    if (String(window.LuxKaraokeSource || "") !== "tts") return;
-    window.LuxSelfPB?.karaokeUpdate?.();
-  });
-  audio.addEventListener("play", () => {
-    if (String(window.LuxKaraokeSource || "") !== "tts") return;
-    window.LuxSelfPB?.karaokeUpdate?.();
-  });
+  const syncSelfPBKaraoke = () => {
+    if (!isTtsKaraokeActive()) return;
+    getSelfPBApi()?.karaokeUpdate?.();
+  };
+  audio.addEventListener("timeupdate", syncSelfPBKaraoke);
+  audio.addEventListener("play", syncSelfPBKaraoke);
 
   // 4. Load Capabilities (Async)
   let caps = await getVoiceCaps();
@@ -179,14 +189,14 @@ luxBus.set('requestSelfPBExpanded', true);
     });
   }
 
-luxBus.on('ttsContext', () => syncVoiceFromContext("ctx-event", caps));
+  luxBus.on('ttsContext', () => syncVoiceFromContext("ctx-event", caps));
 
   // 5. Wire Inputs
   const updateSpeedOut = () => {
     const v = Number(speedEl.value) || 1;
     speedOut.textContent = v.toFixed(2) + "×";
     audio.playbackRate = v;
-    if (window.LuxSelfPB?.setRefRate) window.LuxSelfPB.setRefRate(v);
+    getSelfPBApi()?.setRefRate?.(v);
   };
 
   const updatePitchOut = () => {
@@ -251,8 +261,9 @@ luxBus.on('ttsContext', () => syncVoiceFromContext("ctx-event", caps));
       await audio.play();
 
       // Optional: push into SelfPB reference track
-      if (window.LuxSelfPB?.setReference) {
-        window.LuxSelfPB.setReference({
+      const selfpb = getSelfPBApi();
+      if (selfpb?.setReference) {
+        selfpb.setReference({
           audioEl: audio,
           meta: { voice, style, styledegree, rate: speedMult, ratePct, pitchSt },
         });
@@ -333,8 +344,9 @@ luxBus.on('ttsContext', () => syncVoiceFromContext("ctx-event", caps));
       // ------------------------------------
 
       // Sync with Self Playback
-      if (window.LuxSelfPB?.setReference) {
-        window.LuxSelfPB.setReference({
+      const selfpb = getSelfPBApi();
+      if (selfpb?.setReference) {
+        selfpb.setReference({
           audioEl: audio,
           meta: { voice, style, styledegree, rate: speedMult, ratePct, pitchSt },
         });
@@ -358,7 +370,7 @@ luxBus.on('ttsContext', () => syncVoiceFromContext("ctx-event", caps));
       try {
         await audio.play();
         setMainLabel(true);
-} catch (err) { globalThis.warnSwallow("features/features/tts/player-ui.js", err, "important"); }
+      } catch (err) { globalThis.warnSwallow("features/features/tts/player-ui.js", err, "important"); }
     } else {
       await ensureAudioReadyAndPlay();
     }
@@ -380,7 +392,7 @@ luxBus.on('ttsContext', () => syncVoiceFromContext("ctx-event", caps));
           try {
             await audio.play();
             setMainLabel(true);
-} catch (err) { globalThis.warnSwallow("features/features/tts/player-ui.js", err, "important"); }
+          } catch (err) { globalThis.warnSwallow("features/features/tts/player-ui.js", err, "important"); }
         }
       }
       clickPending = false;

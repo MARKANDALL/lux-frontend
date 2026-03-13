@@ -48,7 +48,9 @@ export function createConvoTurn({
         });
       } catch (err) { globalThis.warnSwallow("features/convo/convo-turn.js", err, "important"); }
 
-      if (window.__attachLearnerBlob) window.__attachLearnerBlob(audioBlob);
+      const attachLearnerBlob =
+        luxBus.get("selfpbApi")?.attachLearnerBlob || window.__attachLearnerBlob;
+      if (typeof attachLearnerBlob === "function") attachLearnerBlob(audioBlob);
     }
 
     // show user msg in chat immediately (natural flow)
