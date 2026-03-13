@@ -45,7 +45,30 @@ export const FLOAT_CSS = `
       display: flex;
       align-items: center;
       gap: 8px;
+      min-width: 0;
     }
+
+    #spb-floatHeadActions{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      min-width: 0;
+      flex-shrink: 0;
+    }
+
+    #spb-toast-float{
+      background:#ef4444;
+      border-color:#b91c1c;
+      color:#fff;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+
+    #spb-floatSpeakSlot{
+      display:flex;
+      align-items:center;
+      min-width: 0;
+    }
+
     /* ✅ Drag handle — animated hand */
     #spb-floatDragHint {
       display: flex;

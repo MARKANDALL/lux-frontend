@@ -118,8 +118,14 @@ export function initConvoPickerSystem({
 
   // ─── Scene Settings button peekaboo ───
   if (pickerKnobsBtn) {
-    pickerKnobsBtn.addEventListener("mouseenter", () => peekKnobsDrawer());
-    pickerKnobsBtn.addEventListener("mouseleave", () => unpeekKnobsDrawer());
+    pickerKnobsBtn.addEventListener("mouseenter", () => {
+      if (pickerKnobsBtn.dataset.luxSuppressPeek === "1") return;
+      peekKnobsDrawer();
+    });
+    pickerKnobsBtn.addEventListener("mouseleave", () => {
+      delete pickerKnobsBtn.dataset.luxSuppressPeek;
+      unpeekKnobsDrawer();
+    });
   }
 
   const listLen = Array.isArray(scenarios) ? scenarios.length : 0;

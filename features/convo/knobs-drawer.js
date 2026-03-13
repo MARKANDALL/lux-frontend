@@ -92,12 +92,21 @@ function _animateOpen(drawer) {
   _currentAnim.onfinish = () => {
     drawer.dataset.state = "open";
     drawer.style.transform = "translateX(0)";
+    // Kill the finished animation so its fill:forwards doesn't leave an
+    // orphaned compositing layer that can re-assert translateX(0) after a
+    // subsequent close animation cancels itself — the root cause of the
+    // "blank drawer shell bleeds into chat page" intermittent bug.
+    try { _currentAnim.cancel(); } catch (_) {}
     _currentAnim = null;
   };
 }
 
 function _animateClose(drawer) {
   if (_currentAnim) { _currentAnim.cancel(); _currentAnim = null; }
+
+  // Belt-and-suspenders: nuke ALL lingering animations on the drawer element
+  // (catches any orphaned fill:forwards from open, content swaps, CSS anims).
+  try { drawer.getAnimations().forEach(a => a.cancel()); } catch (_) {}
 
   _currentAnim = drawer.animate([
     { transform: "translateX(0)",    offset: 0    },
@@ -119,7 +128,13 @@ function _animateClose(drawer) {
     // permanently override CSS classes (e.g. peek on next hover).
     try { _currentAnim.cancel(); } catch (_) {}
     _currentAnim = null;
-    if (_openerEl) { _openerEl.focus(); _openerEl = null; }
+    if (_openerEl) {
+      if (_openerEl instanceof HTMLElement) {
+        _openerEl.dataset.luxSuppressPeek = "1";
+      }
+      _openerEl.focus();
+      _openerEl = null;
+    }
   };
 }
 
@@ -136,9 +151,14 @@ export function unpeekKnobsDrawer() {
   const d = document.getElementById("luxKnobsDrawer");
   if (!d) return;
   d.classList.remove("lux-knobsPeek");
-  // Restore closed position inline (close animation's onfinish sets this,
-  // but peek cleared it, so put it back).
-  d.style.transform = "translateX(100%)";
+  // Only restore the closed-position transform if the drawer is actually
+  // in "closed" state (i.e. it was merely peeking and should retract).
+  // If the drawer is open/opening/closing, leave the transform alone —
+  // otherwise mouseleave on the trigger button would yank an open drawer
+  // offscreen.
+  if (d.dataset.state === "closed") {
+    d.style.transform = "translateX(100%)";
+  }
 }
 
 /* ── Empty-space nudge ── */
@@ -217,7 +237,13 @@ export function mountKnobsDrawer() {
       drawer.style.transform = "translateX(100%)";
       drawer.dataset.open = "0"; drawer.dataset.state = "closed";
       drawer.setAttribute("aria-hidden", "true"); drawer.inert = true;
-      if (_openerEl) { _openerEl.focus(); _openerEl = null; }
+      if (_openerEl) {
+        if (_openerEl instanceof HTMLElement) {
+          _openerEl.dataset.luxSuppressPeek = "1";
+        }
+        _openerEl.focus();
+        _openerEl = null;
+      }
     } else { _animateClose(drawer); }
   };
 

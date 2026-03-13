@@ -112,8 +112,12 @@ export function buildUI() {
           <div id="spb-floatDragHint" title="Drag to move">🖐️</div>
           <div>Self Playback + Text-to-Speech (Expanded)</div>
         </div>
-         <span id="spb-toast-float" class="pill tiny" style="display:none; position:absolute; right:52px; top:10px; background:#ef4444; border-color:#b91c1c; color:#fff; z-index:10; box-shadow: 0 2px 10px rgba(0,0,0,0.5);"></span>
-        <button id="spb-floatClose" class="spb-btn secondary icon" title="Close">✕</button>
+
+        <div id="spb-floatHeadActions">
+          <span id="spb-toast-float" class="pill tiny" style="display:none;"></span>
+          <div id="spb-floatSpeakSlot"></div>
+          <button id="spb-floatClose" class="spb-btn secondary icon" title="Close">✕</button>
+        </div>
       </div>
 
       <div id="spb-floatMount"></div>
@@ -124,6 +128,7 @@ export function buildUI() {
   const floatHead = float.querySelector("#spb-floatHead");
   const floatClose = float.querySelector("#spb-floatClose");
   const floatMount = float.querySelector("#spb-floatMount");
+  const floatSpeakSlot = float.querySelector("#spb-floatSpeakSlot");
   const ttsMount = host.querySelector("#spb-ttsMount");
 
   const expandBtn = host.querySelector("#spb-expand");
@@ -139,6 +144,8 @@ export function buildUI() {
   let ttsWrapHome = null;
   let ttsWrapNext = null;
   let ttsShell = null;
+  let ttsSourceHome = null;
+  let ttsSourceNext = null;
 
   const setTtsShellEmpty = (on) => {
     try {
@@ -211,6 +218,18 @@ export function buildUI() {
       globalThis.warnSwallow("features/features/selfpb/dom.js", err, "important");
     }
 
+    try {
+      const sourceRow = document.querySelector("#tts-wrap .tts-sourceRow");
+      if (sourceRow && floatSpeakSlot && sourceRow.parentElement !== floatSpeakSlot) {
+        ttsSourceHome = sourceRow.parentElement;
+        ttsSourceNext = sourceRow.nextSibling;
+        floatSpeakSlot.appendChild(sourceRow);
+        sourceRow.dataset.luxInFloatHead = "1";
+      }
+    } catch (err) {
+      globalThis.warnSwallow("features/features/selfpb/dom.js", err, "important");
+    }
+
     // show placeholder in the TTS drawer while controls are moved out
     setTtsShellEmpty(true);
 
@@ -234,6 +253,18 @@ export function buildUI() {
     float.classList.remove("is-open");
     bodyHome.insertBefore(body, bodyNext || null);
     host.classList.remove("spb-mini-empty");
+
+    try {
+      const sourceRow =
+        floatSpeakSlot?.querySelector?.(".tts-sourceRow") ||
+        document.querySelector("#spb-floatSpeakSlot .tts-sourceRow");
+      if (ttsSourceHome && sourceRow) {
+        ttsSourceHome.insertBefore(sourceRow, ttsSourceNext || null);
+        delete sourceRow.dataset.luxInFloatHead;
+      }
+    } catch (err) {
+      globalThis.warnSwallow("features/features/selfpb/dom.js", err, "important");
+    }
 
     // restore TTS controls back into its drawer home
     const ttsWrap = document.getElementById("tts-wrap");
@@ -272,8 +303,8 @@ export function buildUI() {
   let dragOffY = 0;
 
   floatHead.addEventListener("pointerdown", (e) => {
-    // prevent dragging when clicking the close button
-    if (e.target && e.target.id === "spb-floatClose") return;
+    // prevent dragging when clicking header controls
+    if (e.target?.closest?.("#spb-floatClose, #spb-floatSpeakSlot")) return;
 
     // ✅ Swap to grab fist
     const dragHint = float.querySelector("#spb-floatDragHint");

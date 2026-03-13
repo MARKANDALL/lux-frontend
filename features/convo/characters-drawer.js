@@ -27,9 +27,14 @@ export function peekCharsDrawer() {
 export function unpeekCharsDrawer() {
   if (!_drawer) return;
   _drawer.classList.remove("lux-charsPeek");
-  // Restore closed position inline (close animation's onfinish sets this,
-  // but if we peeked we cleared it, so put it back).
-  _drawer.style.transform = "translateX(-100%)";
+  // Only restore the closed-position transform if the drawer is actually
+  // in "closed" state (i.e. it was merely peeking and should retract).
+  // If the drawer is open/opening/closing, leave the transform alone —
+  // otherwise mouseleave on the trigger button would yank an open drawer
+  // offscreen.
+  if (_drawer.dataset.state === "closed") {
+    _drawer.style.transform = "translateX(-100%)";
+  }
 }
 
 /* ── Empty-space nudge (wiggle close btn if user clicks dead space) ── */
@@ -232,6 +237,11 @@ function _animateOpen() {
   _currentAnim.onfinish = () => {
     _drawer.dataset.state = "open";
     _drawer.style.transform = "translateX(0)";
+    // Kill the finished animation so its fill:forwards doesn't leave an
+    // orphaned compositing layer that can re-assert translateX(0) after a
+    // subsequent close animation cancels itself — the root cause of the
+    // "blank drawer shell bleeds into chat page" intermittent bug.
+    try { _currentAnim.cancel(); } catch (_) {}
     _currentAnim = null;
   };
 }
@@ -241,6 +251,10 @@ function _animateClose() {
     _currentAnim.cancel();
     _currentAnim = null;
   }
+
+  // Belt-and-suspenders: nuke ALL lingering animations on the drawer element
+  // (catches any orphaned fill:forwards from open, content swaps, CSS anims).
+  try { _drawer.getAnimations().forEach(a => a.cancel()); } catch (_) {}
 
   _currentAnim = _drawer.animate(
     [
