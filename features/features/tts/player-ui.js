@@ -213,7 +213,7 @@ luxBus.on('ttsContext', () => syncVoiceFromContext("ctx-event", caps));
   function setMainLabel(playing) {
     mainBtn.textContent = playing
       ? "⏸️ Pause (dbl-click = Restart)"
-      : "🔊 Generate & Play";
+      : "🔊 Play";
   }
 
   function uiNote(msg, tone = "info") {

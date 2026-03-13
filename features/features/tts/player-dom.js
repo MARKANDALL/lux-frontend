@@ -103,7 +103,7 @@ export function renderControls(mount) {
               id="tts-main"
               class="tts-btn tts-btn--primary"
               title="Click: play/pause • Double-click: restart & play"
-            >🔊 Generate &amp; Play</button>
+            >🔊 Play</button>
 
             <div class="tts-miniActions">
               <button id="tts-back" class="tts-btn tts-btn--sm" title="Back 2 seconds">↺ 2s</button>
