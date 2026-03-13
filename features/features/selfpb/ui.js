@@ -11,6 +11,7 @@ import { initKaraoke } from "./karaoke.js";
 import { initControls } from "./controls.js";
 import { initMediaEvents } from "./media-events.js";
 import { initShortcuts } from "./shortcuts.js";
+import { attachLearnerBlobToAudio } from "./attach-learner-blob.js";
 
 export function mountSelfPlaybackLite() {
   const { api, audio, refAudio, st } = initSelfPBCore();
@@ -30,23 +31,7 @@ export function mountSelfPlaybackLite() {
   // store window.LuxLastRecordingBlob, so we attach it here on mount.
   const audioEl = audio;
   function attachLearnerBlob(blob, meta) {
-    if (!blob) return;
-
-    // Revoke our prior object URL (if any) to avoid leaks
-    try {
-      const prev = audioEl?.dataset?.luxBlobUrl;
-      if (prev && String(prev).startsWith("blob:")) URL.revokeObjectURL(prev);
-    } catch (err) { globalThis.warnSwallow("features/features/selfpb/ui.js", err, "important"); }
-
-    try {
-      const url = URL.createObjectURL(blob);
-      audioEl.dataset.luxBlobUrl = url;
-      audioEl.src = url;
-      try { audioEl.load?.(); } catch (err) { globalThis.warnSwallow("features/features/selfpb/ui.js", err, "important"); }
-    } catch (err) { globalThis.warnSwallow("features/features/selfpb/ui.js", err, "important"); }
-
-    // Draw waveform from the blob as well
-    try { loadLearnerBlob(blob); } catch (err) { globalThis.warnSwallow("features/features/selfpb/ui.js", err, "important"); }
+    attachLearnerBlobToAudio({ audioEl, blob, loadLearnerBlob });
   }
 
   // Recorder will call this if present
@@ -128,4 +113,3 @@ window.LuxSelfPB = Object.assign(window.LuxSelfPB || {}, {
 }
 
 export { mountSelfPlaybackLite as default };
-
