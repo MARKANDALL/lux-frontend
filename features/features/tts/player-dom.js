@@ -48,24 +48,13 @@ export function renderControls(mount) {
   mount.innerHTML = `
       <div id="tts-wrap">
         <div class="tts-box tts-compact">
-          <div class="tts-sourceRow">
-            <div class="tts-selectWrap" data-label="Speak">
-              <select id="tts-source">
-                <option value="ai">AI</option>
-                <option value="me" selected>Me</option>
-                <option value="selection">Selection</option>
-              </select>
-            </div>
-
+          <div class="tts-topRow">
             <label
               class="tts-autoVoice"
               title="Automatically switch the voice to match AI, Me, or Selection"
             >
               <input id="tts-autovoice" type="checkbox" checked>
-              <span class="tts-autoVoiceText">
-                <span>Auto</span>
-                <span>voice</span>
-              </span>
+              Auto voice
             </label>
 
             <button id="tts-expand" type="button" class="tts-expandBtn">Expand</button>
@@ -75,8 +64,20 @@ export function renderControls(mount) {
             <div id="tts-note" class="tts-note" aria-live="polite"></div>
           </div>
 
-          <div class="tts-selectWrap" data-label="Voice">
-            <select id="tts-voice">${voiceOptions}</select>
+          <div class="tts-sourceVoiceRow">
+            <div class="tts-selectWrap" data-label="Voice">
+              <select id="tts-voice">${voiceOptions}</select>
+            </div>
+
+            <div class="tts-sourceRow">
+              <div class="tts-selectWrap" data-label="Speak">
+                <select id="tts-source">
+                  <option value="ai">AI</option>
+                  <option value="me" selected>Me</option>
+                  <option value="selection">Selection</option>
+                </select>
+              </div>
+            </div>
           </div>
 
           <div class="tts-speedRow">

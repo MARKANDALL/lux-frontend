@@ -99,7 +99,7 @@
 
 /* Small toggle button pinned near the Word & Phoneme chart (left edge) */
 #prosodyLegendToggle.prosody-legend-toggleBtn{
-  z-index: 99999 !important;
+  z-index: var(--z-ui-low) !important;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -197,10 +197,10 @@
    ============================================================ */
 
 #prosodyLegendToggle{
-  z-index: 9999 !important;
+  z-index: var(--z-ui-low) !important;
 }
 #prosodyLegendToggle.prosody-legend-toggleBtn{
-  z-index: 9999 !important;
+  z-index: var(--z-ui-low) !important;
 }
 
 /* Keep the chart as a vertical scroll region (no “floating inside the box” behavior) */

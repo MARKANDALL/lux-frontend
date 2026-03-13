@@ -1,6 +1,15 @@
 /* File: features/features/tts.css */
 
-/* Container */
+/* ==========================================================================
+   Lux TTS
+   ONE-LINE: Styles the mini TTS drawers plus the expanded Self Playback TTS
+   quadrant, with separate layouts for Practice Skills vs AI Conversations.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Host / shell
+   -------------------------------------------------------------------------- */
+
 #tts-controls {
   display: flex;
 }
@@ -8,431 +17,12 @@
 #tts-wrap {
   margin-left: auto;
   width: 100%;
-  max-width: 340px;
   max-width: min(340px, 95vw);
   box-sizing: border-box;
-  overflow-x: hidden; /* ✅ prevent accidental horizontal scroll */
+  overflow-x: hidden;
 }
 
-/* ✅ Placeholder behind the TTS tab when controls are moved into expanded SelfPB */
-.lux-tts-placeholder{
-  display:none;
-  width: 100%;
-  min-height: 220px;
-  background:#fff;
-  border-radius: 16px;
-  border: 1px solid rgba(15,23,42,0.10);
-  box-shadow: 0 10px 26px rgba(0,0,0,0.12);
-}
-
-.lux-tts-shell.lux-tts-shell--empty .lux-tts-placeholder{
-  display:block;
-}
-
-/* Card */
-.tts-box {
-  position: relative; /* ✅ required for #tts-expand absolute positioning */
-  border: 1px solid rgba(15,23,42,0.10);
-  border-radius: 14px;
-  padding: 12px;
-  padding-top: 12px;
-  background: #fff;
-  box-shadow: 0 10px 26px rgba(0,0,0,0.12);
-  width: 100%;
-  box-sizing: border-box;
-  overflow-x: hidden; /* ✅ keep drawer from forcing page scroll */
-}
-
-/* Layout inside the card */
-.tts-compact {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 8px;
-}
-
-/* ✅ DO NOT center everything — it makes controls + Expand look wrong */
-.tts-compact > * {
-  width: 100%;
-}
-
-/* Head / note */
-.tts-title {
-  font-weight: 700;
-}
-.tts-head {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.tts-note {
-  font-size: 0.9rem;
-  color: #374151;
-  min-height: 1em;
-}
-
-.tts-note:empty{
-  display: none;
-  min-height: 0;
-}
-
-.tts-note--warn {
-  color: #b45309;
-}
-
-.tts-sourceRow{
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  justify-content: flex-start;
-}
-
-.tts-sourceRow .tts-selectWrap{
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.tts-autoVoice{
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.82rem;
-  font-weight: 900;
-  letter-spacing: 0.02em;
-  opacity: 0.6;
-  white-space: nowrap;
-  user-select: none;
-  flex: 0 0 auto;
-}
-
-.tts-autoVoice input{
-  transform: none;
-  margin: 0;
-  flex: 0 0 auto;
-}
-
-.tts-autoVoiceText{
-  display: inline-flex;
-  flex-direction: column;
-  align-items: flex-start;
-  line-height: 0.92;
-}
-
-.tts-autoVoiceText > span{
-  display: block;
-}
-
-/* Hide "Speak: AI / Me / Auto" + Auto voice everywhere except convo chat page */
-html:not([data-lux-convo-mode="chat"]) .tts-sourceRow,
-html:not([data-lux-convo-mode="chat"]) .tts-autoVoice{
-  display: none !important;
-}
-
-/* ✅ Expand button: now lives inline in the source row */
-#tts-expand{
-  position: static;
-  margin-left: auto;
-  border: 0;
-  border-radius: 999px;
-  padding: 6px 10px;
-  font-weight: 900;
-  cursor: pointer;
-  background: rgba(255,255,255,0.22);
-  color: rgba(15,23,42,0.85);
-  transition: transform .12s ease, filter .12s ease;
-  z-index: 10;
-  flex: 0 0 auto;
-}
-#tts-expand:hover{
-  transform: scale(1.10);
-  filter: brightness(1.12);
-}
-#tts-expand:active{
-  transform: scale(0.98);
-}
-
-/* ✅ Hide the TTS expand button when the TTS card is living inside the expanded SelfPB modal */
-#spb-float #tts-expand,
-.lux-selfpb-expanded #tts-expand,
-#lux-selfpb-modal #tts-expand{
-  display:none;
-}
-
-/* ============================= */
-/*  Compact layout: inside-select labels + rows */
-/* ============================= */
-
-.tts-selectWrap{
-  position:relative;
-  width:100%;
-}
-.tts-selectWrap::after{
-  content: attr(data-label);
-  position:absolute;
-  right: 30px; /* leave room for the native arrow */
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 0.78rem;
-  font-weight: 900;
-  letter-spacing: 0.02em;
-  opacity: 0.55;
-  pointer-events:none;
-  white-space:nowrap;
-}
-.tts-selectWrap select{
-  width:100%;
-  padding: 6px 88px 6px 10px; /* room for pseudo-label */
-  border: 1px solid #d1d5db;
-  border-radius: 10px;
-  background:#fff;
-  font: inherit;
-}
-
-/* Speed row: label + slider + value */
-.tts-speedRow{
-  width:100%;
-  display:flex;
-  align-items:center;
-  gap: 10px;
-}
-.tts-inlineLabel{
-  font-size: 0.9rem;
-  font-weight: 700;
-  color:#374151;
-  white-space:nowrap;
-}
-.tts-inlineValue{
-  font-size: 0.9rem;
-  font-weight: 800;
-  color:#0f172a;
-  white-space:nowrap;
-}
-#tts-speed{
-  flex:1;
-  cursor:pointer;
-}
-
-/* Pitch row: Pitch | slider | value | Degree | number */
-.tts-pitchRow{
-  width:100%;
-  display:flex;
-  align-items:center;
-  gap: 6px;
-  flex-wrap: nowrap;
-}
-#tts-pitch{
-  flex: 1 1 auto;
-  min-width: 0; /* ✅ allow the slider to shrink instead of overflowing */
-  cursor:pointer;
-}
-
-#tts-pitch-out{
-  width: 26px;
-  text-align: right;
-}
-
-#tts-styledegree{
-  width: 56px;
-  padding: 6px 6px;
-  border: 1px solid #d1d5db;
-  border-radius: 10px;
-  text-align:center;
-  font: inherit;
-}
-
-/* Main button + mini actions on one row */
-.tts-actionRow{
-  width:100%;
-  display:flex;
-  align-items:center;
-  gap: 10px;
-}
-#tts-main{
-  flex: 1 1 55%;
-  margin:0;
-  padding: 10px 12px;
-  border-radius: 10px;
-}
-
-/* Mini actions cluster */
-.tts-miniActions{
-  display:flex;
-  align-items:center;
-  gap: 10px;
-}
-
-/* Inputs (legacy selectors kept for safety) */
-.tts-voice select,
-.tts-style-grid select,
-.tts-style-grid input[type="number"] {
-  padding: 6px 8px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  background: #fff;
-  font: inherit;
-  width: 100%;
-}
-
-.tts-row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.tts-speed {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-#tts-speed-out {
-  min-width: 3.5ch;
-  text-align: right;
-}
-
-/* Style row (legacy) */
-.tts-style-row {
-  width: 100%;
-}
-.tts-style-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-.tts-style-grid label {
-  display: flex;
-  flex-direction: column;
-  font-size: 0.95rem;
-  gap: 4px;
-}
-
-/* Buttons */
-.tts-btn {
-  width: 100%;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: 1px solid #d1d5db;
-  background: #0078d7;
-  color: #fff;
-  cursor: pointer;
-  transition: filter 0.15s, transform 0.12s, box-shadow 0.15s;
-  font: inherit;
-}
-.tts-btn:hover {
-  filter: brightness(0.92);
-}
-.tts-btn:active {
-  transform: translateY(1px);
-}
-.tts-btn--primary {
-  font-weight: 800;
-}
-
-/* Skip buttons row (legacy wrapper) */
-#tts-main {
-  margin-bottom: 0;
-}
-.tts-skip {
-  width: 100%;
-  gap: 12px;
-  display: flex;
-  justify-content: center;
-}
-.tts-btn--sm {
-  padding: 7px 12px;
-  font-size: 0.95rem;
-  border-radius: 9px;
-}
-
-/* Download link */
-.tts-link {
-  text-decoration: none;
-  font-size: 1.8rem;
-  line-height: 1;
-  color: #0078d7;
-}
-.tts-link:hover {
-  filter: brightness(0.9);
-}
-
-/* Misc */
-.tts-controls {
-  margin-top: 8px;
-}
-
-.tts-text {
-  width: 100%;
-  min-height: 64px;
-  padding: 10px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 10px;
-  font-size: 15px;
-  resize: vertical;
-}
-
-/* Focus states */
-#tts-expand:focus-visible,
-.tts-btn:focus-visible,
-.tts-selectWrap select:focus-visible,
-#tts-speed:focus-visible,
-#tts-pitch:focus-visible,
-#tts-styledegree:focus-visible,
-.tts-voice select:focus-visible,
-.tts-style-grid select:focus-visible,
-.tts-style-grid input[type="number"]:focus-visible,
-.tts-link:focus-visible {
-  outline: 2px solid #2563eb;
-  outline-offset: 2px;
-}
-
-/* Reduced motion */
-@media (prefers-reduced-motion: reduce) {
-  #tts-expand,
-  .tts-btn {
-    transition: none;
-  }
-}
-
-/* Responsive */
-@media (max-width: 420px) {
-  .tts-style-grid {
-    grid-template-columns: 1fr;
-  }
-  #tts-wrap {
-    width: 100%;
-  }
-}
-
-/* Dark mode */
-@media (prefers-color-scheme: dark) {
-  .tts-box {
-    background: #0b0f14;
-    border-color: rgba(255,255,255,0.14);
-    box-shadow: none;
-  }
-  .tts-voice select,
-  .tts-style-grid select,
-  .tts-style-grid input[type="number"],
-  .tts-text,
-  .tts-selectWrap select,
-  #tts-styledegree{
-    background: #111827;
-    color: #e5e7eb;
-    border-color: #374151;
-  }
-  .tts-btn {
-    background: #0ea5e9;
-    border-color: #0284c7;
-  }
-  .tts-link {
-    color: #38bdf8;
-  }
-}
-
-/* Hide the host until the panel adopts it to avoid any flash */
+/* Hide the host until the panel adopts it to avoid flash */
 #tts-controls[data-luxHidden="1"] {
   display: none !important;
 }
@@ -450,170 +40,557 @@ html:not([data-lux-convo-mode="chat"]) .tts-autoVoice{
   margin: 0 !important;
 }
 
-/* ✅ When TTS controls are mounted into the expanded SelfPB modal, fill the right half cleanly */
-#spb-float #tts-wrap{
+/* --------------------------------------------------------------------------
+   Placeholder when controls are moved into expanded Self Playback
+   -------------------------------------------------------------------------- */
+
+.lux-tts-placeholder {
+  display: none;
+  width: 100%;
+  min-height: 320px;
+  border: 0;
+  border-radius: 16px;
+  background: transparent;
+  box-shadow: none;
+}
+
+.lux-tts-shell.lux-tts-shell--empty .lux-tts-placeholder,
+#tts-shell.tts-shell--empty .lux-tts-placeholder {
+  display: block !important;
+}
+
+.lux-tts-shell.lux-tts-shell--empty,
+#tts-shell.tts-shell--empty {
+  min-height: 320px;
+}
+
+.lux-tts-shell.lux-tts-shell--empty #tts-controls,
+#tts-shell.tts-shell--empty #tts-controls {
+  display: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   Card
+   -------------------------------------------------------------------------- */
+
+.tts-box {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(15, 23, 42, 0.10);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.12);
+  padding: 12px;
+  overflow: hidden;
+}
+
+.tts-compact {
+  display: grid;
+  align-items: start;
+  gap: 8px;
+}
+
+.tts-compact > * {
+  width: 100%;
+  min-width: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Structural wrappers
+   -------------------------------------------------------------------------- */
+
+.tts-topRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.tts-sourceVoiceRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.tts-sourceVoiceRow > * {
+  min-width: 0;
+}
+
+.tts-sourceRow {
+  display: block;
+  min-width: 0;
+}
+
+.tts-head {
+  display: none;
+}
+
+.tts-note {
+  font-size: 0.9rem;
+  color: #374151;
+  min-height: 0;
+}
+
+.tts-note:empty {
+  display: none;
+}
+
+.tts-note--warn {
+  color: #b45309;
+}
+
+/* --------------------------------------------------------------------------
+   Selects / pseudo-labels
+   -------------------------------------------------------------------------- */
+
+.tts-selectWrap {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.tts-selectWrap::after {
+  content: attr(data-label);
+  position: absolute;
+  right: 30px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  opacity: 0.55;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.tts-selectWrap select {
+  width: 100%;
+  min-width: 0;
+  padding: 6px 82px 6px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: #fff;
+  font: inherit;
+  text-overflow: ellipsis;
+}
+
+/* Give the voice select a little more room than the others */
+.tts-selectWrap[data-label="Voice"] select {
+  padding-right: 68px;
+}
+
+/* --------------------------------------------------------------------------
+   Auto voice
+   -------------------------------------------------------------------------- */
+
+.tts-autoVoice {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  white-space: nowrap;
+  user-select: none;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #374151;
+  opacity: 0.72;
+}
+
+.tts-autoVoice input {
+  margin: 0;
+  transform: translateY(0.5px);
+}
+
+/* --------------------------------------------------------------------------
+   Rows
+   -------------------------------------------------------------------------- */
+
+.tts-speedRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tts-pitchRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
+.tts-inlineLabel {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #374151;
+  white-space: nowrap;
+}
+
+.tts-inlineValue {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #0f172a;
+  white-space: nowrap;
+}
+
+#tts-speed,
+#tts-pitch {
+  flex: 1 1 auto;
+  min-width: 0;
+  cursor: pointer;
+}
+
+#tts-speed-out {
+  min-width: 3.5ch;
+  text-align: right;
+}
+
+#tts-pitch-out {
+  width: 26px;
+  text-align: right;
+}
+
+#tts-styledegree {
+  width: 56px;
+  padding: 6px 6px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  text-align: center;
+  font: inherit;
+}
+
+/* --------------------------------------------------------------------------
+   Actions
+   -------------------------------------------------------------------------- */
+
+.tts-actionRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+#tts-main {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+
+.tts-miniActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tts-btn {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  background: #0078d7;
+  color: #fff;
+  cursor: pointer;
+  transition: filter 0.15s ease, box-shadow 0.15s ease;
+  font: inherit;
+}
+
+.tts-btn:hover {
+  filter: brightness(0.92);
+}
+
+.tts-btn:active {
+  transform: translateY(1px);
+}
+
+.tts-btn--primary {
+  font-weight: 800;
+}
+
+.tts-btn--sm {
+  padding: 7px 12px;
+  font-size: 0.95rem;
+  border-radius: 9px;
+}
+
+.tts-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 42px;
+  min-height: 42px;
+  padding: 0 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 9px;
+  background: #0078d7;
+  color: #fff;
+  text-decoration: none;
+  font-size: 1.15rem;
+  line-height: 1;
+  transition: filter 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tts-link:hover {
+  filter: brightness(0.92);
+}
+
+/* --------------------------------------------------------------------------
+   Expand
+   -------------------------------------------------------------------------- */
+
+#tts-expand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  margin-left: auto;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+  color: rgba(15, 23, 42, 0.85);
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+
+#tts-expand:hover {
+  transform: scale(1.06);
+  filter: brightness(1.08);
+}
+
+#tts-expand:active {
+  transform: scale(0.98);
+}
+
+/* Hide Expand when the TTS card lives inside expanded SelfPB */
+#spb-float #tts-expand,
+.lux-selfpb-expanded #tts-expand,
+#lux-selfpb-modal #tts-expand,
+.spb-controls--tts #tts-expand {
+  display: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   Practice Skills / non-chat mini drawer
+   Goal:
+   Row 1 = Voice | Expand
+   Then Speed / Style / Pitch / Actions
+   -------------------------------------------------------------------------- */
+
+html:not([data-lux-convo-mode="chat"]) #tts-wrap .tts-box {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "voice expand"
+    "speed speed"
+    "style style"
+    "pitch pitch"
+    "actions actions";
+  column-gap: 10px;
+  row-gap: 8px;
+  align-items: center;
+}
+
+html:not([data-lux-convo-mode="chat"]) #tts-wrap .tts-topRow,
+html:not([data-lux-convo-mode="chat"]) #tts-wrap .tts-sourceVoiceRow {
+  display: contents;
+}
+
+html:not([data-lux-convo-mode="chat"]) #tts-wrap .tts-topRow .tts-autoVoice,
+html:not([data-lux-convo-mode="chat"]) #tts-wrap .tts-sourceVoiceRow .tts-sourceRow {
+  display: none !important;
+}
+
+html:not([data-lux-convo-mode="chat"]) #tts-wrap .tts-sourceVoiceRow > .tts-selectWrap[data-label="Voice"] {
+  grid-area: voice;
+  min-width: 0;
+}
+
+html:not([data-lux-convo-mode="chat"]) #tts-wrap #tts-expand {
+  grid-area: expand;
+  justify-self: end;
+  align-self: center;
+  margin-left: 0;
+}
+
+html:not([data-lux-convo-mode="chat"]) #tts-wrap .tts-speedRow {
+  grid-area: speed;
+}
+
+html:not([data-lux-convo-mode="chat"]) #tts-wrap .tts-selectWrap[data-label="Speaking style"] {
+  grid-area: style;
+}
+
+html:not([data-lux-convo-mode="chat"]) #tts-wrap .tts-pitchRow {
+  grid-area: pitch;
+}
+
+html:not([data-lux-convo-mode="chat"]) #tts-wrap .tts-actionRow {
+  grid-area: actions;
+}
+
+/* --------------------------------------------------------------------------
+   AI Conversations mini drawer
+   Goal:
+   Row 1 = Auto voice | Expand
+   Row 2 = Voice | Speak
+   Then Speed / Style / Pitch / Actions
+   -------------------------------------------------------------------------- */
+
+html[data-lux-convo-mode="chat"] #tts-wrap .tts-box {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "autovoice expand"
+    "voice speak"
+    "speed speed"
+    "style style"
+    "pitch pitch"
+    "actions actions";
+  column-gap: 10px;
+  row-gap: 8px;
+  align-items: center;
+}
+
+html[data-lux-convo-mode="chat"] #tts-wrap .tts-topRow,
+html[data-lux-convo-mode="chat"] #tts-wrap .tts-sourceVoiceRow {
+  display: contents;
+}
+
+html[data-lux-convo-mode="chat"] #tts-wrap .tts-topRow .tts-autoVoice {
+  grid-area: autovoice;
+  justify-self: start;
+  align-self: center;
+}
+
+html[data-lux-convo-mode="chat"] #tts-wrap #tts-expand {
+  grid-area: expand;
+  justify-self: end;
+  align-self: center;
+  margin-left: 0;
+}
+
+html[data-lux-convo-mode="chat"] #tts-wrap .tts-sourceVoiceRow > .tts-selectWrap[data-label="Voice"] {
+  grid-area: voice;
+  min-width: 0;
+}
+
+html[data-lux-convo-mode="chat"] #tts-wrap .tts-sourceVoiceRow > .tts-sourceRow {
+  grid-area: speak;
+  min-width: 0;
+}
+
+html[data-lux-convo-mode="chat"] #tts-wrap .tts-speedRow {
+  grid-area: speed;
+}
+
+html[data-lux-convo-mode="chat"] #tts-wrap .tts-selectWrap[data-label="Speaking style"] {
+  grid-area: style;
+}
+
+html[data-lux-convo-mode="chat"] #tts-wrap .tts-pitchRow {
+  grid-area: pitch;
+}
+
+html[data-lux-convo-mode="chat"] #tts-wrap .tts-actionRow {
+  grid-area: actions;
+}
+
+/* --------------------------------------------------------------------------
+   Expanded Self Playback integration
+   -------------------------------------------------------------------------- */
+
+#spb-float #tts-wrap {
   margin-left: 0 !important;
   width: 100% !important;
   max-width: 100% !important;
 }
 
-/* Expanded view: remove extra "marker box" feel */
-#spb-float .tts-box{
-  border:0;
+#spb-float .tts-box {
+  border: 0;
   background: transparent;
   box-shadow: none;
   padding: 0;
-  padding-top: 0;
-}
-#spb-float .tts-compact{
-  gap: 8px;
+  overflow: visible;
 }
 
-/* ============================================================
-   ✅ Hard overrides (added near end so they win)
-   ============================================================ */
-
-/* ✅ Force Expand pill to behave like SelfPB: never in-flow, always corner */
-.tts-box { position: relative !important; }
-
-#tts-expand{
-  position: static !important;
-  margin-left: auto !important;
-  top: auto !important;
-  right: auto !important;
-  left: auto !important;
-
-  width: auto !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-
-  border: 0 !important;
-  border-radius: 999px !important;
-  padding: 6px 10px !important;
-  font-weight: 900 !important;
-  cursor: pointer !important;
-  background: rgba(255,255,255,0.22) !important;
-  color: rgba(15,23,42,0.85) !important;
-  transition: transform .12s ease, filter .12s ease !important;
-  z-index: 50 !important;
-  flex: 0 0 auto !important;
+#spb-float .tts-compact {
+  gap: 6px;
 }
 
-#tts-expand:hover{
-  transform: scale(1.10) !important;
-  filter: brightness(1.12) !important;
-}
-
-/* ✅ Avoid double-card look: placeholder should NOT render as its own card */
-.lux-tts-placeholder{
-  display: none !important;
-}
-
-.lux-tts-shell.lux-tts-shell--empty{
-  min-height: 220px;
-}
-
-/* =========================================================
-   SelfPB Expanded integration polish (override at file end)
-   ========================================================= */
-
-/* ✅ Never show the TTS Expand pill inside the expanded quadrant */
-#spb-float #tts-expand,
-.spb-controls--tts #tts-expand{
-  display:none !important;
-}
-
-/* ✅ When the TTS shell is “empty”, hide the real controls to avoid double-box look */
-.lux-tts-shell.lux-tts-shell--empty #tts-controls,
-#tts-shell.tts-shell--empty #tts-controls{
-  display:none !important;
-}
-
-/* ✅ Placeholder should be sizing-only, not a second card */
-.lux-tts-shell.lux-tts-shell--empty .lux-tts-placeholder,
-#tts-shell.tts-shell--empty .lux-tts-placeholder{
-  display:block !important;
-  min-height: 260px;
-  height: 100%;
-  background: transparent !important;
-  border: 0 !important;
-  box-shadow: none !important;
-}
-
-/* Empty drawer while controls are mounted into expanded view: match real perceived height */
-.lux-tts-shell.lux-tts-shell--empty .lux-tts-placeholder{
-  min-height: 320px !important;
-}
-
-.lux-tts-shell.lux-tts-shell--empty,
-#tts-shell.tts-shell--empty{
-  min-height: 260px;
-}
-
-/* Prevent global button:hover scale from expanding controls and triggering scrollbars */
-.tts-box button:hover{
-  transform: none !important;
-}
-
-/* ✅ Restore intended hover bulge + darken for core actions */
-#tts-main:hover,
-#tts-back:hover,
-#tts-fwd:hover{
-  transform: scale(1.06) !important;
-  filter: brightness(0.92);
-}
-
-
-/* Keep the expand pill's intended hover bulge */
-#tts-expand:hover{
-  transform: scale(1.10) !important;
-}
-
-/* Expanded SelfPB quadrant: use the full quadrant width + 2-column layout */
-.spb-controls--tts{
+.spb-controls--tts {
   padding-left: 6px;
   box-sizing: border-box;
   overflow: visible;
 }
-.spb-controls--tts #tts-wrap{
+
+.spb-controls--tts #tts-wrap {
   max-width: none !important;
 }
-.spb-controls--tts .tts-box{
+
+.spb-controls--tts .tts-box {
   width: 100%;
   max-width: none !important;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   grid-template-areas:
     "voice speed"
     "style pitch"
     "actions actions";
-  gap: 6px 10px;
+  gap: 5px 10px;
   align-items: start;
   overflow: visible;
 }
 
-/* Remove wasted vertical space in the quadrant */
-.spb-controls--tts .tts-head{
-  display:none;
+.spb-controls--tts .tts-topRow,
+.spb-controls--tts .tts-head,
+.spb-controls--tts .tts-sourceRow {
+  display: none !important;
 }
 
-.spb-controls--tts .tts-selectWrap[data-label="Voice"]{ grid-area: voice; }
-.spb-controls--tts .tts-speedRow{ grid-area: speed; }
-.spb-controls--tts .tts-selectWrap[data-label="Speaking style"]{ grid-area: style; }
-.spb-controls--tts .tts-pitchRow{ grid-area: pitch; }
-.spb-controls--tts .tts-actionRow{ grid-area: actions; }
+.spb-controls--tts .tts-sourceVoiceRow {
+  display: block;
+  grid-area: voice;
+}
 
-/* ------------------------------------------------------------
-   PATCH 5B — Expanded (SelfPB) select-label overlap fix
-   (Place labels ABOVE the dropdown, prevent overlap)
-   ------------------------------------------------------------ */
+.spb-controls--tts .tts-speedRow {
+  grid-area: speed;
+  padding-top: 9px;
+}
 
-/* Expanded (SelfPB) layout: move select labels ABOVE the dropdown (prevents overlap) */
-.spb-controls--tts .tts-selectWrap::after{ display:none !important; }
-.spb-controls--tts .tts-selectWrap::before{
+.spb-controls--tts .tts-selectWrap[data-label="Speaking style"] {
+  grid-area: style;
+}
+
+.spb-controls--tts .tts-pitchRow {
+  grid-area: pitch;
+  padding-top: 9px;
+}
+
+.spb-controls--tts .tts-actionRow {
+  grid-area: actions;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  overflow: visible;
+  padding-top: 0;
+}
+
+.spb-controls--tts .tts-miniActions {
+  justify-self: end;
+}
+
+.spb-controls--tts .tts-selectWrap::after {
+  display: none !important;
+}
+
+.spb-controls--tts .tts-selectWrap::before {
   content: attr(data-label);
-  display:block;
+  display: block;
   margin: 0 0 2px 2px;
   line-height: 1;
   font-size: 12px;
@@ -621,45 +598,51 @@ html:not([data-lux-convo-mode="chat"]) .tts-autoVoice{
   opacity: 0.55;
 }
 
-/* Expanded: align slider rows with the select labels so Voice+Speed / Style+Pitch sit on one plane */
-.spb-controls--tts .tts-speedRow,
-.spb-controls--tts .tts-pitchRow{
-  padding-top: 11px;
+.spb-controls--tts .tts-selectWrap select {
+  padding-right: 14px;
 }
 
-.spb-controls--tts .tts-selectWrap select{ padding-right: 14px; }
-
-/* Expanded: prevent hover/filters from triggering scrollbars */
-.spb-controls--tts .tts-actionRow{ overflow: visible; padding: 1px 0 0; }
-.spb-controls--tts #tts-main{ padding: 9px 12px; border-radius: 14px; }
-
-/* Slightly tighten the primary row so it doesn't crowd mini-actions */
-.spb-controls--tts #tts-main{
-  padding: 9px 10px;
+.spb-controls--tts #tts-main {
+  width: 100%;
+  max-width: 320px;
+  min-width: 0;
+  padding: 8px 10px;
   border-radius: 12px;
 }
 
-#spb-floatSpeakSlot .tts-sourceRow{
-  width:auto;
-  display:block;
-  margin:0;
+/* Prevent the ugly hover-grow / scrollbar problem in expanded view */
+.spb-controls--tts #tts-main:hover,
+.spb-controls--tts #tts-back:hover,
+.spb-controls--tts #tts-fwd:hover,
+.spb-controls--tts #tts-download:hover {
+  transform: none !important;
 }
 
-#spb-floatSpeakSlot .tts-autoVoice{
-  display:none !important;
+/* --------------------------------------------------------------------------
+   Expanded Self Playback header Speak slot
+   -------------------------------------------------------------------------- */
+
+#spb-floatSpeakSlot .tts-sourceRow {
+  width: auto;
+  display: block;
+  margin: 0;
 }
 
-#spb-floatSpeakSlot .tts-selectWrap{
+#spb-floatSpeakSlot .tts-autoVoice {
+  display: none !important;
+}
+
+#spb-floatSpeakSlot .tts-selectWrap {
   min-width: 160px;
 }
 
-#spb-floatSpeakSlot .tts-selectWrap::after{
-  display:none !important;
+#spb-floatSpeakSlot .tts-selectWrap::after {
+  display: none !important;
 }
 
-#spb-floatSpeakSlot .tts-selectWrap::before{
+#spb-floatSpeakSlot .tts-selectWrap::before {
   content: attr(data-label);
-  display:block;
+  display: block;
   margin: 0 0 2px 2px;
   line-height: 1;
   font-size: 11px;
@@ -667,7 +650,148 @@ html:not([data-lux-convo-mode="chat"]) .tts-autoVoice{
   opacity: 0.58;
 }
 
-#spb-floatSpeakSlot .tts-selectWrap select{
+#spb-floatSpeakSlot .tts-selectWrap select {
   min-width: 160px;
   padding: 6px 30px 6px 10px;
+}
+
+/* --------------------------------------------------------------------------
+   Legacy compatibility selectors kept for safety
+   -------------------------------------------------------------------------- */
+
+.tts-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.tts-speed {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.tts-style-row {
+  width: 100%;
+}
+
+.tts-style-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.tts-style-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.95rem;
+}
+
+.tts-voice select,
+.tts-style-grid select,
+.tts-style-grid input[type="number"],
+.tts-text {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: #fff;
+  font: inherit;
+}
+
+.tts-text {
+  min-height: 64px;
+  font-size: 15px;
+  resize: vertical;
+}
+
+.tts-controls {
+  margin-top: 8px;
+}
+
+/* --------------------------------------------------------------------------
+   Focus states
+   -------------------------------------------------------------------------- */
+
+#tts-expand:focus-visible,
+.tts-btn:focus-visible,
+.tts-link:focus-visible,
+.tts-selectWrap select:focus-visible,
+#tts-speed:focus-visible,
+#tts-pitch:focus-visible,
+#tts-styledegree:focus-visible,
+.tts-voice select:focus-visible,
+.tts-style-grid select:focus-visible,
+.tts-style-grid input[type="number"]:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   Reduced motion
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  #tts-expand,
+  .tts-btn,
+  .tts-link {
+    transition: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Responsive
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 420px) {
+  #tts-wrap {
+    width: 100%;
+  }
+
+  .tts-style-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Dark mode
+   -------------------------------------------------------------------------- */
+
+@media (prefers-color-scheme: dark) {
+  .tts-box {
+    background: #0b0f14;
+    border-color: rgba(255, 255, 255, 0.14);
+    box-shadow: none;
+  }
+
+  .tts-inlineLabel,
+  .tts-inlineValue,
+  .tts-autoVoice,
+  .tts-note {
+    color: #e5e7eb;
+  }
+
+  .tts-voice select,
+  .tts-style-grid select,
+  .tts-style-grid input[type="number"],
+  .tts-text,
+  .tts-selectWrap select,
+  #tts-styledegree {
+    background: #111827;
+    color: #e5e7eb;
+    border-color: #374151;
+  }
+
+  .tts-btn,
+  .tts-link {
+    background: #0ea5e9;
+    border-color: #0284c7;
+  }
+
+  #tts-expand {
+    color: #e5e7eb;
+    background: rgba(255, 255, 255, 0.10);
+  }
 }
