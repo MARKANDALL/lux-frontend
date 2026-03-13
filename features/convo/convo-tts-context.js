@@ -7,6 +7,11 @@ function norm(s) {
   return String(s || "").trim();
 }
 
+function normalizeSourceMode(mode) {
+  const m = norm(mode).toLowerCase();
+  return m === "ai" || m === "me" || m === "selection" ? m : "me";
+}
+
 function parseGender(text) {
   const s = norm(text).toLowerCase();
   const male = /\b(he|him|his|man|male|boy|father|sir|husband|gentleman)\b/.test(s);
@@ -87,15 +92,15 @@ function lastMessageText(messages, role) {
 export function installConvoTtsContext({ state, input, msgs, SCENARIOS }) {
   if (!state) return;
 
-  // Default behavior in convo: speaking "AI" is the most common first action.
+  // Default behavior in convo: preload "Me", but still allow AI / Selection.
   luxBus.update('tts', {
-    sourceMode: luxBus.get('tts')?.sourceMode || "ai",
+    sourceMode: normalizeSourceMode(luxBus.get('tts')?.sourceMode || "me"),
     autoVoice: luxBus.get('tts')?.autoVoice !== false,
   });
 
   const ctx = {
     kind: "convo",
-    defaultSourceMode: "ai",
+    defaultSourceMode: "me",
     _selected: null,
 
     setSelected(sel) {
@@ -123,7 +128,7 @@ luxBus.set('ttsContext', { changed: true });
     },
 
     getText({ mode } = {}) {
-      const m = String(mode || luxBus.get('tts')?.sourceMode || "auto");
+      const m = normalizeSourceMode(mode || luxBus.get('tts')?.sourceMode || "me");
 
       if (m === "selection") return norm(this._selected?.text);
 
@@ -149,7 +154,7 @@ luxBus.set('ttsContext', { changed: true });
     },
 
     getVoiceId({ mode } = {}) {
-      const m = String(mode || luxBus.get('tts')?.sourceMode || "auto");
+      const m = normalizeSourceMode(mode || luxBus.get('tts')?.sourceMode || "me");
       const { roles, userIdx, aiIdx } = this.getRolePair();
 
       const userRole = roles[userIdx] || null;
@@ -192,6 +197,7 @@ luxBus.set('ttsContext', { changed: true });
     });
   }
 
+  luxBus.set('ttsContextApi', ctx);
   window.LuxTTSContext = ctx;
 luxBus.set('ttsContext', { changed: true });
   return ctx;

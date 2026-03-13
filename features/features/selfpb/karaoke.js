@@ -31,7 +31,7 @@ export function initKaraoke({ ui, api, audio, syncTime, syncScrub }) {
 
   const karaokeSource = () => {
     const bus = luxBus.get('karaoke');
-    return String(bus?.source || window.LuxKaraokeSource || "learner");
+    return String(bus?.source || "learner");
   };
 
   const getActiveAudio = () => {
@@ -48,9 +48,6 @@ export function initKaraoke({ ui, api, audio, syncTime, syncScrub }) {
     const busTms = bus?.timings;
     if (Array.isArray(busTms) && busTms.length) {
       return busTms;
-    }
-    if (Array.isArray(window.LuxKaraokeTimings) && window.LuxKaraokeTimings.length) {
-      return window.LuxKaraokeTimings;
     }
     return Array.isArray(fallback) ? fallback : [];
   };
@@ -219,7 +216,15 @@ export function initKaraoke({ ui, api, audio, syncTime, syncScrub }) {
 
   // refresh on expanded open
   luxBus.on('selfpbExpandedOpen', () => {
-    const words = getActiveTimings(window.LuxLastWordTimings || []);
+    const busWords = luxBus.get('karaoke')?.timings;
+    const assessmentWords = luxBus.get('lastAssessment')?.timings;
+    const words = getActiveTimings(
+      Array.isArray(busWords) && busWords.length
+        ? busWords
+        : Array.isArray(assessmentWords) && assessmentWords.length
+          ? assessmentWords
+          : window.LuxLastWordTimings || []
+    );
     renderKaraoke(words);
   });
 
@@ -229,14 +234,22 @@ export function initKaraoke({ ui, api, audio, syncTime, syncScrub }) {
     // Learner assessments should be the default karaoke source
     try {
       publishKaraoke("learner", Array.isArray(words) ? words : []);
-} catch (err) { globalThis.warnSwallow("features/features/selfpb/karaoke.js", err, "important"); }
+    } catch (err) { globalThis.warnSwallow("features/features/selfpb/karaoke.js", err, "important"); }
 
     if (isExpandedOpen()) renderKaraoke(getActiveTimings(words));
   });
 
   // Refresh when TTS (or other sources) publish new karaoke timings
   luxBus.on('karaokeRefresh', () => {
-    const words = getActiveTimings(window.LuxLastWordTimings || []);
+    const busWords = luxBus.get('karaoke')?.timings;
+    const assessmentWords = luxBus.get('lastAssessment')?.timings;
+    const words = getActiveTimings(
+      Array.isArray(busWords) && busWords.length
+        ? busWords
+        : Array.isArray(assessmentWords) && assessmentWords.length
+          ? assessmentWords
+          : window.LuxLastWordTimings || []
+    );
     if (isExpandedOpen()) renderKaraoke(words);
   });
 

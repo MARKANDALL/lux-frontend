@@ -94,10 +94,7 @@ function publishKaraoke(source, timings) {
     if (src === "tts") {
       window.LuxTTSWordTimings = tms;
     }
-    luxBus.set('karaokeRefresh', {
-      source: window.LuxKaraokeSource,
-      timings: window.LuxKaraokeTimings,
-    });
+    luxBus.set('karaokeRefresh', { source: src, timings: tms });
 } catch (err) { globalThis.warnSwallow("features/features/tts/player-ui/karaoke.js", err, "important"); }
 }
 

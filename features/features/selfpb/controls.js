@@ -19,9 +19,12 @@ export function initControls({
 }) {
   const setKaraokeLearner = () => {
     try {
-      const timings = Array.isArray(window.LuxLastWordTimings)
-        ? window.LuxLastWordTimings
-        : luxBus.get('karaoke')?.timings || window.LuxKaraokeTimings || [];
+      const assessmentTimings = luxBus.get('lastAssessment')?.timings;
+  const timings = Array.isArray(assessmentTimings) && assessmentTimings.length
+    ? assessmentTimings
+    : Array.isArray(window.LuxLastWordTimings)
+      ? window.LuxLastWordTimings
+      : [];
       publishKaraoke("learner", timings);
 } catch (err) { globalThis.warnSwallow("features/features/selfpb/controls.js", err, "important"); }
   };

@@ -32,6 +32,11 @@ import {
 const isPlaying = (audio) =>
   !audio.paused && !audio.ended && audio.currentTime > 0;
 
+function normalizeSourceMode(mode) {
+  const m = String(mode || "").trim().toLowerCase();
+  return m === "ai" || m === "me" || m === "selection" ? m : "me";
+}
+
 export async function mountTTSPlayer(hostEl) {
   const host = hostEl || document.getElementById("tts-controls");
   if (!host) return;
@@ -92,10 +97,11 @@ luxBus.set('requestSelfPBExpanded', true);
   audio.playbackRate = DEFAULT_SPEED;
 
   // Apply default source mode (pages like convo can pre-seed via luxBus 'tts')
-  const initialMode =
+  const initialMode = normalizeSourceMode(
     luxBus.get('tts')?.sourceMode ||
     window.LuxTTSContext?.defaultSourceMode ||
-    "auto";
+    "me"
+  );
   if (sourceSel) sourceSel.value = initialMode;
 
   const initialAuto = luxBus.get('tts')?.autoVoice;
@@ -104,7 +110,7 @@ luxBus.set('requestSelfPBExpanded', true);
   // Expose audio + tts UI state for other panels (like Self Playback sync)
   luxBus.update('tts', {
     audioEl: audio,
-    sourceMode: sourceSel?.value || initialMode,
+    sourceMode: normalizeSourceMode(sourceSel?.value || initialMode),
     autoVoice: autoVoiceEl?.checked !== false,
   });
 
@@ -121,7 +127,9 @@ luxBus.set('requestSelfPBExpanded', true);
     if (!autoOn) return;
     const ctx = window.LuxTTSContext;
     if (!ctx || typeof ctx.getVoiceId !== "function") return;
-    const mode = sourceSel?.value || luxBus.get('tts')?.sourceMode || "auto";
+    const mode = normalizeSourceMode(
+      sourceSel?.value || luxBus.get('tts')?.sourceMode || "me"
+    );
     const hint = ctx.getVoiceId({ mode });
     applyVoiceHint(hint, caps);
   }
@@ -157,7 +165,9 @@ luxBus.set('requestSelfPBExpanded', true);
 
   if (sourceSel) {
     sourceSel.addEventListener("change", () => {
-      luxBus.update('tts', { sourceMode: sourceSel.value || "auto" });
+      const nextMode = normalizeSourceMode(sourceSel.value || "me");
+      if (sourceSel.value !== nextMode) sourceSel.value = nextMode;
+      luxBus.update('tts', { sourceMode: nextMode });
       syncVoiceFromContext("source-change", caps);
     });
   }

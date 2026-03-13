@@ -12,8 +12,8 @@ export function getCurrentText() {
   // If a page installs a TTS context adapter (e.g., AI Conversations),
   // let it provide the “current” text (AI / Me / Selection / Auto).
   try {
-    const mode = luxBus.get('tts')?.sourceMode || "auto";
-    const ctx = window.LuxTTSContext;
+    const mode = luxBus.get('tts')?.sourceMode || "me";
+    const ctx = luxBus.get('ttsContextApi') || window.LuxTTSContext;
     if (ctx && typeof ctx.getText === "function") {
       const t = String(ctx.getText({ mode }) || "").trim();
       if (t) return t;
@@ -48,25 +48,31 @@ export function renderControls(mount) {
   mount.innerHTML = `
       <div id="tts-wrap">
         <div class="tts-box tts-compact">
-          <button id="tts-expand" type="button" class="tts-expandBtn">Expand</button>
-
-          <div class="tts-head">
-            <div id="tts-note" class="tts-note" aria-live="polite"></div>
-          </div>
-
           <div class="tts-sourceRow">
             <div class="tts-selectWrap" data-label="Speak">
               <select id="tts-source">
-                <option value="auto">(auto)</option>
                 <option value="ai">AI</option>
-                <option value="me">Me</option>
+                <option value="me" selected>Me</option>
                 <option value="selection">Selection</option>
               </select>
             </div>
-            <label class="tts-autoVoice">
+
+            <label
+              class="tts-autoVoice"
+              title="Automatically switch the voice to match AI, Me, or Selection"
+            >
               <input id="tts-autovoice" type="checkbox" checked>
-              Auto voice
+              <span class="tts-autoVoiceText">
+                <span>Auto</span>
+                <span>voice</span>
+              </span>
             </label>
+
+            <button id="tts-expand" type="button" class="tts-expandBtn">Expand</button>
+          </div>
+
+          <div class="tts-head">
+            <div id="tts-note" class="tts-note" aria-live="polite"></div>
           </div>
 
           <div class="tts-selectWrap" data-label="Voice">
