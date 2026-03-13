@@ -12,6 +12,7 @@ import { initControls } from "./controls.js";
 import { initMediaEvents } from "./media-events.js";
 import { initShortcuts } from "./shortcuts.js";
 import { attachLearnerBlobToAudio } from "./attach-learner-blob.js";
+import { luxBus } from "../../../app-core/lux-bus.js";
 
 export function mountSelfPlaybackLite() {
   const { api, audio, refAudio, st } = initSelfPBCore();
@@ -105,11 +106,26 @@ export function mountSelfPlaybackLite() {
   initShortcuts({ ui, api, audio, syncRateUI });
 
   initialSync();
-window.LuxSelfPB = Object.assign(window.LuxSelfPB || {}, {
+
+  luxBus.set("selfpbApi", {
+    attachLearnerBlob,
+    setReference: (...args) => api?.setReference?.(...args),
+    setRefRate: (...args) => api?.setRefRate?.(...args),
+    karaokeUpdate: (...args) => karaoke?.update?.(...args),
+    karaokeRender: (...args) => karaoke?.renderKaraoke?.(...args),
+    el: ui.host,
+  });
+
+  // Legacy compat mirrors — keep until all cross-feature readers are bus-first
+  window.__attachLearnerBlob = attachLearnerBlob;
+  window.LuxSelfPB = Object.assign(window.LuxSelfPB || {}, {
+    attachLearnerBlob,
     el: ui.host,
     karaokeUpdate: karaoke?.update,
     karaokeRender: karaoke?.renderKaraoke,
-  });  console.info("[self-pb] WaveSurfer UI Mounted");
+  });
+
+  console.info("[self-pb] WaveSurfer UI Mounted");
 }
 
 export { mountSelfPlaybackLite as default };
