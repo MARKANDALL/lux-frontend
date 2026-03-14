@@ -3,6 +3,24 @@
 // UPDATED: Implements persistent Sidebar and SCROLLABLE content area.
 
 import { escapeHtml } from "../helpers/escape-html.js";
+import { mdToHtml as renderMdToHtml } from "../helpers/md-to-html.js";
+
+function mdToHtmlSection(md = "") {
+  return renderMdToHtml(md, {
+    lists: true,
+    preserveLineBreaks: true,
+  });
+}
+
+function mdToHtmlFull(md = "") {
+  return renderMdToHtml(md, {
+    headings: true,
+    specialHeadings: true,
+    lists: true,
+    paragraphs: true,
+    preserveLineBreaks: false,
+  });
+}
 
 function getSectionAndBox() {
   const section = document.getElementById("aiFeedbackSection");
@@ -217,7 +235,7 @@ export function renderSections(sections, count) {
           ">Show/Hide English</button>
           <div id="en-block-${idx}" class="en-text hidden" style="margin-top:10px; padding:10px; background:#f1f5f9; border-radius:6px; font-size:0.9em;">
             <div style="font-weight:700; margin-bottom:4px; color:#334155; font-style:normal;">${titleEn}</div>
-            ${mdToHtml(textEn)}
+            ${mdToHtmlSection(textEn)}
           </div>
         `;
       }
@@ -228,7 +246,7 @@ export function renderSections(sections, count) {
            ${headerHTML}
         </div>
         <div style="color:#334155; line-height:1.6;">
-           ${mdToHtml(hasL1 ? textL1 : textEn)}
+           ${mdToHtmlSection(hasL1 ? textL1 : textEn)}
         </div>
         ${englishBlock}
       </div>
@@ -294,30 +312,9 @@ export function clearAIFeedback() {
   contentArea.innerHTML = "";
 }
 
-// RESTORED FUNCTION
 export function renderAIFeedbackMarkdown(md) {
   const { box } = getSectionAndBox();
   // Ensure we render inside the content area, not destroying the sidebar
   const contentArea = ensureShell(box, null);
-  contentArea.innerHTML = mdToHtml(md);
+  contentArea.innerHTML = mdToHtmlFull(md);
 }
-
-// RESTORED HELPER
-function mdToHtml(md = "") {
-  if (!md || !md.trim()) return "";
-  let html = escapeHtml(md)
-    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\*(.+?)\*/g, "<em>$1</em>");
-
-  if (html.includes("- ")) {
-    html = html
-      .split("\n")
-      .map((line) => {
-        return line.trim().startsWith("- ")
-          ? `<li>${line.trim().substring(2)}</li>`
-          : line;
-      })
-      .join("<br>");
-  }
-  return html;
-}   

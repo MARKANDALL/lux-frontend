@@ -4,6 +4,7 @@
 import { scoreClass as scoreClassCore } from "../../core/scoring/index.js";
 
 import { escapeHtml } from "../../helpers/escape-html.js";
+import { mdToHtml as renderMdToHtml } from "../../helpers/md-to-html.js";
 export const esc = escapeHtml;
 
 export function getColorConfig(s) {
@@ -15,12 +16,10 @@ export function getColorConfig(s) {
 }
 
 export function mdToHtml(md = "") {
-  if (!md) return "";
- return esc(String(md))
-     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\*(.+?)\*/g, "<em>$1</em>")
-    .split("\n")
-    .join("<br>");
+  return renderMdToHtml(md, {
+    lists: true,
+    preserveLineBreaks: true,
+  });
 }
 
 export function mean(nums) {

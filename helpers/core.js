@@ -1,7 +1,7 @@
 // helpers/core.js
 import { getUID } from "../api/identity.js";
 import { coachingPreface } from "../core/scoring/index.js";
-import { escapeHtml } from "./escape-html.js";
+import { mdToHtml as renderMdToHtml } from "./md-to-html.js";
 
 // Single source of truth for UID:
 // - api/identity.js owns generation + persistence + migration
@@ -33,30 +33,12 @@ export function encouragingLine(score) {
 
 /** Tiny MD → HTML tailored for the AI feedback */
 
-export function mdToHtml(md) {
-  md = escapeHtml(md)
-    .replace(/\r\n/g, "\n")
-    .replace(/^(#{2,3} .+?)\s+(?=[^\n])/gm, "$1\n")
-    .replace(/^#{2,3}\s+(.+)$/gm, "<h3>$1</h3>")
-    .replace(/(?:^|\n)((?:[-•]\s+.+(?:\n|$))+)/g, (_m, block) => {
-      const items = block
-        .trim()
-        .split("\n")
-        .map((l) => l.replace(/^[-•]\s+/, "").trim())
-        .filter(Boolean)
-        .map((t) => `<li>${t}</li>`)
-        .join("");
-      return `\n<ul>${items}</ul>\n`;
-    })
-    .replace(
-      /^\s*(🏃‍♂️ Quick Coaching|🔤 Phoneme Profile|✋ Reassurance|💡 Did You Know\?|🌍 World Language Spotlight)\s*$/gm,
-      "<h3>$1</h3>"
-    );
-
-  return md
-    .split("\n")
-    .map((line) =>
-      line.match(/^<h3|^<ul|^<\/ul|^<li|^<\/li|^\s*$/) ? line : `<p>${line}</p>`
-    )
-    .join("\n");
+export function mdToHtml(md = "") {
+  return renderMdToHtml(md, {
+    headings: true,
+    specialHeadings: true,
+    lists: true,
+    paragraphs: true,
+    preserveLineBreaks: false,
+  });
 }
