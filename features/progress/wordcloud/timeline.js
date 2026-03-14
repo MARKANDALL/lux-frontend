@@ -1,8 +1,6 @@
 // features/progress/wordcloud/timeline.js
 
-function clamp(n, a, b) {
-  return Math.max(a, Math.min(b, n));
-}
+import { clamp } from "./math.js";
 
 /**
  * createTimelineController(config)

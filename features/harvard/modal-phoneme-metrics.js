@@ -3,6 +3,13 @@
 
 import { HARVARD_PHONEME_META } from "../../src/data/harvard-phoneme-meta.js";
 import { ensurePassagePhonemeMeta } from "../../src/data/index.js";
+import {
+  pad2,
+  harvardKey,
+  isHarvardKey,
+} from "../../src/data/harvard-key.js";
+
+export { pad2, harvardKey, isHarvardKey };
 
 // Local cached passage meta (prevents repeated async imports + keeps sync APIs)
 let _PASSAGE_META = null;
@@ -33,14 +40,6 @@ function _getPassageMetaSync() {
   return _PASSAGE_META || {};
 }
 
-export function pad2(n) {
-  return String(n).padStart(2, "0");
-}
-
-export function harvardKey(n) {
-  return `harvard${pad2(n)}`;
-}
-
 export function getHarvardMeta(n) {
   return (
     HARVARD_PHONEME_META?.[n] ??
@@ -48,10 +47,6 @@ export function getHarvardMeta(n) {
     HARVARD_PHONEME_META?.[String(n).padStart(2, "0")] ??
     null
   );
-}
-
-export function isHarvardKey(k) {
-  return /^harvard\d{2}$/i.test(String(k || ""));
 }
 
 export function metaForHarvard(n) {

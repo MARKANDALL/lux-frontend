@@ -1,13 +1,10 @@
-// features/progress/wordcloud/compute.js
+// C:\dev\LUX_GEMINI\features\progress\wordcloud\compute.js
+// Builds WordCloud scoring, filtering, ID, and ranking helpers from attempt data.
+
 import { pickTS, pickAzure } from "../attempt-pickers.js";
+import { clamp, lower } from "./math.js";
 
-export function clamp(n, a, b) {
-  return Math.max(a, Math.min(b, n));
-}
-
-export function lower(s) {
-  return String(s || "").trim().toLowerCase();
-}
+export { clamp, lower };
 
 export function log1p(n) {
   return Math.log(1 + Math.max(0, Number(n || 0)));
@@ -116,7 +113,7 @@ export function smartTop3(mode, pool) {
     const diff = clamp((100 - Number(x.avg || 0)) / 100, 0, 1);
     const freq = clamp(log1p(x.count || 0) / maxC, 0, 1);
     const pers = clamp(log1p(x.days || 0) / maxD, 0, 1);
-    const rec  = clamp(Number(x.lastSeenTS || 0) / maxR, 0, 1);
+    const rec = clamp(Number(x.lastSeenTS || 0) / maxR, 0, 1);
 
     return 0.45 * diff + 0.25 * pers + 0.2 * freq + 0.1 * rec;
   };

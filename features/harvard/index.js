@@ -3,6 +3,7 @@
 
 import { setPassage, updatePartsInfoTip } from "../passages/index.js";
 import { ensureHarvardPassages } from "../../src/data/index.js";
+import { harvardKey } from "../../src/data/harvard-key.js";
 
 import { K_HARVARD_LAST, K_HARVARD_RANDOM_BAG } from '../../app-core/lux-storage.js';
 
@@ -43,14 +44,8 @@ function removeFromRandomBag(n) {
   writeRandomBag(bag);
 }
 
-function pad2(n) {
-  return String(n).padStart(2, "0");
-}
 function clamp(n, lo, hi) {
   return Math.max(lo, Math.min(hi, n));
-}
-function harvardKey(n) {
-  return `harvard${pad2(n)}`;
 }
 
 export async function loadHarvardList(raw) {

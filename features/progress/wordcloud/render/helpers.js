@@ -1,13 +1,9 @@
 // features/progress/wordcloud/render/helpers.js
 // One-line: Pure helper utilities for the wordcloud canvas renderer (move-only extraction from render-canvas.js).
 
-export function clamp(n, a, b) {
-  return Math.max(a, Math.min(b, n));
-}
+import { clamp, lower } from "../math.js";
 
-export function lower(s) {
-  return String(s || "").trim().toLowerCase();
-}
+export { clamp, lower };
 
 export function idOfWord(d) {
   const meta = d?.meta || {};
