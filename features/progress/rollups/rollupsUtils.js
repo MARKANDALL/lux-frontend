@@ -2,42 +2,17 @@
 // Helper utilities extracted from rollups.js (surgical copy/paste)
 
 import { getAzureScores } from "../../../core/scoring/index.js";
+import {
+  pickAzure,
+  pickSummary,
+  pickPassageKey,
+  pickSessionId,
+  pickTS,
+} from "../attempt-pickers.js";
 
 function num(x) {
   const n = Number(x);
   return Number.isFinite(n) ? n : null;
-}
-
-function pickAzure(attempt) {
-  return (
-    attempt?.azureResult ||
-    attempt?.azure_result ||
-    attempt?.azure ||
-    attempt?.result ||
-    null
-  );
-}
-
-function pickSummary(attempt) {
-  return attempt?.summary || attempt?.summary_json || attempt?.sum || null;
-}
-
-function pickPassageKey(attempt) {
-  return attempt?.passage_key || attempt?.passageKey || attempt?.passage || "";
-}
-
-function pickSessionId(attempt) {
-  return attempt?.session_id || attempt?.sessionId || "";
-}
-
-function pickTS(attempt) {
-  return (
-    attempt?.ts ||
-    attempt?.created_at ||
-    attempt?.createdAt ||
-    attempt?.time ||
-    Date.now()
-  );
 }
 
 function localDayKey(ts) {

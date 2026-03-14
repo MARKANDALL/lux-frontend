@@ -1,18 +1,14 @@
 // features/progress/render/dashboard/attempt-utils.js
 // Helper functions for dashboard attempt parsing and session grouping.
 
-export function pickAzure(a) {
-  return a?.azureResult || a?.azure_result || a?.azure || a?.result || null;
-}
-export function pickSummary(a) {
-  return a?.summary || a?.summary_json || a?.sum || null;
-}
-export function pickSessionId(a) {
-  return a?.session_id || a?.sessionId || "";
-}
-export function pickTS(a) {
-  return a?.ts || a?.created_at || a?.createdAt || a?.time || a?.localTime || null;
-}
+import {
+  pickAzure,
+  pickSummary,
+  pickSessionId,
+  pickTS,
+} from "../../attempt-pickers.js";
+
+export { pickAzure, pickSummary, pickSessionId, pickTS };
 
 // Pre-group attempts by session for History drill-in.
 function localDayKey(ts) {
@@ -46,4 +42,3 @@ export function buildAttemptsBySession(attempts) {
   }
   return bySession;
 }
-
