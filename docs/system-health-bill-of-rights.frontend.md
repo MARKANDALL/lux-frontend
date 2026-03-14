@@ -7,7 +7,7 @@
 
 ---
 
-## Part A — The Bill of Rights (19 Rules)
+## Part A — The Bill of Rights (20 Rules)
 
 ## Current Enforcement Reality (March 2026)
 
@@ -33,7 +33,63 @@ canonical writer first, compat mirror second, broad purge never.
 - Enforcement: `grep -rn 'window\.LuxFoo\s*=' --include='*.js'` should point to one intentional writer path, or to one canonical helper/bus bridge.
 - Violations found at audit time are tracked in the Single Source of Truth Charter (Part A.2).
 
-### Right 2: No innerHTML With Dynamic Content
+### Right 2: State Must Have One Clear Owner
+
+**Every piece of frontend state must declare its ownership tier up front.**
+If a value crosses feature boundaries, survives orchestration handoffs, or needs compat mirrors, it must not live as ad hoc local state.
+
+#### Allowed ownership tiers
+
+1. **Cross-feature shared runtime state**
+   - Use `app-core/runtime.js` + `luxBus` when multiple features need the same live value.
+   - Examples: last recording, last attempt ID, TTS shared state.
+   - Window mirrors may exist only as compatibility surfaces owned by the canonical helper.
+
+2. **Feature-island state**
+   - Use feature-local state for values that belong entirely to one feature root and do not need to be shared across unrelated features.
+   - Example: convo page orchestration state.
+
+3. **Dedicated feature store**
+   - Use a dedicated store file only for a true sub-application with its own lifecycle, render loop, or internal event system.
+   - Good examples: Streaming store, Wordcloud state store.
+   - Do not create a new store just to avoid deciding ownership.
+
+4. **Compat globals**
+   - Allowed only as temporary mirrors or self-contained legacy islands.
+   - They do not own the value.
+   - New readers should prefer canonical helpers / `luxBus.get()` instead of raw `window.*`.
+
+#### Decision rule
+
+Before adding new state, ask in this order:
+
+1. **Will another feature read or write this?**
+   - Yes → canonicalize through `runtime.js` and/or `luxBus`.
+
+2. **Is this only meaningful inside one feature root?**
+   - Yes → keep it in feature-local state.
+
+3. **Is this a true island with multiple internal surfaces and its own long-lived controller/store model?**
+   - Yes → dedicated feature store is allowed.
+
+4. **Is this only for migration safety or legacy integration?**
+   - Yes → compat mirror only, with exactly one writer.
+
+#### Banned patterns
+
+- Writing the same conceptual value from both local feature code and `window.*`
+- Creating a second writer for an existing compat global
+- Reading raw `window.*` when a canonical bus/helper path already exists
+- Inventing a new mini-store for state that should live in existing runtime/bus ownership
+- Using compat globals as the source of truth for new feature work
+
+#### Enforcement
+
+- New PRs must state the ownership tier for any new stateful value.
+- `rg -n "window\.[A-Za-z0-9_]+\s*=" --type js` should identify one intentional writer path per compat global.
+- If a value needs both bus and window presence, the window write must happen inside the canonical helper or bridge module — never from unrelated feature code.
+
+### Right 3: No innerHTML With Dynamic Content
 **`innerHTML`, `insertAdjacentHTML`, and `outerHTML` must never interpolate user-controlled or externally-sourced strings without escaping.**
 
 - Static HTML templates (no interpolation) are SAFE but should be documented.
@@ -42,7 +98,7 @@ canonical writer first, compat mirror second, broad purge never.
 - If HTML structure is truly needed, use the project's `esc()` (from `progress-utils.js`, `panel-utils.js`, `metric-modal/meta.js`, or `convo-highlight.js:escHtml()`).
 - `document.write()`, `eval()`, and `new Function()` are unconditionally banned in application code.
 
-### Right 3: No Fighting Modals
+### Right 4: No Fighting Modals
 **Body scroll lock uses the reference-counted `helpers/body-scroll-lock.js` — never raw `document.body.style.overflow`.**
 
 - `lockBodyScroll()` increments a counter and sets `overflow: hidden`.
@@ -50,7 +106,7 @@ canonical writer first, compat mirror second, broad purge never.
 - Any new modal MUST import and use these functions — no direct overflow manipulation.
 - Existing compliance: metric-modal and attempt-detail-modal both use the shared helper.
 
-### Right 4: Capture-Phase Handlers Must Not Swallow Unrelated Events
+### Right 5: Capture-Phase Handlers Must Not Swallow Unrelated Events
 **Any `addEventListener(..., { capture: true })` handler must guard before calling `stopPropagation()`.**
 
 - The guard check (`if (!matchedElement) return`) MUST run before `stopPropagation()`.
@@ -62,7 +118,7 @@ canonical writer first, compat mirror second, broad purge never.
   - `my-words/panel-events.js:122` — does NOT call `stopPropagation` (COMPLIANT).
   - `results/header.js:79` — scoped to ring element, not document (COMPLIANT).
 
-### Right 5: Intervals Must Be Clearable
+### Right 6: Intervals Must Be Clearable
 **Every `setInterval()` call must store its timer ID and have a corresponding `clearInterval()` path.**
 
 - Unbounded intervals (no clear path) are banned.
@@ -70,7 +126,7 @@ canonical writer first, compat mirror second, broad purge never.
 - Known violation: `convo-bootstrap.js:176` — 300ms poll of `state.scenarioIdx` with no `clearInterval`.
 - Proper examples: `wordcloud/timeline.js`, `streaming/mic-meter.js`, `streaming/app.js`.
 
-### Right 6: One Init Per Feature
+### Right 7: One Init Per Feature
 **Every feature module must have an idempotent init function with a guard flag.**
 
 - Pattern: `let installed = false; export function init() { if (installed) return; installed = true; ... }`
@@ -78,7 +134,7 @@ canonical writer first, compat mirror second, broad purge never.
 - MutationObserver and event listener registration must be guarded against double-attach.
 - Good examples: `metric-modal/events.js`, `convo-bootstrap.js`, `recorder/index.js`.
 
-### Right 7: Z-Index Budget
+### Right 8: Z-Index Budget
 **Z-index values follow a tiered budget. No ad-hoc values.**
 
 | Tier | Range | Usage |
@@ -97,7 +153,7 @@ canonical writer first, compat mirror second, broad purge never.
 - New z-index values MUST fit into an existing tier or be discussed before merging.
 - The SelfPB expanded float (200000) intentionally sits above modals to allow playback controls during modal interaction.
 
-### Right 8: Escape All Dynamic HTML
+### Right 9: Escape All Dynamic HTML
 **Every function that produces HTML from dynamic data must use an `esc()` function.**
 
 - Canonical escape functions exist in: `progress-utils.js`, `panel-utils.js`, `metric-modal/meta.js`, `ui-ai-ai-dom.js`, `convo-highlight.js`.
@@ -105,7 +161,7 @@ canonical writer first, compat mirror second, broad purge never.
 - Prefer importing from `progress-utils.js` or `helpers/dom.js` for consistency.
 - `mdToHtml()` functions (in `progress-utils.js` and `ui-ai-ai-dom.js`) correctly escape BEFORE applying markdown transforms.
 
-### Right 9: Module Size Budget
+### Right 10: Module Size Budget
 **Logic files (non-data, non-template) should stay under 300 lines. Files over 400 lines require a split plan.**
 
 | Threshold | Action |
@@ -118,7 +174,7 @@ canonical writer first, compat mirror second, broad purge never.
 - Template/HTML-builder files get a +100 line allowance.
 - Current red-zone files (non-data, non-template, >400 lines): `recorder/audio-inspector.js` (404), `convo/scenarios.js` (537).
 
-### Right 10: .GOLD Backup Before Editing
+### Right 11: .GOLD Backup Before Editing
 **Before any manual refactor, create a `.GOLD` backup of each file being changed.**
 
 - Example: `cp features/convo/convo-bootstrap.js features/convo/convo-bootstrap.js.GOLD`
@@ -126,49 +182,49 @@ canonical writer first, compat mirror second, broad purge never.
 - After the change is verified and committed, delete the `.GOLD` file.
 - Add `*.GOLD` to `.gitignore` if not already present.
 
-### Right 11: Event Names Are Contracts
+### Right 12: Event Names Are Contracts
 **Custom event names (e.g., `lux:lastRecording`, `lux:karaokeRefresh`, `lux:ttsContextChanged`) are treated as public API.**
 
 - Renaming or removing an event name requires a grep across the entire codebase.
 - Event detail shapes must not change without updating all listeners.
 - New events should follow the `lux:featureName` naming convention.
 
-### Right 12: No Competing Event Dispatches
+### Right 13: No Competing Event Dispatches
 **For any given event name, there should be exactly ONE dispatch site (or a single canonical function that dispatches).**
 
 - `lux:karaokeRefresh` — dispatched only by `publishKaraoke()` in `tts/player-ui/karaoke.js`.
 - `lux:lastRecording` — dispatched only by `setLastRecording()` in `app-core/runtime.js`.
 - `lux:ttsContextChanged` — dispatched by `convo-tts-context.js` (via `safeDispatch`).
 
-### Right 13: No Silent Catch Blocks
+### Right 14: No Silent Catch Blocks
 **`catch` blocks must either log the error or use the project's `warnSwallow()` pattern.**
 
 - The project already has a hygiene script: `npm run no-silent-catches`.
 - Every `catch` must call `console.error`, `console.warn`, or `globalThis.warnSwallow(filepath, err)`.
 - Empty `catch {}` blocks are banned.
 
-### Right 14: CSS-in-JS Inline Styles Are Last Resort
+### Right 15: CSS-in-JS Inline Styles Are Last Resort
 **Prefer CSS classes over inline `style.cssText` strings in JavaScript.**
 
 - Inline styles in JS make it impossible to audit visual behavior from CSS files alone.
 - Modal shells (e.g., `attempt-detail/modal-shell.js`) are acceptable exceptions when they are self-contained.
 - New features should use CSS classes defined in the feature's `.css` file.
 
-### Right 15: Vendor Files Are Frozen
+### Right 16: Vendor Files Are Frozen
 **Files in `public/vendor/` must never be edited. Update by replacing the entire file.**
 
 - `d3.v7.min.js`, `d3.layout.cloud.js`, `wavesurfer-7.8.11.min.js` are third-party.
 - innerHTML/eval findings in vendor files are NOT actionable (they are upstream's responsibility).
 - If a vendor file has a known vulnerability, replace it with a patched version.
 
-### Right 16: Admin Pages Are Low-Trust
+### Right 17: Admin Pages Are Low-Trust
 **Files in `admin/` render data from the API directly into innerHTML without escaping.**
 
 - `admin/index.html`, `admin/user.html`, `admin/overview.html` all use unescaped template literals in innerHTML.
 - This is acceptable ONLY because admin pages are behind authentication and data comes from our own database.
 - If admin pages ever become accessible to non-admins, these must be escaped.
 
-### Right 17: Tests Gate Refactors
+### Right 18: Tests Gate Refactors
 **No refactor lands without verifying `npm run build` passes.**
 
 - Run `npm run build` before committing any structural change.
@@ -176,7 +232,7 @@ canonical writer first, compat mirror second, broad purge never.
 - Run `npm run lint` to catch style issues.
 - If `npm test` is available, run it.
 
-### Right 18: Rollback Protocol
+### Right 19: Rollback Protocol
 **Every change must have a documented rollback path.**
 
 - For single-file changes: `git checkout HEAD~1 -- path/to/file`.
@@ -184,7 +240,7 @@ canonical writer first, compat mirror second, broad purge never.
 - For `.GOLD` backup workflow: `cp file.js.GOLD file.js`.
 - Never force-push to shared branches without team coordination.
 
-### Right 19: Shared Plumbing Gets a Protection Ring
+### Right 20: Shared Plumbing Gets a Protection Ring
 **Any shared-plumbing cleanup should add or maintain focused tests at the ownership boundary.**
 
 - Shared runtime, bus, storage, and cross-feature attach/handoff logic should not rely on manual QA alone.
@@ -251,14 +307,14 @@ Allowed Patterns
 Pattern	When to Use	Example
 el.textContent = value	Setting text content (safe, no XSS)	btn.textContent = "Save"
 el.innerHTML = staticHTML	Static template strings with no interpolation	container.innerHTML = "" (clearing)
-el.innerHTML = esc(dynamic) + static	Dynamic content with proper escaping	card.innerHTML = \<h3>${esc(title)}</h3>``
+el.innerHTML = esc(dynamic) + static	Dynamic content with proper escaping	card.innerHTML = `<h3>${esc(title)}</h3>`
 document.createElement() + appendChild()	Building DOM programmatically	Modal shells, buttons
 setInterval() with stored ID + clearInterval()	Periodic tasks with cleanup	timer = setInterval(fn, ms); ... clearInterval(timer)
 addEventListener(..., { capture: true }) with guard	Intercepting specific events	if (!chip) return; e.stopPropagation()
 lockBodyScroll() / unlockBodyScroll()	Modal open/close	Import from helpers/body-scroll-lock.js
 Banned Patterns
 Pattern	Why It's Banned	Alternative
-el.innerHTML = \...${userInput}...``	XSS injection risk	esc(userInput) or el.textContent
+el.innerHTML = `...${userInput}...`	XSS injection risk	esc(userInput) or el.textContent
 document.write()	Destroys document, blocks parsing	createElement + appendChild
 eval() / new Function()	Code injection, CSP violation	Direct function calls
 document.body.style.overflow = "hidden"	Fighting code between modals	lockBodyScroll()
@@ -299,7 +355,7 @@ Delete .GOLD after commit is verified.
 Current Red-Zone Files (Non-Data, Non-Template, >400 lines)
 File	Lines	Suggested Split
 features/recorder/audio-inspector.js	404	Extract rendering logic from event wiring
-Current Yellow-Zone Files (250-400 lines, logic-heavy)
+Current Yellow-Zone Files (250–400 lines, logic-heavy)
 File	Lines
 features/features/tts/player-ui.js	388
 features/convo/scene-atmo.js	388
@@ -336,22 +392,23 @@ Scroll behind modal	Body scroll lock mismatch	helpers/body-scroll-lock.js, modal
 SelfPB doesn't show recording	LuxLastRecordingBlob not set	app-core/runtime.js, convo-turn.js, recorder/index.js
 TTS voice wrong in convo	Check luxBus.get('tts')?.sourceMode — was dual-write issue, now resolved (Phase A)	convo-tts-context.js, tts/player-ui.js
 Click does nothing on score tile	Capture handler swallowing event	chip-events.js, metric-modal/events.js
-Double init / duplicate listeners	Missing guard flag	Check installed/luxBooted flags in the feature module
+Double init / duplicate listeners	Missing guard flag	Check installed / luxBooted flags in the feature module
 Part B — Updated Audit Status Table (Feb 26 → Mar 1)
 #	Issue	Status	Evidence	Risk	Next Action
 B.1	window.LuxLastRecordingBlob dual-write (runtime.js vs convo-turn.js)	FIXED	convo-turn.js:4 now imports setLastRecording from runtime.js and calls it at line 38. No direct window.LuxLastRecordingBlob = in convo-turn.js. Only writer is runtime.js:42. Commit c89c937.	LOW	None — verified single writer.
 B.2	window.LuxKaraokeSource / LuxKaraokeTimings written by 3 modules	FIXED	publishKaraoke() in tts/player-ui/karaoke.js:81-97 is now the sole writer. selfpb/controls.js:3 imports and calls publishKaraoke("learner", timings). selfpb/karaoke.js:3 imports and calls publishKaraoke. No direct window.LuxKaraokeSource = outside publishKaraoke. Commit aaa3832.	LOW	None — verified canonical writer pattern.
-B.3	document.body.style.overflow toggled by 2 modals	FIXED	helpers/body-scroll-lock.js implements ref-counted lockBodyScroll()/unlockBodyScroll(). metric-modal/events.js:5 and attempt-detail/modal-shell.js:4 both import from this helper. No direct document.body.style.overflow in modal files. Commit 2f3292b.	LOW	None — verified ref-counted lock.
+B.3	document.body.style.overflow toggled by 2 modals	FIXED	helpers/body-scroll-lock.js implements ref-counted lockBodyScroll() / unlockBodyScroll(). metric-modal/events.js:5 and attempt-detail/modal-shell.js:4 both import from this helper. No direct document.body.style.overflow in modal files. Commit 2f3292b.	LOW	None — verified ref-counted lock.
 B.4	3 capture-phase click handlers competing (my-words, metric-modal, chip-events)	PARTIAL	chip-events.js:46-54 guards with if (!chip) return before stopPropagation() — safe. metric-modal/events.js:134-145 does NOT call stopPropagation — safe. my-words/panel-events.js:122-148 does NOT call stopPropagation — safe. However, no documentation of handler interaction exists.	LOW	Add comments documenting capture-handler interaction matrix.
 B.5	window.luxTTS dual-init (convo-tts-context vs player-ui)	FIXED	All 6 Object.assign mirror writes removed. All readers migrated to luxBus.get('tts'). Frozen compat shim remains. Tag: v-luxTTS-bus-only.	LOW	None — resolved.
 B.6	Double-init guard in convo-bootstrap.js (MutationObserver + setInterval)	PARTIAL	MutationObserver removed (commit 6285941). setInterval at line 176 still runs forever (300ms poll of state.scenarioIdx) with no clearInterval.	MED	Replace 300ms poll with lux:scenarioChanged event dispatch from picker system.
 B.7	Global/window ownership map (inventory of globals)	FIXED	Documented in this Bill of Rights (Part A.2).	LOW	Keep the charter updated as new globals are added.
-B.8	z-index stack conflicts (selfpb float above modals)	PARTIAL	z-index inventory compiled (Part A, Right 7). SelfPB expanded float at 200000 is intentional. Metric modal at 10050 vs attempt-detail at 9999 is a minor ordering issue.	LOW	Promote attempt-detail modal z-index to 10050 to match metric-modal.
+B.8	z-index stack conflicts (selfpb float above modals)	PARTIAL	z-index inventory compiled (Part A, Right 8). SelfPB expanded float at 200000 is intentional. Metric modal at 10050 vs attempt-detail at 9999 is a minor ordering issue.	LOW	Promote attempt-detail modal z-index to 10050 to match metric-modal.
 Part C — innerHTML / Injection / Flakiness Investigation (Code Red)
 C.1 — Search Results Summary
 
-Total innerHTML/insertAdjacentHTML/outerHTML usages found: ~95+ across JS files
-eval/new Function/document.write: 0 in application code (only in vendor files)
+Total innerHTML / insertAdjacentHTML / outerHTML usages found: ~95+ across JS files
+
+eval / new Function / document.write: 0 in application code (only in vendor files)
 
 C.2 — Categorized Findings
 SAFE: Static HTML or Properly Escaped (76 instances)
@@ -361,33 +418,33 @@ These use either static string templates (no interpolation) or properly escape d
 File	Line(s)	Pattern	Why Safe
 ui/ui-arrow-trail.js	37	host.innerHTML = ""	Clearing only
 ui/ui-ai-ai-dom.js	37, 131, 260, 292	innerHTML = ""	Clearing only
-ui/ui-ai-ai-dom.js	60, 147, 156	btn.innerHTML = \<span>emoji</span>``	Static emoji strings, no user data
-ui/ui-ai-ai-dom.js	177	contentArea.innerHTML = \...``	Static loading spinner
-ui/ui-ai-ai-dom.js	286	innerHTML = \...${safeMsg}...``	Uses escapeHtml(msg) at line 285
+ui/ui-ai-ai-dom.js	60, 147, 156	btn.innerHTML = <span>emoji</span>	Static emoji strings, no user data
+ui/ui-ai-ai-dom.js	177	contentArea.innerHTML = ...	Static loading spinner
+ui/ui-ai-ai-dom.js	286	innerHTML = `...${safeMsg}...`	Uses escapeHtml(msg) at line 285
 ui/ui-ai-ai-dom.js	309	contentArea.innerHTML = mdToHtml(md)	mdToHtml calls escapeHtml() first (line 315)
 features/convo/convo-render.js	38, 55	msgs.innerHTML = "", sugs.innerHTML = ""	Clearing only
 features/convo/convo-render.js	44, 63	bubble.innerHTML = highlightHtml(...)	highlightHtml uses escHtml() at line 192 of convo-highlight.js
 features/interactions/metric-modal/events.js	69	closeBtn.innerHTML = "&times;"	Static entity
 features/interactions/metric-modal/events.js	97-110	card.insertAdjacentHTML(...)	Uses esc() from meta.js for metric keys; buildModalHtml escapes all dynamic values
-features/features/tts/boot-tts.js	66	tab.innerHTML = \...``	Static label + icon
+features/features/tts/boot-tts.js	66	tab.innerHTML = ...	Static label + icon
 features/features/selfpb/karaoke.js	73	ui.karaokeLane.innerHTML = ""	Clearing only
 features/features/tts/player-dom.js	36, 47	styleSel.innerHTML, mount.innerHTML	Static template; voice names come from VOICES constant
 features/progress/attempt-detail/modal-shell.js	25	closeBtn.innerHTML = "&times;"	Static entity
-features/progress/attempt-detail/header.js	66	header.innerHTML = \...``	Uses esc() imports from progress-utils.js for all dynamic values
-features/progress/attempt-detail/*.js	Various	innerHTML = \...``	Template strings with escaped dynamic values
+features/progress/attempt-detail/header.js	66	header.innerHTML = ...	Uses esc() imports from progress-utils.js for all dynamic values
+features/progress/attempt-detail/*.js	Various	innerHTML = ...	Template strings with escaped dynamic values
 features/results/render-core.js	50, 71, 98, 114	innerHTML = "", innerHTML = buildRows(...)	buildRows escapes via score rendering functions
 features/results/summary.js	170	$out.innerHTML = html	HTML built by render pipeline with escaping
-features/convo/convo-layout.js	7, 12	root.innerHTML = "", atmo.innerHTML = \...``	Clearing + static atmo template
-features/my-words/panel-dom.js	34	root.innerHTML = \...``	Static panel template
+features/convo/convo-layout.js	7, 12	root.innerHTML = "", atmo.innerHTML = ...	Clearing + static atmo template
+features/my-words/panel-dom.js	34	root.innerHTML = ...	Static panel template
 features/my-words/panel-render.js	170-205	Various innerHTML	Uses esc() from panel-utils.js
 features/onboarding/lux-onboarding.js	30, 140, 143	card.innerHTML, elBody.innerHTML	Step content is from static STEPS array
-features/dashboard/ui.js	9, 27	container.innerHTML = \...``	Static dashboard templates
+features/dashboard/ui.js	9, 27	container.innerHTML = ...	Static dashboard templates
 features/dashboard/index.js	159, 209, 239	Various innerHTML	Static templates + loading states
 features/streaming/ui/render.js	44	container.innerHTML = ""	Clearing only
 features/streaming/ui/dom.js	4	root.innerHTML = ""	Clearing only
-features/streaming/setup/app.js	45	root.innerHTML = \...``	Static setup template
+features/streaming/setup/app.js	45	root.innerHTML = ...	Static setup template
 features/convo/progress.js	60, 96, 117	Various innerHTML	Static templates + loading states
-features/convo/knobs-drawer.js	42	drawer.innerHTML = \...``	Static drawer template
+features/convo/knobs-drawer.js	42	drawer.innerHTML = ...	Static drawer template
 features/convo/characters-drawer.js	77, 203, 299, 347	Various innerHTML	Scenario data from internal config; uses role name interpolation (see RISKY notes)
 features/convo/convo-shared.js	102, 106, 243	Various innerHTML	Session report; mostly static templates
 features/life/app.js	44, 50, 117, 180, 222	Various innerHTML	Life mode templates; data from internal API
@@ -395,18 +452,18 @@ features/harvard/modal-dom.js	178	explainRight.innerHTML = EXPLAIN_HTML	Static c
 features/harvard/modal-actions.js	15, 229	focusSel.innerHTML = "", explainRight.innerHTML = ...	Clearing + static constants
 features/harvard/modal-controller.js	333	explainRight.innerHTML = ...	Static HTML constants
 features/convo/picker-deck/thumbs-render.js	7	thumbs.innerHTML = ""	Clearing only
-features/my-words/launcher.js	23	btn.innerHTML = \...``	Static emoji button
+features/my-words/launcher.js	23	btn.innerHTML = ...	Static emoji button
 features/my-words/library-modal-controller.js	18, 45	Various innerHTML	Static modal template
 features/my-words/index.js	116, 124	Various innerHTML	AI coaching UI; static templates
-features/recorder/audio-inspector.js	166	root.innerHTML = \...``	Dev-only audio inspector template
+features/recorder/audio-inspector.js	166	root.innerHTML = ...	Dev-only audio inspector template
 features/features/selfpb/dom.js	8, 107	host.innerHTML, float.innerHTML	Static selfpb UI template
 features/progress/wordcloud/*.js	Various	Multiple innerHTML	Static wordcloud templates
-features/results/summary-shell.js	90	footer.innerHTML = \...``	Static footer template
+features/results/summary-shell.js	90	footer.innerHTML = ...	Static footer template
 RISKY: Dynamic Content Without Escaping (7 instances)
 #	File	Line(s)	Code	Risk Level	Dynamic Source	Remediation
-R1	ui/auth-dom.js	107	modal.querySelector("div").innerHTML = \...${email}...``	HIGH	User email input from <input type="email">	XSS: user types "><img src=x onerror=alert(1)> as email. Must escape: esc(email).
-R2	features/results/render-helpers.js	58	$out.innerHTML = \<span class="score-bad">Error: ${data?.error || "Unknown"}</span>``	MED	API error message	Error messages from Azure API could contain HTML. Must escape: esc(data?.error).
-R3	features/results/render-helpers.js	116	\<b>${err.word}</b>: <span...>${err.score}%</span>``	MED	Azure word results	err.word comes from Azure API Word field. Unlikely but not impossible to contain HTML. Should escape.
+R1	ui/auth-dom.js	107	modal.querySelector("div").innerHTML = `...${email}...`	HIGH	User email input from <input type="email">	XSS: user types "><img src=x onerror=alert(1)> as email. Must escape: esc(email).
+R2	features/results/render-helpers.js	58	``$out.innerHTML = `<span class="score-bad">Error: ${data?.error		"Unknown"}</span>` ``	MED
+R3	features/results/render-helpers.js	116	<b>${err.word}</b>: <span...>${err.score}%</span>	MED	Azure word results	err.word comes from Azure API Word field. Unlikely but not impossible to contain HTML. Should escape.
 R4	features/passages/dom.js	66	ui.tipText.innerHTML = textHTML	LOW-MED	textHTML variable; need to trace source	Depends on upstream builder; likely safe but should verify escaping.
 R5	features/results/syllables.js	138	m.innerHTML = renderSyllableStrip(w)	LOW	Syllable render from Azure word data	renderSyllableStrip should be verified to escape word text.
 R6	features/interactions/ph-hover/tooltip-render.js	212	state.tooltipContent.innerHTML = html	LOW	html from tooltip builder	Tooltip builders use escapeHTML() from utils.js. Likely safe.
@@ -414,7 +471,7 @@ R7	features/progress/attempt-detail/ai-coach-section.js	59, 69, 73	contentDiv.in
 Admin Pages (Separate Trust Zone)
 File	Line(s)	Pattern	Note
 admin/index.html	271-303	Multiple innerHTML with template literals	Admin-only; data from own DB
-admin/user.html	57	innerHTML = rows.map(r => \...`)`	Admin-only; data from own DB
+admin/user.html	57	innerHTML = rows.map(r => `...`)	Admin-only; data from own DB
 admin/overview.html	66-71	tbody.innerHTML, tr.innerHTML	Admin-only; data from own DB
 C.3 — Correlation to Reported "Inconsistent UI Behavior"
 
@@ -428,7 +485,7 @@ Progress dashboard flickers on refresh	dashboard/index.js:159 and :239 replace e
 
 Key insight: The codebase uses delegated event handling (listeners on parent containers) which mitigates most innerHTML-related listener loss. The remaining issues are visual (flicker during rebuilds) rather than functional.
 
-Performance note: innerHTML triggers HTML parsing, which is slower than createElement+appendChild for small updates but faster for large template replacements. The current usage pattern (rebuild-on-data-change) is acceptable but could benefit from targeted DOM patching for frequently-updated elements like chat bubbles.
+Performance note: innerHTML triggers HTML parsing, which is slower than createElement + appendChild for small updates but faster for large template replacements. The current usage pattern (rebuild-on-data-change) is acceptable but could benefit from targeted DOM patching for frequently-updated elements like chat bubbles.
 
 Part D — Tactical Fix Plan (Top 8 Items)
 Fix 1: Escape email in auth-dom.js (CRITICAL — XSS)
@@ -476,7 +533,6 @@ Why: convo-bootstrap.js:176 runs a 300ms interval forever to detect state.scenar
 Minimal patch:
 
 File: features/convo/convo-bootstrap.js
-
 File: features/convo/convo-picker-system.js (where state.scenarioIdx is set)
 
 In picker-system, dispatch window.dispatchEvent(new Event("lux:scenarioChanged")) when state.scenarioIdx changes.

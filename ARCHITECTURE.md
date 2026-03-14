@@ -123,6 +123,7 @@ LUX_GEMINI/
 ├── *.css                       Global and feature CSS (61 files, ~12K lines)
 ├── vite.config.js              Multi-page Vite config with API proxy
 └── package.json                Scripts: dev, build, lint, test, hygiene
+
 Pages and Entry Points
 
 Lux is a multi-page app (not SPA). Each HTML page has its own Vite entry point. Page navigation is a full reload.
@@ -160,9 +161,9 @@ The single source of truth for cross-feature shared state. Replaces the old patt
 import { luxBus } from '../app-core/lux-bus.js';
 
 luxBus.set('scenario', { id: 'coffee-shop', idx: 3 });  // write + notify
-luxBus.get('scenario');                                    // read
-luxBus.on('scenario', (val) => { ... });                   // subscribe (returns unsub fn)
-luxBus.update('tts', { autoVoice: true });                 // shallow merge
+luxBus.get('scenario');                                  // read
+luxBus.on('scenario', (val) => { ... });                 // subscribe (returns unsub fn)
+luxBus.update('tts', { autoVoice: true });               // shallow merge
 
 Bus channels currently in use: scenario, ttsContext, lastRecording, lastAssessment, knobs, karaoke, karaokeRefresh, selfpbExpandedOpen, requestSelfPBExpanded, openSelfPBExpanded, pickerSummaryPulse, pickerSummaryHover, pickerSummaryHoverClear, convoMode.
 
@@ -217,7 +218,7 @@ features/features/tts/player-core.js	/api/tts, /api/tts?voices=1	TTS synthesis +
 ui/auth-dom.js	/api/migrate	Guest → user history migration
 Auth
 
-Admin token: prompted at runtime, stored in sessionStorage/localStorage under lux_admin_token
+Admin token: prompted at runtime, stored in sessionStorage / localStorage under lux_admin_token
 
 User identity: UUID generated client-side, stored in localStorage under LUX_USER_ID
 
@@ -281,6 +282,103 @@ window.LuxLastRecordingBlob	Active mirror	runtime.js via setLastRecording()
 window.LuxMyWords	Active — self-contained island	my-words/index.js
 window.LuxSelfPB	Active — selfpb family only	selfpb/core.js + selfpb/ui.js
 window.LUX_USER_ID	Active mirror	identity.js via ensureUID() / setUID()
+State Ownership Ladder
+
+This repo currently contains four legitimate state tiers. Future work must choose one intentionally.
+
+Tier A — Cross-feature shared runtime state
+
+Use this when multiple features need the same live value, or when a value must survive handoff between modules.
+
+Canonical tools:
+
+app-core/runtime.js
+
+app-core/lux-bus.js
+
+Examples:
+
+lastRecording
+
+lastAttemptId
+
+tts
+
+Rule:
+
+If multiple feature families need the value, do not keep it as ad hoc local state.
+
+Canonical writes must go through exported runtime helpers and/or luxBus.update() / luxBus.set().
+
+Tier B — Feature-island state
+
+Use this when state belongs entirely to one feature root and does not need cross-feature ownership.
+
+Examples:
+
+AI Conversations page state
+
+drawer open/close state
+
+local UI mode toggles inside a single feature family
+
+Rule:
+
+Keep it local unless another feature truly needs it.
+
+Do not publish to window.* just for convenience.
+
+Tier C — Dedicated store islands
+
+Use this only for a true sub-app with its own internal lifecycle, render loop, or controller/store architecture.
+
+Good examples:
+
+Streaming (features/streaming/state/store.js)
+
+Wordcloud (features/progress/wordcloud/state-store.js)
+
+Rule:
+
+A dedicated store is allowed for real islands.
+
+Do not create a new store for simple shared values that belong in runtime/bus ownership.
+
+Tier D — Compat globals
+
+These exist for migration safety, legacy bridges, or isolated legacy islands.
+They are not canonical owners.
+
+Examples:
+
+window.luxTTS — frozen shim only
+
+window.LuxLastRecordingBlob — compat mirror of runtime-owned value
+
+window.LuxSelfPB — selfpb family island
+
+window.LuxMyWords — self-contained island
+
+Rule:
+
+One writer only.
+
+No new direct readers if a canonical helper already exists.
+
+Compat mirrors may remain temporarily, but they do not change canonical ownership.
+
+PR Review Questions For State Changes
+
+Is this value shared across feature families?
+
+If yes, why is it not in runtime/bus ownership?
+
+If it is feature-local, what proves it is truly a feature island?
+
+If it is a store, what makes it a true sub-app rather than just local state with a fancy wrapper?
+
+If it touches window.*, where is the single canonical writer?
+
 Streaming Feature (Reference Architecture)
 
 The Streaming feature (features/streaming/) is the cleanest feature island in the codebase. It's a good model for how future features should be structured: isolated mount, dedicated state store, transport controller, and render loop.
