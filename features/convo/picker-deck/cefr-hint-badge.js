@@ -115,10 +115,17 @@ export function mountCefrHintBadge(textWrap, host) {
 
   // ── Flight to knobs drawer (state 2) ──
 
-  function cleanupFlight() {
-    if (flyAnim) { try { flyAnim.cancel(); } catch (_) {} flyAnim = null; }
-    if (flyEl && flyEl.parentNode) { flyEl.parentNode.removeChild(flyEl); flyEl = null; }
+function cleanupFlight() {
+  if (flyAnim) {
+    try {
+      flyAnim.cancel();
+    } catch (err) {
+      globalThis.warnSwallow("features/convo/picker-deck/cefr-hint-badge.js", err);
+    }
+    flyAnim = null;
   }
+  if (flyEl && flyEl.parentNode) { flyEl.parentNode.removeChild(flyEl); flyEl = null; }
+}
 
   /**
    * Visibility check that also rejects elements pushed offscreen by transforms.

@@ -241,7 +241,11 @@ function _animateOpen() {
     // orphaned compositing layer that can re-assert translateX(0) after a
     // subsequent close animation cancels itself — the root cause of the
     // "blank drawer shell bleeds into chat page" intermittent bug.
-    try { _currentAnim.cancel(); } catch (_) {}
+    try {
+  _currentAnim.cancel();
+} catch (err) {
+  globalThis.warnSwallow("features/convo/characters-drawer.js", err);
+}
     _currentAnim = null;
   };
 }
@@ -254,7 +258,11 @@ function _animateClose() {
 
   // Belt-and-suspenders: nuke ALL lingering animations on the drawer element
   // (catches any orphaned fill:forwards from open, content swaps, CSS anims).
-  try { _drawer.getAnimations().forEach(a => a.cancel()); } catch (_) {}
+  try {
+  _drawer.getAnimations().forEach(a => a.cancel());
+} catch (err) {
+  globalThis.warnSwallow("features/convo/characters-drawer.js", err);
+}
 
   _currentAnim = _drawer.animate(
     [
@@ -277,7 +285,11 @@ function _animateClose() {
     _drawer.style.transform = "translateX(-100%)";
     // Kill the finished animation so its fill:forwards doesn't
     // permanently override CSS classes (e.g. peek on next hover).
-    try { _currentAnim.cancel(); } catch (_) {}
+    try {
+  _currentAnim.cancel();
+} catch (err) {
+  globalThis.warnSwallow("features/convo/characters-drawer.js", err);
+}
     _currentAnim = null;
     if (_openerEl && typeof _openerEl.focus === "function") {
       _openerEl.focus();
