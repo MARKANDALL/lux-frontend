@@ -3,7 +3,7 @@
 
 import { fmtPct } from "../../../../core/scoring/index.js";
 import { prettyErrCounts } from "../derive.js";
-import { esc } from "./meta.js";
+import { esc } from "../meta.js";
 
 function bullets(items = []) {
   return `<ul class="lux-metricBullets">${(items || [])
@@ -272,4 +272,3 @@ export function helpCta(metricKey) {
     </button>
   `;
 }
- 
