@@ -22,6 +22,39 @@ Current repo direction:
 Interpret every rule below through that lens:
 canonical writer first, compat mirror second, broad purge never.
 
+## Current Project Context (March 2026)
+
+These rules are being applied in the context of a **solo-developer, local-only build phase**.
+
+Current reality:
+- the frontend is being developed and tested locally
+- there is no intended public production exposure yet
+- there are no external clients, customers, employees, or general users on the system
+- the same person is currently the architect, developer, tester, and operator
+
+This affects **priority**, but not **standards**.
+
+What changes in this phase:
+- architecture clarity, ownership boundaries, migration completion, and maintainability usually take priority over full production hardening
+- some public-deployment security work may be intentionally deferred until the product is further along
+- recommendations should be calibrated for a codebase that is still being actively built, not one already serving outside users
+
+What does **not** change in this phase:
+- no real secrets or credentials should be committed
+- avoid creating structural patterns that will be painful or dangerous to unwind later
+- deferred hardening must remain visible as future required work before any external exposure
+- “local-only for now” is not permission for permanent sloppy ownership, drift, or hidden risk
+
+Practical review rule:
+
+> When evaluating this repo, distinguish between:
+> 1. **fix-now architecture and maintainability problems**, and
+> 2. **later-phase production hardening work**.
+>
+> Do not confuse the second category for an already-live emergency unless there is evidence of actual exposure.
+
+This note exists so future audits, refactors, and AI handoffs do not mis-prioritize work by assuming the project is already publicly deployed.
+
 ### Right 1: One Writer Per Global
 **Every shared-state entrypoint has exactly ONE canonical writer module or helper contract.**
 
@@ -300,21 +333,21 @@ player-ui.js writes runtime state via luxBus.update('tts', {...}) — no window 
 
 All readers (player-dom.js, convo-tts-context.js, selfpb/karaoke.js, player-ui.js) use luxBus.get('tts')?.sourceMode etc.
 
-One frozen compat shim: window.luxTTS = luxBus.get('tts') at end of mountTTSPlayer (live reference, not a copy).
+One frozen compat shim remains: window.luxTTS = luxBus.get('tts') at end of mountTTSPlayer (live reference, not a copy).
 
 Part A.3 — Allowed vs Banned Patterns
 Allowed Patterns
 Pattern	When to Use	Example
 el.textContent = value	Setting text content (safe, no XSS)	btn.textContent = "Save"
 el.innerHTML = staticHTML	Static template strings with no interpolation	container.innerHTML = "" (clearing)
-el.innerHTML = esc(dynamic) + static	Dynamic content with proper escaping	card.innerHTML = `<h3>${esc(title)}</h3>`
+el.innerHTML = esc(dynamic) + static	Dynamic content with proper escaping	card.innerHTML = \<h3>${esc(title)}</h3>``
 document.createElement() + appendChild()	Building DOM programmatically	Modal shells, buttons
 setInterval() with stored ID + clearInterval()	Periodic tasks with cleanup	timer = setInterval(fn, ms); ... clearInterval(timer)
 addEventListener(..., { capture: true }) with guard	Intercepting specific events	if (!chip) return; e.stopPropagation()
 lockBodyScroll() / unlockBodyScroll()	Modal open/close	Import from helpers/body-scroll-lock.js
 Banned Patterns
 Pattern	Why It's Banned	Alternative
-el.innerHTML = `...${userInput}...`	XSS injection risk	esc(userInput) or el.textContent
+el.innerHTML = \...${userInput}...``	XSS injection risk	esc(userInput) or el.textContent
 document.write()	Destroys document, blocks parsing	createElement + appendChild
 eval() / new Function()	Code injection, CSP violation	Direct function calls
 document.body.style.overflow = "hidden"	Fighting code between modals	lockBodyScroll()
@@ -398,7 +431,7 @@ Part B — Updated Audit Status Table (Feb 26 → Mar 1)
 B.1	window.LuxLastRecordingBlob dual-write (runtime.js vs convo-turn.js)	FIXED	convo-turn.js:4 now imports setLastRecording from runtime.js and calls it at line 38. No direct window.LuxLastRecordingBlob = in convo-turn.js. Only writer is runtime.js:42. Commit c89c937.	LOW	None — verified single writer.
 B.2	window.LuxKaraokeSource / LuxKaraokeTimings written by 3 modules	FIXED	publishKaraoke() in tts/player-ui/karaoke.js:81-97 is now the sole writer. selfpb/controls.js:3 imports and calls publishKaraoke("learner", timings). selfpb/karaoke.js:3 imports and calls publishKaraoke. No direct window.LuxKaraokeSource = outside publishKaraoke. Commit aaa3832.	LOW	None — verified canonical writer pattern.
 B.3	document.body.style.overflow toggled by 2 modals	FIXED	helpers/body-scroll-lock.js implements ref-counted lockBodyScroll() / unlockBodyScroll(). metric-modal/events.js:5 and attempt-detail/modal-shell.js:4 both import from this helper. No direct document.body.style.overflow in modal files. Commit 2f3292b.	LOW	None — verified ref-counted lock.
-B.4	3 capture-phase click handlers competing (my-words, metric-modal, chip-events)	PARTIAL	chip-events.js:46-54 guards with if (!chip) return before stopPropagation() — safe. metric-modal/events.js:134-145 does NOT call stopPropagation — safe. my-words/panel-events.js:122-148 does NOT call stopPropagation — safe. However, no documentation of handler interaction exists.	LOW	Add comments documenting capture-handler interaction matrix.
+B.4	3 capture-phase click handlers competing (my-words, metric-modal, chip-events)	PARTIAL	chip-events.js:46-54 guards with if (!chip) return before stopPropagation() — safe. metric-modal/events.js:134-145 does NOT call stopPropagation() — safe. my-words/panel-events.js:122-148 does NOT call stopPropagation() — safe. However, no documentation of handler interaction exists.	LOW	Add comments documenting capture-handler interaction matrix.
 B.5	window.luxTTS dual-init (convo-tts-context vs player-ui)	FIXED	All 6 Object.assign mirror writes removed. All readers migrated to luxBus.get('tts'). Frozen compat shim remains. Tag: v-luxTTS-bus-only.	LOW	None — resolved.
 B.6	Double-init guard in convo-bootstrap.js (MutationObserver + setInterval)	PARTIAL	MutationObserver removed (commit 6285941). setInterval at line 176 still runs forever (300ms poll of state.scenarioIdx) with no clearInterval.	MED	Replace 300ms poll with lux:scenarioChanged event dispatch from picker system.
 B.7	Global/window ownership map (inventory of globals)	FIXED	Documented in this Bill of Rights (Part A.2).	LOW	Keep the charter updated as new globals are added.
@@ -420,7 +453,7 @@ ui/ui-arrow-trail.js	37	host.innerHTML = ""	Clearing only
 ui/ui-ai-ai-dom.js	37, 131, 260, 292	innerHTML = ""	Clearing only
 ui/ui-ai-ai-dom.js	60, 147, 156	btn.innerHTML = <span>emoji</span>	Static emoji strings, no user data
 ui/ui-ai-ai-dom.js	177	contentArea.innerHTML = ...	Static loading spinner
-ui/ui-ai-ai-dom.js	286	innerHTML = `...${safeMsg}...`	Uses escapeHtml(msg) at line 285
+ui/ui-ai-ai-dom.js	286	innerHTML = \...${safeMsg}...``	Uses escapeHtml(msg) at line 285
 ui/ui-ai-ai-dom.js	309	contentArea.innerHTML = mdToHtml(md)	mdToHtml calls escapeHtml() first (line 315)
 features/convo/convo-render.js	38, 55	msgs.innerHTML = "", sugs.innerHTML = ""	Clearing only
 features/convo/convo-render.js	44, 63	bubble.innerHTML = highlightHtml(...)	highlightHtml uses escHtml() at line 192 of convo-highlight.js
@@ -461,7 +494,7 @@ features/progress/wordcloud/*.js	Various	Multiple innerHTML	Static wordcloud tem
 features/results/summary-shell.js	90	footer.innerHTML = ...	Static footer template
 RISKY: Dynamic Content Without Escaping (7 instances)
 #	File	Line(s)	Code	Risk Level	Dynamic Source	Remediation
-R1	ui/auth-dom.js	107	modal.querySelector("div").innerHTML = `...${email}...`	HIGH	User email input from <input type="email">	XSS: user types "><img src=x onerror=alert(1)> as email. Must escape: esc(email).
+R1	ui/auth-dom.js	107	modal.querySelector("div").innerHTML = \...${email}...``	HIGH	User email input from <input type="email">	XSS: user types "><img src=x onerror=alert(1)> as email. Must escape: esc(email).
 R2	features/results/render-helpers.js	58	``$out.innerHTML = `<span class="score-bad">Error: ${data?.error		"Unknown"}</span>` ``	MED
 R3	features/results/render-helpers.js	116	<b>${err.word}</b>: <span...>${err.score}%</span>	MED	Azure word results	err.word comes from Azure API Word field. Unlikely but not impossible to contain HTML. Should escape.
 R4	features/passages/dom.js	66	ui.tipText.innerHTML = textHTML	LOW-MED	textHTML variable; need to trace source	Depends on upstream builder; likely safe but should verify escaping.
@@ -471,7 +504,7 @@ R7	features/progress/attempt-detail/ai-coach-section.js	59, 69, 73	contentDiv.in
 Admin Pages (Separate Trust Zone)
 File	Line(s)	Pattern	Note
 admin/index.html	271-303	Multiple innerHTML with template literals	Admin-only; data from own DB
-admin/user.html	57	innerHTML = rows.map(r => `...`)	Admin-only; data from own DB
+admin/user.html	57	innerHTML = rows.map(r => \...`)`	Admin-only; data from own DB
 admin/overview.html	66-71	tbody.innerHTML, tr.innerHTML	Admin-only; data from own DB
 C.3 — Correlation to Reported "Inconsistent UI Behavior"
 

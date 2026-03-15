@@ -8,6 +8,37 @@ This is not an ideal-state doc. This is a plain-English description of how the L
 
 Lux is a browser-based English pronunciation and conversation training platform. It uses Azure Speech Services for pronunciation assessment and TTS, OpenAI GPT for AI coaching and conversation, and Supabase for auth. The frontend is Vite + vanilla JS/CSS with zero frameworks — all DOM manipulation is manual. The backend is a separate repo (`luxury-language-api`) deployed as Vercel serverless functions.
 
+## Current Project Reality (March 2026)
+
+This repo is currently a **local-only development project**, not a live public product.
+
+Current operating reality:
+- **Single developer:** one person owns and works on the codebase
+- **Local-only usage:** the project is run locally for development and testing
+- **No public deployment:** it is not intentionally exposed to outside users, clients, or employees
+- **No active external user base:** the current “user” is the developer during build/test
+- **Mid-build posture:** the repo is still in active product construction, cleanup, and architecture hardening
+
+This context matters when reviewing the codebase.
+
+The frontend may contain patterns that would deserve stronger concern in a publicly exposed production system, but in the current phase those should usually be interpreted as **deferred hardening work**, not as evidence that the project is already in a dangerous live state.
+
+That does **not** mean security is ignored. It means security work is being sequenced.
+
+Current priority order is generally:
+1. core product construction
+2. architecture cleanup and ownership clarity
+3. migration completion and maintainability
+4. production-grade hardening before any real external exposure
+
+So when auditing or refactoring this repo, use the following lens:
+
+- Prioritize **architecture correctness, ownership clarity, duplication cleanup, state discipline, and maintainability** first
+- Flag **security and deployment hardening** clearly, but usually place it in a later hardening bucket unless it creates immediate local risk or bad long-term structure
+- Treat **committed secrets, real credentials, or accidental exposure of personal/service access** as urgent even during local-only development
+
+In other words: this is a real codebase with real standards, but it is **not yet a public internet-facing system**, and recommendations should be prioritized accordingly.
+
 ## Tech Stack
 
 - **Build:** Vite (multi-page app, dev server with API proxy)
@@ -128,17 +159,17 @@ Pages and Entry Points
 
 Lux is a multi-page app (not SPA). Each HTML page has its own Vite entry point. Page navigation is a full reload.
 
-HTML Page	Entry Script	What It Does
-index.html	src/main.js	Practice Skills — record speech, get Azure scores, AI coaching
-convo.html	src/convo.js	AI Conversations — scenario-based chat with GPT
-progress.html	src/progress.js	Dashboard — practice history, stats
-wordcloud.html	src/wordcloud.js	Wordcloud visualization of practice data
-stream.html	src/stream.js	Real-time streaming conversation (WebRTC + OpenAI Realtime)
-stream-setup.html	src/stream-setup.js	Stream setup/config page
-life.html	src/life.js	Life Journey — gamified practice paths
-admin/index.html	Inline JS	Admin dashboard
-admin/overview.html	Inline JS	Admin overview/analytics
-admin/user.html	Inline JS	Admin per-user view
+HTML Page Entry Script What It Does
+index.html src/main.js Practice Skills — record speech, get Azure scores, AI coaching
+convo.html src/convo.js AI Conversations — scenario-based chat with GPT
+progress.html src/progress.js Dashboard — practice history, stats
+wordcloud.html src/wordcloud.js Wordcloud visualization of practice data
+stream.html src/stream.js Real-time streaming conversation (WebRTC + OpenAI Realtime)
+stream-setup.html src/stream-setup.js Stream setup/config page
+life.html src/life.js Life Journey — gamified practice paths
+admin/index.html Inline JS Admin dashboard
+admin/overview.html Inline JS Admin overview/analytics
+admin/user.html Inline JS Admin per-user view
 
 Common boot sequence (most pages follow this pattern):
 
@@ -160,10 +191,10 @@ The single source of truth for cross-feature shared state. Replaces the old patt
 
 import { luxBus } from '../app-core/lux-bus.js';
 
-luxBus.set('scenario', { id: 'coffee-shop', idx: 3 });  // write + notify
-luxBus.get('scenario');                                  // read
-luxBus.on('scenario', (val) => { ... });                 // subscribe (returns unsub fn)
-luxBus.update('tts', { autoVoice: true });               // shallow merge
+luxBus.set('scenario', { id: 'coffee-shop', idx: 3 }); // write + notify
+luxBus.get('scenario'); // read
+luxBus.on('scenario', (val) => { ... }); // subscribe (returns unsub fn)
+luxBus.update('tts', { autoVoice: true }); // shallow merge
 
 Bus channels currently in use: scenario, ttsContext, lastRecording, lastAssessment, knobs, karaoke, karaokeRefresh, selfpbExpandedOpen, requestSelfPBExpanded, openSelfPBExpanded, pickerSummaryPulse, pickerSummaryHover, pickerSummaryHoverClear, convoMode.
 
@@ -207,15 +238,15 @@ const data = await apiFetch(url, { promptIfMissing: true, promptLabel: 'Token ne
 Response types: "json" (default), "blob", "text", "response" (raw).
 
 Backend Endpoints
-Frontend File	Endpoint	Purpose
-api/assess.js	/api/assess	Azure pronunciation assessment (multipart FormData)
-api/ai.js	/api/pronunciation-gpt	GPT coaching feedback
-api/attempts.js	/api/attempt, /api/user-recent	Save/fetch/update attempts
-api/convo.js	/api/convo-turn	AI conversation turn (retry + abort)
-api/convo-report.js	/api/convo-report	End-of-session report
-api/alt-meaning.js	/api/router?route=alt-meaning	Word meaning lookup
-features/features/tts/player-core.js	/api/tts, /api/tts?voices=1	TTS synthesis + voice capabilities
-ui/auth-dom.js	/api/migrate	Guest → user history migration
+Frontend File Endpoint Purpose
+api/assess.js /api/assess Azure pronunciation assessment (multipart FormData)
+api/ai.js /api/pronunciation-gpt GPT coaching feedback
+api/attempts.js /api/attempt, /api/user-recent Save/fetch/update attempts
+api/convo.js /api/convo-turn AI conversation turn (retry + abort)
+api/convo-report.js /api/convo-report End-of-session report
+api/alt-meaning.js /api/router?route=alt-meaning Word meaning lookup
+features/features/tts/player-core.js /api/tts, /api/tts?voices=1 TTS synthesis + voice capabilities
+ui/auth-dom.js /api/migrate Guest → user history migration
 Auth
 
 Admin token: prompted at runtime, stored in sessionStorage / localStorage under lux_admin_token
@@ -245,43 +276,43 @@ The Convo Feature (Largest Surface)
 AI Conversations is the biggest and most complex feature — 36 files in features/convo/. It has a scenario picker with a card deck UI, character role selection drawers, knobs (CEFR level, tone, response length), and a chat interface with pronunciation assessment on each turn.
 
 Key Convo Files
-File	Role
-convo-bootstrap.js	Main orchestrator — builds layout, wires everything
-convo-state.js	Creates the mutable state object
-convo-flow.js	Wires the turn cycle: picker → recording → assessment → AI response
-convo-turn.js	Single turn logic: assess → persist → get AI reply
-convo-handlers.js	Button click handlers (record, stop, end session)
-convo-render.js	Chat bubble rendering
-convo-layout.js	DOM construction for the entire convo page
-convo-picker-system.js	Scenario picker state and transitions
-convo-knobs.js / convo-knobs-ui.js / convo-knobs-system.js	Level/tone/length controls
-convo-modes.js / convo-mode-system.js	Picker ↔ chat mode switching
-characters-drawer.js / knobs-drawer.js	Slide-out drawers for role and settings
-picker-deck/	Card deck UI (7 files — rendering, thumbnails, CEFR badge)
-scenarios.js	25 conversation scenario definitions
-convo-api.js	UI-friendly wrapper around api/convo.js (never throws)
-convo-tts-context.js	TTS context setup for convo page
-convo-persistence.js	Save convo attempts
-convo-shared.js	Shared helpers (uid, el, showConvoReportOverlay)
+File Role
+convo-bootstrap.js Main orchestrator — builds layout, wires everything
+convo-state.js Creates the mutable state object
+convo-flow.js Wires the turn cycle: picker → recording → assessment → AI response
+convo-turn.js Single turn logic: assess → persist → get AI reply
+convo-handlers.js Button click handlers (record, stop, end session)
+convo-render.js Chat bubble rendering
+convo-layout.js DOM construction for the entire convo page
+convo-picker-system.js Scenario picker state and transitions
+convo-knobs.js / convo-knobs-ui.js / convo-knobs-system.js Level/tone/length controls
+convo-modes.js / convo-mode-system.js Picker ↔ chat mode switching
+characters-drawer.js / knobs-drawer.js Slide-out drawers for role and settings
+picker-deck/ Card deck UI (7 files — rendering, thumbnails, CEFR badge)
+scenarios.js 25 conversation scenario definitions
+convo-api.js UI-friendly wrapper around api/convo.js (never throws)
+convo-tts-context.js TTS context setup for convo page
+convo-persistence.js Save convo attempts
+convo-shared.js Shared helpers (uid, el, showConvoReportOverlay)
 Convo Data Flow
 User clicks Record → convo-handlers.js
-  → startRecording (convo-recording.js)
-  → stopRecordingAndGetBlob
-  → sendTurn (convo-turn.js)
-    → assessPronunciation (api/assess.js → Azure)
-    → persistConvoAttempt (convo-persistence.js → api/attempts.js)
-    → convoTurn (convo-api.js → api/convo.js → GPT)
-    → renderMessages + renderSuggestions
+→ startRecording (convo-recording.js)
+→ stopRecordingAndGetBlob
+→ sendTurn (convo-turn.js)
+→ assessPronunciation (api/assess.js → Azure)
+→ persistConvoAttempt (convo-persistence.js → api/attempts.js)
+→ convoTurn (convo-api.js → api/convo.js → GPT)
+→ renderMessages + renderSuggestions
 Window Globals Still Present (as backward-compat mirrors)
 
 These are NOT the source of truth — luxBus is. Reader code should use luxBus.get(), not the window global.
 
-Global	Status	Real Owner
-window.luxTTS	Frozen shim — luxBus.get('tts') is sole owner. All readers migrated to bus. One window.luxTTS = luxBus.get('tts') compat shim remains at end of mountTTSPlayer.	luxBus 'tts' key
-window.LuxLastRecordingBlob	Active mirror	runtime.js via setLastRecording()
-window.LuxMyWords	Active — self-contained island	my-words/index.js
-window.LuxSelfPB	Active — selfpb family only	selfpb/core.js + selfpb/ui.js
-window.LUX_USER_ID	Active mirror	identity.js via ensureUID() / setUID()
+Global Status Real Owner
+window.luxTTS Frozen shim — luxBus.get('tts') is sole owner. All readers migrated to bus. One window.luxTTS = luxBus.get('tts') compat shim remains at end of mountTTSPlayer. luxBus 'tts' key
+window.LuxLastRecordingBlob Active mirror runtime.js via setLastRecording()
+window.LuxMyWords Active — self-contained island my-words/index.js
+window.LuxSelfPB Active — selfpb family only selfpb/core.js + selfpb/ui.js
+window.LUX_USER_ID Active mirror identity.js via ensureUID() / setUID()
 State Ownership Ladder
 
 This repo currently contains four legitimate state tiers. Future work must choose one intentionally.
@@ -384,38 +415,39 @@ Streaming Feature (Reference Architecture)
 The Streaming feature (features/streaming/) is the cleanest feature island in the codebase. It's a good model for how future features should be structured: isolated mount, dedicated state store, transport controller, and render loop.
 
 Build and Dev
-npm run dev          # Vite dev server on port 3000 with API proxy
-npm run build        # Production build
-npm run lint         # ESLint
-npm run test         # Vitest
-npm run hygiene      # Hygiene report + no-silent-catches scan
+npm run dev # Vite dev server on port 3000 with API proxy
+npm run build # Production build
+npm run lint # ESLint
+npm run test # Vitest
+npm run hygiene # Hygiene report + no-silent-catches scan
 
-Dev proxy: /api/* requests are proxied to the backend (configurable via LUX_API_ORIGIN or VITE_LUX_API_ORIGIN env vars, defaults to https://luxury-language-api.vercel.app).
+Dev proxy: /api/* requests are proxied to the backend (configurable via LUX_API_ORIGIN or VITE_LUX_API_ORIGIN env vars, defaults to https://luxury-language-api.vercel.app
+).
 
 localStorage Keys
-Key	Purpose	Owner
-LUX_USER_ID / lux_user_id	User identity UUID	api/identity.js
-lux_admin_token	Admin API token	api/util.js
-luxAudioMode	Recording mode (normal/pro)	recorder/audio-mode-core.js
-LUX_HARVARD_LAST	Last Harvard list index	features/harvard/
-LUX_HARVARD_FAVS	Harvard favorites	features/harvard/
-LUX_PASSAGES_LAST / LUX_PASSAGES_FAVS	Passage selection state	features/passages/
-bannerCollapsed	UI preference	various
-spb-hint-seen	Self-playback hint shown	selfpb/
-seenClickHints / seenProsodyLegendCue	Onboarding hints	interactions/
-LUX_STREAM_DEBUG	Streaming debug mode	streaming/
-LUX_WARN_SWALLOW_MODE	warnSwallow verbosity	ui/lux-warn.js
+Key Purpose Owner
+LUX_USER_ID / lux_user_id User identity UUID api/identity.js
+lux_admin_token Admin API token api/util.js
+luxAudioMode Recording mode (normal/pro) recorder/audio-mode-core.js
+LUX_HARVARD_LAST Last Harvard list index features/harvard/
+LUX_HARVARD_FAVS Harvard favorites features/harvard/
+LUX_PASSAGES_LAST / LUX_PASSAGES_FAVS Passage selection state features/passages/
+bannerCollapsed UI preference various
+spb-hint-seen Self-playback hint shown selfpb/
+seenClickHints / seenProsodyLegendCue Onboarding hints interactions/
+LUX_STREAM_DEBUG Streaming debug mode streaming/
+LUX_WARN_SWALLOW_MODE warnSwallow verbosity ui/lux-warn.js
 Git Tags (Stabilization Campaign)
-Tag	Description
-v2.1-scenario-bus	scenarioChanged migrated to bus
-v2.2-bus-migration-complete	All lux: events on bus
-v3.0-apifetch-begin	Phase 3 started
-v3.1-apifetch-core-complete	5 core API helpers on apiFetch
-v3.2-sidecar-cleanup	Orphan dispatch removed, warnSwallow labels fixed
-v3.3-apifetch-full	apiFetch responseType upgrade, TTS + auth migrated
-v4.0-warnswallow-normalize	170 warnSwallow path labels normalized
-v4.1-warnswallow-critical-tagged	91 critical catches tagged "important"
-v4.2-warnswallow-medium-tagged	69 medium catches tagged "important"
+Tag Description
+v2.1-scenario-bus scenarioChanged migrated to bus
+v2.2-bus-migration-complete All lux: events on bus
+v3.0-apifetch-begin Phase 3 started
+v3.1-apifetch-core-complete 5 core API helpers on apiFetch
+v3.2-sidecar-cleanup Orphan dispatch removed, warnSwallow labels fixed
+v3.3-apifetch-full apiFetch responseType upgrade, TTS + auth migrated
+v4.0-warnswallow-normalize 170 warnSwallow path labels normalized
+v4.1-warnswallow-critical-tagged 91 critical catches tagged "important"
+v4.2-warnswallow-medium-tagged 69 medium catches tagged "important"
 Architecture Rules (Enforced)
 
 Bus is truth, globals are mirrors. luxBus.set() is the canonical write. Window globals may survive temporarily but are never the primary source.
