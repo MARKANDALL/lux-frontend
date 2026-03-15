@@ -95,7 +95,10 @@ export function initSceneAtmo({ root, atmo, state, scenarios = [] }) {
     const FADE_MS = 500;
 
     rotTimer = window.setInterval(() => {
-      if (state.mode !== "intro") return;
+      if (state.mode !== "intro") {
+        stopRotation();
+        return;
+      }
 
       // make sure we’ve seeded (intro can be entered after a hash route)
       seedSceneImagesOnce();
