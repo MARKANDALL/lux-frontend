@@ -6,6 +6,7 @@
 import * as UI from "./ui.js";
 import { fetchHistory, ensureUID } from "../../api/index.js";
 import { computeRollups } from "../progress/rollups.js";
+import { pickPassageKey } from "../progress/attempt-pickers.js";
 import { renderProgressDashboard } from "../progress/render.js";
 import { mountAICoachAlwaysOn } from "../../ui/ui-ai-ai-logic.js";
 import { bringBoxBottomToViewport } from "../../helpers/index.js";
@@ -15,10 +16,6 @@ const ROOT_ID = "dashboard-root";
 const HUB_HREF = "./progress.html";
 
 let _state = null;
-
-function pickPassageKey(a) {
-  return a?.passage_key || a?.passageKey || a?.passage || "";
-}
 
 function isConvoAttempt(a) {
   return String(pickPassageKey(a)).startsWith("convo:");

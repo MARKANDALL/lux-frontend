@@ -4,16 +4,13 @@
 
 import { fetchHistory, ensureUID } from "../../api/index.js";
 import { computeRollups } from "../progress/rollups.js";
+import { pickPassageKey } from "../progress/attempt-pickers.js";
 import { renderProgressDashboard } from "../progress/render.js";
 import { luxBus } from "../../app-core/lux-bus.js";
 
 const HUB_HREF = "./progress.html";
 
 let _state = null;
-
-function pickPassageKey(a) {
-  return a?.passage_key || a?.passageKey || a?.passage || "";
-}
 
 function isConvoAttempt(a) {
   return String(pickPassageKey(a)).startsWith("convo:");
