@@ -5,6 +5,8 @@ import {
   THEME_KEY,
 } from "./state-store.js";
 
+import { getString, setString } from "../../../app-core/lux-storage.js";
+
 import { readUrlState, writeUrlState } from "./url-state.js";
 
 /**
@@ -42,7 +44,7 @@ export function createWordcloudContext() {
     timelinePos: Number(st.timelinePos || 0),
 
     // Theme: stored in localStorage, but state owns it too
-    theme: String(localStorage.getItem(THEME_KEY) || "light").toLowerCase(),
+    theme: String(getString(THEME_KEY) || "light").toLowerCase(),
   };
 
   // ✅ normalize theme to only light/night
@@ -147,9 +149,7 @@ export function createWordcloudContext() {
     });
 
     // theme is stored separately (but state owns it)
-    try {
-      localStorage.setItem(THEME_KEY, state.theme);
-    } catch (err) { globalThis.warnSwallow("features/progress/wordcloud/context.js", err); }
+    setString(THEME_KEY, state.theme);
   }
 
   function syncUrl() {
@@ -197,9 +197,7 @@ export function createWordcloudContext() {
         : "Switch to night theme";
     }
 
-    try {
-      localStorage.setItem(THEME_KEY, state.theme);
-    } catch (err) { globalThis.warnSwallow("features/progress/wordcloud/context.js", err); }
+    setString(THEME_KEY, state.theme);
   }
 
   function toggleTheme(dom) {
@@ -238,4 +236,3 @@ export function createWordcloudContext() {
     setLastPool,
   };
 }
-

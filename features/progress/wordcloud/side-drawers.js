@@ -1,7 +1,7 @@
 // features/progress/wordcloud/side-drawers.js
 // ✅ Drawer wiring (safe localStorage + NO redraw/reload on toggle)
 
-const KEY = "lux_wc_drawers_v1";
+import { K_WC_DRAWERS, getJSON, setJSON } from '../../../app-core/lux-storage.js';
 
 function safeParse(json, fallback) {
   try {
@@ -34,7 +34,7 @@ export function wireWordcloudSideDrawers(root, { onLayoutChange } = {}) {
   }
 
   const fallbackState = { leftOpen: true, rightOpen: true };
-  const saved = safeParse(localStorage.getItem(KEY), fallbackState);
+  const saved = getJSON(K_WC_DRAWERS, null) || fallbackState;
 
   let state = {
     leftOpen: !!saved.leftOpen,
@@ -42,9 +42,7 @@ export function wireWordcloudSideDrawers(root, { onLayoutChange } = {}) {
   };
 
   function persist() {
-    try {
-      localStorage.setItem(KEY, JSON.stringify(state));
-    } catch (err) { globalThis.warnSwallow("features/progress/wordcloud/side-drawers.js", err); }
+    setJSON(K_WC_DRAWERS, state);
   }
 
   function setOpen(side, open, { silent = false } = {}) {
@@ -96,4 +94,3 @@ export function wireWordcloudSideDrawers(root, { onLayoutChange } = {}) {
     });
   });
 }
-

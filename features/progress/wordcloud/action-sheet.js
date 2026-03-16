@@ -1,27 +1,20 @@
 // features/progress/wordcloud/action-sheet.js
+// One-line: Word Cloud action sheet for favorites, pins, recents, and targeted practice actions.
+
+import { K_WC_FAVS, K_WC_PINS, getJSON, setJSON } from '../../../app-core/lux-storage.js';
 import { esc, getColorConfig } from "../progress-utils.js";
 import { scoreClass as scoreClassCore } from "../../../core/scoring/index.js";
 
-const FAV_KEY = "lux.cloud.favs.v1";
-const PIN_KEY = "lux.cloud.pins.v1";
-
 function readStore(key) {
-  try {
-    const raw = localStorage.getItem(key);
-    const obj = raw ? JSON.parse(raw) : null;
-    const out = obj && typeof obj === "object" ? obj : {};
-    out.words = Array.isArray(out.words) ? out.words : [];
-    out.phonemes = Array.isArray(out.phonemes) ? out.phonemes : [];
-    return out;
-  } catch (_) {
-    return { words: [], phonemes: [] };
-  }
+  const obj = getJSON(key, null);
+  const out = obj && typeof obj === "object" ? obj : {};
+  out.words = Array.isArray(out.words) ? out.words : [];
+  out.phonemes = Array.isArray(out.phonemes) ? out.phonemes : [];
+  return out;
 }
 
 function writeStore(key, obj) {
-  try {
-    localStorage.setItem(key, JSON.stringify(obj));
-  } catch (err) { globalThis.warnSwallow("features/progress/wordcloud/action-sheet.js", err); }
+  setJSON(key, obj);
 }
 
 function hasItem(kind, id, store) {
@@ -180,13 +173,13 @@ export function createCloudActionSheet({
       }
 
       if (act === "fav") {
-        const isNowFav = toggleItem(state.kind, state.id, FAV_KEY);
+        const isNowFav = toggleItem(state.kind, state.id, K_WC_FAVS);
         btn.classList.toggle("is-on", isNowFav);
         onStoreChange?.();
       }
 
       if (act === "pin") {
-        const isNowPinned = toggleItem(state.kind, state.id, PIN_KEY);
+        const isNowPinned = toggleItem(state.kind, state.id, K_WC_PINS);
         btn.classList.toggle("is-on", isNowPinned);
         onStoreChange?.();
       }
@@ -239,8 +232,8 @@ export function createCloudActionSheet({
     overlay.querySelector("#luxWcStatLevel").textContent = labelFor(state.avg);
 
     // Fav/pin button state
-    const fav = readStore(FAV_KEY);
-    const pin = readStore(PIN_KEY);
+    const fav = readStore(K_WC_FAVS);
+    const pin = readStore(K_WC_PINS);
 
     overlay
       .querySelector('[data-act="fav"]')
@@ -317,4 +310,3 @@ export function createCloudActionSheet({
 
   return { open, close };
 }
-

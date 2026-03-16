@@ -1,7 +1,8 @@
 // features/progress/wordcloud/state-store.js
 // LocalStorage state + saved lists for Wordcloud
 
-export const STATE_KEY = "lux.cloud.state.v3";
+import { K_WC_STATE, getJSON, setJSON } from '../../../app-core/lux-storage.js';
+
 export const THEME_KEY = "lux.cloud.theme.v1";
 export const FAV_KEY   = "lux.cloud.favs.v1";
 export const PIN_KEY   = "lux.cloud.pins.v1";
@@ -11,37 +12,24 @@ function lower(s) {
 }
 
 export function readState() {
-  try {
-    const raw = localStorage.getItem(STATE_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch (_) {
-    return {};
-  }
+  const parsed = getJSON(K_WC_STATE, null);
+  return parsed || {};
 }
 
 export function writeState(next) {
-  try {
-    localStorage.setItem(STATE_KEY, JSON.stringify(next || {}));
-  } catch (err) { globalThis.warnSwallow("features/progress/wordcloud/state-store.js", err, "important"); }
+  setJSON(K_WC_STATE, next || {});
 }
 
 function readSaved(key) {
-  try {
-    const raw = localStorage.getItem(key);
-    const obj = raw ? JSON.parse(raw) : {};
-    return {
-      words: Array.isArray(obj.words) ? obj.words : [],
-      phonemes: Array.isArray(obj.phonemes) ? obj.phonemes : [],
-    };
-  } catch (_) {
-    return { words: [], phonemes: [] };
-  }
+  const obj = getJSON(key, {}) || {};
+  return {
+    words: Array.isArray(obj.words) ? obj.words : [],
+    phonemes: Array.isArray(obj.phonemes) ? obj.phonemes : [],
+  };
 }
 
 function writeSaved(key, next) {
-  try {
-    localStorage.setItem(key, JSON.stringify(next));
-  } catch (err) { globalThis.warnSwallow("features/progress/wordcloud/state-store.js", err, "important"); }
+  setJSON(key, next);
 }
 
 export function savedListForMode(key, mode) {
@@ -73,4 +61,3 @@ export function addManySaved(key, mode, ids) {
 
   writeSaved(key, s);
 }
-
