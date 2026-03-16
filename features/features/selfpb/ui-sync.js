@@ -1,7 +1,12 @@
+/* =============================================================================
+   FILE: features/features/selfpb/ui-sync.js
+   ONE-LINE: UI syncing helpers for SelfPB toast/hint behavior, button states, timers, scrubber, and reference-audio labels.
+============================================================================= */
+
 // features/features/selfpb/ui-sync.js
 // UI syncing helpers for SelfPB (toast/warnings, state-to-UI updates, small orchestration).
 
-import { K_SELFPB_HINT_SEEN } from '../../../app-core/lux-storage.js';
+import { K_SELFPB_HINT_SEEN, getString, setString } from '../../../app-core/lux-storage.js';
 
 export function makeUISync({ ui, api, audio, refAudio, st }) {
   // --- Logic helpers ---
@@ -37,11 +42,11 @@ export function makeUISync({ ui, api, audio, refAudio, st }) {
   };
 
   const showLoopHint = () => {
-    if (localStorage.getItem(K_SELFPB_HINT_SEEN) !== "true") {
+    if (getString(K_SELFPB_HINT_SEEN) !== "true") {
       ui.loopTip.classList.add("visible");
       setTimeout(() => {
         ui.loopTip.classList.remove("visible");
-        localStorage.setItem(K_SELFPB_HINT_SEEN, "true");
+        setString(K_SELFPB_HINT_SEEN, "true");
       }, 4000);
     }
   };
@@ -94,4 +99,3 @@ export function makeUISync({ ui, api, audio, refAudio, st }) {
 
   return { showToast, showLoopHint, syncButtons, syncTime, syncScrub, syncRateUI, syncRefUI };
 }
-

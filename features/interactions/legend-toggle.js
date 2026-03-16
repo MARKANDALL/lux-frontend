@@ -6,7 +6,7 @@
 // ui/interactions/legend-toggle.js
 // CLEANED: Removed dynamic CSS injection (now handled by lux-results.css)
 
-import { K_UI_PROSODY_CUE_SEEN } from '../../app-core/lux-storage.js';
+import { K_UI_PROSODY_CUE_SEEN, getString, setString } from '../../app-core/lux-storage.js';
 
 export function initProsodyLegendToggle() {
   // Removed: installLegendCueStyles();
@@ -80,7 +80,7 @@ export function initProsodyLegendToggle() {
       if (open) {
         tip.classList.remove("cue-legend");
         try {
-          localStorage.setItem(K_UI_PROSODY_CUE_SEEN, "1");
+          setString(K_UI_PROSODY_CUE_SEEN, "1");
 } catch (err) { globalThis.warnSwallow("features/interactions/legend-toggle.js", err); }
         hidePeek();
       } else {
@@ -112,12 +112,10 @@ export function initProsodyLegendToggle() {
   }
 
   try {
-    if (!localStorage.getItem(K_UI_PROSODY_CUE_SEEN))
+    if (!getString(K_UI_PROSODY_CUE_SEEN))
       tip.classList.add("cue-legend");
 } catch (err) { globalThis.warnSwallow("features/interactions/legend-toggle.js", err); }
 
   positionPeek();
   window.addEventListener("resize", positionPeek, { passive: true });
 }
-
-

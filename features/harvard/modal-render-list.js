@@ -1,5 +1,10 @@
+/* =============================================================================
+   FILE: features/harvard/modal-render-list.js
+   ONE-LINE: Renders the Harvard modal left-side list UI, including filtering, favorites, chips, hover, and last-used preselection.
+============================================================================= */
+
 // features/harvard/modal-render-list.js
-import { K_HARVARD_LAST, K_PASSAGES_LAST } from '../../app-core/lux-storage.js';
+import { K_HARVARD_LAST, K_PASSAGES_LAST, getString } from '../../app-core/lux-storage.js';
 // Renders the left list UI (Harvard / Passages) based on current modal state.
 // This is a surgical move-out of the big renderList() body from modal.js.
 
@@ -287,18 +292,16 @@ export async function renderHarvardModalList(ctx = {}) {
   // pre-select last used, but don't auto-practice
   if (isHarvard) {
     try {
-      const last = localStorage.getItem(K_HARVARD_LAST);
+      const last = getString(K_HARVARD_LAST);
       const n = last ? Number.parseInt(last, 10) : null;
       if (n && n >= 1 && n <= 72) setSelected(n);
 } catch (err) { globalThis.warnSwallow("features/harvard/modal-render-list.js", err, "important"); }
   } else {
     try {
-      const last = localStorage.getItem(K_PASSAGES_LAST);
+      const last = getString(K_PASSAGES_LAST);
       const key = last ? String(last) : "";
       if (key && data?.some?.((r) => String(r.key) === String(key)))
         setSelectedPassage(key);
 } catch (err) { globalThis.warnSwallow("features/harvard/modal-render-list.js", err, "important"); }
   }
 }
-  
-

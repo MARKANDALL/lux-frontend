@@ -1,5 +1,9 @@
-// features/harvard/modal-actions.js
-import { K_HARVARD_LAST, K_PASSAGES_LAST } from '../../app-core/lux-storage.js';
+/* =============================================================================
+   FILE: features/harvard/modal-actions.js
+   ONE-LINE: Shared Harvard modal action helpers for selection, hover preview, filter UI, and tab switching.
+============================================================================= */
+
+// features/harvard/modal-actions.jsimport { K_HARVARD_LAST, K_PASSAGES_LAST, setString } from '../../app-core/lux-storage.js';
 
 export function ensurePhonemeOptions({
   focusSel,
@@ -87,7 +91,7 @@ export function selectHarvardList({
   practiceBtn.disabled = false;
 
   try {
-    localStorage.setItem(K_HARVARD_LAST, String(n));
+    setString(K_HARVARD_LAST, String(n));
 } catch (err) { globalThis.warnSwallow("features/harvard/modal-actions.js", err, "important"); }
 }
 
@@ -124,7 +128,7 @@ export function selectPassage({
   practiceBtn.disabled = false;
 
   try {
-    localStorage.setItem(K_PASSAGES_LAST, String(key));
+    setString(K_PASSAGES_LAST, String(key));
 } catch (err) { globalThis.warnSwallow("features/harvard/modal-actions.js", err, "important"); }
 }
 
@@ -251,5 +255,3 @@ export function switchTabCore({
 
   return activeTab;
 }
-
-

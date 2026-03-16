@@ -1,14 +1,14 @@
 /* ============================================================================
- * File: ui/auth-dom.js
- * What it does: Renders the “Save Progress” auth button + login modal, sends
- *               Supabase magic-link OTP sign-in, updates the active UID, and
- *               triggers guest→user history migration + dashboard refresh.
+ * FILE: ui/auth-dom.js
+ * ONE-LINE: Renders the Save Progress auth button and login modal, handles magic-link sign-in, swaps guest/user UID state, and triggers history migration plus dashboard refresh.
  * ============================================================================ */
+
+// ui/auth-dom.js
 
 import { supabase } from "../src/supabase.js";
 import { API_BASE, apiFetch } from "../api/util.js";
 import { setUID } from "../api/index.js";
-import { K_IDENTITY_UID } from "../app-core/lux-storage.js";
+import { K_IDENTITY_UID, getString } from "../app-core/lux-storage.js";
 import { luxBus } from "../app-core/lux-bus.js";
 
 import { escapeHtml as escHtml } from "../helpers/escape-html.js";
@@ -153,7 +153,7 @@ function handleAuthStateChange() {
       };
       
       // --- THE MIGRATION CHECK ---
-      const guestUid = localStorage.getItem(K_IDENTITY_UID);
+      const guestUid = getString(K_IDENTITY_UID);
       
       // If we have a guest ID, and it's NOT the same as our new Real ID, migrate!
       if (guestUid && guestUid !== realUid) {
