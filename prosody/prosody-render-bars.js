@@ -1,6 +1,7 @@
 // prosody/prosody-render-bars.js
 // Renders the two-bar prosody ribbon.
 
+import { escapeHtml } from '../helpers/escape-html.js';
 import { classifyTempo, classifyGap } from "./annotate.js";
 
 /**
@@ -40,7 +41,7 @@ export function renderProsodyRibbon(index, words, timings, medianDur) {
     ? `Word length: ${t.durationSec.toFixed(2)}s (${tempo})`
     : "Word length: —";
 
-  const esc = (s) => String(s).replace(/"/g, "&quot;");
+  const esc = escapeHtml;
 
   return (
     '<div class="prosody-ribbon" role="img" aria-label="' +
