@@ -3,14 +3,21 @@
 // Enable with:  ?audioDebug=1
 // or in console: localStorage.setItem("luxAudioInspector","1"); location.reload();  (key = K_AUDIO_INSPECTOR)
 
-import { K_AUDIO_MODE, K_AUDIO_INSPECTOR } from '../../app-core/lux-storage.js';
-const LS_KEY = K_AUDIO_INSPECTOR;
+import {
+  K_AUDIO_MODE,
+  K_AUDIO_INSPECTOR,
+  getBool,
+  setBool,
+  remove,
+  getString,
+  setString,
+} from '../../app-core/lux-storage.js';
 
 function isEnabled() {
   try {
     const qs = new URLSearchParams(location.search);
     if (qs.has("audioDebug")) return true;
-    return localStorage.getItem(LS_KEY) === "1";
+    return getBool(K_AUDIO_INSPECTOR);
   } catch (err) {
     globalThis.warnSwallow("features/recorder/audio-inspector.js", err, "important");
     return false;
@@ -23,7 +30,10 @@ function fmtBytes(n) {
   const units = ["B", "KB", "MB", "GB"];
   let i = 0;
   let v = num;
-  while (v >= 1024 && i < units.length - 1) { v /= 1024; i++; }
+  while (v >= 1024 && i < units.length - 1) {
+    v /= 1024;
+    i++;
+  }
   return `${v.toFixed(v >= 10 || i === 0 ? 0 : 1)} ${units[i]}`;
 }
 
@@ -35,13 +45,17 @@ async function probeBlobDurationSeconds(blob) {
       el.preload = "metadata";
       el.onloadedmetadata = () => {
         const d = Number(el.duration);
-        try { URL.revokeObjectURL(el.src); } catch (err) {
+        try {
+          URL.revokeObjectURL(el.src);
+        } catch (err) {
           globalThis.warnSwallow("features/recorder/audio-inspector.js", err, "important");
         }
         resolve(Number.isFinite(d) ? d : null);
       };
       el.onerror = () => {
-        try { URL.revokeObjectURL(el.src); } catch (err) {
+        try {
+          URL.revokeObjectURL(el.src);
+        } catch (err) {
           globalThis.warnSwallow("features/recorder/audio-inspector.js", err, "important");
         }
         resolve(null);
@@ -55,7 +69,9 @@ async function probeBlobDurationSeconds(blob) {
 }
 
 function safeJson(obj) {
-  try { return JSON.stringify(obj, null, 2); } catch (err) {
+  try {
+    return JSON.stringify(obj, null, 2);
+  } catch (err) {
     globalThis.warnSwallow("features/recorder/audio-inspector.js", err, "important");
     return String(obj);
   }
@@ -193,9 +209,9 @@ function ensurePanel() {
   });
 
   root.querySelector('[data-act="mode"]')?.addEventListener("click", () => {
-    const cur = (localStorage.getItem(K_AUDIO_MODE) || "normal").toLowerCase();
+    const cur = (getString(K_AUDIO_MODE) || "normal").toLowerCase();
     const next = cur === "pro" ? "normal" : "pro";
-    localStorage.setItem(K_AUDIO_MODE, next);
+    setString(K_AUDIO_MODE, next);
 
     // ✅ Reload so next getUserMedia uses new constraints
     location.reload();
@@ -239,9 +255,10 @@ function render() {
   const pre = root.querySelector("#luxAudioInspectorPre");
   if (!pre) return;
 
-  const mode = (localStorage.getItem(K_AUDIO_MODE) || "normal").toLowerCase() === "pro"
-    ? "pro"
-    : "normal";
+  const mode =
+    (getString(K_AUDIO_MODE) || "normal").toLowerCase() === "pro"
+      ? "pro"
+      : "normal";
 
   const modeBtn = root.querySelector('[data-act="mode"]');
   if (modeBtn) modeBtn.textContent = `Mode: ${mode.toUpperCase()}`;
@@ -273,7 +290,9 @@ function render() {
   lines.push("== Last Captured Blob (what you recorded) ==");
   lines.push(`Blob type: ${state.blobType || "-"}`);
   lines.push(`Blob size: ${state.blobSize != null ? fmtBytes(state.blobSize) : "-"}`);
-  lines.push(`Blob duration: ${state.blobDuration != null ? `${state.blobDuration.toFixed(2)}s` : "-"}`);
+  lines.push(
+    `Blob duration: ${state.blobDuration != null ? `${state.blobDuration.toFixed(2)}s` : "-"}`
+  );
   lines.push("");
 
   lines.push("== Upload (what you send to backend) ==");
@@ -308,7 +327,7 @@ async function inferDeviceLabel(stream) {
     if (!deviceId || !navigator.mediaDevices?.enumerateDevices) return null;
 
     const devices = await navigator.mediaDevices.enumerateDevices();
-    const hit = devices.find(d => d.kind === "audioinput" && d.deviceId === deviceId);
+    const hit = devices.find((d) => d.kind === "audioinput" && d.deviceId === deviceId);
     return hit?.label || null;
   } catch (err) {
     globalThis.warnSwallow("features/recorder/audio-inspector.js", err, "important");
@@ -319,17 +338,13 @@ async function inferDeviceLabel(stream) {
 const AudioInspector = {
   enable() {
     state.enabled = true;
-    try { localStorage.setItem(LS_KEY, "1"); } catch (err) {
-      globalThis.warnSwallow("features/recorder/audio-inspector.js", err, "important");
-    }
+    setBool(K_AUDIO_INSPECTOR, true);
     render();
   },
 
   disable() {
     state.enabled = false;
-    try { localStorage.removeItem(LS_KEY); } catch (err) {
-      globalThis.warnSwallow("features/recorder/audio-inspector.js", err, "important");
-    }
+    remove(K_AUDIO_INSPECTOR);
     const el = document.getElementById("luxAudioInspector");
     if (el) el.remove();
   },
@@ -397,9 +412,10 @@ const AudioInspector = {
 };
 
 // Auto-init on import
-try { AudioInspector.init(); } catch (err) {
+try {
+  AudioInspector.init();
+} catch (err) {
   globalThis.warnSwallow("features/recorder/audio-inspector.js", err, "important");
 }
 
 export default AudioInspector;
-

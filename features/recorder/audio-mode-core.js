@@ -6,7 +6,7 @@ export const AUDIO_MODES = {
   PRO: "PRO",
 };
 
-import { K_AUDIO_MODE as KEY } from '../../app-core/lux-storage.js';
+import { K_AUDIO_MODE, getString, setString } from '../../app-core/lux-storage.js';
 
 /**
  * Convert "NORMAL"/"PRO" -> html dataset value: "normal"/"pro"
@@ -35,7 +35,7 @@ export function initAudioModeDataset(mode) {
  */
 export function getAudioMode() {
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = getString(K_AUDIO_MODE);
     const low = String(raw || "").toLowerCase();
 
     // Accept both canonical + legacy values
@@ -44,7 +44,7 @@ export function getAudioMode() {
 
     // Default for everyone (first run / invalid value): NORMAL
     try {
-      localStorage.setItem(KEY, AUDIO_MODES.NORMAL);
+      setString(K_AUDIO_MODE, AUDIO_MODES.NORMAL);
 } catch (err) { globalThis.warnSwallow("features/recorder/audio-mode-core.js", err, "important"); }
 
     return AUDIO_MODES.NORMAL;
@@ -60,7 +60,7 @@ export function setAudioMode(mode) {
   const safe = mode === AUDIO_MODES.PRO ? AUDIO_MODES.PRO : AUDIO_MODES.NORMAL;
 
   try {
-    localStorage.setItem(KEY, safe);
+    setString(K_AUDIO_MODE, safe);
   } catch {
     // ignore storage failures (private mode etc.)
   }
@@ -68,5 +68,3 @@ export function setAudioMode(mode) {
   initAudioModeDataset(safe);
   return safe;
 }
-
-

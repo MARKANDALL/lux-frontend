@@ -4,7 +4,7 @@
    with legacy globals supported only as fallback.
 ============================================================================ */
 import { renderResultsHeaderModern } from "./header-modern.js";
-import { K_ACCORDION_SCORE, K_ACCORDION_WP } from "../../app-core/lux-storage.js";
+import { K_ACCORDION_SCORE, K_ACCORDION_WP, getString, setString } from "../../app-core/lux-storage.js";
 
 // Direct ES-module interaction boots (idempotent in their own modules)
 import { setupYGHover } from "../interactions/yg-hover.js";
@@ -46,11 +46,9 @@ export function ensureHeader(data) {
     if (scoreAcc && scoreAcc.dataset.luxPersistBound !== "1") {
       scoreAcc.dataset.luxPersistBound = "1";
 
-      const KEY = K_ACCORDION_SCORE;
-
       // Apply saved state (default: open)
       try {
-        const saved = localStorage.getItem(KEY);
+        const saved = getString(K_ACCORDION_SCORE);
         if (saved === "0") scoreAcc.open = false;
         if (saved === "1") scoreAcc.open = true;
       } catch (err) {
@@ -60,7 +58,7 @@ export function ensureHeader(data) {
       // Save on toggle
       scoreAcc.addEventListener("toggle", () => {
         try {
-          localStorage.setItem(KEY, scoreAcc.open ? "1" : "0");
+          setString(K_ACCORDION_SCORE, scoreAcc.open ? "1" : "0");
         } catch (err) {
           globalThis.warnSwallow("features/results/header.js", err);
         }
@@ -157,11 +155,9 @@ export function ensureHeader(data) {
   if (scoreAcc && scoreAcc.dataset.luxPersistBound !== "1") {
     scoreAcc.dataset.luxPersistBound = "1";
 
-    const KEY = K_ACCORDION_SCORE;
-
     // Apply saved state (default: open)
     try {
-      const saved = localStorage.getItem(KEY);
+      const saved = getString(K_ACCORDION_SCORE);
       if (saved === "0") scoreAcc.open = false;
       if (saved === "1") scoreAcc.open = true;
     } catch (err) {
@@ -171,7 +167,7 @@ export function ensureHeader(data) {
     // Save on toggle
     scoreAcc.addEventListener("toggle", () => {
       try {
-        localStorage.setItem(KEY, scoreAcc.open ? "1" : "0");
+        setString(K_ACCORDION_SCORE, scoreAcc.open ? "1" : "0");
       } catch (err) {
         globalThis.warnSwallow("features/results/header.js", err);
       }
@@ -231,11 +227,10 @@ export function wirePostDom(data) {
     const wpAcc = document.getElementById("luxWpAccordion");
     if (wpAcc && wpAcc.dataset.luxPersistBound !== "1") {
       wpAcc.dataset.luxPersistBound = "1";
-      const KEY = K_ACCORDION_WP;
 
       // Apply saved state (default behavior remains whatever markup says)
       try {
-        const saved = localStorage.getItem(KEY);
+        const saved = getString(K_ACCORDION_WP);
         if (saved === "0") wpAcc.open = false;
         if (saved === "1") wpAcc.open = true;
       } catch (err) {
@@ -245,7 +240,7 @@ export function wirePostDom(data) {
       // Save only when the user toggles
       wpAcc.addEventListener("toggle", () => {
         try {
-          localStorage.setItem(KEY, wpAcc.open ? "1" : "0");
+          setString(K_ACCORDION_WP, wpAcc.open ? "1" : "0");
         } catch (err) {
           globalThis.warnSwallow("features/results/header.js", err);
         }
@@ -257,11 +252,9 @@ export function wirePostDom(data) {
     if (scoreAcc && scoreAcc.dataset.luxPersistBound !== "1") {
       scoreAcc.dataset.luxPersistBound = "1";
 
-      const KEY = K_ACCORDION_SCORE;
-
       // Apply saved state (default: open)
       try {
-        const saved = localStorage.getItem(KEY);
+        const saved = getString(K_ACCORDION_SCORE);
         if (saved === "0") scoreAcc.open = false;
         if (saved === "1") scoreAcc.open = true;
       } catch (err) {
@@ -271,7 +264,7 @@ export function wirePostDom(data) {
       // Save on toggle
       scoreAcc.addEventListener("toggle", () => {
         try {
-          localStorage.setItem(KEY, scoreAcc.open ? "1" : "0");
+          setString(K_ACCORDION_SCORE, scoreAcc.open ? "1" : "0");
         } catch (err) {
           globalThis.warnSwallow("features/results/header.js", err);
         }
@@ -360,4 +353,3 @@ function nudgeClosedSectionsOnce() {
     }, baseDelay + idx * step);
   });
 }
-

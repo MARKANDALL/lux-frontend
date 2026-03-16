@@ -1,9 +1,7 @@
 // ui/lux-warn.js
 // Centralized swallowed-error warning control (ON / OFF / IMPORTANT-ONLY)
 
-import { K_WARN_MODE } from '../app-core/lux-storage.js';
-
-const KEY = K_WARN_MODE; // "on" | "off" | "important"
+import { K_WARN_MODE, getString, setString } from '../app-core/lux-storage.js';
 
 function safeConsoleWarn(prefix, err) {
   try {
@@ -27,7 +25,7 @@ function safeConsoleLog(...args) {
 
 function readMode() {
   try {
-    return (localStorage.getItem(KEY) || "").toLowerCase();
+    return (getString(K_WARN_MODE) || "").toLowerCase();
   } catch (err) {
     safeConsoleWarn("[ui/lux-warn.js] swallowed error (readMode)", err);
     return "";
@@ -49,7 +47,7 @@ export function setWarnSwallowMode(mode) {
   if (!["on", "off", "important"].includes(m)) return false;
 
   try {
-    localStorage.setItem(KEY, m);
+    setString(K_WARN_MODE, m);
   } catch (err) {
     safeConsoleWarn("[ui/lux-warn.js] swallowed error (setWarnSwallowMode)", err);
   }
