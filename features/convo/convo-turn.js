@@ -92,8 +92,8 @@ export function createConvoTurn({
     } catch (err) { globalThis.warnSwallow("features/convo/convo-turn.js", err, "important"); }
 
     // refresh Conversation Skills progress (bus-first, window compat fallback)
-    const refreshConvoProgress =
-      luxBus.get("convoProgressApi")?.refresh || window.refreshConvoProgress;
+const refreshConvoProgress = luxBus.get("convoProgressApi")?.refresh;
+
     if (typeof refreshConvoProgress === "function") {
       try {
         await refreshConvoProgress();

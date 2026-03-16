@@ -196,7 +196,29 @@ luxBus.get('scenario'); // read
 luxBus.on('scenario', (val) => { ... }); // subscribe (returns unsub fn)
 luxBus.update('tts', { autoVoice: true }); // shallow merge
 
-Bus channels currently in use: scenario, ttsContext, lastRecording, lastAssessment, knobs, karaoke, karaokeRefresh, selfpbExpandedOpen, requestSelfPBExpanded, openSelfPBExpanded, pickerSummaryPulse, pickerSummaryHover, pickerSummaryHoverClear, convoMode.
+Bus channels currently in use (20 channels, March 2026):
+
+Channel	Writers	Readers / Subscribers	Purpose
+scenario	convo-picker-system, picker-deck, render-deck	convo-bootstrap (on)	Currently selected conversation scenario
+convoMode	convo-modes	convo-picker-system (on)	Current convo UI mode (intro/picker/chat)
+knobs	convo-knobs, knobs-drawer	knobs-drawer (on), cefr-hint-badge (on)	Scene settings (level, tone, length)
+tts	convo-tts-context, player-ui	convo-tts-context, karaoke, player-dom, player-ui (get)	TTS player state and voice config
+ttsContext	convo-bootstrap, convo-tts-context	player-ui (on)	TTS context for character-matched voices
+ttsContextApi	convo-tts-context	player-dom, player-ui (get)	TTS context public API
+karaoke	karaoke (selfpb)	karaoke, player-ui (get)	Active karaoke word-timing data
+karaokeRefresh	karaoke (selfpb)	karaoke (on)	Karaoke re-render trigger
+lastAttemptId	runtime	runtime (get)	Most recent assessment attempt ID
+lastRecording	runtime	runtime, download-latest (get/on)	Most recent learner audio blob + meta
+lastAssessment	recorder/index	selfpb/controls, selfpb/karaoke (get/on)	Most recent Azure assessment result
+selfpbApi	selfpb/ui	convo-turn, recorder/index, player-ui (get)	Self-playback public API (attachLearnerBlob, karaoke, el)
+selfpbExpandedOpen	selfpb/dom	selfpb/karaoke (on)	Whether the expanded self-playback drawer is open
+openSelfPBExpanded	08-selfpb-peekaboo	selfpb/dom (on)	Request to open expanded self-playback
+requestSelfPBExpanded	tts/player-ui	08-selfpb-peekaboo (on)	TTS player requesting self-playback expand
+convoProgressApi	convo/progress	convo-turn (get)	Convo progress refresh API
+dashboardApi	dashboard/index	dashboard/index, auth-dom (get)	Dashboard refresh API
+pickerSummaryPulse	characters-drawer	convo-knobs-ui (on)	Pulse animation on picker knobs summary
+pickerSummaryHover	characters-drawer	convo-knobs-ui (on)	Hover state on picker knobs summary
+pickerSummaryHoverClear	characters-drawer	convo-knobs-ui (on)	Clear hover state on picker knobs summary
 
 lux-listeners.js — Guarded Listener Registry
 
@@ -422,6 +444,7 @@ npm run test # Vitest
 npm run hygiene # Hygiene report + no-silent-catches scan
 
 Dev proxy: /api/* requests are proxied to the backend (configurable via LUX_API_ORIGIN or VITE_LUX_API_ORIGIN env vars, defaults to https://luxury-language-api.vercel.app
+
 ).
 
 localStorage Keys

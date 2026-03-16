@@ -59,7 +59,6 @@ export async function initConvoProgress() {
   luxBus.set("convoProgressApi", { refresh: refreshConvoProgress });
 
   // Window compat shim (keep for now)
-  window.refreshConvoProgress = refreshConvoProgress;
 
   host.innerHTML = `
     <details class="lux-progress-drawer" id="luxConvoProgressDrawer">

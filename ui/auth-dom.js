@@ -165,8 +165,7 @@ function handleAuthStateChange() {
       setUID(realUid);
 
       // Refresh Dashboard (bus-first, window compat fallback, then lazy import)
-      const refreshDashboard =
-        luxBus.get("dashboardApi")?.refresh || window.refreshDashboard;
+      const refreshDashboard = luxBus.get("dashboardApi")?.refresh;
       if (typeof refreshDashboard === "function") {
         await refreshDashboard();
       } else {

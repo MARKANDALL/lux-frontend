@@ -148,7 +148,6 @@ export async function initDashboard() {
   luxBus.set("dashboardApi", { refresh: refreshHistory });
 
   // Window compat shim (keep for now)
-  window.refreshDashboard = refreshHistory;
 
   const isHub =
     location.pathname.endsWith("/progress.html") ||

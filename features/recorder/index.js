@@ -227,8 +227,8 @@ async function saveToDatabase(result, text, lang) {
         console.log("[Lux] Saved Attempt ID:", saved.id);
 
         // REFRESH DASHBOARD (bus-first, window compat fallback)
-        const refreshDashboard =
-          luxBus.get("dashboardApi")?.refresh || window.refreshDashboard;
+const refreshDashboard = luxBus.get("dashboardApi")?.refresh;
+
         if (typeof refreshDashboard === "function") {
           try {
             await refreshDashboard();
