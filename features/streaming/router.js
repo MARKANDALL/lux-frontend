@@ -1,5 +1,7 @@
 // features/streaming/router.js
+// One-line: Parses streaming page URL params into normalized route config, applying defaults, scenario lookup, and bounded numeric settings.
 import { SCENARIOS } from "../convo/scenarios.js";
+import { clampNumber, clampInt } from "./util.js";
 
 const DEFAULTS = {
   input: "tap",
@@ -9,18 +11,6 @@ const DEFAULTS = {
   speed: 0.85,
   maxOutputTokens: 250,
 };
-
-function clampNumber(v, fallback, min, max) {
-  const n = Number.parseFloat(v);
-  if (!Number.isFinite(n)) return fallback;
-  return Math.min(max, Math.max(min, n));
-}
-
-function clampInt(v, fallback, min, max) {
-  const n = Number.parseInt(v, 10);
-  if (!Number.isFinite(n)) return fallback;
-  return Math.min(max, Math.max(min, n));
-}
 
 function pickScenario(id) {
   const list = Array.isArray(SCENARIOS) ? SCENARIOS : [];

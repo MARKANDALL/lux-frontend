@@ -1,7 +1,7 @@
 // features/streaming/setup/app.js
 // One-line: Streaming setup screen mount + persisted preference handoff into stream.html.
 
-import { K_STREAM_SETUP, getJSON, setJSON } from "../../app-core/lux-storage.js";
+import { K_STREAM_SETUP, getJSON, setJSON } from "../../../app-core/lux-storage.js";
 import { SCENARIOS } from "../../convo/scenarios.js";
 
 function loadPrefs() {

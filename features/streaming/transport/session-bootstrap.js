@@ -3,18 +3,7 @@
 
 import { API_BASE } from "../../../api/util.js";
 import { K_ADMIN_TOKEN } from '../../../app-core/lux-storage.js';
-
-function clampNumber(v, fallback, min, max) {
-  const n = Number.parseFloat(v);
-  if (!Number.isFinite(n)) return fallback;
-  return Math.min(max, Math.max(min, n));
-}
-
-function clampInt(v, fallback, min, max) {
-  const n = Number.parseInt(v, 10);
-  if (!Number.isFinite(n)) return fallback;
-  return Math.min(max, Math.max(min, n));
-}
+import { clampNumber, clampInt } from '../util.js';
 
 // ✅ 1. ROBUST TOKEN GETTER
 function getClientToken() {
