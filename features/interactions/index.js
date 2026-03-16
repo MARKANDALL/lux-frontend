@@ -1,4 +1,5 @@
 // ui/interactions/index.js
+// One-line: Interaction hub that wires hover/audio/legend helpers, re-attaches legacy globals, and auto-boots shared UI behaviors.
 import { safePlay, playWithGesture, prepareVideo } from "./utils.js";
 // Removed: installLegendCueStyles
 import { initScoreErrorCollapse } from "./score-collapse.js";
@@ -8,7 +9,7 @@ import { setupPhonemeHover } from "./ph-hover.js";
 import { initPhonemeAudio } from "./ph-audio.js";
 import { initPhonemeChipBehavior } from "./ph-chips.js";
 import { animateMetricTips } from "./tips.js";
-import { showClickHint, keepTooltipInView } from "./helpers.js";
+import { showClickHint } from "./helpers.js";
 import { bootInteractions } from "./boot.js";
 
 // Re-attach legacy globals
@@ -26,8 +27,6 @@ globalThis.initPhonemeAudio = globalThis.initPhonemeAudio || initPhonemeAudio;
 globalThis.initPhonemeChipBehavior =
   globalThis.initPhonemeChipBehavior || initPhonemeChipBehavior;
 globalThis.showClickHint = globalThis.showClickHint || showClickHint;
-globalThis.keepTooltipInView =
-  globalThis.keepTooltipInView || keepTooltipInView;
 
 // Utils
 globalThis.safePlay = globalThis.safePlay || safePlay;

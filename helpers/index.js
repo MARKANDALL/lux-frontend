@@ -12,7 +12,6 @@ export {
   bringBoxBottomToViewport,
   initUnderlineObserver,
   showClickHint,
-  keepTooltipInView,
 } from "./dom.js";
 
 /*

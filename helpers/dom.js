@@ -83,8 +83,3 @@ export function showClickHint(targetEl, msg, { delay = 1000 } = {}) {
   }, delay + visibleMs);
 }
 
-/**
- * Intentionally a no-op for now.
- * Kept only so older imports do not break during cleanup.
- */
-export function keepTooltipInView(_el, _padding = 8) {}

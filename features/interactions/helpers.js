@@ -11,7 +11,3 @@ export function showClickHint(targetEl, msg) {
   setTimeout(() => hint.remove(), 1400);
 }
 
-// placeholder kept for compatibility (no-op)
-export function keepTooltipInView() {
-  /* noop placeholder */
-}
