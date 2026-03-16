@@ -16,7 +16,7 @@ export function setKnobs(p) { const n = { ...read(), ...p }; write(n); return n;
 export function onKnobsChange(fn) { return luxBus.on('knobs', (val) => fn(val || read())); }
 export function formatKnobsSummary(k) { const c = s => s.charAt(0).toUpperCase()+s.slice(1); return `Level: ${String(k.level||"B1").toUpperCase()} · Tone: ${c(k.tone||"neutral")} · Length: ${c(k.length||"medium")}`; }
 
-const TONE_EMOJI = {neutral:"😐",formal:"👔",friendly:"😊",enthusiastic:"🤩",encouraging:"💪",playful:"😜",flirty:"😏",sarcastic:"🙄",tired:"😴",distracted:"📱",cold:"🧊",blunt:"🔨",impatient:"⏱️",irritable:"😤",angry:"🔥",emotional:"🥺"};
+export const TONE_EMOJI = {neutral:"😐",formal:"👔",friendly:"😊",enthusiastic:"🤩",encouraging:"💪",playful:"😜",flirty:"😏",sarcastic:"🙄",tired:"😴",distracted:"📱",cold:"🧊",blunt:"🔨",impatient:"⏱️",irritable:"😤",angry:"🔥",emotional:"🥺"};
 const LEVEL_COLORS = {A1:{bg:"#f87171",text:"#fff"},A2:{bg:"#dc2626",text:"#fff"},B1:{bg:"#fbbf24",text:"#78350f"},B2:{bg:"#d97706",text:"#fff"},C1:{bg:"#60a5fa",text:"#fff"},C2:{bg:"#2563eb",text:"#fff"}};
 const LENGTH_SIZES = {terse:{px:"6px 10px",fs:"0.78rem"},short:{px:"7px 14px",fs:"0.82rem"},medium:{px:"8px 18px",fs:"0.85rem"},long:{px:"9px 24px",fs:"0.88rem"},extended:{px:"10px 32px",fs:"0.90rem"}};
 const LENGTH_LABELS = {terse:"Terse",short:"Short",medium:"Medium",long:"Long",extended:"Extended"};
