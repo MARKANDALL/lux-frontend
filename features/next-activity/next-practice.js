@@ -5,8 +5,12 @@ import { getCodesForIPA } from "../../src/data/phonemes/core.js";
 import { ensurePassagePhonemeMeta } from "../../src/data/index.js";
 import { setPassage, updatePartsInfoTip } from "../passages/index.js";
 import { loadHarvardList } from "../harvard/index.js";
-
-const STORAGE_KEY = "luxNextPracticePlan";
+import {
+  K_NEXT_PRACTICE_PLAN,
+  getJSON,
+  setJSON,
+  remove,
+} from "../../app-core/lux-storage.js";
 
 // Lazy passage meta cache (keeps existing sync scoring helpers intact)
 let _PASSAGE_META = null;
@@ -117,20 +121,14 @@ export async function buildNextPracticePlanFromModel(model) {
 }
 
 export function saveNextPracticePlan(plan) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(plan || null));
-  } catch (err) { globalThis.warnSwallow("features/next-activity/next-practice.js", err, "important"); }
+  setJSON(K_NEXT_PRACTICE_PLAN, plan || null);
 }
 
 export function consumeNextPracticePlan() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    localStorage.removeItem(STORAGE_KEY);
-    return JSON.parse(raw);
-  } catch (_) {
-    return null;
-  }
+  const plan = getJSON(K_NEXT_PRACTICE_PLAN, null);
+  if (!plan) return null;
+  remove(K_NEXT_PRACTICE_PLAN);
+  return plan;
 }
 
 export async function applyNextPracticePlan(plan, opts = {}) {
@@ -143,7 +141,9 @@ export async function applyNextPracticePlan(plan, opts = {}) {
     await loadHarvardList(plan.harvardN);
     try {
       document.getElementById("referenceText")?.focus();
-} catch (err) { globalThis.warnSwallow("features/next-activity/next-practice.js", err, "important"); }
+    } catch (err) {
+      globalThis.warnSwallow("features/next-activity/next-practice.js", err, "important");
+    }
     return;
   }
 
@@ -158,7 +158,9 @@ export async function applyNextPracticePlan(plan, opts = {}) {
     updatePartsInfoTip();
     try {
       document.getElementById("referenceText")?.focus();
-} catch (err) { globalThis.warnSwallow("features/next-activity/next-practice.js", err, "important"); }
+    } catch (err) {
+      globalThis.warnSwallow("features/next-activity/next-practice.js", err, "important");
+    }
   }
 }
 
@@ -167,6 +169,3 @@ export async function maybeApplyStoredNextPracticePlan() {
   if (!plan) return;
   await applyNextPracticePlan(plan);
 }
-
-
-

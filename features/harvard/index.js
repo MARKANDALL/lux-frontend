@@ -5,26 +5,41 @@ import { setPassage, updatePartsInfoTip } from "../passages/index.js";
 import { ensureHarvardPassages } from "../../src/data/index.js";
 import { harvardKey } from "../../src/data/harvard-key.js";
 
-import { K_HARVARD_LAST, K_HARVARD_RANDOM_BAG } from '../../app-core/lux-storage.js';
+import {
+  K_HARVARD_LAST,
+  K_HARVARD_RANDOM_BAG,
+  getJSON,
+  getString,
+  setJSON,
+  setString,
+} from "../../app-core/lux-storage.js";
 
 const HARVARD_COUNT = 72;
 
 function safeParseJson(raw, fallback) {
-  try { return JSON.parse(raw); } catch { return fallback; }
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return fallback;
+  }
 }
 
 function readRandomBag() {
   try {
-    let bag = safeParseJson(localStorage.getItem(K_HARVARD_RANDOM_BAG) || "[]", []);
+    let bag = getJSON(K_HARVARD_RANDOM_BAG, []);
+    if (!Array.isArray(bag)) {
+      bag = safeParseJson(getString(K_HARVARD_RANDOM_BAG) || "[]", []);
+    }
     if (!Array.isArray(bag)) bag = [];
 
     const seen = new Set();
-    return bag.filter((x) =>
-      Number.isInteger(x) &&
-      x >= 1 &&
-      x <= HARVARD_COUNT &&
-      !seen.has(x) &&
-      seen.add(x)
+    return bag.filter(
+      (x) =>
+        Number.isInteger(x) &&
+        x >= 1 &&
+        x <= HARVARD_COUNT &&
+        !seen.has(x) &&
+        seen.add(x)
     );
   } catch {
     return [];
@@ -32,11 +47,7 @@ function readRandomBag() {
 }
 
 function writeRandomBag(bag) {
-  try {
-    localStorage.setItem(K_HARVARD_RANDOM_BAG, JSON.stringify(bag));
-  } catch (err) {
-    globalThis.warnSwallow("features/harvard/index.js", err, "important");
-  }
+  setJSON(K_HARVARD_RANDOM_BAG, bag);
 }
 
 function removeFromRandomBag(n) {
@@ -110,8 +121,8 @@ export function wireHarvardPicker() {
 
     const current = clamp(
       parseInt(num?.value, 10) ||
-      parseInt(localStorage.getItem(K_HARVARD_LAST), 10) ||
-      1,
+        parseInt(getString(K_HARVARD_LAST), 10) ||
+        1,
       1,
       HARVARD_COUNT
     );
@@ -140,9 +151,7 @@ export function wireHarvardPicker() {
 
     if (num) num.value = String(n);
     removeFromRandomBag(n);
-    try {
-localStorage.setItem(K_HARVARD_LAST, String(n));
-} catch (err) { globalThis.warnSwallow("features/harvard/index.js", err, "important"); }
+    setString(K_HARVARD_LAST, String(n));
 
     // ✅ Delegate actual loading to exported helper (keeps behavior consistent)
     try {
@@ -198,7 +207,9 @@ localStorage.setItem(K_HARVARD_LAST, String(n));
 
               try {
                 document.getElementById("referenceText")?.focus();
-} catch (err) { globalThis.warnSwallow("features/harvard/index.js", err, "important"); }
+              } catch (err) {
+                globalThis.warnSwallow("features/harvard/index.js", err, "important");
+              }
             },
           });
 
@@ -242,9 +253,11 @@ localStorage.setItem(K_HARVARD_LAST, String(n));
 
   // restore last used
   try {
-const last = localStorage.getItem(K_HARVARD_LAST);
+    const last = getString(K_HARVARD_LAST);
     if (last) num.value = String(clamp(parseInt(last, 10) || 1, 1, 72));
-} catch (err) { globalThis.warnSwallow("features/harvard/index.js", err, "important"); }
+  } catch (err) {
+    globalThis.warnSwallow("features/harvard/index.js", err, "important");
+  }
 
   load.addEventListener("click", () => apply(num.value));
   num.addEventListener("keydown", (e) => {

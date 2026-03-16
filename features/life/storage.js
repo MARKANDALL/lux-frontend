@@ -1,11 +1,11 @@
 // features/life/storage.js
-const KEY = "lux.life.run.v1";
+// One-line: Loads, saves, and clears the active Life run via centralized Lux storage helpers.
+
+import { K_LIFE_RUN, getJSON, setJSON, remove } from '../../app-core/lux-storage.js';
 
 export function loadLifeRun() {
   try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return null;
-    const run = JSON.parse(raw);
+    const run = getJSON(K_LIFE_RUN, null);
     return run && typeof run === "object" ? run : null;
   } catch (_) {
     return null;
@@ -14,13 +14,12 @@ export function loadLifeRun() {
 
 export function saveLifeRun(run) {
   try {
-    localStorage.setItem(KEY, JSON.stringify(run));
+    setJSON(K_LIFE_RUN, run);
   } catch (err) { globalThis.warnSwallow("features/life/storage.js", err, "important"); }
 }
 
 export function clearLifeRun() {
   try {
-    localStorage.removeItem(KEY);
+    remove(K_LIFE_RUN);
   } catch (err) { globalThis.warnSwallow("features/life/storage.js", err, "important"); }
 }
-

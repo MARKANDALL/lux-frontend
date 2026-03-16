@@ -2,26 +2,18 @@
 
 import { luxBus } from '../../app-core/lux-bus.js';
 
-import { K_CONVO_KNOBS as KNOBS_KEY } from '../../app-core/lux-storage.js';
+import { K_CONVO_KNOBS as KNOBS_KEY, getJSON, setJSON } from '../../app-core/lux-storage.js';
 const KNOBS_DEFAULTS = { level: "B1", tone: "neutral", length: "medium" };
 
 function loadKnobs() {
-  try {
-    const raw = localStorage.getItem(KNOBS_KEY);
-    if (!raw) return { ...KNOBS_DEFAULTS };
-    const parsed = JSON.parse(raw);
-    return { ...KNOBS_DEFAULTS, ...(parsed || {}) };
-  } catch {
-    return { ...KNOBS_DEFAULTS };
-  }
+  const parsed = getJSON(KNOBS_KEY, null);
+  return { ...KNOBS_DEFAULTS, ...(parsed || {}) };
 }
 
 function saveKnobs(knobs) {
-  try {
-    localStorage.setItem(KNOBS_KEY, JSON.stringify(knobs));
-    // Fire unified event so all listeners (chip drawer, summaries) stay in sync
-    luxBus.set('knobs', knobs);
-} catch (err) { globalThis.warnSwallow("features/convo/convo-knobs.js", err, "important"); }
+  setJSON(KNOBS_KEY, knobs);
+  // Fire unified event so all listeners (chip drawer, summaries) stay in sync
+  luxBus.set('knobs', knobs);
 }
 
 function knobsSummaryText(knobs, roleLabel = null) {
@@ -40,4 +32,3 @@ function knobsSummaryText(knobs, roleLabel = null) {
 }
 
 export { loadKnobs, saveKnobs, knobsSummaryText };
-

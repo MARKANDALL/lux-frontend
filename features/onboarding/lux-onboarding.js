@@ -5,13 +5,14 @@ import { SEEN_KEY, STEPS } from "./onboarding-steps.js";
 import { stopMic, stopMeterOnly, resumeMeterIfPossible } from "./onboarding-mic.js";
 import { runAction } from "./onboarding-actions.js";
 import { escapeHtml } from "../../helpers/escape-html.js";
+import { K_ONBOARD_SEEN, getBool, setBool } from '../../app-core/lux-storage.js';
 
 export function maybeShowOnboarding() {
   // Force open via ?onboard=1
   const params = new URLSearchParams(location.search);
   const force = params.get("onboard") === "1";
 
-  if (!force && localStorage.getItem(SEEN_KEY) === "1") return;
+  if (!force && getBool(K_ONBOARD_SEEN)) return;
   showOnboarding();
 }
 
@@ -67,7 +68,7 @@ function showOnboarding() {
 
   function close(markSeen = true) {
     stopMic(state);
-    if (markSeen) localStorage.setItem(SEEN_KEY, "1");
+    if (markSeen) setBool(K_ONBOARD_SEEN, true);
     overlay.remove();
   }
 

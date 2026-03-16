@@ -2,25 +2,23 @@
 // Tiny glue: pick targets from rollups + store/consume a Next Activity plan.
 
 import { norm } from "../../src/data/phonemes/core.js";
-
-const KEY = "lux.nextActivity.v1";
+import { K_NEXT_ACTIVITY, getJSON, setJSON, remove } from '../../app-core/lux-storage.js';
 
 export function saveNextActivityPlan(plan) {
   try {
-    localStorage.setItem(KEY, JSON.stringify(plan));
+    setJSON(K_NEXT_ACTIVITY, plan);
   } catch (err) { globalThis.warnSwallow("features/next-activity/next-activity.js", err, "important"); }
 }
 
 export function consumeNextActivityPlan() {
   try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return null;
-    localStorage.removeItem(KEY);
-    const plan = JSON.parse(raw);
+    const plan = getJSON(K_NEXT_ACTIVITY, null);
+    if (!plan) return null;
+    remove(K_NEXT_ACTIVITY);
     return plan && typeof plan === "object" ? plan : null;
   } catch (_) {
     try {
-      localStorage.removeItem(KEY);
+      remove(K_NEXT_ACTIVITY);
     } catch (err) { globalThis.warnSwallow("features/next-activity/next-activity.js", err, "important"); }
     return null;
   }
@@ -177,4 +175,3 @@ export function buildConvoTargetOverlay(plan) {
 
   return lines.filter(Boolean).join("\n");
 }
-

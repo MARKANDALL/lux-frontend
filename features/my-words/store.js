@@ -1,9 +1,8 @@
 // features/my-words/store.js
+// One-line: Local My Words store with persistence, open-state memory, subscriptions, and entry mutations.
 
+import { K_MY_WORDS_PREFIX, K_MY_WORDS_OPEN_PREFIX, getString, setString } from '../../app-core/lux-storage.js';
 import { normalizeText, splitLines } from "./normalize.js";
-
-const LS_KEY_PREFIX = "lux_my_words_v1:";
-const LS_OPEN_PREFIX = "lux_my_words_open_v1:";
 
 function safeParse(json, fallback) {
   try {
@@ -23,8 +22,8 @@ function makeId() {
 }
 
 export function createMyWordsStore({ uid, onMutation } = {}) {
-  const key = LS_KEY_PREFIX + String(uid || "anon");
-  const openKey = LS_OPEN_PREFIX + String(uid || "anon");
+  const key = K_MY_WORDS_PREFIX + String(uid || "anon");
+  const openKey = K_MY_WORDS_OPEN_PREFIX + String(uid || "anon");
 
   const subs = new Set();
 
@@ -47,7 +46,7 @@ export function createMyWordsStore({ uid, onMutation } = {}) {
 
   function persist() {
     try {
-      localStorage.setItem(key, JSON.stringify(state.entries));
+      setString(key, JSON.stringify(state.entries));
     } catch (err) {
       globalThis.warnSwallow("features/my-words/store.js", err, "important");
     }
@@ -55,13 +54,13 @@ export function createMyWordsStore({ uid, onMutation } = {}) {
 
   function persistOpen() {
     try {
-      localStorage.setItem(openKey, state.open ? "1" : "0");
+      setString(openKey, state.open ? "1" : "0");
     } catch (err) { globalThis.warnSwallow("features/my-words/store.js", err, "important"); }
   }
 
   function load() {
     try {
-      const raw = localStorage.getItem(key) || "[]";
+      const raw = getString(key) || "[]";
       const arr = safeParse(raw, []);
       state.entries = Array.isArray(arr) ? arr : [];
     } catch (err) {
@@ -69,7 +68,7 @@ export function createMyWordsStore({ uid, onMutation } = {}) {
     }
 
     try {
-      const rawOpen = localStorage.getItem(openKey) || "0";
+      const rawOpen = getString(openKey) || "0";
       state.open = rawOpen === "1";
     } catch (err) { globalThis.warnSwallow("features/my-words/store.js", err, "important"); }
   }
@@ -234,5 +233,3 @@ export function createMyWordsStore({ uid, onMutation } = {}) {
     hardDelete,
   };
 }
-
-

@@ -1,21 +1,15 @@
 // features/streaming/setup/app.js
+// One-line: Streaming setup screen mount + persisted preference handoff into stream.html.
+
+import { K_STREAM_SETUP, getJSON, setJSON } from "../../app-core/lux-storage.js";
 import { SCENARIOS } from "../../convo/scenarios.js";
 
-const KEY = "lux.stream.setup.v1";
-
 function loadPrefs() {
-  try {
-    const raw = localStorage.getItem(KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch (_) {
-    return null;
-  }
+  return getJSON(K_STREAM_SETUP, null);
 }
 
 function savePrefs(prefs) {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(prefs));
-  } catch (err) { globalThis.warnSwallow("features/streaming/setup/app.js", err, "important"); }
+  setJSON(K_STREAM_SETUP, prefs);
 }
 
 function pickRandomScenarioId() {
@@ -187,4 +181,3 @@ export function mountStreamingSetupApp({ rootId }) {
     window.location.href = `./stream.html?${qp.toString()}`;
   });
 }
-

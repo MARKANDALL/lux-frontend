@@ -2,14 +2,14 @@
 import { guardedListener, removeGuardedListener } from '../../app-core/lux-listeners.js';
 import { luxBus } from '../../app-core/lux-bus.js';
 
-import { K_CONVO_KNOBS as KNOBS_KEY } from '../../app-core/lux-storage.js';
+import { K_CONVO_KNOBS as KNOBS_KEY, getJSON, setJSON } from '../../app-core/lux-storage.js';
 const DEFAULTS = { level: "B1", tone: "neutral", length: "medium" };
 
 function read() {
-  try { const r = localStorage.getItem(KNOBS_KEY); return r ? { ...DEFAULTS, ...JSON.parse(r) } : { ...DEFAULTS }; }
-  catch { return { ...DEFAULTS }; }
+  const parsed = getJSON(KNOBS_KEY, null);
+  return { ...DEFAULTS, ...(parsed || {}) };
 }
-function write(n) { localStorage.setItem(KNOBS_KEY, JSON.stringify(n)); luxBus.set('knobs', n); }
+function write(n) { setJSON(KNOBS_KEY, n); luxBus.set('knobs', n); }
 
 export function getKnobs() { return read(); }
 export function setKnobs(p) { const n = { ...read(), ...p }; write(n); return n; }
