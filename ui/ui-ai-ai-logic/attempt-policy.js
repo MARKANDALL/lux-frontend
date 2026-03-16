@@ -2,13 +2,13 @@
 // Practice Skills: attempt-based AI Coach auto-open policy + persistence helpers.
 // Extracted from ui/ui-ai-ai-logic.js (cut/paste only).
 
+import { K_AICOACH_PREF, getString, setString } from '../../app-core/lux-storage.js';
 import { openAICoachDrawer, collapseAICoachDrawer } from "../ui-ai-ai-dom.js";
 
 const LUX_PRACTICE_ATTEMPT_KEY = "lux:practiceAttemptCount";
 const LUX_AICOACH_EARLY_CLOSE_KEY = "lux:aicoachEarlyCloseCount";
 const LUX_AICOACH_EARLY_CLOSED_A1_KEY = "lux:aicoachEarlyClosedAttempt1";
 const LUX_AICOACH_EARLY_CLOSED_A2_KEY = "lux:aicoachEarlyClosedAttempt2";
-const LUX_AICOACH_PREF_KEY = "lux:aicoachDrawerPref";
 
 function getLuxSessionInt(key) {
   try {
@@ -71,7 +71,7 @@ export function ensureAICoachAttemptPolicyBound() {
       // If they closed in both early attempts, lock default to closed for attempt 3+
       if (next >= 2) {
         try {
-          localStorage.setItem(LUX_AICOACH_PREF_KEY, "0");
+          setString(K_AICOACH_PREF, "0");
 } catch (err) { globalThis.warnSwallow("ui/ui-ai-logics/attempt-policy.js", err, "important"); }
       }
       return;
@@ -79,7 +79,7 @@ export function ensureAICoachAttemptPolicyBound() {
 
     // Attempt 3+: persist user preference.
     try {
-      localStorage.setItem(LUX_AICOACH_PREF_KEY, d.open ? "1" : "0");
+      setString(K_AICOACH_PREF, d.open ? "1" : "0");
 } catch (err) { globalThis.warnSwallow("ui/ui-ai-logics/attempt-policy.js", err, "important"); }
   });
 }
@@ -103,7 +103,7 @@ function applyAICoachAttemptOpenPolicy(attempt) {
   // Attempt 3+: prefer saved preference (if any)
   let pref = null;
   try {
-    pref = localStorage.getItem(LUX_AICOACH_PREF_KEY);
+    pref = getString(K_AICOACH_PREF);
 } catch (err) { globalThis.warnSwallow("ui/ui-ai-logics/attempt-policy.js", err, "important"); }
 
   if (pref === "1") {
@@ -120,5 +120,3 @@ function applyAICoachAttemptOpenPolicy(attempt) {
   if (earlyClosed >= 2) collapseAICoachDrawer();
   else openAICoachDrawer();
 }
-
-
