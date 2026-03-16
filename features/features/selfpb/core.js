@@ -1,7 +1,7 @@
 // features/features/selfpb/core.js
 // Core: audio engine, AB loop, rate persistence, reference handling, public API
 
-import { K_SELFPB_RATE } from '../../../app-core/lux-storage.js';
+import { K_SELFPB_RATE, getString, setString } from '../../../app-core/lux-storage.js';
 
 if (window.LuxSelfPB?.__mounted) {
   console.warn("[self-pb] already mounted, aborting second mount");
@@ -9,7 +9,6 @@ if (window.LuxSelfPB?.__mounted) {
 }
 window.LuxSelfPB = Object.assign(window.LuxSelfPB || {}, { __mounted: true });
 
-const LS_RATE = "const LS_RATE = K_SELFPB_RATE;selfpb_rate_v1";
 const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
 const fmt = (t) => {
   if (!isFinite(t) || t < 0) t = 0;
@@ -50,7 +49,7 @@ export function initSelfPBCore() {
   };
 
   // init rate from storage
-  const savedRate = Number(localStorage.getItem(LS_RATE) || "1") || 1;
+  const savedRate = Number(getString(K_SELFPB_RATE) || "1") || 1;
   audio.playbackRate = clamp(savedRate, 0.5, 1.5);
 
   // AB loop enforcement on timeupdate
@@ -96,7 +95,7 @@ export function initSelfPBCore() {
     },
     setRate(v) {
       audio.playbackRate = clamp(v, 0.5, 1.5);
-      localStorage.setItem(LS_RATE, String(audio.playbackRate));
+      setString(K_SELFPB_RATE, String(audio.playbackRate));
     },
     setRefRate(v) {
       refAudio.playbackRate = clamp(Number(v) || 1, 0.5, 1.5);
@@ -171,7 +170,7 @@ export function initSelfPBCore() {
     fmt,
     clamp,
     persistRate(v) {
-      localStorage.setItem(LS_RATE, String(clamp(v, 0.5, 1.5)));
+      setString(K_SELFPB_RATE, String(clamp(v, 0.5, 1.5)));
     },
   };
 
@@ -180,4 +179,3 @@ export function initSelfPBCore() {
 
   return { api, audio, refAudio, st };
 }
-
