@@ -36,7 +36,6 @@ export function mountSelfPlaybackLite() {
   }
 
   // Recorder will call this if present
-  window.__attachLearnerBlob = attachLearnerBlob;
 
   // If we already have a last recording (made before mount), attach it now
   try {
@@ -114,15 +113,6 @@ export function mountSelfPlaybackLite() {
     karaokeUpdate: (...args) => karaoke?.update?.(...args),
     karaokeRender: (...args) => karaoke?.renderKaraoke?.(...args),
     el: ui.host,
-  });
-
-  // Legacy compat mirrors — keep until all cross-feature readers are bus-first
-  window.__attachLearnerBlob = attachLearnerBlob;
-  window.LuxSelfPB = Object.assign(window.LuxSelfPB || {}, {
-    attachLearnerBlob,
-    el: ui.host,
-    karaokeUpdate: karaoke?.update,
-    karaokeRender: karaoke?.renderKaraoke,
   });
 
   console.info("[self-pb] WaveSurfer UI Mounted");
