@@ -1,4 +1,7 @@
 // helpers/core.js
+// One-line: Shared core helpers for user identity, friendly feedback text, markdown rendering, clamping, and in-place shuffling.
+
+
 import { getUID } from "../api/identity.js";
 import { coachingPreface } from "../core/scoring/index.js";
 import { mdToHtml as renderMdToHtml } from "./md-to-html.js";
@@ -41,4 +44,18 @@ export function mdToHtml(md = "") {
     paragraphs: true,
     preserveLineBreaks: false,
   });
+}
+
+/** Clamp a number between lo and hi (inclusive). */
+export function clamp(n, lo, hi) {
+  return Math.max(lo, Math.min(hi, n));
+}
+
+/** Fisher-Yates in-place shuffle (Math.random). */
+export function shuffleInPlace(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
 }

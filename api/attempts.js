@@ -2,20 +2,13 @@
 // UPDATED: Added updateAttempt() to save AI feedback
 
 import { API_BASE, dbg, apiFetch } from "./util.js";
+import { localDayKey } from '../features/progress/rollups/rollupsUtils.js';
 
 const ATTEMPT_URL = `${API_BASE}/api/attempt`;
 const HISTORY_URL = `${API_BASE}/api/user-recent`;
 const UPDATE_URL  = `${API_BASE}/api/update-attempt`;
 
 // Helper: YYYY-MM-DD in the user's local day (best-effort)
-function localDayKey(ts) {
-  const d = new Date(ts);
-  try { return d.toLocaleDateString("en-CA"); } catch (err) { globalThis.warnSwallow("api/attempts.js", err, "important"); }
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const da = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${da}`;
-}
 
 export async function saveAttempt({
   uid,

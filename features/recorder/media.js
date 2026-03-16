@@ -1,15 +1,14 @@
 // features/recorder/media.js
+// One-line: Handles microphone capture, live level metering, MediaRecorder lifecycle, and final audio blob creation for the recorder flow.
+
 import { logError } from "../../app-core/lux-utils.js";
 import AudioInspector from "./audio-inspector.js";
 import { buildAudioConstraints } from "./audio-mode.js";
+import { clamp } from '../../helpers/core.js';
 
 let mediaRecorder = null;
 let recordedChunks = [];
 let stopMeterFn = null;
-
-function clamp(n, lo, hi) {
-  return Math.max(lo, Math.min(hi, n));
-}
 
 function startLevelMeter(stream, onMeter, bars = 10) {
   const AudioCtx = window.AudioContext || window.webkitAudioContext;

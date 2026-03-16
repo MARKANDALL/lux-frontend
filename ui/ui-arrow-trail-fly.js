@@ -1,6 +1,9 @@
 // ui/ui-arrow-trail-fly.js
+// One-line: Controls arrow-flight target finding, motion physics, and landing animation for the UI arrow trail.
 // Flight controller: target-finding, trajectory physics, and animation.
 // Called by ui-arrow-trail.js — no direct DOM setup here.
+
+import { clamp } from '../helpers/core.js';
 
 export function createFlightController({
   host,
@@ -25,10 +28,6 @@ export function createFlightController({
   let debugDot = null;
 
   // ─── Helpers ─────────────────────────────────────────────────────────────
-
-  function clamp(v, lo, hi) {
-    return Math.max(lo, Math.min(hi, v));
-  }
 
   function parseRGB(rgbStr) {
     const m = rgbStr && rgbStr.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);

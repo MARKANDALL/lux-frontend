@@ -3,6 +3,7 @@
 
 import { wirePickerDeck } from "./picker-deck.js";
 import { openCharsDrawer, closeCharsDrawer, peekCharsDrawer, unpeekCharsDrawer } from "./characters-drawer.js";
+import { shuffleInPlace } from '../../helpers/core.js';
 import { getKnobsDrawerInstance, onKnobsChange, peekKnobsDrawer, unpeekKnobsDrawer } from "./knobs-drawer.js";
 import { luxBus } from '../../app-core/lux-bus.js';
 import {
@@ -13,13 +14,6 @@ import {
   setJSON,
   setString,
 } from "../../app-core/lux-storage.js";
-
-function shuffleInPlace(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-}
 
 function pickNextRandomScenarioIdx(n) {
   if (!Number.isFinite(n) || n <= 1) return 0;

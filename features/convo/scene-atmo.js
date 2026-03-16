@@ -1,4 +1,7 @@
 // features/convo/scene-atmo.js
+// One-line: Seeds, lays out, rotates, and parallax-drives the intro scene atmosphere cards.
+
+import { clamp, shuffleInPlace } from '../../helpers/core.js';
 
 export function initSceneAtmo({ root, atmo, state, scenarios = [] }) {
   // --- Edge-style scene tiles (scatter + depth + independent drift) ---
@@ -27,14 +30,6 @@ export function initSceneAtmo({ root, atmo, state, scenarios = [] }) {
   let queue = [];
   let qi = 0;
   let rotTimer = 0;
-
-  function shuffleInPlace(arr) {
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    return arr;
-  }
 
   function refillQueue() {
     queue = Array.from({ length: scenarios.length }, (_, i) => i);
@@ -319,7 +314,6 @@ export function initSceneAtmo({ root, atmo, state, scenarios = [] }) {
 
   // --- Parallax driver (Edge-like: stage-relative + eased + recenters on leave) ---
   const par = { tx: 0, ty: 0, x: 0, y: 0, raf: 0 };
-  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
   function parTick() {
     // Ease gives that “float / inertia” feel

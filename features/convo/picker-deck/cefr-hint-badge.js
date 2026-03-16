@@ -1,8 +1,10 @@
 // features/convo/picker-deck/cefr-hint-badge.js
-// ONE-LINE: CEFR hint badge that peeks/bobs on states 0–1, flies to the level chip on state 2 (max 2 flights per session), then subtle nudge only.
+// One-line: CEFR hint badge that peeks/bobs on states 0–1, flies to the level chip on state 2 (max 2 flights per session), then subtle nudge only.
+
 
 import { luxBus } from '../../../app-core/lux-bus.js';
 import { getKnobs } from "../knobs-drawer.js";
+import { clamp } from '../../../helpers/core.js';
 
 // ── Color map (mirrors knobs-drawer.js LEVEL_COLORS) ──
 
@@ -20,8 +22,6 @@ function getLevelStyle(lvl) {
 }
 
 // ── Helpers ──
-
-function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
 const REDUCED = typeof window !== "undefined" &&
   window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
