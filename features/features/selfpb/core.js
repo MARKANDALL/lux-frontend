@@ -3,12 +3,16 @@
 
 import { K_SELFPB_RATE, getString, setString } from '../../../app-core/lux-storage.js';
 import { clamp } from '../../../helpers/core.js';
+import { luxBus } from '../../../app-core/lux-bus.js';
 
-if (window.LuxSelfPB?.__mounted) {
+let _refState = null;   // was window.LuxSelfPB_REF
+let _lastUrl = null;    // was window.LuxSelfPB_LastUrl
+
+if (luxBus.get('selfpb:mounted')) {
   console.warn("[self-pb] already mounted, aborting second mount");
   throw new Error("self-pb double mount");
 }
-window.LuxSelfPB = Object.assign(window.LuxSelfPB || {}, { __mounted: true });
+luxBus.set('selfpb:mounted', true);
 
 const fmt = (t) => {
   if (!isFinite(t) || t < 0) t = 0;
@@ -99,8 +103,8 @@ export function initSelfPBCore() {
     },
     setRefRate(v) {
       refAudio.playbackRate = clamp(Number(v) || 1, 0.5, 1.5);
-      if (window.LuxSelfPB_REF)
-        window.LuxSelfPB_REF.playbackRate = refAudio.playbackRate;
+      if (_refState)
+        _refState.playbackRate = refAudio.playbackRate;
     },
     setReference({ url, audioEl, meta } = {}) {
       try {
@@ -113,7 +117,7 @@ export function initSelfPBCore() {
           refAudio.src = url;
         }
         refMeta = meta || null;
-        window.LuxSelfPB_REF = {
+        _refState = {
           url: refAudio.src || null,
           meta: refMeta,
           playbackRate: refAudio.playbackRate || 1,
@@ -127,8 +131,8 @@ export function initSelfPBCore() {
     async setLearnerArrayBuffer(arrBuf) {
       try {
         // 1. Cleanup old memory if we tracked it
-        if (window.LuxSelfPB_LastUrl) {
-            URL.revokeObjectURL(window.LuxSelfPB_LastUrl);
+        if (_lastUrl) {
+            URL.revokeObjectURL(_lastUrl);
         }
 
         // 2. STOP THE LOOP:
@@ -143,7 +147,7 @@ export function initSelfPBCore() {
         if (!audio.src) {
              const blob = new Blob([arrBuf], { type: "audio/mpeg" });
              const url = URL.createObjectURL(blob);
-             window.LuxSelfPB_LastUrl = url;
+             _lastUrl = url;
              audio.src = url;
              await audio.load?.();
         }
@@ -174,8 +178,9 @@ export function initSelfPBCore() {
     },
   };
 
-  // expose API (back-compat)
-  window.LuxSelfPB = Object.assign(window.LuxSelfPB || {}, api);
+ // expose API via bus (canonical) + frozen compat shim
+  luxBus.set('selfpbApi:core', api);
+  window.LuxSelfPB = api;  // frozen compat shim — do not read; use luxBus.get('selfpbApi:core')
 
   return { api, audio, refAudio, st };
 }

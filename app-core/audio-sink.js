@@ -2,7 +2,8 @@
 // Handles the hidden learner audio element.
 // UPDATED: Simplified. Passes Blob directly to Waveform Logic (no manual decoding).
 
-import { loadLearnerBlob } from "../features/features/selfpb/waveform-logic.js"; 
+import { loadLearnerBlob } from "../features/features/selfpb/waveform-logic.js";
+import { luxBus } from "./lux-bus.js";
 
 export function initAudioSink() {
   const AUDIO_ID = "playbackAudio";
@@ -31,10 +32,12 @@ export function initAudioSink() {
           loadLearnerBlob(blob);
       }
 
-      if (window.LuxSelfPB?.setLearnerArrayBuffer) {
+       const selfpb = luxBus.get('selfpbApi') || luxBus.get('selfpbApi:core');
+      if (selfpb?.setLearnerArrayBuffer) {
         const arr = await blob.arrayBuffer();
-        await window.LuxSelfPB.setLearnerArrayBuffer(arr);
+        await selfpb.setLearnerArrayBuffer(arr);
       }
+      
     } catch (err) {
       console.warn("[learner] Audio load error:", err);
     }

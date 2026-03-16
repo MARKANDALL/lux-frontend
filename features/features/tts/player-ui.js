@@ -42,7 +42,7 @@ function getTtsContext() {
 }
 
 function getSelfPBApi() {
-  return luxBus.get("selfpbApi") || window.LuxSelfPB || null;
+  return luxBus.get("selfpbApi") || luxBus.get("selfpbApi:core") || null;
 }
 
 function isTtsKaraokeActive() {
