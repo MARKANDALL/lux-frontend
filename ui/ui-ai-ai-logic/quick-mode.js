@@ -130,8 +130,8 @@ async function showQuickTipAt({
         .then((r) => {
           quickTipState.cache[next] = r.sections || r.fallbackSections || [];
         })
-        .catch(() => {});
-    }
+   .catch(e => console.warn("[QuickMode] prefetch tip failed:", e));
+      }
 
     // Persist only the first viewed tip (keeps DB clean + fast)
     if (i === 0) persistFeedbackToDB(sections);
