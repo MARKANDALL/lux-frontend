@@ -1,5 +1,8 @@
 // features/my-words/panel-events.js
+// Binds My Words panel and library modal DOM events to store actions, navigation hooks, and render updates.
+
 import { guardedListener } from '../../app-core/lux-listeners.js';
+import { luxBus } from "../../app-core/lux-bus.js";
 
 export function bindMyWordsPanelEvents({
   root,
@@ -32,7 +35,7 @@ export function bindMyWordsPanelEvents({
     // If we're inside the modal → go “back”
     if (root.classList.contains("is-modal")) {
       onCloseLibrary?.();
-      window.LuxMyWords?.closeLibrary?.();
+      luxBus.get('myWordsApi')?.closeLibrary?.();
       return;
     }
 
@@ -101,7 +104,7 @@ export function bindMyWordsPanelEvents({
 
       store.archive(entry.id);
       store.setOpen(false);               // close sidecar
-      window.LuxMyWords?.openLibrary?.();  // open modal library
+      luxBus.get('myWordsApi')?.openLibrary?.();  // open modal library
       return;
     }
 

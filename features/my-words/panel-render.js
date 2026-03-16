@@ -2,6 +2,7 @@
 // ONE-LINE: Renders the My Words panel rows/meta/footer and wires the View Library / Back buttons.
 
 import { fmtPctCefr } from "../../core/scoring/index.js";
+import { luxBus } from "../../app-core/lux-bus.js";
 
 export function createMyWordsPanelRenderer({
   root,
@@ -114,7 +115,7 @@ export function createMyWordsPanelRenderer({
 
       btn.addEventListener("click", () => {
         onCloseLibrary?.();
-        window.LuxMyWords?.closeLibrary?.();
+        luxBus.get('myWordsApi')?.closeLibrary?.();
       });
 
       host.appendChild(btn);
@@ -130,7 +131,7 @@ export function createMyWordsPanelRenderer({
 
       btn.addEventListener("click", () => {
         onOpenLibrary?.();
-        window.LuxMyWords?.openLibrary?.();
+        luxBus.get('myWordsApi')?.openLibrary?.();
       });
 
       host.appendChild(btn);

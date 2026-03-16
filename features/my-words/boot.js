@@ -7,6 +7,7 @@
 // not from launcher.js directly.
 
 import { mountMyWordsCornerLauncher } from "./launcher.js";
+import { luxBus } from "../../app-core/lux-bus.js";
 
 /**
  * Mounts the corner launcher button and lazy-boots the full My Words
@@ -33,7 +34,7 @@ export function bootMyWordsLauncher() {
       }
 
       // Fallback if global exists
-      window.LuxMyWords?.toggle?.();
+      luxBus.get('myWordsApi')?.toggle?.();
     },
   });
 }

@@ -1,7 +1,9 @@
 // features/my-words/index.js
+// Mounts the My Words side panel, library modal, launcher, store wiring, and external API registration.
 
 import { fetchHistory } from "../../api/index.js";
 import { ensureUID } from "../../api/identity.js";
+import { luxBus } from "../../app-core/lux-bus.js";
 
 import { createMyWordsStore } from "./store.js";
 import { mountMyWordsPanel, ensureMyWordsLibraryModal } from "./panel.js";
@@ -212,10 +214,12 @@ if (isConvo) {
     },
   });
 
-  // expose globally (panel.js View Library button can call this)
-  window.LuxMyWords = window.LuxMyWords || {};
-  window.LuxMyWords.openLibrary = library.open;
-  window.LuxMyWords.closeLibrary = library.close;
+  // expose library API early via bus
+  luxBus.set('myWordsApi', {
+    ...(luxBus.get('myWordsApi') || {}),
+    openLibrary: library.open,
+    closeLibrary: library.close,
+  });
 
   // ✅ Alias for older code that expects "sidecar"
   const sidecar = panel;
@@ -293,15 +297,16 @@ if (isConvo) {
     }
   })();
 
-  // Global hook for Progress page button + external calls
-  window.LuxMyWords = {
-    ...(window.LuxMyWords || {}),
+  // Canonical API via bus + frozen compat shim
+  const myWordsApi = {
     toggle: () => store.toggleOpen(),
     open: () => store.setOpen(true),
     close: () => store.setOpen(false),
-    openLibrary: library.open, // ✅ separate modal instance
+    openLibrary: library.open,
     closeLibrary: library.close,
   };
+  luxBus.set('myWordsApi', myWordsApi);
+  window.LuxMyWords = myWordsApi;  // frozen compat shim — use luxBus.get('myWordsApi')
 
   return { store, panel, sidecar, launcher };
 }
@@ -315,4 +320,3 @@ export function initMyWordsEverywhere() {
   const inputEl = document.getElementById("referenceText") || null;
   return initMyWordsGlobal({ uid, inputEl });
 }
-

@@ -4,6 +4,8 @@
 // 1) ensures the "My Words" button exists in the actions area (if possible)
 // 2) wires it to open the global My Words Library modal
 
+import { luxBus } from "../../app-core/lux-bus.js";
+
 export * from "./render/index.js";
 
 /**
@@ -43,7 +45,7 @@ export function wireMyWordsLibraryGateway(root) {
   // 2) Wire click → open library (global hook set by initMyWordsGlobal)
   if (mwBtn) {
     mwBtn.addEventListener("click", () => {
-      window.LuxMyWords?.openLibrary?.();
+      luxBus.get('myWordsApi')?.openLibrary?.();
     });
   }
 }
