@@ -196,14 +196,6 @@ const module = await import("./selfpb/ui.js");
     if (host) host.style.display = "none";
   }
 
-  // Expose control API
-  window.luxSP = Object.assign(window.luxSP || {}, {
-    open,
-    close,
-    toggle: handleToggle,
-  });
-
-
   // ✅ External request (used by TTS Expand): load SelfPB if needed, then open the shared expanded modal
   luxBus.on('requestSelfPBExpanded', async () => {
     try {
