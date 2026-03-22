@@ -107,7 +107,7 @@ LUX_GEMINI/
 │   ├── index.js                Public re-exports (the API gatekeeper)
 │   ├── ai.js                   GPT coaching feedback
 │   ├── assess.js               Azure pronunciation assessment
-│   ├── attempts.js             Save/fetch/update practice attempts
+│   ├── attempts.js             Save/fetch/update attempts
 │   ├── alt-meaning.js          Alternative meaning lookup
 │   ├── convo.js                Convo turn (has own retry + AbortController)
 │   ├── convo-report.js         End-of-session conversation report
@@ -332,8 +332,8 @@ These are NOT the source of truth — luxBus is. Reader code should use luxBus.g
 Global Status Real Owner
 window.luxTTS Frozen shim — luxBus.get('tts') is sole owner. All readers migrated to bus. One window.luxTTS = luxBus.get('tts') compat shim remains at end of mountTTSPlayer. luxBus 'tts' key
 window.LuxLastRecordingBlob Active mirror runtime.js via setLastRecording()
-window.LuxMyWords Active — self-contained island my-words/index.js
-window.LuxSelfPB Active — selfpb family only selfpb/core.js + selfpb/ui.js
+window.LuxMyWords Frozen shim — luxBus.get('myWordsApi') is sole owner. All readers migrated to bus. Tag: v-LuxMyWords-bus-migrated
+window.LuxSelfPB Frozen shim — luxBus.get('selfpbApi:core') is sole owner. All readers migrated to bus. _REF/_LastUrl internalized. Tag: v-LuxSelfPB-bus-migrated
 window.LUX_USER_ID Active mirror identity.js via ensureUID() / setUID()
 State Ownership Ladder
 
@@ -408,9 +408,11 @@ window.luxTTS — frozen shim only
 
 window.LuxLastRecordingBlob — compat mirror of runtime-owned value
 
-window.LuxSelfPB — selfpb family island
+window.LuxSelfPB — frozen shim only (was active island; migrated to luxBus v-LuxSelfPB-bus-migrated)
 
-window.LuxMyWords — self-contained island
+window.LuxMyWords — frozen shim only (was self-contained island; migrated to luxBus v-LuxMyWords-bus-migrated)
+
+window.luxSP — REMOVED (was dead — zero readers; deleted v-luxSP-removed)
 
 Rule:
 

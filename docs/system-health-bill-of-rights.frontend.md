@@ -300,19 +300,19 @@ Before adding new state, ask in this order:
 | `window.LuxLastAzureResult` | `recorder/index.js` | `features/recorder/index.js:155` | Results UI |
 | `window.luxTTS` | `luxBus 'tts'` (frozen shim only) | End of `mountTTSPlayer` — `window.luxTTS = luxBus.get('tts')` | No direct readers — all migrated to `luxBus.get('tts')` |
 | `window.LuxTTSContext` | `installConvoTtsContext()` | `convo/convo-tts-context.js:198` | `tts/player-ui.js` |
-| `window.LuxSelfPB` | `selfpb/core.js` + `selfpb/ui.js` | `features/features/selfpb/core.js:177`, `selfpb/ui.js:123` | `tts/player-ui.js` |
-| `window.LuxMyWords` | `my-words/index.js` | `features/my-words/index.js:297` | `panel-events.js` |
-| `window.LuxSelfPB_REF` | `selfpb/core.js` | `features/features/selfpb/core.js:115` | Internal |
-| `window.LuxSelfPB_LastUrl` | `selfpb/core.js` | `features/features/selfpb/core.js:145` | Internal (cleanup) |
+| `window.LuxSelfPB` | Frozen shim — `luxBus.get('selfpbApi:core')` is sole owner | `features/features/selfpb/core.js` | All readers migrated to bus. Tag: `v-LuxSelfPB-bus-migrated` |
+| `window.LuxMyWords` | Frozen shim — `luxBus.get('myWordsApi')` is sole owner | `features/my-words/index.js` | All readers migrated to bus. Tag: `v-LuxMyWords-bus-migrated` |
+| `window.LuxSelfPB_REF` | REMOVED — internalized as module-level `_refState` | — | Tag: `v-LuxSelfPB-bus-migrated` |
+| `window.LuxSelfPB_LastUrl` | REMOVED — internalized as module-level `_lastUrl` | — | Tag: `v-LuxSelfPB-bus-migrated` |
 | `window.luxDbg` | `app-core/state.js` | `app-core/state.js:13` | Dev tools |
-| `window.luxSP` | `08-selfpb-peekaboo.js` | `features/features/08-selfpb-peekaboo.js:198` | Internal |
+| `window.luxSP` | REMOVED — zero readers, dead code | — | Tag: `v-luxSP-removed` |
 
 ### One Writer Rule — Enforcement
 
 **Code Review Checklist:**
 1. `grep -rn 'window\.LuxFoo\s*=' --include='*.js'` — must return exactly one file (the canonical writer).
 2. Any PR that adds a new `window.*` assignment must add it to this charter.
-3. Use `Object.assign(window.X || {}, { newProp })` for additive writes (e.g., `window.LuxSelfPB`).
+3. Do NOT use `Object.assign(window.X || {}, ...)` for new globals. Use `luxBus.set()`. Remaining window globals are frozen compat shims only.
 
 **Hygiene Grep Patterns:**
 ```bash
