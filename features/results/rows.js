@@ -59,8 +59,7 @@ export function buildRows(words, timings, med) {
           >
             ${ipaRaw /* Display the raw symbol from Azure, usually safest */}
             <span style="font-size: 0.8em; opacity: 0.7; margin-left: 2px;">
-                (${fmtPctCefr(ph.AccuracyScore)})
-            </span>
+(${Math.round(ph.AccuracyScore)}%)            </span>
           </span>`;
         })
         .join(" "); // Space separated for cleaner wrapping
