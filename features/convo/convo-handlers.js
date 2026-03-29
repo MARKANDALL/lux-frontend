@@ -102,6 +102,7 @@ export function attachConvoHandlers({
   });
 
   endBtn.addEventListener("click", async () => {
+    console.log("[Convo] End Session click fired");
     try {
       const s = SCENARIOS[state.scenarioIdx];
       const report = await convoReport({
@@ -119,7 +120,6 @@ export function attachConvoHandlers({
         scenario: { id: s.id, title: s.title },
       });
 
-      // Debug dump: only in dev / when LUX_DEBUG is active
       if (window.LUX_DEBUG) {
         let pre = document.getElementById("luxConvoReportDump");
         if (!pre) {

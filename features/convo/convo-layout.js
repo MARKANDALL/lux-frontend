@@ -123,7 +123,6 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
   const scenBtn = el("button", "btn ghost", "Scenarios");
   const knobsBtn = el("button", "btn ghost", "⚙️ Settings");
   const endBtn = el("button", "btn danger", "End Session");
-  attachClickRipple(endBtn);
   actions.append(scenBtn, knobsBtn, endBtn);
 
   midHd.append(titleWrap, actions);
