@@ -1,33 +1,20 @@
 // features/progress/render/dashboard.js
-// Main full-size Progress dashboard render functions live here.
-// features/progress/render/dashboard.js
+// Main full-size Progress dashboard render + wiring.
 
 import { openDetailsModal } from "../attempt-detail-modal.js";
-import { wireAttemptDetailChipExplainers } from "../attempt-detail/chip-explainers.js";
-
-import {
-  buildNextPracticePlanFromModel,
-  saveNextPracticePlan,
-  applyNextPracticePlan,
-} from "../../next-activity/next-practice.js";
+import { wireTroubleChips } from "../../../ui/components/trouble-chips.js";
 
 import { buildProgressDashboardHtml } from "./dashboard/dashboard-template.js";
 
 import {
-  pickAzure,
-  pickSummary,
   pickTS,
   buildAttemptsBySession,
 } from "./dashboard/attempt-utils.js";
 
 import {
-  renderAiFeedback,
-  attemptPills,
   attemptOverallScore,
   attemptDateStr,
 } from "./dashboard/attempt-display.js";
-
-import { wireHistoryButtons } from "./dashboard/wire-history.js";
 
 import { wireDashboardActions } from "./dashboard/actions-and-trends.js";
 
@@ -39,13 +26,10 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
 
   const title = opts.title || "My Progress";
   const subtitle = opts.subtitle || "All practice (Pronunciation + AI Conversations)";
-  const showActions = opts.showActions !== false; // default true
+  const showActions = opts.showActions !== false;
   const showCoach = !!opts.showCoach;
-  const showNextPractice = !!opts.showNextPractice;
-  const nextPracticeBehavior = opts.nextPracticeBehavior || "apply";
-  const nextPracticePlan = showNextPractice ? buildNextPracticePlanFromModel(model) : null;
-
-  // ✅ NEW (All Data-only): metric trends section (acc/flu/comp/pron)
+  const showNextPractice = false;
+  const nextPracticePlan = null;
   const showMetricTrends = !!opts.showMetricTrends && !!model?.metrics;
 
   const topPh = (trouble.phonemesAll || []).slice(0, 12);
@@ -70,46 +54,76 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
     nextPracticePlan,
   });
 
-  // ✅ Enable “click trouble chip -> show details” on the main dashboard too
-  wireAttemptDetailChipExplainers(host, { phItems: topPh, wdItems: topWd });
+  // ── Deferred wiring: chips and history rows are inside <details> ──
+  // Wire them when the section opens, not on initial mount.
 
-  // ✅ Next Practice actions (apply in-place or navigate to Practice page)
-  if (showNextPractice && nextPracticePlan) {
-    const bH = document.getElementById("luxNextPracticeStartHarvard");
-    const bP = document.getElementById("luxNextPracticeStartPassage");
+  let chipsWired = false;
+  let historyWired = false;
 
-    if (bH) {
-      bH.addEventListener("click", () => {
-        if (!nextPracticePlan.harvardN) return;
-
-        if (nextPracticeBehavior === "navigate") {
-          saveNextPracticePlan({ ...nextPracticePlan, start: "harvard" });
-          window.location.assign("./index.html#next-practice");
-          return;
-        }
-
-        applyNextPracticePlan({ ...nextPracticePlan, start: "harvard" });
-      });
-    }
-
-    if (bP) {
-      bP.addEventListener("click", () => {
-        if (!nextPracticePlan.passageKey) return;
-
-        if (nextPracticeBehavior === "navigate") {
-          saveNextPracticePlan({ ...nextPracticePlan, start: "passage" });
-          window.location.assign("./index.html#next-practice");
-          return;
-        }
-
-        applyNextPracticePlan({ ...nextPracticePlan, start: "passage" });
-      });
-    }
+  function wireChipsIfNeeded() {
+    if (chipsWired) return;
+    chipsWired = true;
+    wireTroubleChips(host, { phItems: topPh, wdItems: topWd });
   }
 
-  wireHistoryButtons(host, bySession, sessions);
+  function wireHistoryIfNeeded() {
+    if (historyWired) return;
+    historyWired = true;
 
-  // Downloads (optional)
+    host.querySelectorAll('.lux-card--row[data-sid]').forEach((row) => {
+      const handler = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const sid = row.getAttribute('data-sid') || '';
+        if (!sid) return;
+
+        const list = (bySession.get(sid) || [])
+          .slice()
+          .sort((a, b) => {
+            const ta = new Date(pickTS(a) || 0).getTime();
+            const tb = new Date(pickTS(b) || 0).getTime();
+            return tb - ta;
+          });
+
+        const a = list[0];
+        if (!a) return;
+
+        const sess = (sessions || []).find((x) => String(x.sessionId) === String(sid)) || null;
+
+        openDetailsModal(a, attemptOverallScore(a), attemptDateStr(a), {
+          sid,
+          list,
+          session: sess,
+        });
+      };
+
+      row.addEventListener('click', handler);
+      row.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') handler(e);
+      });
+    });
+  }
+
+  // Listen for <details> toggle events to wire at the right time
+  host.querySelectorAll('details.lux-progress-sec').forEach((details) => {
+    details.addEventListener('toggle', () => {
+      if (!details.open) return;
+
+      const summary = details.querySelector('summary');
+      const text = summary?.textContent || '';
+
+      if (text.includes('Trouble Sounds') || text.includes('Trouble Words')) {
+        wireChipsIfNeeded();
+      }
+
+      if (text.includes('History')) {
+        wireHistoryIfNeeded();
+      }
+    });
+  });
+
+  // Action buttons (downloads, next conversation, cloud visuals)
   if (showActions) {
     wireDashboardActions(host, model, attempts);
   }

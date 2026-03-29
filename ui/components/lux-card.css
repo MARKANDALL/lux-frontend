@@ -1,0 +1,618 @@
+/* ui/components/lux-card.css
+ * Unified card component styles.
+ * Covers: score ring, metric tiles, trouble chips, card shell, inline explainers.
+ * Color schema: Blue >=80  |  Yellow >=60  |  Red <60
+ */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   COLOR TOKENS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --lux-good:    #2563eb;
+  --lux-good-bg: #dbeafe;
+  --lux-warn:    #d97706;
+  --lux-warn-bg: #fef3c7;
+  --lux-bad:     #dc2626;
+  --lux-bad-bg:  #fee2e2;
+  --lux-na:      #94a3b8;
+
+  --lux-slate-900: #0f172a;
+  --lux-slate-700: #334155;
+  --lux-slate-500: #64748b;
+  --lux-slate-400: #94a3b8;
+  --lux-slate-200: #e2e8f0;
+  --lux-slate-100: #f1f5f9;
+  --lux-slate-50:  #f8fafc;
+  --lux-white:     #ffffff;
+
+  --lux-radius:    12px;
+  --lux-shadow:    0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --lux-shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -1px rgba(0,0,0,0.04);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SCORE RING
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.lux-ring {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 4px solid var(--lux-good);
+  margin: 16px auto;
+}
+
+/* Sizes */
+.lux-ring--sm  { width: 60px;  height: 60px;  border-width: 3px; }
+.lux-ring--md  { width: 88px;  height: 88px;  border-width: 4px; }
+.lux-ring--lg  { width: 110px; height: 110px; border-width: 5px; }
+
+/* Tier colors */
+.lux-ring--good { border-color: var(--lux-good); }
+.lux-ring--warn { border-color: var(--lux-warn); }
+.lux-ring--bad  { border-color: var(--lux-bad);  }
+.lux-ring--na   { border-color: var(--lux-slate-200); }
+
+.lux-ring__pct {
+  font-weight: 700;
+  line-height: 1;
+  color: var(--lux-slate-900);
+}
+.lux-ring--sm .lux-ring__pct { font-size: 1.1rem; }
+.lux-ring--md .lux-ring__pct { font-size: 1.6rem; }
+.lux-ring--lg .lux-ring__pct { font-size: 2.0rem; }
+
+/* Color the percentage text to match the ring */
+.lux-ring--good .lux-ring__pct { color: var(--lux-good); }
+.lux-ring--warn .lux-ring__pct { color: var(--lux-warn); }
+.lux-ring--bad  .lux-ring__pct { color: var(--lux-bad);  }
+.lux-ring--na   .lux-ring__pct { color: var(--lux-na);   }
+
+.lux-ring__band {
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: var(--lux-slate-400);
+  margin-top: 1px;
+}
+
+.lux-ring__label {
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: var(--lux-slate-400);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+.lux-ring--sm .lux-ring__label { font-size: 0.5rem; }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   METRIC TILES (5-across grid)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.lux-tiles {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1px;
+  background: var(--lux-slate-100);
+  border-top: 1px solid var(--lux-slate-100);
+  border-bottom: 1px solid var(--lux-slate-100);
+}
+
+.lux-tile {
+  background: var(--lux-white);
+  padding: 10px 4px;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.15s;
+  user-select: none;
+}
+
+.lux-tile:hover {
+  background: var(--lux-slate-50);
+}
+
+.lux-tile__label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--lux-slate-400);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.lux-tile__value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.lux-tile--good .lux-tile__value { color: var(--lux-good); }
+.lux-tile--warn .lux-tile__value { color: var(--lux-warn); }
+.lux-tile--bad  .lux-tile__value { color: var(--lux-bad);  }
+.lux-tile--na   .lux-tile__value { color: var(--lux-na);   }
+
+.lux-tile__meta {
+  font-size: 0.6rem;
+  color: var(--lux-slate-400);
+  margin-top: 2px;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TROUBLE CHIPS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.lux-trouble {
+  padding: 14px 22px;
+}
+
+.lux-trouble + .lux-trouble {
+  padding-top: 0;
+}
+
+.lux-trouble__head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.lux-trouble__label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--lux-slate-500);
+}
+
+.lux-trouble__count {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--lux-slate-400);
+  background: var(--lux-slate-100);
+  padding: 1px 7px;
+  border-radius: 10px;
+}
+
+.lux-trouble__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.lux-trouble__empty {
+  font-size: 0.85rem;
+  color: var(--lux-slate-500);
+  font-style: italic;
+  padding: 4px 0;
+}
+
+/* Individual chip */
+.lux-tchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 2px solid var(--lux-slate-200);
+  background: var(--lux-white);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  user-select: none;
+  outline: none;
+}
+
+.lux-tchip:hover {
+  border-color: var(--lux-good);
+  background: var(--lux-good-bg);
+}
+
+.lux-tchip:focus-visible {
+  border-color: var(--lux-good);
+  box-shadow: 0 0 0 2px var(--lux-good-bg);
+}
+
+.lux-tchip.is-active {
+  border-color: var(--lux-good);
+  background: var(--lux-good-bg);
+}
+
+.lux-tchip__text {
+  font-weight: 600;
+  color: var(--lux-slate-900);
+}
+
+.lux-tchip__score {
+  font-weight: 700;
+  font-size: 0.78rem;
+}
+
+.lux-tchip__score--good { color: var(--lux-good); }
+.lux-tchip__score--warn { color: var(--lux-warn); }
+.lux-tchip__score--bad  { color: var(--lux-bad);  }
+.lux-tchip__score--na   { color: var(--lux-na);   }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   INLINE EXPLAINER (appears below chips on click)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.lux-trouble__explain {
+  margin-top: 10px;
+}
+
+.lux-trouble__explain[hidden] {
+  display: none;
+}
+
+.lux-explain {
+  background: var(--lux-slate-50);
+  border: 1px solid var(--lux-slate-200);
+  border-radius: var(--lux-radius);
+  padding: 12px;
+  animation: luxExplainIn 0.15s ease-out;
+}
+
+@keyframes luxExplainIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.lux-explain__row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.lux-explain__title {
+  font-weight: 700;
+  color: var(--lux-slate-700);
+  font-size: 0.92rem;
+}
+
+.lux-explain__meta {
+  margin-top: 4px;
+  color: var(--lux-slate-500);
+  font-weight: 600;
+  font-size: 0.82rem;
+}
+
+.lux-explain__avg {
+  font-weight: 700;
+  font-size: 0.92rem;
+  white-space: nowrap;
+  padding: 6px 10px;
+  border: 1px solid var(--lux-slate-200);
+  background: var(--lux-white);
+  border-radius: 999px;
+}
+
+.lux-explain__avg--good { color: var(--lux-good); }
+.lux-explain__avg--warn { color: var(--lux-warn); }
+.lux-explain__avg--bad  { color: var(--lux-bad);  }
+.lux-explain__avg--na   { color: var(--lux-na);   }
+
+.lux-explain__examples {
+  margin-top: 8px;
+  font-size: 0.85rem;
+  color: var(--lux-slate-700);
+}
+
+.lux-explain__examples-label {
+  font-weight: 700;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CARD SHELL (Level 0 = chip row, Level 1 = expanded, Level 2 = detail)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.lux-card {
+  background: var(--lux-white);
+  border: 1px solid var(--lux-slate-200);
+  border-radius: var(--lux-radius);
+  box-shadow: var(--lux-shadow);
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+
+.lux-card:hover {
+  box-shadow: var(--lux-shadow-md);
+}
+
+/* ── Level 0: History row ── */
+
+.lux-card--row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  cursor: pointer;
+}
+
+.lux-card--row:hover {
+  background: var(--lux-slate-50);
+}
+
+.lux-card__left {
+  flex: 1;
+  min-width: 0;
+}
+
+.lux-card__title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--lux-slate-900);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lux-card__meta {
+  font-size: 0.8rem;
+  color: var(--lux-slate-500);
+  margin-top: 1px;
+}
+
+.lux-card__right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 16px;
+  flex-shrink: 0;
+}
+
+.lux-card__chev {
+  font-size: 1.1rem;
+  color: var(--lux-slate-400);
+  transition: transform 0.2s;
+}
+
+/* Score pill (used in rows) */
+.lux-spill {
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.lux-spill--good { background: var(--lux-good-bg); color: var(--lux-good); }
+.lux-spill--warn { background: var(--lux-warn-bg); color: var(--lux-warn); }
+.lux-spill--bad  { background: var(--lux-bad-bg);  color: var(--lux-bad);  }
+.lux-spill--na   { background: var(--lux-slate-100); color: var(--lux-na); }
+
+
+/* ── Level 1: Expanded card ── */
+
+.lux-card__header {
+  padding: 20px 22px 16px;
+  text-align: center;
+  border-bottom: 1px solid var(--lux-slate-100);
+}
+
+.lux-card__header .lux-card__title {
+  font-size: 1.15rem;
+  white-space: normal;
+  overflow: visible;
+}
+
+.lux-card__subtitle {
+  font-size: 0.82rem;
+  color: var(--lux-slate-500);
+  margin-top: 2px;
+}
+
+.lux-card__date {
+  font-size: 0.78rem;
+  color: var(--lux-slate-400);
+  margin-top: 4px;
+}
+
+/* Context badge */
+.lux-cbadge {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: var(--lux-slate-100);
+  color: var(--lux-slate-500);
+}
+
+.lux-cbadge--convo {
+  background: #ede9fe;
+  color: #7c3aed;
+}
+
+/* Next actions section */
+.lux-next {
+  padding: 14px 22px 18px;
+  border-top: 1px solid var(--lux-slate-100);
+}
+
+.lux-next__heading {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--lux-slate-500);
+  margin-bottom: 8px;
+}
+
+.lux-next__item {
+  font-size: 0.85rem;
+  color: var(--lux-slate-700);
+  padding: 3px 0;
+  line-height: 1.5;
+}
+
+.lux-next__item strong {
+  color: var(--lux-slate-900);
+}
+
+/* Card footer with action buttons */
+.lux-card__footer {
+  padding: 12px 22px;
+  border-top: 1px solid var(--lux-slate-100);
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.lux-card__btn {
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: 1px solid var(--lux-slate-200);
+  background: var(--lux-white);
+  color: var(--lux-slate-700);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  font-family: inherit;
+}
+
+.lux-card__btn:hover {
+  border-color: var(--lux-good);
+  color: var(--lux-good);
+}
+
+.lux-card__btn--primary {
+  background: var(--lux-slate-900);
+  color: var(--lux-white);
+  border-color: var(--lux-slate-900);
+}
+
+.lux-card__btn--primary:hover {
+  background: var(--lux-slate-700);
+  border-color: var(--lux-slate-700);
+  color: var(--lux-white);
+}
+
+
+/* ── Level 2: Expandable detail sections ── */
+
+.lux-detail {
+  border-top: 1px solid var(--lux-slate-100);
+  padding: 14px 22px;
+}
+
+.lux-detail__toggle {
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--lux-slate-500);
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 0;
+}
+
+.lux-detail__toggle:hover {
+  color: var(--lux-good);
+}
+
+.lux-detail__arrow {
+  font-size: 0.7rem;
+  display: inline-block;
+  transition: transform 0.2s;
+}
+
+.lux-detail__arrow.is-open {
+  transform: rotate(90deg);
+}
+
+.lux-detail__body {
+  margin-top: 10px;
+}
+
+.lux-detail__body[hidden] {
+  display: none;
+}
+
+/* Attempt row inside detail */
+.lux-arow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--lux-slate-50);
+  margin-bottom: 4px;
+  font-size: 0.82rem;
+}
+
+.lux-arow__time {
+  color: var(--lux-slate-700);
+  font-weight: 500;
+}
+
+.lux-arow__scores {
+  display: flex;
+  gap: 12px;
+  color: var(--lux-slate-500);
+  font-size: 0.78rem;
+}
+
+.lux-arow__scores span {
+  white-space: nowrap;
+}
+
+/* Text sub-accordion inside attempt rows */
+.lux-arow__text-toggle {
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--lux-slate-400);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 12px;
+}
+
+.lux-arow__text-toggle:hover {
+  color: var(--lux-good);
+}
+
+.lux-arow__text-body {
+  padding: 6px 12px 10px;
+  font-size: 0.82rem;
+  color: var(--lux-slate-700);
+  line-height: 1.5;
+}
+
+.lux-arow__text-body[hidden] {
+  display: none;
+}
+
+/* AI Coach memory section */
+.lux-coach-memory {
+  padding: 10px 14px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: var(--lux-slate-700);
+  line-height: 1.6;
+}
+
+.lux-coach-memory__badge {
+  font-weight: 700;
+  color: var(--lux-good);
+  font-size: 0.82rem;
+}
+
+.lux-coach-memory__date {
+  font-size: 0.78rem;
+  color: var(--lux-slate-400);
+  margin-bottom: 6px;
+}
