@@ -24,6 +24,15 @@ function fmtMini(totals = {}) {
   return `Avg ${avg}% · Attempts ${attempts} · Last ${lastStr}`;
 }
 
+/** Shared opts for convo drawer renders */
+const CONVO_DRAWER_OPTS = {
+  title: "My Progress",
+  subtitle: "Conversation Skills (AI Conversations)",
+  showActions: false,
+  showNextPractice: true,
+  nextPracticeBehavior: "navigate",
+};
+
 export async function refreshConvoProgress() {
   if (!_state?.host) return;
 
@@ -36,11 +45,7 @@ export async function refreshConvoProgress() {
     if (_state.miniStatsEl) _state.miniStatsEl.textContent = fmtMini(model.totals);
 
     if (_state.detailsEl?.open && _state.mountEl) {
-      renderProgressDashboard(_state.mountEl, filtered, model, {
-        title: "My Progress",
-        subtitle: "Conversation Skills (AI Conversations)",
-        showActions: false,
-      });
+      renderProgressDashboard(_state.mountEl, filtered, model, CONVO_DRAWER_OPTS);
     }
   } catch (err) {
     console.error("[ConvoProgress] refresh failed:", err);
@@ -104,11 +109,7 @@ export async function initConvoProgress() {
       if (miniStatsEl) miniStatsEl.textContent = fmtMini(model.totals);
 
       if (mountEl) {
-        renderProgressDashboard(mountEl, filtered, model, {
-          title: "My Progress",
-          subtitle: "Conversation Skills (AI Conversations)",
-          showActions: false,
-        });
+        renderProgressDashboard(mountEl, filtered, model, CONVO_DRAWER_OPTS);
       }
     } catch (err) {
       console.error("[ConvoProgress] Drawer load failed:", err);

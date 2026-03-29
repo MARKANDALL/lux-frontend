@@ -1,89 +1,169 @@
 // features/convo/convo-report-ui.js
-// End-session report overlay: builds the modal, wires coach turn list, computes session rollups.
+// End-session report overlay: user-facing session summary with scores, trouble areas, and coach turns.
 
-import { computeRollups } from "../progress/rollups.js";
+import { computeRollups, getAttemptScore } from "../progress/rollups.js";
 import { promptUserForAI } from "../../ui/ui-ai-ai-logic.js";
 import { setLastAttemptId } from "../../app-core/runtime.js";
-import { scoreClass as scoreClassCore } from "../../core/scoring/index.js";
-import { escapeHtml } from "../../helpers/escape-html.js";
+import {
+  scoreClass as scoreClassCore,
+  fmtPct,
+  cefrBand,
+} from "../../core/scoring/index.js";
+import { escapeHtml as esc } from "../../helpers/escape-html.js";
+import { pickSummary, pickAzure } from "../progress/attempt-pickers.js";
 
-function wordSetFromText(text) {
-  const s = String(text || "").toLowerCase();
-  const out = new Set();
-  const m = s.match(/[a-z']+/g) || [];
-  for (const w of m) out.add(w);
-  return out;
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function mean(nums) {
+  const v = (nums || []).filter((x) => Number.isFinite(x));
+  if (!v.length) return null;
+  return v.reduce((a, b) => a + b, 0) / v.length;
 }
 
-function uniqLower(list) {
-  const out = [];
-  const seen = new Set();
-  for (const x of list || []) {
-    const k = String(x || "").trim().toLowerCase();
-    if (!k || seen.has(k)) continue;
-    seen.add(k);
-    out.push(String(x).trim());
-  }
-  return out;
+function getColorConfig(s) {
+  const n = Number(s) || 0;
+  const cls = scoreClassCore(n);
+  if (cls === "score-good") return { color: "#2563eb", bg: "#dbeafe" };
+  if (cls === "score-warn") return { color: "#d97706", bg: "#fef3c7" };
+  return { color: "#dc2626", bg: "#fee2e2" };
 }
 
-function chipRow(items) {
-  if (!items || !items.length) return `<div style="opacity:.7">—</div>`;
+function attemptMetric(a, kind) {
+  const sum = pickSummary(a) || {};
+  const az = pickAzure(a);
+  const nb = az?.NBest?.[0] || az?.nBest?.[0] || null;
+  const pa =
+    nb?.PronunciationAssessment ||
+    nb?.pronunciationAssessment ||
+    az?.PronunciationAssessment ||
+    null;
+
+  const map = {
+    pron: () => (sum.pron != null ? Number(sum.pron) : Number(nb?.PronScore ?? pa?.PronScore)),
+    acc: () => (sum.acc != null ? Number(sum.acc) : Number(pa?.AccuracyScore)),
+    flu: () => (sum.flu != null ? Number(sum.flu) : Number(pa?.FluencyScore)),
+    comp: () => (sum.comp != null ? Number(sum.comp) : Number(pa?.CompletenessScore)),
+    pros: () =>
+      sum.pros != null
+        ? Number(sum.pros)
+        : sum.pro != null
+        ? Number(sum.pro)
+        : Number(pa?.ProsodyScore),
+  };
+
+  const fn = map[kind];
+  if (!fn) return null;
+  const n = fn();
+  return Number.isFinite(n) ? n : null;
+}
+
+function fmtRoundPct(v) {
+  return v == null || !Number.isFinite(+v) ? "—" : `${Math.round(+v)}%`;
+}
+
+function scoreColorClass(avg) {
+  const cls = scoreClassCore(avg);
+  if (cls === "score-good") return "lux-pill--blue";
+  if (cls === "score-warn") return "lux-pill--yellow";
+  return "lux-pill--red";
+}
+
+// ── Score ring (matches header.js style) ─────────────────────────────────────
+
+function renderOverallRing(v, ringColor) {
+  const pct = v == null || !Number.isFinite(+v) ? "—" : fmtPct(Math.round(+v));
+  const band =
+    v == null || !Number.isFinite(+v) ? "" : cefrBand(Math.round(+v)) || "";
+
   return `
-    <div style="display:flex; flex-wrap:wrap; gap:8px;">
+    <div
+      class="lux-scoreRing lux-scoreRing--overall lux-scoreRing--coin"
+      style="--lux-score-ring:${ringColor};"
+      ${band ? `data-cefr="${band}"` : ""}
+    >
+      <span class="lux-scoreRingFlip">
+        <span class="lux-scoreRingFace lux-scoreRingFace--front">${pct}</span>
+        <span class="lux-scoreRingFace lux-scoreRingFace--back">${band || pct}</span>
+      </span>
+    </div>
+  `;
+}
+
+function tileKV(label, val) {
+  return `
+    <div class="lux-scoreTile">
+      <div class="lux-scoreTile-label">${esc(label)}</div>
+      <div class="lux-scoreTile-value">${fmtRoundPct(val)}</div>
+    </div>
+  `;
+}
+
+// ── Trouble chips (lightweight inline version) ──────────────────────────────
+
+function renderTroubleChips(items, kind) {
+  if (!items || !items.length) {
+    return `<div style="color:#94a3b8; font-size:0.88rem;">Not enough data yet.</div>`;
+  }
+  return `
+    <div class="lux-chiprow lux-chiprow--center">
       ${items
-        .map(
-          (x) =>
-            `<span style="border:1px solid rgba(255,255,255,0.14); border-radius:999px; padding:6px 10px; font-size:12px;">${escapeHtml(
-              x
-            )}</span>`
-        )
+        .slice(0, 10)
+        .map((x) => {
+          const label = kind === "sounds" ? (x.ipa || "") : (x.word || "");
+          const avg = Math.round(Number(x.avg) || 0);
+          return `
+            <span class="lux-chip" title="Seen ${x.count || 0}× · Avg ${avg}%">
+              <span>${esc(label)}</span>
+              <span class="lux-pill ${scoreColorClass(avg)}">${avg}%</span>
+            </span>
+          `;
+        })
         .join("")}
     </div>
   `;
 }
 
-function wireCoachTurnList(host, turns) {
-  const list = host?.querySelector("#luxConvoCoachTurnList");
-  if (!list) return;
+// ── Coach turn list ──────────────────────────────────────────────────────────
 
+function buildCoachTurnListHtml(turns) {
   const all = Array.isArray(turns) ? turns : [];
-  const shown = all.slice(-10); // keep it compact
+  const shown = all.slice(-10);
 
   if (!shown.length) {
-    list.innerHTML = `<div style="font-size:12px; opacity:0.85;">No turns saved for this session yet.</div>`;
-    return;
+    return `<div style="color:#64748b; font-size:0.88rem;">No scored turns in this session.</div>`;
   }
 
-  list.innerHTML = shown
+  return shown
     .map((t, idx) => {
       const has = !!t?.azureResult?.NBest?.[0];
       const text = String(t?.userText || "").trim();
-      const label = text ? (text.length > 90 ? text.slice(0, 90) + "…" : text) : "(no text)";
-      const turnNum = Number.isFinite(t?.turn) ? (t.turn + 1) : (all.length - shown.length + idx + 1);
+      const label = text
+        ? text.length > 90
+          ? text.slice(0, 90) + "…"
+          : text
+        : "(no text)";
+      const turnNum = Number.isFinite(t?.turn)
+        ? t.turn + 1
+        : all.length - shown.length + idx + 1;
 
       return `
-        <button data-i="${idx}" ${has ? "" : "disabled"} style="
-          text-align:left;
-          width: 100%;
-          appearance:none;
-          border: 1px solid rgba(255,255,255,0.10);
-          background: ${has ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.03)"};
-          color: ${has ? "#e5e7eb" : "rgba(229,231,235,0.55)"};
-          border-radius: 10px;
-          padding: 10px 12px;
-          cursor: ${has ? "pointer" : "not-allowed"};
-        ">
-          <div style="font-weight:800; margin-bottom:4px;">Coach Turn ${turnNum}</div>
-          <div style="font-size:12px; opacity:0.9;">${escapeHtml(label)}</div>
+        <button data-coach-i="${idx}" ${has ? "" : "disabled"}
+          class="lux-coach-turn ${has ? "" : "lux-coach-turn--disabled"}">
+          <div class="lux-coach-turn__num">Turn ${turnNum}</div>
+          <div class="lux-coach-turn__text">${esc(label)}</div>
         </button>
       `;
     })
     .join("");
+}
 
-  list.querySelectorAll("button[data-i]").forEach((btn) => {
+function wireCoachTurnList(host, turns) {
+  const all = Array.isArray(turns) ? turns : [];
+  const shown = all.slice(-10);
+
+  host.querySelectorAll("button[data-coach-i]").forEach((btn) => {
     btn.addEventListener("click", () => {
-      const idx = Number(btn.getAttribute("data-i") || -1);
+      const idx = Number(btn.getAttribute("data-coach-i") || -1);
       const t = shown[idx];
       if (!t?.azureResult?.NBest?.[0]) return;
 
@@ -101,192 +181,224 @@ function wireCoachTurnList(host, turns) {
   });
 }
 
-export function showConvoReportOverlay(report, turns = []) {
-  let host = document.getElementById("luxConvoReportOverlay");
-  const pretty = escapeHtml(JSON.stringify(report, null, 2));
+// ── Next actions (derived from trouble data) ─────────────────────────────────
 
-  const plan = null;
-  const targetPh = "";
-  const targetWords = [];
+function buildNextActions(trouble, scenarioTitle) {
+  const actions = [];
+  const topPh = (trouble?.phonemesAll || [])[0];
+  const topWd = (trouble?.wordsAll || [])[0];
 
-  const said = new Set();
-  for (const t of turns) {
-    const ws = wordSetFromText(t?.userText || "");
-    for (const w of ws) said.add(w);
+  if (topPh) {
+    const avg = Math.round(Number(topPh.avg) || 0);
+    actions.push(
+      `Focus on the <b>${esc(topPh.ipa)}</b> sound (avg ${avg}%) — try it in a new conversation or passage.`
+    );
   }
-  const saidTargets = targetWords.filter((w) => said.has(w.toLowerCase()));
+
+  if (topWd) {
+    const avg = Math.round(Number(topWd.avg) || 0);
+    actions.push(
+      `Practice the word <b>"${esc(topWd.word)}"</b> (avg ${avg}%) — say it slowly, then at normal speed.`
+    );
+  }
+
+  if (!actions.length) {
+    actions.push("Great session! Keep practicing to build consistency.");
+  }
+
+  actions.push(
+    `Try <b>"${esc(scenarioTitle || "another scenario")}"</b> again, or pick a new one to challenge yourself.`
+  );
+
+  return actions;
+}
+
+// ── Main overlay ─────────────────────────────────────────────────────────────
+
+/**
+ * @param {object}  report  - API response from /api/convo-report
+ * @param {Array}   turns   - state.turns from the conversation
+ * @param {object}  [ctx]   - extra context
+ * @param {object}  [ctx.nextActivity]
+ * @param {string}  [ctx.sessionId]
+ * @param {string}  [ctx.passageKey]
+ * @param {object}  [ctx.scenario] - { id, title }
+ */
+export function showConvoReportOverlay(report, turns = [], ctx = {}) {
+  // Remove any existing overlay
+  const existing = document.getElementById("luxConvoReportOverlay");
+  if (existing) existing.remove();
+
+  const scenarioTitle = ctx?.scenario?.title || "";
 
   // Build attempt-like objects for session-local rollups
   const baseTS = Date.now();
-  const attempts = turns.map((t, i) => ({
-    ts: baseTS - (turns.length - i) * 1000,
-    passage_key: "",
-    session_id: "",
+  const attempts = (turns || []).map((t, i) => ({
+    ts: new Date(baseTS - (turns.length - i) * 1000).toISOString(),
+    passage_key: ctx?.passageKey || "",
+    session_id: ctx?.sessionId || "",
     text: t?.userText || "",
     azureResult: t?.azureResult || null,
   }));
 
   let sessionModel = null;
   try {
-    sessionModel = computeRollups(attempts);
+    sessionModel = computeRollups(attempts, { minWordCount: 1, minPhonCount: 1 });
   } catch (e) {
     console.error("[ConvoReportOverlay] computeRollups failed", e);
   }
 
-  const troubleWords = sessionModel?.trouble?.wordsAll || [];
-  const troublePhonemes = sessionModel?.trouble?.phonemesAll || [];
+  const trouble = sessionModel?.trouble || {};
+  const troubleWords = trouble.wordsAll || [];
+  const troublePhonemes = trouble.phonemesAll || [];
 
-  // "Targets you said that still need work today"
-  const saidTargetsNeedingWork = troubleWords
-    .filter((x) => {
-      const w = String(x?.word || "").toLowerCase();
-      if (!w) return false;
-      if (!saidTargets.map((s) => s.toLowerCase()).includes(w)) return false;
-      const avg = Number(x?.avg);
-      return Number.isFinite(avg) ? scoreClassCore(avg) !== "score-good" : true;
-    })
-    .slice(0, 10)
-    .map((x) => {
-      const avg = Number.isFinite(Number(x?.avg)) ? Number(x.avg).toFixed(0) : "—";
-      const c = Number.isFinite(Number(x?.count)) ? `×${x.count}` : "";
-      return `${x.word} (${avg}${c ? `, ${c}` : ""})`;
-    });
+  // Scores
+  const accAvg = mean(attempts.map((a) => attemptMetric(a, "acc")));
+  const fluAvg = mean(attempts.map((a) => attemptMetric(a, "flu")));
+  const compAvg = mean(attempts.map((a) => attemptMetric(a, "comp")));
+  const pronAvg = mean(attempts.map((a) => attemptMetric(a, "pron")));
+  const prosAvg = mean(attempts.map((a) => attemptMetric(a, "pros")));
+  const overallAvg = mean([accAvg, fluAvg, compAvg, pronAvg, prosAvg].filter(Number.isFinite));
+  const overallColor = getColorConfig(overallAvg).color;
 
-  const topTroubleWords = troubleWords
-    .slice(0, 12)
-    .map((x) => {
-      const avg = Number.isFinite(Number(x?.avg)) ? Number(x.avg).toFixed(0) : "—";
-      const c = Number.isFinite(Number(x?.count)) ? `×${x.count}` : "";
-      return `${x.word} (${avg}${c ? `, ${c}` : ""})`;
-    });
+  const turnsWithScores = (turns || []).filter((t) => !!t?.azureResult?.NBest?.[0]);
 
-  const topTroublePh = troublePhonemes
-    .slice(0, 10)
-    .map((x) => {
-      const avg = Number.isFinite(Number(x?.avg)) ? Number(x.avg).toFixed(0) : "—";
-      const c = Number.isFinite(Number(x?.count)) ? `×${x.count}` : "";
-      return `${x.ipa} (${avg}${c ? `, ${c}` : ""})`;
-    });
+  const nextActions = buildNextActions(trouble, scenarioTitle);
 
-  let focusPhLine = "—";
-  if (targetPh) {
-    const hit = troublePhonemes.find((x) => String(x?.ipa || "") === targetPh);
-    if (hit) {
-      const avg = Number.isFinite(Number(hit?.avg)) ? Number(hit.avg).toFixed(0) : "—";
-      const c = Number.isFinite(Number(hit?.count)) ? `×${hit.count}` : "";
-      focusPhLine = `${targetPh} (today: ${avg}${c ? `, ${c}` : ""})`;
-    } else {
-      focusPhLine = `${targetPh} (today: not enough data)`;
+  // Debug JSON (only shown when LUX_DEBUG is on)
+  const debugHtml = globalThis.LUX_DEBUG
+    ? `
+    <details style="margin-top: 16px;">
+      <summary style="cursor:pointer; font-size:0.85rem; color:#94a3b8; font-weight:700;">Debug JSON</summary>
+      <pre style="
+        white-space: pre-wrap; word-break: break-word;
+        font-size: 11px; line-height: 1.35; margin: 10px 0 0;
+        background: #f1f5f9; border: 1px solid #e2e8f0;
+        padding: 12px; border-radius: 10px; max-height: 300px; overflow: auto;
+      ">${esc(JSON.stringify(report, null, 2))}</pre>
+    </details>
+    `
+    : "";
+
+  // ── Build overlay ──
+  const host = document.createElement("div");
+  host.id = "luxConvoReportOverlay";
+  host.style.cssText = `
+    position: fixed; inset: 0; z-index: 99999;
+    background: rgba(0,0,0,0.35);
+    display:flex; align-items:center; justify-content:center;
+    padding: 18px;
+  `;
+
+  host.innerHTML = `
+    <dialog open class="lux-end-report">
+      <div class="lux-end-report__header">
+        <div>
+          <div class="lux-end-report__title">Session Complete</div>
+          <div class="lux-end-report__subtitle">${esc(scenarioTitle || "AI Conversation")} · ${turnsWithScores.length} scored turn${turnsWithScores.length === 1 ? "" : "s"}</div>
+        </div>
+        <button id="luxConvoReportClose" class="lux-end-report__close">✕</button>
+      </div>
+
+      <div class="lux-end-report__body">
+        <!-- Score ring + pyramid -->
+        <div class="lux-scoreSummary lux-scoreSummary--pyramid" style="margin-bottom:16px;">
+          <div class="lux-scoreMain">
+            <div class="lux-scoreMainLabel">Overall</div>
+            ${renderOverallRing(overallAvg, overallColor)}
+          </div>
+          <div class="lux-scorePyramid">
+            <div class="lux-scoreRow lux-scoreRow-mid">
+              ${tileKV("Prosody", prosAvg)}
+              ${tileKV("Pronunciation", pronAvg)}
+            </div>
+            <div class="lux-scoreRow lux-scoreRow-bottom">
+              ${tileKV("Accuracy", accAvg)}
+              ${tileKV("Fluency", fluAvg)}
+              ${tileKV("Completeness", compAvg)}
+            </div>
+          </div>
+        </div>
+
+        <!-- Trouble sounds -->
+        <div class="lux-end-report__section">
+          <div class="lux-end-report__section-title">⚠️ Trouble Sounds <span style="color:#94a3b8; font-weight:800;">${troublePhonemes.length}</span></div>
+          ${renderTroubleChips(troublePhonemes, "sounds")}
+        </div>
+
+        <!-- Trouble words -->
+        <div class="lux-end-report__section">
+          <div class="lux-end-report__section-title">⚠️ Trouble Words <span style="color:#94a3b8; font-weight:800;">${troubleWords.length}</span></div>
+          ${renderTroubleChips(troubleWords, "words")}
+        </div>
+
+        <!-- What to do next -->
+        <div class="lux-end-report__section">
+          <div class="lux-end-report__section-title">✅ What to do next</div>
+          <ul style="margin:0; padding-left:18px; color:#475569; line-height:1.55;">
+            ${nextActions.map((x) => `<li style="margin-bottom:6px;">${x}</li>`).join("")}
+          </ul>
+        </div>
+
+        <!-- Coach: review your turns -->
+        <details class="lux-end-report__section" ${turnsWithScores.length ? "open" : ""}>
+          <summary class="lux-end-report__section-title" style="cursor:pointer;">🤖 Review your turns <span style="color:#94a3b8; font-weight:800;">${turnsWithScores.length}</span></summary>
+          <div style="display:flex; flex-direction:column; gap:8px; margin-top:10px;">
+            ${buildCoachTurnListHtml(turns)}
+          </div>
+          <div style="font-size:0.82rem; color:#94a3b8; margin-top:8px;">
+            Tap a turn to get AI Coach feedback on that recording.
+          </div>
+        </details>
+
+        <!-- Actions -->
+        <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:18px; padding-top:14px; border-top:1px solid #e2e8f0;">
+          <button id="luxEndReportNextConvo" class="lux-pbtn">✨ Next conversation</button>
+          <button id="luxEndReportChoose" class="lux-pbtn lux-pbtn--ghost">🗂️ Choose scenario</button>
+        </div>
+
+        ${debugHtml}
+      </div>
+    </dialog>
+  `;
+
+  // ── Wire interactions ──
+  host.querySelector("#luxConvoReportClose")?.addEventListener("click", () => host.remove());
+
+  // Click backdrop to close
+  host.addEventListener("click", (e) => {
+    if (e.target === host) host.remove();
+  });
+
+  // Escape to close
+  const onKey = (e) => {
+    if (e.key === "Escape") {
+      host.remove();
+      document.removeEventListener("keydown", onKey);
     }
-  }
+  };
+  document.addEventListener("keydown", onKey);
 
-  const headerSub = "";
+  // Coach turn buttons
+  wireCoachTurnList(host, turns);
 
-  if (!host) {
-    host = document.createElement("div");
-    host.id = "luxConvoReportOverlay";
-    host.style.cssText = `
-      position: fixed; inset: 0; z-index: 99999;
-      background: rgba(0,0,0,0.45);
-      display:flex; align-items:center; justify-content:center;
-      padding: 18px;
-    `;
+  // Action buttons
+  host.querySelector("#luxEndReportNextConvo")?.addEventListener("click", () => {
+    host.remove();
+    // Trigger the same "next conversation" flow as the drawer
+    const genBtn = document.querySelector("[data-lux-generate-next]");
+    if (genBtn) {
+      genBtn.click();
+      return;
+    }
+    // Fallback: reload convo page
+    window.location.assign("./convo.html#chat");
+  });
 
-    host.innerHTML = `
-      <dialog open style="
-        width: min(880px, 96vw);
-        max-height: min(86vh, 920px);
-        overflow: hidden;
-        border: 1px solid rgba(255,255,255,0.12);
-        border-radius: 16px;
-        background: rgba(12,12,14,0.96);
-        color: #e5e7eb;
-        box-shadow: 0 16px 64px rgba(0,0,0,0.45);
-        padding: 0;
-      ">
-        <div style="display:flex; align-items:center; justify-content:space-between; padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,0.08);">
-          <div>
-            <div style="font-weight: 800;">End Session Report</div>
-            <div style="opacity:.75; font-size:12px; margin-top:2px;">${escapeHtml(headerSub || "")}</div>
-          </div>
-          <button id="luxConvoReportClose" style="background: transparent; border: 1px solid rgba(255,255,255,0.18); color:#e5e7eb; padding: 8px 12px; border-radius: 10px; cursor:pointer;">Close</button>
-        </div>
-        <div style="padding: 12px 14px; overflow:auto;">
-          <div style="display:grid; grid-template-columns: 1fr; gap: 14px;">
-
-            <div style="border:1px solid rgba(255,255,255,0.10); background: rgba(255,255,255,0.04); border-radius: 14px; padding: 12px;">
-              <div style="font-weight: 800; margin-bottom: 8px;">Targets loaded</div>
-              <div style="font-size: 12px; opacity:.9;">Focus sound</div>
-              <div style="margin: 6px 0 10px;">${escapeHtml(focusPhLine)}</div>
-              <div style="font-size: 12px; opacity:.9; margin-top: 6px;">Word bank</div>
-              ${chipRow(targetWords)}
-            </div>
-
-            <div style="border:1px solid rgba(255,255,255,0.10); background: rgba(255,255,255,0.04); border-radius: 14px; padding: 12px;">
-              <div style="font-weight: 800; margin-bottom: 8px;">What you actually practiced</div>
-              <div style="font-size: 12px; opacity:.9;">Target words you said</div>
-              ${chipRow(saidTargets)}
-              <div style="font-size: 12px; opacity:.9; margin-top: 10px;">Target words you said that still need work today</div>
-              ${chipRow(saidTargetsNeedingWork)}
-            </div>
-
-            <div style="border:1px solid rgba(255,255,255,0.10); background: rgba(255,255,255,0.04); border-radius: 14px; padding: 12px;">
-              <div style="font-weight: 800; margin-bottom: 8px;">Needs work today (this session)</div>
-              <div style="font-size: 12px; opacity:.9;">Top trouble words</div>
-              ${chipRow(topTroubleWords)}
-              <div style="font-size: 12px; opacity:.9; margin-top: 10px;">Top trouble sounds (phonemes)</div>
-              ${chipRow(topTroublePh)}
-            </div>
-
-            <details style="border:1px solid rgba(255,255,255,0.10); background: rgba(255,255,255,0.03); border-radius: 14px; padding: 10px 12px;">
-              <summary style="cursor:pointer; font-weight: 800;">Debug JSON</summary>
-              <div style="padding: 12px 14px;">
-
-                <div style="
-                  margin: 0 0 12px 0;
-                  padding: 12px;
-                  border: 1px solid rgba(255,255,255,0.08);
-                  border-radius: 12px;
-                  background: rgba(255,255,255,0.04);
-                ">
-                  <div style="font-weight:800; margin-bottom:8px;">AI Coach</div>
-                  <div id="luxConvoCoachTurnList" style="display:flex; flex-direction:column; gap:8px;"></div>
-                  <div style="font-size:12px; opacity:0.85; margin-top:8px;">
-                    Choose a turn to coach (turns without analysis are disabled).
-                  </div>
-                </div>
-
-                <pre id="luxConvoReportPre" style="
-                  white-space: pre-wrap;
-                  word-break: break-word;
-                  font-size: 12px;
-                  line-height: 1.35;
-                  margin: 10px 0 0;
-                  background: rgba(255,255,255,0.06);
-                  border: 1px solid rgba(255,255,255,0.10);
-                  padding: 12px;
-                  border-radius: 12px;
-                ">${pretty}</pre>
-              </div>
-            </details>
-
-          </div>
-        </div>
-      </dialog>
-    `;
-
-    host.querySelector("#luxConvoReportClose")?.addEventListener("click", () =>
-      host.remove()
-    );
-
-    wireCoachTurnList(host, turns);
-  } else {
-    // If reusing existing overlay, just update Debug JSON block
-    const pre = host.querySelector("#luxConvoReportPre");
-    if (pre) pre.textContent = JSON.stringify(report, null, 2);
-
-    wireCoachTurnList(host, turns);
-  }
+  host.querySelector("#luxEndReportChoose")?.addEventListener("click", () => {
+    host.remove();
+    window.location.assign("./convo.html#picker");
+  });
 
   document.body.appendChild(host);
 }

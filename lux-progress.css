@@ -718,3 +718,152 @@ details.lux-progress-drawer:not(.lux-ai-drawer) .lux-drawer-action--close{ right
   text-align: center !important;
   max-width: calc(100% - 240px) !important; /* avoid overlapping All Data area */
 }
+/* ── Snapshot: side-by-side two-column layout ─────────────────────────── */
+.lux-snapshot-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.lux-snapshot-col {
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(248, 250, 252, 0.8);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.lux-snapshot-col .lux-k {
+  font-size: 0.82rem;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 4px;
+}
+
+.lux-snapshot-col .lux-v {
+  font-size: 0.95rem;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+@media (max-width: 480px) {
+  .lux-snapshot-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Centered trouble chip rows ───────────────────────────────────────── */
+.lux-chiprow--center {
+  justify-content: center;
+}
+/* ── End Session Report overlay ────────────────────────────────────────── */
+.lux-end-report {
+  width: min(680px, 96vw);
+  max-height: min(88vh, 920px);
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #fff;
+  color: #0f172a;
+  box-shadow: 0 16px 64px rgba(0, 0, 0, 0.18);
+  padding: 0;
+  margin: 0;
+}
+
+.lux-end-report__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.lux-end-report__title {
+  font-weight: 900;
+  font-size: 1.15rem;
+  color: #1e293b;
+}
+
+.lux-end-report__subtitle {
+  color: #64748b;
+  font-size: 0.88rem;
+  margin-top: 2px;
+}
+
+.lux-end-report__close {
+  appearance: none;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.lux-end-report__close:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.lux-end-report__body {
+  padding: 20px;
+  overflow-y: auto;
+  max-height: calc(min(88vh, 920px) - 70px);
+}
+
+.lux-end-report__section {
+  border-top: 1px solid #f1f5f9;
+  padding-top: 14px;
+  margin-top: 14px;
+}
+
+.lux-end-report__section-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #334155;
+  margin-bottom: 10px;
+}
+
+/* Coach turn buttons (light theme) */
+.lux-coach-turn {
+  text-align: left;
+  width: 100%;
+  appearance: none;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #0f172a;
+  border-radius: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.lux-coach-turn:hover:not(:disabled) {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+}
+
+.lux-coach-turn--disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.lux-coach-turn__num {
+  font-weight: 800;
+  font-size: 0.88rem;
+  margin-bottom: 3px;
+  color: #334155;
+}
+
+.lux-coach-turn__text {
+  font-size: 0.82rem;
+  color: #64748b;
+  line-height: 1.4;
+}
