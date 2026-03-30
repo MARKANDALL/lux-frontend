@@ -142,13 +142,25 @@ function wireNextPracticeButtons(plan, behavior, model) {
 
   // ✨ Targeted AI Conversation — builds an activity plan from the full
   // model's trouble data (phoneme focus + word bank) and navigates to convo.
-  const bC = document.getElementById("luxNextPracticeStartConvo");
-  if (bC) {
-    bC.addEventListener("click", () => {
-      const activityPlan = buildNextActivityPlanFromModel(model, { source: "next-practice" });
-      if (!activityPlan) return;
-      saveNextActivityPlan(activityPlan);
+  // ✨ Quick Practice — instant launch, pins to neutral quick-practice scenario
+  const bQ = document.getElementById("luxNextPracticeQuickConvo");
+  if (bQ) {
+    bQ.addEventListener("click", () => {
+      const plan = buildNextActivityPlanFromModel(model, { source: "next-practice", launch_mode: "quick" });
+      if (!plan) return;
+      saveNextActivityPlan(plan);
       window.location.assign("./convo.html#chat");
+    });
+  }
+
+  // 🎭 Choose Scenario — user picks the scenario, targets preserved as overlay
+  const bS = document.getElementById("luxNextPracticeChooseConvo");
+  if (bS) {
+    bS.addEventListener("click", () => {
+      const plan = buildNextActivityPlanFromModel(model, { source: "next-practice", launch_mode: "choose" });
+      if (!plan) return;
+      saveNextActivityPlan(plan);
+      window.location.assign("./convo.html#picker");
     });
   }
 }

@@ -45,7 +45,8 @@ export function buildNextPracticeSectionBody(plan) {
     <div class="lux-nextpractice-actions">
       <button class="lux-pbtn" type="button" id="luxNextPracticeStartHarvard" ${plan.harvardN ? "" : "disabled"}>Start Harvard</button>
       <button class="lux-pbtn lux-pbtn--ghost" type="button" id="luxNextPracticeStartPassage" ${plan.passageKey ? "" : "disabled"}>Start Passage/Drill</button>
-      <button class="lux-pbtn lux-pbtn--ghost" type="button" id="luxNextPracticeStartConvo" title="Start a targeted AI conversation using your trouble sounds and words">✨ Start Conversation</button>
+      <button class="lux-pbtn lux-pbtn--ghost" type="button" id="luxNextPracticeQuickConvo" title="Instant targeted conversation using your trouble sounds">✨ Quick Practice</button>
+      <button class="lux-pbtn lux-pbtn--ghost" type="button" id="luxNextPracticeChooseConvo" title="Pick a scenario, then practice with your trouble sounds woven in">🎭 Choose Scenario</button>
     </div>
   `;
 }
@@ -77,13 +78,11 @@ export function buildProgressDashboardHtml({
         ${
           showActions
             ? `
-          <div class="lux-progress-actions">
-<button class="lux-pbtn" id="luxGenerateNextPractice" data-lux-generate-next>
-  ✨ Next conversation
-</button>
+<div class="lux-progress-actions">
 <button class="lux-pbtn lux-pbtn--ghost" id="luxOpenWordCloud">
   ☁️ Cloud Visuals
 </button>
+
             <button class="lux-pbtn" id="luxDownloadReport">Download report</button>
             <button class="lux-pbtn lux-pbtn--ghost" id="luxDownloadTrouble">Download troubleshooting report</button>
           </div>

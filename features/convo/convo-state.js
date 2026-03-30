@@ -36,11 +36,13 @@ export function createConvoState() {
     coach: { startTipShown: false, replyTipShown: false, typeTipShown: false },
   };
 
-  const next = consumeNextActivityPlan();
+const next = consumeNextActivityPlan();
   if (next && next.kind === "ai_conversation") {
     state.nextActivity = next;
-    state.scenarioIdx = getQuickPracticeIdx();
-    state.roleIdx = 0;
+    if (next.launch_mode !== "choose") {
+      state.scenarioIdx = getQuickPracticeIdx();
+      state.roleIdx = 0;
+    }
   }
 
   return state;
@@ -54,7 +56,7 @@ export function tryConsumeStoredNextActivityPlan(state) {
 
     state.nextActivity = plan;
 
-    if (plan.kind === "ai_conversation") {
+    if (plan.kind === "ai_conversation" && plan.launch_mode !== "choose") {
       state.scenarioIdx = getQuickPracticeIdx();
       state.roleIdx = 0;
     }

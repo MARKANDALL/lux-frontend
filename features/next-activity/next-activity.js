@@ -50,9 +50,10 @@ export function buildNextActivityPlanFromModel(model, opts = {}) {
 
   const now = Date.now();
 
-  return {
+return {
     plan_version: "v1",
     kind: "ai_conversation",
+    launch_mode: opts.launch_mode || "quick",
     created_ts: now,
     source: opts.source || "unknown", // "session" | "global"
     confidence: opts.confidence || null,

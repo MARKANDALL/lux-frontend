@@ -3,10 +3,7 @@
 
 // Dashboard action-button wiring + metric trend card renderer.
 
-import {
-  buildNextActivityPlanFromModel,
-  saveNextActivityPlan,
-} from "../../../next-activity/next-activity.js";
+
 
 import { esc } from "../format.js";
 import { sparklineSvg } from "../sparkline.js";
@@ -14,15 +11,7 @@ import { downloadBlob } from "../export.js";
 import { fmtPctCefr } from "../../../../core/scoring/index.js";
 
 export function wireDashboardActions(host, model, attempts) {
-  const gen = document.getElementById("luxGenerateNextPractice");
-  if (gen) {
-    gen.addEventListener("click", () => {
-      const plan = buildNextActivityPlanFromModel(model, { source: "global" });
-      if (!plan) return;
-      saveNextActivityPlan(plan);
-      window.location.assign("./convo.html#chat");
-    });
-  }
+  const wc = document.getElementById("luxOpenWordCloud");
 
   const wc = document.getElementById("luxOpenWordCloud");
   if (wc)

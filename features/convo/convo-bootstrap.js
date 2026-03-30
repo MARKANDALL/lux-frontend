@@ -398,7 +398,7 @@ luxBus.set('ttsContext', { changed: true });
 
   syncConvoPortraits();
 
-  if (state.nextActivity) {
+  if (state.nextActivity && state.nextActivity.launch_mode !== "choose") {
     const autoStart = async () => {
       if (state.mode !== "chat") {
         await warpSwap(() => setMode("chat", { replace: true, push: false }), {
