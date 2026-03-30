@@ -396,9 +396,20 @@
 
 ## 7.3 Monetization & Business
 
+- 🟠 **Founder cost tracker / unit economics system:** Create one clear internal source of truth for every Lux-related cost — APIs, hosting, database, storage, subscriptions, domains, tools, and future services. Track fixed monthly costs vs. usage-based costs, what feature each service supports, and where each account is managed.
+
+- 🟠 **Simple internal cost dashboard:** Build a lightweight internal-only dashboard/page showing all current Lux expenses in one place, total monthly burn, estimated variable spend, and simple revenue-vs-cost math. It should make it easy to answer: "Am I spending more than I'm bringing in?"
+
+- 🟡 **Per-feature cost visibility:** Estimate which Lux features cost the most to operate — for example AI Conversations, realtime voice, Azure pronunciation analysis, storage, email, and future coaching-related tooling. This helps guide pricing, premium limits, and product decisions.
+
+- 🟡 **Usage + pricing decision support:** Use dashboard data to shape payment plans, free-tier limits, premium feature gating, usage caps, and long-term business decisions. The goal is not just to track spend, but to make smart decisions from it.
+
 - 🟡 **Payment plans:** Structure and present pricing options.
+
 - 🟡 **Price positioning against competitors:** Demonstrate value for cost.
+
 - 🟡 **Side-by-side feature comparison chart:** Lux features vs. each competitor.
+
 - 🟡 **Price advantage display:** Show Lux stacked up — cheaper than all paid alternatives.
 
 ## 7.4 Competitive Analysis

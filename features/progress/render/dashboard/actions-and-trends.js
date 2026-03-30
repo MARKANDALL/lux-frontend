@@ -12,8 +12,6 @@ import { fmtPctCefr } from "../../../../core/scoring/index.js";
 
 export function wireDashboardActions(host, model, attempts) {
   const wc = document.getElementById("luxOpenWordCloud");
-
-  const wc = document.getElementById("luxOpenWordCloud");
   if (wc)
     wc.addEventListener("click", () => {
       window.location.assign("./wordcloud.html");
