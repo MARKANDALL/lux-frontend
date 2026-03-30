@@ -168,7 +168,7 @@ export function buildProgressDashboardHtml({
         showNextPractice
           ? `
       <details class="lux-progress-sec" open id="lux-next-practice" data-lux-next-practice>
-        <summary title="Based on your trouble sounds, Lux picks the best passage and conversation to practice next.">✨ Next practice</summary>
+        <summary data-tip="Based on your trouble sounds, Lux picks the best passage and conversation to practice next.">✨ Next practice</summary>
         <div class="lux-sec-body">
           ${buildNextPracticeSectionBody(nextPracticePlan)}
         </div>
@@ -178,7 +178,7 @@ export function buildProgressDashboardHtml({
       }
 
       <details class="lux-progress-sec">
-        <summary title="Sounds you consistently score below average on, sorted by how much they need attention.">⚠️ Trouble Sounds <span style="color:#94a3b8; font-weight:800">${
+        <summary data-tip="Sounds you consistently score below average on, sorted by how much they need attention.">⚠️ Trouble Sounds <span style="color:#94a3b8; font-weight:800">${
           (trouble.phonemesAll || []).length
         }</span></summary>
 
@@ -213,7 +213,7 @@ export function buildProgressDashboardHtml({
       </details>
 
       <details class="lux-progress-sec">
-        <summary title="Words you consistently score below average on, sorted by how much they need attention.">⚠️ Trouble Words <span style="color:#94a3b8; font-weight:800">${
+        <summary data-tip="Words you consistently score below average on, sorted by how much they need attention.">⚠️ Trouble Words <span style="color:#94a3b8; font-weight:800">${
           (trouble.wordsAll || []).length
         }</span></summary>
 

@@ -866,6 +866,8 @@ details.lux-progress-drawer:not(.lux-ai-drawer) .lux-drawer-action--close{ right
   font-size: 0.82rem;
   color: #64748b;
   line-height: 1.4;
+}
+
 /* ── Delta indicators (↑ ↓ → arrows) ─────────────────────────────────── */
 .lux-delta {
   display: inline-block;
@@ -890,4 +892,41 @@ details.lux-progress-drawer:not(.lux-ai-drawer) .lux-drawer-action--close{ right
 .lux-delta--flat {
   color: #64748b;
   background: #f8fafc;
+}/* ── Section header hover tooltip (data-tip) ──────────────────────────── */
+.lux-progress-sec > summary[data-tip] {
+  position: relative;
+}
+
+.lux-progress-sec > summary[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  left: 14px;
+  top: calc(100% + 6px);
+  z-index: 10;
+  max-width: min(400px, 80vw);
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #1e293b;
+  color: #e2e8f0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: normal;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+
+.lux-progress-sec > summary[data-tip]:hover::after {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Don't show tooltip when the section is open (user is already looking at the content) */
+.lux-progress-sec[open] > summary[data-tip]::after {
+  display: none;
+}.lux-progress-sec:not([open]) {
+  overflow: visible;
 }
