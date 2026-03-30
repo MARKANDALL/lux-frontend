@@ -51,7 +51,6 @@ export function wireAttemptDetailChipExplainers(card, { phItems = [], wdItems = 
     const avg = Math.round(Number(item.avg) || 0);
     const count = Number(item.count) || 0;
     const days = Number(item.days) || 1;
-    const pr = Number.isFinite(item.priority) ? item.priority.toFixed(2) : "—";
 
     const label = kind === "phoneme" ? `Sound ${esc(item.ipa)}` : `Word ${esc(item.word)}`;
 
@@ -62,13 +61,19 @@ export function wireAttemptDetailChipExplainers(card, { phItems = [], wdItems = 
           )}</div>`
         : "";
 
+    // lowCount info (if available): "12 out of 19 attempts were below 80%"
+    const lowCount = Number(item.lowCount) || 0;
+    const lowCountHtml = (kind === "phoneme" && lowCount > 0 && count > 0)
+      ? `<div style="margin-top:6px; color:#64748b; font-size:0.88rem;">${lowCount} of ${count} attempt${count === 1 ? "" : "s"} scored below 80%</div>`
+      : "";
+
     panel.innerHTML = `
       <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px;">
         <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px;">
           <div>
             <div style="font-weight:900; color:#334155;">${label}</div>
             <div style="margin-top:4px; color:#64748b; font-weight:800; font-size:0.92rem;">
-              Seen ${count}× · ${days} day(s) · Priority ${esc(pr)}
+              Seen ${count}× · ${days} day${days === 1 ? "" : "s"}
             </div>
           </div>
           <div style="font-weight:900; color:#334155; border:1px solid #e2e8f0; background:#fff; border-radius:999px; padding:6px 10px;">
@@ -77,11 +82,7 @@ export function wireAttemptDetailChipExplainers(card, { phItems = [], wdItems = 
         </div>
 
         ${examples}
-
-        <div style="margin-top:10px; color:#64748b; font-size:0.92rem;">
-          <span style="font-weight:900;">Why it’s here:</span>
-          low accuracy + repeated exposure (count/days) increases priority.
-        </div>
+        ${lowCountHtml}
       </div>
     `;
 
@@ -112,4 +113,3 @@ export function wireAttemptDetailChipExplainers(card, { phItems = [], wdItems = 
 
   card.querySelectorAll(".lux-chip[data-kind][data-idx]").forEach(bindChip);
 }
-

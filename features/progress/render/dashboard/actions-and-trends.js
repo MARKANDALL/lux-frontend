@@ -45,6 +45,24 @@ export function wireDashboardActions(host, model, attempts) {
     });
 }
 
+/**
+ * Compute a delta indicator HTML snippet.
+ * Compares `current` vs `baseline`. Returns "" if either is missing.
+ *
+ * @param {number|null} current   - the more recent value (e.g., last, avg7)
+ * @param {number|null} baseline  - the comparison value (e.g., avg7, avg30)
+ * @returns {string} HTML like `<span class="lux-delta lux-delta--up">↑ 5</span>`
+ */
+export function deltaHtml(current, baseline) {
+  if (current == null || baseline == null) return "";
+  if (!Number.isFinite(+current) || !Number.isFinite(+baseline)) return "";
+
+  const diff = Math.round(+current - +baseline);
+  if (diff === 0) return `<span class="lux-delta lux-delta--flat">→ 0</span>`;
+  if (diff > 0) return `<span class="lux-delta lux-delta--up">↑ ${diff}</span>`;
+  return `<span class="lux-delta lux-delta--down">↓ ${Math.abs(diff)}</span>`;
+}
+
 export function renderMetricTrendCard(m) {
   if (!m) return "";
   const fmtPct = (v) =>
@@ -52,10 +70,13 @@ export function renderMetricTrendCard(m) {
   const best =
     m.bestDay?.avg != null ? `${m.bestDay.day} • ${fmtPct(m.bestDay.avg)}` : "—";
 
+  // Delta: compare last session vs 7-day average
+  const delta = deltaHtml(m.last, m.avg7);
+
   return `
     <div class="lux-pcard lux-metricTrendCard">
       <div class="lux-metricTrendTop">
-        <div class="lux-pcard-label">${esc(m.label)}</div>
+        <div class="lux-pcard-label">${esc(m.label)} ${delta}</div>
         <div class="lux-metricTrendValue">${fmtPct(m.avg30)}</div>
       </div>
       <div class="lux-spark">${sparklineSvg(m.trend || [], { width: 240, height: 42 })}</div>

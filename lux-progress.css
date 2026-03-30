@@ -866,4 +866,28 @@ details.lux-progress-drawer:not(.lux-ai-drawer) .lux-drawer-action--close{ right
   font-size: 0.82rem;
   color: #64748b;
   line-height: 1.4;
+/* ── Delta indicators (↑ ↓ → arrows) ─────────────────────────────────── */
+.lux-delta {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 6px;
+  vertical-align: middle;
+  margin-left: 4px;
+}
+
+.lux-delta--up {
+  color: #15803d;
+  background: #f0fdf4;
+}
+
+.lux-delta--down {
+  color: #dc2626;
+  background: #fef2f2;
+}
+
+.lux-delta--flat {
+  color: #64748b;
+  background: #f8fafc;
 }

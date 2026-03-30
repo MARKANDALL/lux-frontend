@@ -5,7 +5,7 @@
 
 import { scoreClass, fmtScore, fmtScoreCefr, fmtDate, titleFromPassageKey, esc } from "../format.js";
 import { sparklineSvg } from "../sparkline.js";
-import { renderMetricTrendCard } from "./actions-and-trends.js";
+import { renderMetricTrendCard, deltaHtml } from "./actions-and-trends.js";
 
 /**
  * Builds the inner HTML of the Next Practice section body.
@@ -100,7 +100,10 @@ export function buildProgressDashboardHtml({
         </div>
 
         <div class="lux-pcard">
-          <div class="lux-pcard-label">Average score</div>
+<div class="lux-pcard-label">Average score ${model?.metrics ? deltaHtml(
+            Math.round(((model.metrics.acc?.last ?? 0) + (model.metrics.flu?.last ?? 0) + (model.metrics.comp?.last ?? 0) + (model.metrics.pron?.last ?? 0)) / 4),
+            Math.round(((model.metrics.acc?.avg7 ?? 0) + (model.metrics.flu?.avg7 ?? 0) + (model.metrics.comp?.avg7 ?? 0) + (model.metrics.pron?.avg7 ?? 0)) / 4)
+          ) : ''}</div>
           <div class="lux-pcard-value">${fmtScoreCefr(totals.avgScore ?? 0)}</div>
           <div class="lux-pcard-mini">Last activity: ${fmtDate(totals.lastTS)}</div>
         </div>

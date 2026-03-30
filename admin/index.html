@@ -84,12 +84,9 @@
         <option value="0">None</option>
       </select>
     </label>
-    <div class="checks">
+    <div class="checks" id="passageChecks">
       <span>Passages:</span>
-      <label><input class="pass" type="checkbox" value="grandfather" checked> grandfather</label>
-      <label><input class="pass" type="checkbox" value="rainbow" checked> rainbow</label>
-      <label><input class="pass" type="checkbox" value="sentences" checked> sentences</label>
-      <label><input class="pass" type="checkbox" value="wordList" checked> wordList</label>
+      <span class="muted">(load data to see available passages)</span>
     </div>
     <button id="applyBtn">Apply</button>
     <button id="clearBtn">Clear</button>
@@ -149,7 +146,8 @@
   const fromEl   = document.getElementById('from');
   const toEl     = document.getElementById('to');
   const smoothEl = document.getElementById('smooth');
-  const passEls  = Array.from(document.querySelectorAll('.pass'));
+  let passEls  = []; // built dynamically after first load
+  const passChecksContainer = document.getElementById('passageChecks');
   const csvBtn   = document.getElementById('csvBtn');
   const loadBtn  = document.getElementById('loadBtn');
   const applyBtn = document.getElementById('applyBtn');
@@ -176,13 +174,11 @@
     toEl.value   = qs.get('to')   || toStr(today);
   })();
 
-  (function initPassages() {
-    const p = qs.get('passages');
-    if (p) {
-      const set = new Set(p.split(',').map(s => s.trim()));
-      passEls.forEach(el => el.checked = set.has(el.value));
-    }
-  })();
+  // Passages are now dynamic — checkboxes built after first data load.
+  // If URL has ?passages=..., we remember them to pre-check after building.
+  const preselectedPassages = qs.get('passages')
+    ? new Set(qs.get('passages').split(',').map(s => s.trim()))
+    : null;
   smoothEl.value = qs.get('smooth') ?? '7';
 
   let lineChart = null;
@@ -192,7 +188,90 @@
   const toLocal  = (iso) => new Date(iso).toLocaleString();
 
   function buildPassagesParam() {
+    passEls = Array.from(document.querySelectorAll('.pass'));
     return passEls.filter(e => e.checked).map(e => e.value).join(',');
+  }
+
+  function getCheckedPassages() {
+    passEls = Array.from(document.querySelectorAll('.pass'));
+    const checked = passEls.filter(e => e.checked).map(e => e.value);
+    return new Set(checked);
+  }
+
+  function buildPassageCheckboxes(rows) {
+    const keys = new Set();
+    for (const r of rows) {
+      const pk = r.passage_key || r.passageKey || '';
+      if (pk) keys.add(pk);
+    }
+
+    const sorted = Array.from(keys).sort((a, b) => {
+      // convo: entries last, then alphabetical
+      const ac = a.startsWith('convo:') ? 1 : 0;
+      const bc = b.startsWith('convo:') ? 1 : 0;
+      if (ac !== bc) return ac - bc;
+      return a.localeCompare(b);
+    });
+
+    passChecksContainer.innerHTML = '<span>Passages:</span>';
+
+    for (const pk of sorted) {
+      const label = document.createElement('label');
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.className = 'pass';
+      cb.value = pk;
+      // Pre-check: if URL had specific passages, use those; otherwise check all
+      cb.checked = preselectedPassages ? preselectedPassages.has(pk) : true;
+      cb.addEventListener('change', () => { applyClientFilter(); updateCsvHref(); });
+      label.appendChild(cb);
+
+      // Friendly label: shorten convo: prefix, capitalize passage names
+      let displayName = pk;
+      if (pk.startsWith('convo:')) {
+        displayName = '🤖 ' + pk.slice(6);
+      } else if (pk.startsWith('harvard')) {
+        displayName = 'Harvard ' + pk.replace('harvard', '');
+      }
+      label.appendChild(document.createTextNode(' ' + displayName));
+      passChecksContainer.appendChild(label);
+    }
+
+    // Select All / None buttons
+    const selAll = document.createElement('button');
+    selAll.textContent = 'All';
+    selAll.style.cssText = 'margin-left:8px; padding:4px 8px; font-size:12px;';
+    selAll.onclick = () => { document.querySelectorAll('.pass').forEach(e => e.checked = true); applyClientFilter(); };
+    passChecksContainer.appendChild(selAll);
+
+    const selNone = document.createElement('button');
+    selNone.textContent = 'None';
+    selNone.style.cssText = 'padding:4px 8px; font-size:12px;';
+    selNone.onclick = () => { document.querySelectorAll('.pass').forEach(e => e.checked = false); applyClientFilter(); };
+    passChecksContainer.appendChild(selNone);
+
+    passEls = Array.from(document.querySelectorAll('.pass'));
+  }
+
+  // All loaded rows (unfiltered) — kept so checkbox toggles don't re-fetch
+  let allRows = [];
+
+  function applyClientFilter() {
+    const checked = getCheckedPassages();
+    if (checked.size === 0) {
+      currentRows = allRows;
+    } else {
+      currentRows = allRows.filter(r => {
+        const pk = r.passage_key || r.passageKey || '';
+        return checked.has(pk);
+      });
+    }
+    statAttempts.textContent = currentRows.length;
+    const vals = currentRows.map(r => Number(r?.summary?.pron)).filter(Number.isFinite);
+    statAvg.textContent = vals.length ? (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1) : '–';
+    renderChart(currentRows);
+    renderTrouble(currentRows);
+    renderTable(currentRows);
   }
 
   function updateCsvHref() {
@@ -311,22 +390,22 @@
     loadBtn.disabled = true;
     try {
       const limit = Number(limitEl.value || 500);
-      const passages = buildPassagesParam();
+      // Load ALL passages — no server-side passage filter.
+      // Client-side checkboxes handle filtering after load.
       let url = `${API_BASE}/api/admin-recent?limit=${encodeURIComponent(limit)}&uid=${encodeURIComponent(uid)}`;
       if (fromEl.value) url += `&from=${encodeURIComponent(fromEl.value)}`;
       if (toEl.value)   url += `&to=${encodeURIComponent(toEl.value)}`;
-      if (passages)     url += `&passages=${encodeURIComponent(passages)}`;
       const r = await fetch(url, { cache: 'no-store', headers });
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const json = await r.json();
-      currentRows = json.rows || [];
-      if (currentRows[0] && currentRows[0].label) labelInput.value = currentRows[0].label;
-      statAttempts.textContent = currentRows.length;
-      const vals = currentRows.map(r => Number(r?.summary?.pron)).filter(Number.isFinite);
-      statAvg.textContent = vals.length ? (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1) : '–';
-      renderChart(currentRows);
-      renderTrouble(currentRows);
-      renderTable(currentRows);
+      allRows = json.rows || [];
+      if (allRows[0] && allRows[0].label) labelInput.value = allRows[0].label;
+
+      // Build passage checkboxes from the actual data
+      buildPassageCheckboxes(allRows);
+
+      // Apply client-side filter (respects checkbox state)
+      applyClientFilter();
       updateCsvHref();
     } catch (e) {
       alert('Load failed: ' + e.message);
@@ -351,11 +430,11 @@
   }
 
   loadBtn.onclick = loadData;
-  applyBtn.onclick = loadData;
+  applyBtn.onclick = () => { if (allRows.length) applyClientFilter(); else loadData(); };
   clearBtn.onclick = () => { fromEl.value = ''; loadData(); };
   saveBtn.onclick = saveLabel;
   copyBtn.onclick = copyLinkToClipboard;
-  [uidEl, limitEl, fromEl, toEl, smoothEl, ...passEls].forEach(el => el.addEventListener('change', updateCsvHref));
+  [uidEl, limitEl, fromEl, toEl, smoothEl].forEach(el => el.addEventListener('change', updateCsvHref));
 
   updateCsvHref();
   if (uidEl.value) loadData();
@@ -363,3 +442,4 @@
 </script>
 </body>
 </html>
+</file>

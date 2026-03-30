@@ -47,7 +47,6 @@ function ensureFooterHost() {
  */
 function getAdminLinks(uid) {
   const base = "https://luxury-language-api.vercel.app/admin";
-  const passages = "grandfather,rainbow,sentences,wordList";
   const fmt = (d) => d.toISOString().slice(0, 10);
   
   const now = new Date();
@@ -58,9 +57,9 @@ function getAdminLinks(uid) {
   const dateQ = `&from=${from}&to=${to}`;
 
   return {
-    progress: `${base}/?${q}${dateQ}&smooth=7&passages=${encodeURIComponent(passages)}&limit=500`,
-    attempts: `${base}/user.html?${q}${dateQ}&passages=${encodeURIComponent(passages)}&limit=500`,
-    cohort: `${base}/overview.html?from=${from}&to=${to}&sort=last&limit=10000&passages=${encodeURIComponent(passages)}&quick=14`
+    progress: `${base}/?${q}${dateQ}&smooth=7&limit=500`,
+    attempts: `${base}/user.html?${q}${dateQ}&limit=500`,
+    cohort: `${base}/overview.html?from=${from}&to=${to}&sort=last&limit=10000&quick=14`
   };
 }
 
