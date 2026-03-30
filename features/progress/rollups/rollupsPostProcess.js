@@ -11,10 +11,15 @@ export function buildPostProcess({
   windowDays,
   minPhonCount,
   minWordCount,
+  maxAvg,
   localDayKey,
   priorityFromFull,
 } = {}) {
-  // Build trouble lists (worst avg first), with basic “seen enough” guard.
+  // Score ceiling: items averaging above this are NOT trouble.
+  // Default 80 aligns with the blue/yellow threshold used everywhere in Lux.
+  const ceiling = Number.isFinite(maxAvg) ? maxAvg : 80;
+
+  // Build trouble lists (worst avg first), with "seen enough" + "actually struggling" guards.
   const troublePhonemesAll = Array.from(phon.values())
     .map((x) => {
       const avg = x.count ? x.sum / x.count : 0;
@@ -24,6 +29,7 @@ export function buildPostProcess({
         count: x.count,
         avg,
         days,
+        lowCount: x.lowCount || 0,
         priority: priorityFromFull({
           avg,
           count: x.count,
@@ -33,7 +39,7 @@ export function buildPostProcess({
         examples: Array.from(x.examples || []).slice(0, 3),
       };
     })
-    .filter((x) => x.count >= minPhonCount)
+    .filter((x) => x.count >= minPhonCount && x.avg < ceiling)
     .sort(
       (a, b) => b.priority - a.priority || a.avg - b.avg || b.count - a.count
     );
@@ -55,7 +61,7 @@ export function buildPostProcess({
         }),
       };
     })
-    .filter((x) => x.count >= minWordCount)
+    .filter((x) => x.count >= minWordCount && x.avg < ceiling)
     .sort(
       (a, b) => b.priority - a.priority || a.avg - b.avg || b.count - a.count
     );

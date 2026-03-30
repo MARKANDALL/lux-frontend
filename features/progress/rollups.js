@@ -37,6 +37,13 @@ export function computeRollups(attempts = [], opts = {}) {
     ? Math.max(1, Math.floor(minPhonCountRaw))
     : 3;
 
+  // Score ceiling for trouble lists: items averaging ≥ this are NOT trouble.
+  // Default 80 = the blue/yellow boundary used everywhere in Lux.
+  // Pass maxAvg: 100 to disable (e.g., for the Session Report modal which
+  // should show all items regardless of average).
+  const maxAvgRaw = Number(opts.maxAvg);
+  const maxAvg = Number.isFinite(maxAvgRaw) ? maxAvgRaw : 80;
+
   // Plan A: metric-specific trend capture (Prosody later)
   const METRICS = [
     ["acc", "Accuracy"],
@@ -74,6 +81,7 @@ export function computeRollups(attempts = [], opts = {}) {
       windowDays,
       minPhonCount,
       minWordCount,
+      maxAvg,
       localDayKey,
       priorityFromFull,
     });

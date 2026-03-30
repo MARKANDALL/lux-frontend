@@ -45,6 +45,7 @@ export function buildNextPracticeSectionBody(plan) {
     <div class="lux-nextpractice-actions">
       <button class="lux-pbtn" type="button" id="luxNextPracticeStartHarvard" ${plan.harvardN ? "" : "disabled"}>Start Harvard</button>
       <button class="lux-pbtn lux-pbtn--ghost" type="button" id="luxNextPracticeStartPassage" ${plan.passageKey ? "" : "disabled"}>Start Passage/Drill</button>
+      <button class="lux-pbtn lux-pbtn--ghost" type="button" id="luxNextPracticeStartConvo" title="Start a targeted AI conversation using your trouble sounds and words">✨ Start Conversation</button>
     </div>
   `;
 }

@@ -11,6 +11,11 @@ import {
   applyNextPracticePlan,
 } from "../../next-activity/next-practice.js";
 
+import {
+  buildNextActivityPlanFromModel,
+  saveNextActivityPlan,
+} from "../../next-activity/next-activity.js";
+
 import { buildProgressDashboardHtml, buildNextPracticeSectionBody } from "./dashboard/dashboard-template.js";
 
 import {
@@ -47,8 +52,8 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
   // ✅ NEW (All Data-only): metric trends section (acc/flu/comp/pron)
   const showMetricTrends = !!opts.showMetricTrends && !!model?.metrics;
 
-  const topPh = (trouble.phonemesAll || []).slice(0, 12);
-  const topWd = (trouble.wordsAll || []).slice(0, 12);
+  const topPh = (trouble.phonemesAll || []).slice(0, 10);
+  const topWd = (trouble.wordsAll || []).slice(0, 10);
 
   const bySession = buildAttemptsBySession(attempts);
 
@@ -93,7 +98,7 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
       }
 
       // Wire the action buttons now that the plan is resolved
-      wireNextPracticeButtons(plan, nextPracticeBehavior);
+      wireNextPracticeButtons(plan, nextPracticeBehavior, model);
     }).catch((err) => {
       globalThis.warnSwallow?.("features/progress/render/dashboard.js", err, "important");
     });
@@ -101,7 +106,7 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
 }
 
 // ── Next Practice button wiring (extracted for clarity) ──
-function wireNextPracticeButtons(plan, behavior) {
+function wireNextPracticeButtons(plan, behavior, model) {
   if (!plan) return;
 
   const bH = document.getElementById("luxNextPracticeStartHarvard");
@@ -132,6 +137,18 @@ function wireNextPracticeButtons(plan, behavior) {
       }
 
       applyNextPracticePlan({ ...plan, start: "passage" });
+    });
+  }
+
+  // ✨ Targeted AI Conversation — builds an activity plan from the full
+  // model's trouble data (phoneme focus + word bank) and navigates to convo.
+  const bC = document.getElementById("luxNextPracticeStartConvo");
+  if (bC) {
+    bC.addEventListener("click", () => {
+      const activityPlan = buildNextActivityPlanFromModel(model, { source: "next-practice" });
+      if (!activityPlan) return;
+      saveNextActivityPlan(activityPlan);
+      window.location.assign("./convo.html#chat");
     });
   }
 }
