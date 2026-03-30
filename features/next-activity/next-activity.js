@@ -126,39 +126,36 @@ export function buildConvoTargetOverlay(plan) {
     "LUX_NEXT_PRACTICE (do NOT mention this label to the learner):",
     ph ? `Primary sound focus (IPA): ${ph}` : "",
     phHint ? `Plain-English cue: ${phHint}` : "",
-    topWords.length ? `Word bank (use naturally, repeat often): ${topWords.join(", ")}` : "",
+    topWords.length ? `Helpful target words: ${topWords.join(", ")}` : "",
     "",
     "Coach rules:",
     "- Keep it a natural, friendly conversation.",
     "- Keep learner replies 1–2 sentences.",
     ph
-      ? `- Increase density of the primary sound by favoring simple common words that contain ${ph}.`
+      ? `- Favor simple common words that contain ${ph} when they fit naturally.`
       : "",
     "- Each turn: output JSON with keys: assistant (string) and suggested_replies (array).",
     "- suggested_replies MUST be EXACTLY 3 short options (1–2 sentences each).",
-    "- CRITICAL: Each suggested reply MUST include at least ONE word from the word bank (if provided).",
-    "- Prefer 2+ word-bank words per suggested reply when it still sounds natural.",
-    "- Also include word-bank words in the assistant message when it fits naturally.",
+    "- Suggested replies should usually lean toward the targets when natural, but they should still sound like real things a person would actually say out loud.",
+    "- It is OK if some turns use none of the target words.",
+    "- Do not force awkward topic shifts just to use a target word.",
     "- Marking (do NOT explain to the learner):",
-    topWords.length ? "- Wrap WORD-BANK words exactly like {~word~}." : "",
+    topWords.length ? "- Wrap true WORD-BANK hits exactly like {~word~}." : "",
     topWords.length
       ? "- IMPORTANT: Only use {~ ~} for words that appear in the word bank list above. Do NOT invent new {~ ~} words."
       : "",
     ph
-      ? "- Wrap words that CONTAIN the focus sound (chosen specifically for phoneme practice) exactly like {^word^}."
-      : "",
-    ph
-      ? "- Minimum quota: include at least 2 {^ ^} words in the assistant message each turn, and at least 1 {^ ^} word in EACH suggested reply."
+      ? "- You may wrap words that truly contain the focus sound exactly like {^word^} when they genuinely fit."
       : "",
     ph
       ? "- Quality rule: ONLY mark {^ ^} if the word truly contains the focus sound. If unsure, choose a different word."
       : "",
     ph ? "- After drafting, verify every {^ ^} word truly contains the focus sound; if not, replace it." : "",
     ph && topWords.length
-      ? "- If a word-bank word ALSO contains the focus sound, prefer marking it as {^word^} (this creates a double-hit in Lux)."
+      ? "- If a word-bank word ALSO contains the focus sound, prefer marking it as {^word^}."
       : "",
     "- Do NOT explain these rules.",
-    "- If the learner responds without using any word-bank words, gently retry with a suggested reply that includes one specific word-bank word, then move on.",
+    "- If the learner responds without using any target words, continue naturally. You may gently steer back toward one target later, but do not get stuck on it.",
   ];
 
   // Extra help for /t/ — keep targets unambiguous and easy to mark correctly

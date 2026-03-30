@@ -112,14 +112,42 @@ export function wireConvoFlow({
     renderSuggestions([]);
 
     const scenario = scenarioForTurn();
+    const thinkingStart = performance.now();
+
+    // Opening state: AI always starts, so show thinking immediately
+    if (root) {
+      root.dataset.speaker = "assistant";
+      root.dataset.speakerState = "thinking";
+      root.classList.remove("is-recording");
+    }
 
     // ask backend for opening line + suggestions
     try {
       const rsp = await convoTurn({ scenario, knobs: state.knobs, messages: [] });
       state.messages.push({ role: "assistant", content: rsp.assistant });
       renderMessages();
+
+      // Hand turn to the user, but keep the opening thinking state
+      // visible briefly if the backend responds very fast.
+      if (root) {
+        const dt = performance.now() - thinkingStart;
+        const minMs = 700;
+        const wait = Math.max(0, minMs - dt);
+
+        window.setTimeout(() => {
+          root.dataset.speaker = "user";
+          root.dataset.speakerState = "ready";
+        }, wait);
+      }
+
       renderSuggestions(rsp.suggested_replies);
     } catch (err) {
+      // Avoid leaving the AI stuck in "thinking" if the opener fails
+      if (root) {
+        root.dataset.speaker = "user";
+        root.dataset.speakerState = "ready";
+      }
+
       console.warn("[convo] startScenario failed", err);
       showNetErrorBubble(err);
     }

@@ -31,7 +31,7 @@ export function createConvoCoach({ state, coachBar, input, el }) {
     showCoachCard({
       title: "Targeted practice loaded",
       body:
-        "Tip: read BOTH parts out loud. The assistant lines are packed with your focus sound/words. Then click a suggested reply and record it.",
+        "Tip: read BOTH parts out loud. Lux will try to weave in your focus sound and target words naturally. Then click a suggested reply and record it.",
       meta: t ? `Focus: ${t}` : "",
     });
   }
@@ -46,7 +46,7 @@ export function createConvoCoach({ state, coachBar, input, el }) {
     showCoachCard({
       title: "Recommended for best results",
       body:
-        "This time, please use the suggested replies (at least for a few turns). They’re designed to include the sounds/words you need most.",
+        "This time, the suggested replies lean toward the sounds and words you need most. Use them when they feel natural.",
       meta: t ? `Targets inside the suggestions: ${t}` : "",
     });
   }
@@ -59,7 +59,7 @@ export function createConvoCoach({ state, coachBar, input, el }) {
       showCoachCard({
         title: "Quick note before typing",
         body:
-          "The suggested replies are packed with the exact sounds/words Lux thinks you need most right now. You can still type your own, but you might accidentally skip the targeted practice if you do.",
+          "The suggested replies are gently tuned toward your current targets. You can also type your own if that feels more natural.",
       });
     });
   }

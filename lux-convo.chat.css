@@ -465,6 +465,10 @@
   animation: luxPulseRing 1.15s infinite ease-in-out;
 }
 
+#convoApp[data-speaker="user"][data-speaker-state="recording"] .lux-portraitChip--me .lux-portraitDots{
+  display: flex;
+}
+
 /* Your turn (always-on subtle signal) */
 #convoApp[data-speaker="user"][data-speaker-state="ready"] .lux-portraitChip--me{
   animation: luxBreathe 2.8s infinite ease-in-out;
@@ -478,11 +482,6 @@
 #convoApp[data-speaker="assistant"][data-speaker-state="thinking"] .lux-portraitChip--ai .lux-portraitDots{
   display: flex;
 }
-
-#convoApp[data-speaker="assistant"][data-speaker-state="thinking"] .lux-portraitChip--ai .lux-portraitDots{
-  display: flex;
-}
-
 /* Responsive: on narrow screens, hide the flank portraits so drawers win space */
 @media (max-width: 920px){
   #convoApp[data-mode="chat"] .lux-convoPortraits{ display:none; }

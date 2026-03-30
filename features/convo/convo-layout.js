@@ -163,8 +163,13 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
   meImg.alt = "You";
   meImg.loading = "lazy";
   meImg.decoding = "async";
+
+  // typing dots overlay
+  const meDots = el("div", "lux-portraitDots");
+  meDots.innerHTML = `<span></span><span></span><span></span>`;
+
   const meBadge = el("div", "lux-portraitBadge", "YOU");
-  meChip.append(meImg, meBadge);
+  meChip.append(meImg, meDots, meBadge);
 
   const aiChip = document.createElement("button");
   aiChip.type = "button";
@@ -177,7 +182,7 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
   aiImg.loading = "lazy";
   aiImg.decoding = "async";
 
-  // thinking dots overlay
+  // typing dots overlay
   const aiDots = el("div", "lux-portraitDots");
   aiDots.innerHTML = `<span></span><span></span><span></span>`;
 
