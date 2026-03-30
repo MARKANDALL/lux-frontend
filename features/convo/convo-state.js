@@ -5,6 +5,13 @@ import { consumeNextActivityPlan } from "../next-activity/next-activity.js";
 import { newSessionId } from "./convo-shared.js";
 import { loadKnobs } from "./convo-knobs.js";
 
+const QUICK_PRACTICE_ID = "quick-practice";
+
+function getQuickPracticeIdx() {
+  const idx = SCENARIOS.findIndex((s) => s?.id === QUICK_PRACTICE_ID);
+  return idx >= 0 ? idx : 0;
+}
+
 export function createConvoState() {
   const state = {
     sessionId: newSessionId(),
@@ -32,9 +39,8 @@ export function createConvoState() {
   const next = consumeNextActivityPlan();
   if (next && next.kind === "ai_conversation") {
     state.nextActivity = next;
-
-    // Choose a base scenario for variety (keeps passageKey pretty: convo:doctor, etc.)
-    state.scenarioIdx = Math.floor(Math.random() * SCENARIOS.length);
+    state.scenarioIdx = getQuickPracticeIdx();
+    state.roleIdx = 0;
   }
 
   return state;
@@ -44,7 +50,13 @@ export function tryConsumeStoredNextActivityPlan(state) {
   // If a Next Practice plan was stored, consume it once and keep in memory for this session.
   try {
     const plan = consumeNextActivityPlan();
-    if (plan) state.nextActivity = plan;
+    if (!plan) return;
+
+    state.nextActivity = plan;
+
+    if (plan.kind === "ai_conversation") {
+      state.scenarioIdx = getQuickPracticeIdx();
+      state.roleIdx = 0;
+    }
   } catch (err) { globalThis.warnSwallow("features/convo/convo-state.js", err, "important"); }
 }
-

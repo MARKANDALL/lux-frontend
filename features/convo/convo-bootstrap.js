@@ -77,6 +77,7 @@ export function bootConvo() {
     scenBtn,
     knobsBtn,
     endBtn,
+    practiceMeta,
     msgs,
     sugs,
     sugsNote,
@@ -204,8 +205,58 @@ export function bootConvo() {
   // ✅ Render helpers now live in convo-render.js
   initConvoRender({ state, msgs, sugs, sugsNote, input, el, coach });
 
+  function syncPracticeMeta() {
+    if (!practiceMeta) return;
+
+    const phRaw = state.nextActivity?.targets?.phoneme?.ipa || "";
+    const ph = String(phRaw).trim().replace(/^\/|\/$/g, "");
+    const words = (state.nextActivity?.targets?.words || [])
+      .map((x) => x?.word || x)
+      .filter(Boolean)
+      .map((x) => String(x).trim())
+      .filter(Boolean)
+      .slice(0, 6);
+
+    practiceMeta.innerHTML = "";
+
+    if (!ph && !words.length) {
+      practiceMeta.hidden = true;
+      return;
+    }
+
+    if (ph) {
+      const soundRow = el("div", "lux-practiceMetaRow");
+      const soundLabel = el("div", "lux-practiceMetaLabel", "Sound");
+      const soundValue = el("div", "lux-practiceMetaValue");
+      soundValue.append(el("span", "lux-hl2", `/${ph}/`));
+      soundRow.append(soundLabel, soundValue);
+      practiceMeta.append(soundRow);
+    }
+
+    if (words.length) {
+      const wordsRow = el("div", "lux-practiceMetaRow");
+      const wordsLabel = el("div", "lux-practiceMetaLabel", "Words");
+      const wordsValue = el("div", "lux-practiceMetaValue");
+
+      words.forEach((word, idx) => {
+        wordsValue.append(el("span", "lux-hl", word));
+        if (idx < words.length - 1) {
+          wordsValue.append(document.createTextNode(", "));
+        }
+      });
+
+      wordsRow.append(wordsLabel, wordsValue);
+      practiceMeta.append(wordsRow);
+    }
+
+    practiceMeta.hidden = false;
+  }
+
+  syncPracticeMeta();
+
   function render() {
     renderAICoachShell(state);
+    syncPracticeMeta();
   }
 
   const setKnobs = createSetKnobs({ state, stage, levelSel, toneSel, lengthSel });
@@ -323,13 +374,6 @@ luxBus.set('ttsContext', { changed: true });
     showConvoReportOverlay,
   });
 
-  if (state.nextActivity) {
-    // Ensure we're in chat mode and start immediately
-    warpSwap(() => setMode("chat", { replace: true, push: false }), { outMs: 120, inMs: 160 })
-      .then(() => startScenario())
-      .catch((e) => console.error("[NextPractice] auto-start failed", e));
-  }
-
   const beginScenario = createBeginScenario({ warpSwap, setMode, startScenario });
 
   initConvoPickerSystem({
@@ -354,9 +398,29 @@ luxBus.set('ttsContext', { changed: true });
 
   syncConvoPortraits();
 
-  // If we landed directly in chat (e.g., from "Generate my next practice"),
-  // show the start tip immediately.
-  if (state.mode === "chat" && state.nextActivity) {
-    coach.maybeShowStartTip();
+  if (state.nextActivity) {
+    const autoStart = async () => {
+      if (state.mode !== "chat") {
+        await warpSwap(() => setMode("chat", { replace: true, push: false }), {
+          outMs: 120,
+          inMs: 160,
+        });
+      } else {
+        setMode("chat", { replace: true, push: false });
+      }
+
+      syncConvoPortraits();
+      coach.maybeShowStartTip();
+      await startScenario();
+    };
+
+    autoStart().catch((e) => console.error("[NextPractice] auto-start failed", e));
+    return;
+  }
+
+  // If we landed directly in chat without a saved Next Practice plan,
+  // keep the normal manual chat entry behavior.
+  if (state.mode === "chat") {
+    syncConvoPortraits();
   }
 }

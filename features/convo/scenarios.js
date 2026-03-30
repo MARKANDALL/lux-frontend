@@ -5,6 +5,28 @@
 
 export const SCENARIOS = [
   {
+    id: "quick-practice",
+    title: "Quick Practice",
+    desc: "A relaxed, open-ended conversation focused on natural speaking practice. There is no rigid setting, so the topic can drift wherever it feels most natural.",
+    more: `• Flexible setting — no fixed location, task, or storyline forcing the dialogue in the wrong direction
+
+• Best for targeted pronunciation practice when Lux wants to weave in specific sounds and words naturally
+
+• Targets: spontaneous speaking · easy topic shifts · natural repetition without awkward scene constraints`,
+    roles: [
+      {
+        id: "learner",
+        label: "Learner",
+        npc: "Someone doing a short, targeted speaking practice conversation. They are trying to speak naturally and clearly.",
+      },
+      {
+        id: "partner",
+        label: "Conversation Partner",
+        npc: "A calm, friendly conversation partner who keeps the exchange open-ended, natural, and easy to follow.",
+      },
+    ],
+  },
+  {
     id: "coffee",
     title: "Order Coffee",
     desc: "Order quickly, make small talk, and stay friendly under mild time pressure.",

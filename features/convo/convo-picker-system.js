@@ -124,11 +124,25 @@ export function initConvoPickerSystem({
 
   const listLen = Array.isArray(scenarios) ? scenarios.length : 0;
 
+  function renderCurrentSelectionAndBroadcast() {
+    renderDeck();
+    luxBus.set("scenario", { idx: state.scenarioIdx });
+  }
+
+  function shouldPreservePinnedScenario() {
+    return !!state.nextActivity;
+  }
+
   function randomizeDefaultSelectionAndRender() {
     if (!listLen) return;
+
+    if (shouldPreservePinnedScenario()) {
+      renderCurrentSelectionAndBroadcast();
+      return;
+    }
+
     state.scenarioIdx = pickNextRandomScenarioIdx(listLen);
-    renderDeck();
-    luxBus.set('scenario', { idx: state.scenarioIdx });
+    renderCurrentSelectionAndBroadcast();
   }
 
   // boot (randomize once so the deck doesn't always start on Coffee)
@@ -136,10 +150,16 @@ export function initConvoPickerSystem({
 
   // Every time we ENTER the picker section, randomize again.
   // (Changed-only prevents re-randomizing if setMode("picker") is called redundantly.)
-  luxBus.on('convoMode', (val) => {
+  luxBus.on("convoMode", (val) => {
     const mode = val?.mode;
     const changed = val?.changed;
     if (mode !== "picker" || !changed) return;
+
+    if (shouldPreservePinnedScenario()) {
+      renderCurrentSelectionAndBroadcast();
+      return;
+    }
+
     randomizeDefaultSelectionAndRender();
   });
 

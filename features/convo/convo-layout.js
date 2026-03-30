@@ -115,8 +115,9 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
   const midHd = el("div", "lux-hd");
   const titleWrap = el("div");
   const title = el("div", "lux-title", "AI Conversation");
-  const sub = el("div", "lux-sub", `Session: ${sessionId}`);
-  titleWrap.append(title, sub);
+  const practiceMeta = el("div", "lux-practiceMeta");
+  practiceMeta.hidden = true;
+  titleWrap.append(title, practiceMeta);
 
   const actions = el("div", "lux-actions");
 
@@ -299,6 +300,7 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
     scenBtn,
     knobsBtn,
     endBtn,
+    practiceMeta,
     msgs,
     sugs,
     sugsNote,
