@@ -46,8 +46,25 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
   const subtitle = opts.subtitle || "All practice (Pronunciation + AI Conversations)";
   const showActions = opts.showActions !== false; // default true
   const showCoach = !!opts.showCoach;
-  const showNextPractice = !!opts.showNextPractice;
-  const nextPracticeBehavior = opts.nextPracticeBehavior || "apply";
+  const fallbackBehavior = opts.nextPracticeBehavior || "apply";
+
+  const nextPracticeBlocks =
+    Array.isArray(opts.nextPracticeBlocks) && opts.nextPracticeBlocks.length
+      ? opts.nextPracticeBlocks
+      : opts.showNextPractice
+      ? [
+          {
+            key: "default",
+            title: "✨ Next practice",
+            description: "Based on your current trouble sounds.",
+            model,
+            behavior: fallbackBehavior,
+            source: "next-practice",
+          },
+        ]
+      : [];
+
+  const showNextPractice = nextPracticeBlocks.length > 0;
 
   // ✅ NEW (All Data-only): metric trends section (acc/flu/comp/pron)
   const showMetricTrends = !!opts.showMetricTrends && !!model?.metrics;
@@ -57,8 +74,6 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
 
   const bySession = buildAttemptsBySession(attempts);
 
-  // ── Pass 1: render immediately with nextPracticePlan: null ──
-  // (buildNextPracticePlanFromModel is async — awaits passage phoneme meta)
   host.innerHTML = buildProgressDashboardHtml({
     model,
     title,
@@ -73,44 +88,52 @@ export function renderProgressDashboard(host, attempts, model, opts = {}) {
     sessions,
     topPh,
     topWd,
-    nextPracticePlan: null,
+    nextPracticeBlocks: nextPracticeBlocks.map((block) => ({
+      ...block,
+      nextPracticePlan: null,
+    })),
   });
 
-  // ✅ Enable "click trouble chip -> show details" on the main dashboard too
   wireAttemptDetailChipExplainers(host, { phItems: topPh, wdItems: topWd });
-
   wireHistoryButtons(host, bySession, sessions);
 
-  // Downloads (optional)
   if (showActions) {
     wireDashboardActions(host, model, attempts);
   }
 
-  // ── Pass 2: async — fill in Next Practice when data arrives ──
-  if (showNextPractice) {
-    buildNextPracticePlanFromModel(model).then((plan) => {
-      if (!plan) return;
+  for (const block of nextPracticeBlocks) {
+    buildNextPracticePlanFromModel(block.model)
+      .then((plan) => {
+        const sec = host.querySelector(
+          `[data-lux-next-practice="${block.key}"] .lux-sec-body`
+        );
+        if (sec) {
+          sec.innerHTML = buildNextPracticeSectionBody(plan, block);
+        }
 
-      // Hot-swap the Next Practice section body
-      const sec = host.querySelector('[data-lux-next-practice] .lux-sec-body');
-      if (sec) {
-        sec.innerHTML = buildNextPracticeSectionBody(plan);
-      }
-
-      // Wire the action buttons now that the plan is resolved
-      wireNextPracticeButtons(plan, nextPracticeBehavior, model);
-    }).catch((err) => {
-      globalThis.warnSwallow?.("features/progress/render/dashboard.js", err, "important");
-    });
+        wireNextPracticeButtons({
+          plan,
+          behavior: block.behavior || fallbackBehavior,
+          model: block.model,
+          scopeKey: block.key,
+          source: block.source || "next-practice",
+        });
+      })
+      .catch((err) => {
+        globalThis.warnSwallow?.(
+          "features/progress/render/dashboard.js",
+          err,
+          "important"
+        );
+      });
   }
 }
 
-// ── Next Practice button wiring (extracted for clarity) ──
-function wireNextPracticeButtons(plan, behavior, model) {
+function wireNextPracticeButtons({ plan, behavior, model, scopeKey, source }) {
   if (!plan) return;
 
-  const bH = document.getElementById("luxNextPracticeStartHarvard");
-  const bP = document.getElementById("luxNextPracticeStartPassage");
+  const bH = document.getElementById(`luxNextPracticeStartHarvard-${scopeKey}`);
+  const bP = document.getElementById(`luxNextPracticeStartPassage-${scopeKey}`);
 
   if (bH) {
     bH.addEventListener("click", () => {
@@ -140,26 +163,28 @@ function wireNextPracticeButtons(plan, behavior, model) {
     });
   }
 
-  // ✨ Targeted AI Conversation — builds an activity plan from the full
-  // model's trouble data (phoneme focus + word bank) and navigates to convo.
-  // ✨ Quick Practice — instant launch, pins to neutral quick-practice scenario
-  const bQ = document.getElementById("luxNextPracticeQuickConvo");
+  const bQ = document.getElementById(`luxNextPracticeQuickConvo-${scopeKey}`);
   if (bQ) {
     bQ.addEventListener("click", () => {
-      const plan = buildNextActivityPlanFromModel(model, { source: "next-practice", launch_mode: "quick" });
-      if (!plan) return;
-      saveNextActivityPlan(plan);
+      const nextPlan = buildNextActivityPlanFromModel(model, {
+        source,
+        launch_mode: "quick",
+      });
+      if (!nextPlan) return;
+      saveNextActivityPlan(nextPlan);
       window.location.assign("./convo.html#chat");
     });
   }
 
-  // 🎭 Choose Scenario — user picks the scenario, targets preserved as overlay
-  const bS = document.getElementById("luxNextPracticeChooseConvo");
+  const bS = document.getElementById(`luxNextPracticeChooseConvo-${scopeKey}`);
   if (bS) {
     bS.addEventListener("click", () => {
-      const plan = buildNextActivityPlanFromModel(model, { source: "next-practice", launch_mode: "choose" });
-      if (!plan) return;
-      saveNextActivityPlan(plan);
+      const nextPlan = buildNextActivityPlanFromModel(model, {
+        source,
+        launch_mode: "choose",
+      });
+      if (!nextPlan) return;
+      saveNextActivityPlan(nextPlan);
       window.location.assign("./convo.html#picker");
     });
   }

@@ -8,6 +8,11 @@ import { fetchHistory, ensureUID } from "../../api/index.js";
 import { computeRollups } from "../progress/rollups.js";
 import { pickPassageKey } from "../progress/attempt-pickers.js";
 import { renderProgressDashboard } from "../progress/render.js";
+import {
+  pickLatestAttempt,
+  pickAttemptsForLatestSession,
+  computeImmediateScopeRollups,
+} from "../progress/next-practice-scopes.js";
 import { mountAICoachAlwaysOn } from "../../ui/ui-ai-ai-logic.js";
 import { bringBoxBottomToViewport } from "../../helpers/index.js";
 import { luxBus } from "../../app-core/lux-bus.js";
@@ -29,6 +34,39 @@ function fmtMini(totals = {}) {
     ? last.toLocaleDateString(undefined, { month: "short", day: "numeric" })
     : "—";
   return `Avg ${avg}% · Attempts ${attempts} · Last ${lastStr}`;
+}
+
+function buildPracticeNextPracticeBlocks(attempts, aggregateModel) {
+  const latest = pickLatestAttempt(attempts);
+  const latestOnly = latest ? [latest] : [];
+  const currentPassageAttempts = pickAttemptsForLatestSession(attempts);
+
+  return [
+    {
+      key: "practice-latest-line",
+      title: "✨ Next practice • What you just did: This line",
+      description: "Based only on your latest recorded line.",
+      model: computeImmediateScopeRollups(latestOnly),
+      behavior: "apply",
+      source: "practice_latest_attempt",
+    },
+    {
+      key: "practice-current-passage",
+      title: "✨ Next practice • What you just did: This passage",
+      description: "Based only on your current passage session.",
+      model: computeImmediateScopeRollups(currentPassageAttempts),
+      behavior: "apply",
+      source: "practice_current_session",
+    },
+    {
+      key: "practice-total",
+      title: "✨ Next practice • Your combined total",
+      description: "Based on your Practice Skills history.",
+      model: aggregateModel,
+      behavior: "apply",
+      source: "practice_aggregate",
+    },
+  ];
 }
 
 /**
@@ -62,8 +100,7 @@ export async function refreshHistory() {
         title: "My Progress",
         subtitle: "Practice Results (word + phoneme practice)",
         showActions: false,
-        showNextPractice: true,
-        nextPracticeBehavior: "apply",
+        nextPracticeBlocks: buildPracticeNextPracticeBlocks(filtered, model),
         // IMPORTANT: drawer should NOT show category trend grid
         // showMetricTrends: false (default)
       });
@@ -86,8 +123,16 @@ async function loadAndRenderHub(root) {
       subtitle: "All practice (Pronunciation + AI Conversations)",
       showActions: true,
       showCoach: true,
-      showNextPractice: true,
-      nextPracticeBehavior: "navigate",
+      nextPracticeBlocks: [
+        {
+          key: "all-total",
+          title: "✨ Next practice • Your combined total",
+          description: "Based on all Practice Skills + AI Conversations history.",
+          model,
+          behavior: "navigate",
+          source: "global_aggregate",
+        },
+      ],
       // ✅ ONLY the All Data page gets the new category trend block
       showMetricTrends: true,
     });
@@ -219,8 +264,7 @@ export async function initDashboard() {
           title: "My Progress",
           subtitle: "Practice Results (word + phoneme practice)",
           showActions: false,
-          showNextPractice: true,
-          nextPracticeBehavior: "apply",
+          nextPracticeBlocks: buildPracticeNextPracticeBlocks(filtered, model),
           // IMPORTANT: drawer should NOT show category trend grid
           // showMetricTrends: false (default)
         });

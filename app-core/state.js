@@ -46,6 +46,12 @@ export let isCustom = (currentPassageKey === "custom");
 // ---- Session State
 let _sessionId = null;
 
+// Practice-run grouping:
+// - pending = what passage the user has currently selected/browsed to
+// - active  = what passage the current saved practice run belongs to
+let _pendingPracticeRunPassageKey = DEFAULT_PASSAGE;
+let _activePracticeRunPassageKey = DEFAULT_PASSAGE;
+
 // Small helpers
 export const $ = (sel, r = document) => r.querySelector(sel);
 export const $$ = (sel, r = document) => Array.from(r.querySelectorAll(sel));
@@ -93,10 +99,39 @@ export function getChosenLang() {
   return lang;
 }
 
+function makeSessionId() {
+  return (
+    Math.random().toString(36).substring(2, 15) +
+    Math.random().toString(36).substring(2, 15)
+  );
+}
+
+export function notePracticePassageSelection(passageKey) {
+  _pendingPracticeRunPassageKey = String(passageKey || "");
+  dbg("state:notePracticePassageSelection", {
+    pending: _pendingPracticeRunPassageKey,
+  });
+}
+
+export function beginPracticeRunIfNeeded() {
+  const pending = String(_pendingPracticeRunPassageKey || currentPassageKey || "");
+
+  if (!_sessionId || pending !== _activePracticeRunPassageKey) {
+    _sessionId = makeSessionId();
+    _activePracticeRunPassageKey = pending;
+    dbg("state:beginPracticeRunIfNeeded", {
+      sessionId: _sessionId,
+      passageKey: _activePracticeRunPassageKey,
+    });
+  }
+
+  return _sessionId;
+}
+
 export function getSessionId() {
   if (!_sessionId) {
-    _sessionId = Math.random().toString(36).substring(2, 15) + 
-                 Math.random().toString(36).substring(2, 15);
+    _sessionId = makeSessionId();
+    _activePracticeRunPassageKey = String(currentPassageKey || "");
   }
   return _sessionId;
 }

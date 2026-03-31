@@ -11,12 +11,18 @@ import { renderMetricTrendCard, deltaHtml } from "./actions-and-trends.js";
  * Builds the inner HTML of the Next Practice section body.
  * Exported so dashboard.js can hot-swap it after the async plan resolves.
  */
-export function buildNextPracticeSectionBody(plan) {
+export function buildNextPracticeSectionBody(plan, meta = {}) {
+  const key = String(meta.key || "default");
+  const description = meta.description
+    ? `<div style="color:#64748b; margin-bottom:10px;">${esc(meta.description)}</div>`
+    : ``;
+
   if (!plan) {
-    return `<div style="color:#64748b">Not enough progress yet — do one more practice run.</div>`;
+    return `${description}<div style="color:#64748b">Not enough progress yet — do one more practice run.</div>`;
   }
 
   return `
+    ${description}
     <div class="lux-kv" style="margin-bottom:10px;">
       <div class="lux-k">Focus phoneme</div>
       <div class="lux-v">
@@ -43,12 +49,32 @@ export function buildNextPracticeSectionBody(plan) {
     </div>
 
     <div class="lux-nextpractice-actions">
-      <button class="lux-pbtn" type="button" id="luxNextPracticeStartHarvard" ${plan.harvardN ? "" : "disabled"}>Start Harvard</button>
-      <button class="lux-pbtn lux-pbtn--ghost" type="button" id="luxNextPracticeStartPassage" ${plan.passageKey ? "" : "disabled"}>Start Passage/Drill</button>
-      <button class="lux-pbtn lux-pbtn--ghost" type="button" id="luxNextPracticeQuickConvo" title="Instant targeted conversation using your trouble sounds">✨ Quick Practice</button>
-      <button class="lux-pbtn lux-pbtn--ghost" type="button" id="luxNextPracticeChooseConvo" title="Pick a scenario, then practice with your trouble sounds woven in">🎭 Choose Scenario</button>
+      <button class="lux-pbtn" type="button" id="luxNextPracticeStartHarvard-${key}" ${plan.harvardN ? "" : "disabled"}>Start Harvard</button>
+      <button class="lux-pbtn lux-pbtn--ghost" type="button" id="luxNextPracticeStartPassage-${key}" ${plan.passageKey ? "" : "disabled"}>Start Passage/Drill</button>
+      <button class="lux-pbtn lux-pbtn--ghost" type="button" id="luxNextPracticeQuickConvo-${key}" title="Instant targeted conversation using your trouble sounds">✨ Quick Practice</button>
+      <button class="lux-pbtn lux-pbtn--ghost" type="button" id="luxNextPracticeChooseConvo-${key}" title="Pick a scenario, then practice with your trouble sounds woven in">🎭 Choose Scenario</button>
     </div>
   `;
+}
+
+function buildNextPracticeSectionsHtml(nextPracticeBlocks = []) {
+  return (nextPracticeBlocks || [])
+    .map(
+      (block) => `
+      <details
+        class="lux-progress-sec"
+        open
+        id="lux-next-practice-${esc(block.key)}"
+        data-lux-next-practice="${esc(block.key)}"
+      >
+        <summary>${esc(block.title || "✨ Next practice")}</summary>
+        <div class="lux-sec-body">
+          ${buildNextPracticeSectionBody(block.nextPracticePlan || null, block)}
+        </div>
+      </details>
+    `
+    )
+    .join("");
 }
 
 export function buildProgressDashboardHtml({
@@ -65,7 +91,7 @@ export function buildProgressDashboardHtml({
   sessions,
   topPh,
   topWd,
-  nextPracticePlan,
+  nextPracticeBlocks,
 }) {
   return `
     <a id="lux-my-progress"></a>
@@ -163,18 +189,7 @@ export function buildProgressDashboardHtml({
         </div>
       </details>
 
-      ${
-        showNextPractice
-          ? `
-      <details class="lux-progress-sec" open id="lux-next-practice" data-lux-next-practice>
-        <summary data-tip="Based on your trouble sounds, Lux picks the best passage and conversation to practice next.">✨ Next practice</summary>
-        <div class="lux-sec-body">
-          ${buildNextPracticeSectionBody(nextPracticePlan)}
-        </div>
-      </details>
-      `
-          : ``
-      }
+      ${showNextPractice ? buildNextPracticeSectionsHtml(nextPracticeBlocks) : ``}
 
       <details class="lux-progress-sec">
         <summary data-tip="Sounds you consistently score below average on, sorted by how much they need attention.">⚠️ Trouble Sounds <span style="color:#94a3b8; font-weight:800">${

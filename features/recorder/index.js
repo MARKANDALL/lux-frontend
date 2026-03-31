@@ -12,6 +12,7 @@ import {
   currentParts,
   getSessionId,
   pushPartResult,
+  beginPracticeRunIfNeeded,
 } from "../../app-core/state.js";
 import { assessPronunciation, saveAttempt, getUID, fetchHistory } from "../../api/index.js";
 import { showPrettyResults } from "../results/index.js";
@@ -74,6 +75,7 @@ async function startRecordingFlow() {
     DOM.setStatus("Microphone Error");
     DOM.setVisualState("idle");
   } else {
+    beginPracticeRunIfNeeded();
     logDebug("Hybrid Recording Started");
   }
 }

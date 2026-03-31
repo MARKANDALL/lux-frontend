@@ -6,6 +6,11 @@ import { fetchHistory, ensureUID } from "../../api/index.js";
 import { computeRollups } from "../progress/rollups.js";
 import { pickPassageKey } from "../progress/attempt-pickers.js";
 import { renderProgressDashboard } from "../progress/render.js";
+import {
+  pickLatestAttempt,
+  pickAttemptsForLatestSession,
+  computeImmediateScopeRollups,
+} from "../progress/next-practice-scopes.js";
 import { luxBus } from "../../app-core/lux-bus.js";
 
 const HUB_HREF = "./progress.html";
@@ -24,14 +29,38 @@ function fmtMini(totals = {}) {
   return `Avg ${avg}% · Attempts ${attempts} · Last ${lastStr}`;
 }
 
-/** Shared opts for convo drawer renders */
-const CONVO_DRAWER_OPTS = {
-  title: "My Progress",
-  subtitle: "Conversation Skills (AI Conversations)",
-  showActions: false,
-  showNextPractice: true,
-  nextPracticeBehavior: "navigate",
-};
+function buildConvoNextPracticeBlocks(attempts, aggregateModel) {
+  const latest = pickLatestAttempt(attempts);
+  const latestOnly = latest ? [latest] : [];
+  const currentConversationAttempts = pickAttemptsForLatestSession(attempts);
+
+  return [
+    {
+      key: "convo-latest-exchange",
+      title: "✨ Next practice • What you just did: This exchange",
+      description: "Based only on your latest conversation turn.",
+      model: computeImmediateScopeRollups(latestOnly),
+      behavior: "navigate",
+      source: "convo_latest_attempt",
+    },
+    {
+      key: "convo-current-conversation",
+      title: "✨ Next practice • What you just did: This conversation",
+      description: "Based only on your current conversation session.",
+      model: computeImmediateScopeRollups(currentConversationAttempts),
+      behavior: "navigate",
+      source: "convo_current_session",
+    },
+    {
+      key: "convo-total",
+      title: "✨ Next practice • Your combined total",
+      description: "Based on your AI Conversations history.",
+      model: aggregateModel,
+      behavior: "navigate",
+      source: "convo_aggregate",
+    },
+  ];
+}
 
 export async function refreshConvoProgress() {
   if (!_state?.host) return;
@@ -45,7 +74,12 @@ export async function refreshConvoProgress() {
     if (_state.miniStatsEl) _state.miniStatsEl.textContent = fmtMini(model.totals);
 
     if (_state.detailsEl?.open && _state.mountEl) {
-      renderProgressDashboard(_state.mountEl, filtered, model, CONVO_DRAWER_OPTS);
+      renderProgressDashboard(_state.mountEl, filtered, model, {
+        title: "My Progress",
+        subtitle: "Conversation Skills (AI Conversations)",
+        showActions: false,
+        nextPracticeBlocks: buildConvoNextPracticeBlocks(filtered, model),
+      });
     }
   } catch (err) {
     console.error("[ConvoProgress] refresh failed:", err);
@@ -109,7 +143,12 @@ export async function initConvoProgress() {
       if (miniStatsEl) miniStatsEl.textContent = fmtMini(model.totals);
 
       if (mountEl) {
-        renderProgressDashboard(mountEl, filtered, model, CONVO_DRAWER_OPTS);
+        renderProgressDashboard(mountEl, filtered, model, {
+          title: "My Progress",
+          subtitle: "Conversation Skills (AI Conversations)",
+          showActions: false,
+          nextPracticeBlocks: buildConvoNextPracticeBlocks(filtered, model),
+        });
       }
     } catch (err) {
       console.error("[ConvoProgress] Drawer load failed:", err);

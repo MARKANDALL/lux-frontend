@@ -12,6 +12,7 @@ import {
   currentPartIdx,
   currentPassageKey,
   isCustom,
+  notePracticePassageSelection,
 } from "../../app-core/state.js"; 
 import * as DOM from "./dom.js"; 
 import { updateBalloon, popBalloon } from "../balloon/index.js";
@@ -141,6 +142,7 @@ export function showCurrentPart({ preserveExistingInput = false } = {}) {
 }
 
 export function setPassage(key, { clearInputForCustom = false } = {}) {
+  notePracticePassageSelection(key);
   setCustom(key === "custom");
   setPassageKey(key);
   setPartIdx(0);
