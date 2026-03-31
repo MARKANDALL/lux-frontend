@@ -33,6 +33,40 @@ function luxToast(msg, { duration = 4000, type = "error" } = {}) {
   }, duration);
 }
 
+function setTalkBtnLabel(talkBtn, text) {
+  const label = talkBtn?.querySelector(".lux-recLabel");
+  if (label) {
+    label.textContent = text;
+    return;
+  }
+  if (talkBtn) talkBtn.textContent = text;
+}
+
+function setTalkBtnIdle(talkBtn) {
+  if (!talkBtn) return;
+  talkBtn.classList.remove("record-glow", "record-stopflash");
+  setTalkBtnLabel(talkBtn, "🎙 Record");
+}
+
+function setTalkBtnRecording(talkBtn) {
+  if (!talkBtn) return;
+  talkBtn.classList.remove("record-stopflash");
+  talkBtn.classList.add("record-glow");
+  setTalkBtnLabel(talkBtn, "■ Stop & Send");
+}
+
+function flashTalkBtnStopping(talkBtn) {
+  if (!talkBtn) return;
+  talkBtn.classList.remove("record-glow", "record-stopflash");
+  void talkBtn.offsetWidth;
+  talkBtn.classList.add("record-stopflash");
+  setTalkBtnLabel(talkBtn, "Stopping…");
+
+  window.setTimeout(() => {
+    talkBtn.classList.remove("record-stopflash");
+  }, 220);
+}
+
 // ---------------------------------------------------------------------------
 // Handler attachment
 // ---------------------------------------------------------------------------
@@ -64,13 +98,16 @@ export function attachConvoHandlers({
     if (state.isRecording) {
       state.busy = true;
       talkBtn.disabled = true;
+      flashTalkBtnStopping(talkBtn);
+
       try {
         const blob = await stopRecordingAndGetBlob();
         state.isRecording = false;
         root.dataset.speaker = "assistant";
         root.dataset.speakerState = "thinking";
         root.classList.remove("is-recording");
-        talkBtn.textContent = "🎙 Record";
+        setTalkBtnIdle(talkBtn);
+
         if (blob) await sendTurn({ audioBlob: blob });
       } finally {
         state.busy = false;
@@ -85,16 +122,18 @@ export function attachConvoHandlers({
 
     state.busy = true;
     talkBtn.disabled = true;
+
     try {
       await startRecording();
       state.isRecording = true;
       root.dataset.speaker = "user";
       root.dataset.speakerState = "recording";
       root.classList.add("is-recording");
-      talkBtn.textContent = "■ Stop & Send";
+      setTalkBtnRecording(talkBtn);
     } catch (e) {
       console.error("[Convo] start recording failed", e);
-      luxToast(`Recording failed: ${e?.message || "unknown error"}`);
+      setTalkBtnIdle(talkBtn);
+      luxToast(`Recording failed: ${e?.message || e}`, { type: "error" });
     } finally {
       state.busy = false;
       talkBtn.disabled = false;

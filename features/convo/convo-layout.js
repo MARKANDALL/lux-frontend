@@ -138,7 +138,23 @@ export function buildConvoLayout({ root, el, mode, sessionId }) {
   input.className = "lux-in";
   input.placeholder = "Type or click a suggestion, then record your reply…";
 
-  const talkBtn = el("button", "btn primary", "🎙 Record");
+  const talkBtn = el("button", "btn primary lux-convoTalkBtn");
+  talkBtn.type = "button";
+  talkBtn.innerHTML = `
+    <span class="lux-recLabel">🎙 Record</span>
+    <span class="lux-recViz" aria-hidden="true">
+      <span class="lux-recBar"></span>
+      <span class="lux-recBar"></span>
+      <span class="lux-recBar"></span>
+      <span class="lux-recBar"></span>
+      <span class="lux-recBar"></span>
+      <span class="lux-recBar"></span>
+      <span class="lux-recBar"></span>
+      <span class="lux-recBar"></span>
+      <span class="lux-recBar"></span>
+      <span class="lux-recBar"></span>
+    </span>
+  `;
   compose.append(input, talkBtn);
 
   mid.append(midHd, coachBar, msgs, sugsNote, sugs, compose);
