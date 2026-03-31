@@ -3,6 +3,7 @@
 import { norm } from "../../src/data/phonemes/core.js";
 import { K_DEBUG_CONVO_MARKS, getBool } from "../../app-core/lux-storage.js";
 import { escapeHtml as escHtml } from "../../helpers/escape-html.js";
+import { getPhonemeSpellingRule } from "./phoneme-spelling-map.js";
 
 
 function escapeRegExp(s) {
@@ -20,54 +21,9 @@ function normToken(tok) {
 }
 
 function makeFocusTester(ipa) {
-  const k = norm(String(ipa || "").trim());
-
-  // Return a function(word)->boolean, or null if we don't have safe spelling cues.
-  if (!k) return null;
-
-  const map = {
-    f: /(?:f|ph|gh)/i, // far, flight, phone, laugh
-    v: /v/i,
-    θ: /th/i, // think
-    ð: /th/i, // this
-    ʃ: /sh/i, // she
-    "tʃ": /(?:ch|tch)/i, // chair, match
-    "dʒ": /(?:j|dge|dg)/i, // job, bridge
-    ŋ: /ng/i, // sing
-    ɹ: /(?:r|wr)/i,
-    r: /(?:r|wr)/i,
-    l: /l/i,
-k: /(?:k|ck|c(?![eiy]))/i,    // cat, black, king, kick
-    g: /g(?!h)/i,                   // go, big, great (not ghost/sigh)
-    b: /b/i,                        // big, lab
-    d: /d/i,                        // dog, bad
-    p: /p/i,                        // pen, top
-    s: /(?:s|ss|ce|ci|cy)/i,        // see, miss, nice, city
-    z: /(?:z|zz|s(?=[aeiouy]))/i,   // zoo, fizz, rose
-    m: /m/i,                        // map, him
-    n: /n(?!g)/i,                   // no, ten (not "ng")
-    w: /w/i,                        // we, win
-    h: /^h/i,                       // he, hat (word-initial only)
-    j: /(?:y(?=[aeiouy]))/i,        // yes, you (IPA /j/ = English "y" sound)
-    
-    // /t/ is tricky, but we need a practical rule so blue can exist.
-    // Accept most “t” spellings; avoid very common t→sh/ch patterns + a tiny silent-t denylist.
-    t: (word) => {
-      const s = normToken(word);
-      if (!s) return false;
-      if (!s.includes("t")) return false;
-      if (/(tion|tial|tious|ture)/i.test(s)) return false; // nation, special, future (often not /t/)
-      if (/stle$/i.test(s)) return false; // castle, whistle (t often silent)
-      if (/(listen|often)/i.test(s)) return false; // common silent-t words
-      return true;
-    },
-  };
-
-  const rule = map[k];
+  const rule = getPhonemeSpellingRule(ipa);
   if (!rule) return null;
-  if (rule instanceof RegExp) return (word) => rule.test(String(word || ""));
-  if (typeof rule === "function") return rule;
-  return null;
+  return (word) => rule.test(String(word || ""));
 }
 
 export function stripMarks(s) {
