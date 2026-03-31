@@ -46,14 +46,19 @@ function setTalkBtnLabel(talkBtn, text) {
 
 function setTalkBtnIdle(talkBtn) {
   if (!talkBtn) return;
-  talkBtn.classList.remove("record-glow", "record-stopflash", "record-sending");
+  talkBtn.classList.remove(
+    "record-glow",
+    "record-stopflash",
+    "record-sending",
+    "record-waiting"
+  );
   delete talkBtn.dataset.stopLabel;
   setTalkBtnLabel(talkBtn, "🎙 Record");
 }
 
 function setTalkBtnRecording(talkBtn) {
   if (!talkBtn) return;
-  talkBtn.classList.remove("record-stopflash", "record-sending");
+  talkBtn.classList.remove("record-stopflash", "record-sending", "record-waiting");
   delete talkBtn.dataset.stopLabel;
   talkBtn.classList.add("record-glow");
   setTalkBtnLabel(talkBtn, "■ Stop & Send");
@@ -61,18 +66,46 @@ function setTalkBtnRecording(talkBtn) {
 
 function setTalkBtnSending(talkBtn, text = "Sending…") {
   if (!talkBtn) return;
-  talkBtn.classList.remove("record-glow", "record-stopflash");
+  talkBtn.classList.remove("record-glow", "record-stopflash", "record-waiting");
   talkBtn.classList.add("record-sending");
+  delete talkBtn.dataset.stopLabel;
+  setTalkBtnLabel(talkBtn, text);
+}
+
+function setTalkBtnWaiting(talkBtn, text = "Waiting on AI…") {
+  if (!talkBtn) return;
+  talkBtn.classList.remove("record-glow", "record-stopflash", "record-sending");
+  talkBtn.classList.add("record-waiting");
   delete talkBtn.dataset.stopLabel;
   setTalkBtnLabel(talkBtn, text);
 }
 
 function flashTalkBtnStopping(talkBtn) {
   if (!talkBtn) return;
-  talkBtn.dataset.stopLabel = "Stopping…";
-  talkBtn.classList.remove("record-glow", "record-stopflash", "record-sending");
+  talkBtn.dataset.stopLabel = "Sending…";
+  talkBtn.classList.remove(
+    "record-glow",
+    "record-stopflash",
+    "record-sending",
+    "record-waiting"
+  );
   void talkBtn.offsetWidth;
   talkBtn.classList.add("record-stopflash");
+}
+
+function spawnCameraFlash(anchorEl) {
+  if (!anchorEl) return;
+
+  const rect = anchorEl.getBoundingClientRect();
+  const fx = document.createElement("div");
+  fx.className = "lux-convoCamFlash";
+  fx.style.setProperty("--flash-x", `${rect.left + rect.width / 2}px`);
+  fx.style.setProperty("--flash-y", `${rect.top + rect.height / 2}px`);
+  document.body.appendChild(fx);
+
+  window.setTimeout(() => {
+    fx.remove();
+  }, 520);
 }
 
 function waitMs(ms) {
@@ -102,6 +135,15 @@ export function attachConvoHandlers({
   uid,
   showConvoReportOverlay,
 }) {
+  let aiWaitTimer = null;
+
+  function clearTalkBtnTimers() {
+    if (aiWaitTimer) {
+      window.clearTimeout(aiWaitTimer);
+      aiWaitTimer = null;
+    }
+  }
+
   // --- Buttons ---
   talkBtn.addEventListener("click", async () => {
     if (state.busy) return;
@@ -110,6 +152,9 @@ export function attachConvoHandlers({
     if (state.isRecording) {
       state.busy = true;
       talkBtn.disabled = true;
+
+      clearTalkBtnTimers();
+      spawnCameraFlash(talkBtn);
       flashTalkBtnStopping(talkBtn);
 
       try {
@@ -119,14 +164,20 @@ export function attachConvoHandlers({
         root.dataset.speakerState = "thinking";
         root.classList.remove("is-recording");
 
-        // Let the white burst + snap-in label read, but keep it brief.
-        await waitMs(115);
+        // Give the flash + materialize phase time to breathe.
+        await waitMs(260);
 
-        // Then settle into a quieter neutral send state.
+        // Brief truthful send phase.
         setTalkBtnSending(talkBtn, "Sending…");
+
+        // If the response isn't back quickly, change the semantic state.
+        aiWaitTimer = window.setTimeout(() => {
+          setTalkBtnWaiting(talkBtn, "Waiting on AI…");
+        }, 900);
 
         if (blob) await sendTurn({ audioBlob: blob });
       } finally {
+        clearTalkBtnTimers();
         setTalkBtnIdle(talkBtn);
         state.busy = false;
         talkBtn.disabled = false;
