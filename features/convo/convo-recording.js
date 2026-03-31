@@ -62,9 +62,9 @@ function startLevelMeter(stream, onMeter, bars = 10) {
       }
 
       const avg = sum / Math.max(1, count);
-      let v = (avg / 255) * 1.9;
-      v = Math.pow(v, 0.65);
-      levels.push(clamp(v, 0.08, 1));
+      let v = (avg / 255) * 2.15;
+      v = Math.pow(v, 0.60);
+      levels.push(clamp(v, 0.10, 1));
     }
 
     try {

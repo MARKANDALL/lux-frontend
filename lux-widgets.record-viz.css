@@ -117,7 +117,7 @@
   #record.record-glow { animation: none; }
 }
 /* ============================================================
-   AI Conversations: single-toggle record button viz
+   AI Conversations: stronger stop burst + calmer send state
    ============================================================ */
 
 #convoApp .lux-convoTalkBtn{
@@ -125,12 +125,18 @@
   overflow: hidden;
   isolation: isolate;
   min-width: 168px;
+  transition:
+    color 140ms ease,
+    background-color 140ms ease,
+    box-shadow 140ms ease,
+    transform 140ms ease,
+    filter 140ms ease;
 }
 
 #convoApp .lux-convoTalkBtn .lux-recLabel{
   position: relative;
   z-index: 2;
-  transition: opacity 120ms ease, transform 120ms ease;
+  transition: opacity 110ms ease, transform 110ms ease, color 110ms ease, letter-spacing 110ms ease;
 }
 
 #convoApp .lux-convoTalkBtn .lux-recViz{
@@ -139,86 +145,143 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 4px;
   z-index: 3;
   pointer-events: none;
   opacity: 0;
-  transform: scale(0.98);
-  transition: opacity 120ms ease, transform 120ms ease;
+  transform: scale(0.985);
+  transition: opacity 0.12s ease, transform 0.12s ease;
 }
 
 #convoApp .lux-convoTalkBtn .lux-recBar{
-  width: 4px;
-  height: 18px;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.98);
-  opacity: 0.95;
+  width: 5px;
+  height: 20px;
+  border-radius: 4px;
+  background: currentColor;
+  opacity: 0.82;
   transform-origin: center bottom;
   transform: scaleY(var(--y, 0.12));
   will-change: transform;
 }
 
-#convoApp .lux-convoTalkBtn.record-glow{
-  background: linear-gradient(180deg, #f6d36a 0%, #e5ad28 100%);
-  color: #2a1d00;
+/* Gold recording state */
+#convoApp .lux-convoTalkBtn.record-glow,
+#convoApp .lux-convoTalkBtn.record-glow:disabled{
+  animation: recordGlowAmber 1.45s ease-in-out infinite;
+  background: linear-gradient(180deg, #f5ca58 0%, #dda329 100%);
+  color: #111827;
   box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,0.28),
-    0 0 0 1px rgba(229,173,40,0.34),
-    0 0 0 0 rgba(246,211,106,0);
-  animation: convoRecordGoldPulse 1.2s infinite ease-in-out;
+    0 0 0 0 var(--rec-glow-soft),
+    0 0 28px 2px var(--rec-glow-soft),
+    inset 0 1px 0 rgba(255,255,255,0.34),
+    inset 0 0 0 1px rgba(255,255,255,0.16);
+  filter: saturate(1.03);
 }
 
-#convoApp .lux-convoTalkBtn.record-glow .lux-recLabel{
-  opacity: 0;
-  transform: scale(0.96);
-}
-
-#convoApp .lux-convoTalkBtn.record-glow .lux-recViz{
+#convoApp .lux-convoTalkBtn.record-glow .lux-recViz,
+#convoApp .lux-convoTalkBtn.record-glow:disabled .lux-recViz{
   opacity: 1;
   transform: scale(1);
+  transition-delay: 55ms;
+}
+
+#convoApp .lux-convoTalkBtn.record-glow .lux-recLabel,
+#convoApp .lux-convoTalkBtn.record-glow:disabled .lux-recLabel{
+  opacity: 0;
+  transform: scale(0.965);
+}
+
+/* STOP FLASH: immediate white camera-pop */
+#convoApp .lux-convoTalkBtn.record-stopflash{
+  overflow: visible;
+  color: #0f172a;
+  filter: none;
+}
+
+#convoApp .lux-convoTalkBtn.record-stopflash .lux-recLabel,
+#convoApp .lux-convoTalkBtn.record-stopflash .lux-recViz{
+  opacity: 0 !important;
+  transform: scale(0.96) !important;
 }
 
 #convoApp .lux-convoTalkBtn.record-stopflash::after{
   content: "";
   position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: rgba(255,255,255,0.92);
+  inset: -34%;
+  border-radius: 999px;
   pointer-events: none;
-  z-index: 4;
-  animation: convoRecordStopFlash 220ms ease-out forwards;
+  z-index: 5;
+  background:
+    radial-gradient(circle at 50% 50%,
+      rgba(255,255,255,1) 0 20%,
+      rgba(255,255,255,0.98) 34%,
+      rgba(255,255,255,0.78) 50%,
+      rgba(255,255,255,0.22) 70%,
+      rgba(255,255,255,0) 86%
+    );
+  animation: convoStopWhiteBurst 115ms cubic-bezier(.12,.9,.2,1) forwards;
 }
 
-@keyframes convoRecordGoldPulse{
-  0%{
-    box-shadow:
-      inset 0 0 0 1px rgba(255,255,255,0.28),
-      0 0 0 1px rgba(229,173,40,0.34),
-      0 0 0 0 rgba(246,211,106,0);
-  }
-  50%{
-    box-shadow:
-      inset 0 0 0 1px rgba(255,255,255,0.34),
-      0 0 0 1px rgba(229,173,40,0.40),
-      0 0 0 7px rgba(246,211,106,0.22);
-  }
-  100%{
-    box-shadow:
-      inset 0 0 0 1px rgba(255,255,255,0.28),
-      0 0 0 1px rgba(229,173,40,0.34),
-      0 0 0 0 rgba(246,211,106,0);
-  }
+#convoApp .lux-convoTalkBtn.record-stopflash::before{
+  content: attr(data-stopLabel);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 6;
+  transform: translate(-50%, -50%) scale(1.26);
+  transform-origin: center center;
+  color: #0f172a;
+  font-weight: 900;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  text-shadow: 0 0 14px rgba(255,255,255,0.65);
+  animation: convoStopLabelSnapIn 135ms cubic-bezier(.18,.9,.22,1) 26ms forwards;
 }
 
-@keyframes convoRecordStopFlash{
-  0%   { opacity: 0.95; }
-  100% { opacity: 0; }
+/* Calm neutral send/wait state */
+#convoApp .lux-convoTalkBtn.record-sending{
+  animation: none;
+  background: linear-gradient(180deg, rgba(255,255,255,0.99), rgba(241,245,249,0.99));
+  color: #334155;
+  box-shadow:
+    0 8px 18px rgba(15,23,42,0.08),
+    inset 0 0 0 1px rgba(15,23,42,0.08);
+}
+
+#convoApp .lux-convoTalkBtn.record-sending::before,
+#convoApp .lux-convoTalkBtn.record-sending::after{
+  content: none;
+}
+
+#convoApp .lux-convoTalkBtn.record-sending .lux-recViz{
+  opacity: 0 !important;
+  transform: scale(0.98) !important;
+}
+
+#convoApp .lux-convoTalkBtn.record-sending .lux-recLabel{
+  opacity: 0.9;
+  transform: scale(1);
+  letter-spacing: 0.01em;
+}
+
+@keyframes convoStopWhiteBurst{
+  0%   { opacity: 0; transform: scale(0.08); }
+  35%  { opacity: 1; transform: scale(1.12); }
+  100% { opacity: 0; transform: scale(1.72); }
+}
+
+@keyframes convoStopLabelSnapIn{
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(1.26); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
 @media (prefers-reduced-motion: reduce){
   #convoApp .lux-convoTalkBtn,
   #convoApp .lux-convoTalkBtn .lux-recLabel,
   #convoApp .lux-convoTalkBtn .lux-recViz,
+  #convoApp .lux-convoTalkBtn.record-stopflash::before,
   #convoApp .lux-convoTalkBtn.record-stopflash::after{
     animation: none !important;
     transition: none !important;

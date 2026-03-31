@@ -46,12 +46,16 @@ async function postConvoTurn(payload, { signal } = {}) {
  * Backend contract — inject these into the ChatGPT system prompt:
  *   1. level  → CEFR band the AI partner should target (vocab + grammar complexity)
  *   2. tone   → conversational tone / emotional register the AI partner should adopt
- *   3. length → response length:
- *        terse    = 1-2 sentences, curt/snippet-like
- *        short    = 2-3 sentences
- *        medium   = 3-5 sentences (default)
- *        long     = 5-8 sentences, fuller responses
- *        extended = no artificial limit, genuinely full responses
+ *   3. length → response length target band:
+ *        terse    = usually 1–2 brief sentences, sometimes less; opening turns should skew extra short
+ *        short    = usually 2–3 short sentences
+ *        medium   = a normal conversational turn, often around 3–5 sentences
+ *        long     = a fuller response when needed, often around 5–8 sentences, but still conversational
+ *        extended = no artificial limit; speak as long as the situation naturally requires
+ *
+ * IMPORTANT:
+ * - Length is a strong conversational preference, not a robotic exact quota.
+ * - Opening turns should usually start smaller than later turns.
  *
  * NOTE: field was renamed from "mood" to "tone" in knobs v3.
  */

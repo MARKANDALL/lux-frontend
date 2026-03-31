@@ -1,5 +1,5 @@
 // features/convo/convo-handlers.js
-// One-line: Handles user interactions like recording, stop/send, etc.
+// One-line: Handles user interactions like recording, stop/send, and end-session reporting in AI Conversations.
 
 // ---------------------------------------------------------------------------
 // Tiny self-contained toast — no external deps, respects --z-toast CSS token
@@ -26,7 +26,9 @@ function luxToast(msg, { duration = 4000, type = "error" } = {}) {
   `;
   el.textContent = msg;
   document.body.appendChild(el);
-  requestAnimationFrame(() => (el.style.opacity = "1"));
+  requestAnimationFrame(() => {
+    el.style.opacity = "1";
+  });
   setTimeout(() => {
     el.style.opacity = "0";
     el.addEventListener("transitionend", () => el.remove(), { once: true });
@@ -44,27 +46,37 @@ function setTalkBtnLabel(talkBtn, text) {
 
 function setTalkBtnIdle(talkBtn) {
   if (!talkBtn) return;
-  talkBtn.classList.remove("record-glow", "record-stopflash");
+  talkBtn.classList.remove("record-glow", "record-stopflash", "record-sending");
+  delete talkBtn.dataset.stopLabel;
   setTalkBtnLabel(talkBtn, "🎙 Record");
 }
 
 function setTalkBtnRecording(talkBtn) {
   if (!talkBtn) return;
-  talkBtn.classList.remove("record-stopflash");
+  talkBtn.classList.remove("record-stopflash", "record-sending");
+  delete talkBtn.dataset.stopLabel;
   talkBtn.classList.add("record-glow");
   setTalkBtnLabel(talkBtn, "■ Stop & Send");
 }
 
-function flashTalkBtnStopping(talkBtn) {
+function setTalkBtnSending(talkBtn, text = "Sending…") {
   if (!talkBtn) return;
   talkBtn.classList.remove("record-glow", "record-stopflash");
+  talkBtn.classList.add("record-sending");
+  delete talkBtn.dataset.stopLabel;
+  setTalkBtnLabel(talkBtn, text);
+}
+
+function flashTalkBtnStopping(talkBtn) {
+  if (!talkBtn) return;
+  talkBtn.dataset.stopLabel = "Stopping…";
+  talkBtn.classList.remove("record-glow", "record-stopflash", "record-sending");
   void talkBtn.offsetWidth;
   talkBtn.classList.add("record-stopflash");
-  setTalkBtnLabel(talkBtn, "Stopping…");
+}
 
-  window.setTimeout(() => {
-    talkBtn.classList.remove("record-stopflash");
-  }, 220);
+function waitMs(ms) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
 // ---------------------------------------------------------------------------
@@ -106,10 +118,16 @@ export function attachConvoHandlers({
         root.dataset.speaker = "assistant";
         root.dataset.speakerState = "thinking";
         root.classList.remove("is-recording");
-        setTalkBtnIdle(talkBtn);
+
+        // Let the white burst + snap-in label read, but keep it brief.
+        await waitMs(115);
+
+        // Then settle into a quieter neutral send state.
+        setTalkBtnSending(talkBtn, "Sending…");
 
         if (blob) await sendTurn({ audioBlob: blob });
       } finally {
+        setTalkBtnIdle(talkBtn);
         state.busy = false;
         talkBtn.disabled = false;
       }
@@ -141,49 +159,21 @@ export function attachConvoHandlers({
   });
 
   endBtn.addEventListener("click", async () => {
-    console.log("[Convo] End Session click fired");
     try {
-      const s = SCENARIOS[state.scenarioIdx];
       const report = await convoReport({
         uid: uid(),
         sessionId: state.sessionId,
-        passageKey: `convo:${s.id}`,
+        scenarioId: SCENARIOS[state.scenarioIdx]?.id || "unknown",
+        messages: state.messages,
+        turns: state.turns,
       });
 
-      console.log("[Convo] convo-report result", report);
-      showConvoReportOverlay(report, state.turns, {
-        nextActivity: state.nextActivity || null,
-        turns: Array.isArray(state.turns) ? state.turns : [],
-        sessionId: state.sessionId,
-        passageKey: `convo:${s.id}`,
-        scenario: { id: s.id, title: s.title },
+      showConvoReportOverlay(report);
+    } catch (err) {
+      console.error("[Convo] end/report failed", err);
+      luxToast(`Could not generate report: ${err?.message || err}`, {
+        type: "error",
       });
-
-      if (window.LUX_DEBUG) {
-        let pre = document.getElementById("luxConvoReportDump");
-        if (!pre) {
-          pre = document.createElement("pre");
-          pre.id = "luxConvoReportDump";
-          pre.style.cssText = `
-            position: fixed; left: 12px; bottom: 12px; z-index: 99998;
-            max-width: min(520px, 92vw);
-            max-height: min(320px, 38vh);
-            overflow: auto;
-            white-space: pre-wrap;
-            background: rgba(0,0,0,0.55);
-            color: #e5e7eb;
-            border: 1px solid rgba(255,255,255,0.10);
-            border-radius: 12px;
-            padding: 10px;
-            font-size: 11px;
-          `;
-          (document.getElementById("convoApp") || document.body).appendChild(pre);
-        }
-        pre.textContent = JSON.stringify(report, null, 2);
-      }
-    } catch (e) {
-      console.error("[Convo] convo-report failed", e);
-      luxToast(`Session report failed — please try again`);
     }
   });
 }
