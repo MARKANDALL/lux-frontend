@@ -11,6 +11,7 @@ import {
   setJSON,
   remove,
 } from "../../app-core/lux-storage.js";
+import { renderPracticePreview } from "../practice-highlight/practice-highlight.js";
 
 // Lazy passage meta cache (keeps existing sync scoring helpers intact)
 let _PASSAGE_META = null;
@@ -135,10 +136,13 @@ export async function applyNextPracticePlan(plan, opts = {}) {
   if (!plan) return;
 
   const mode = opts.mode || plan.start || "";
+  const focusIpa = plan.focusIpa || "";
+  const wordBank = opts.wordBank || [];
 
   if (mode === "harvard") {
     if (!plan.harvardN) return;
     await loadHarvardList(plan.harvardN);
+    _refreshPreview(focusIpa, wordBank);
     try {
       document.getElementById("referenceText")?.focus();
     } catch (err) {
@@ -150,17 +154,27 @@ export async function applyNextPracticePlan(plan, opts = {}) {
   if (mode === "passage") {
     if (!plan.passageKey) return;
 
-    // Keep dropdown visually in sync
     const sel = document.getElementById("passageSelect");
     if (sel) sel.value = plan.passageKey;
 
     setPassage(plan.passageKey, { clearInputForCustom: false });
     updatePartsInfoTip();
+    _refreshPreview(focusIpa, wordBank);
     try {
       document.getElementById("referenceText")?.focus();
     } catch (err) {
       globalThis.warnSwallow("features/next-activity/next-practice.js", err, "important");
     }
+  }
+}
+
+function _refreshPreview(focusIpa, wordBank) {
+  try {
+    const previewEl = document.getElementById("luxPracticePreview");
+    const text = document.getElementById("referenceText")?.value || "";
+    renderPracticePreview(previewEl, text, { focusIpa, wordBank });
+  } catch (err) {
+    globalThis.warnSwallow("features/next-activity/next-practice.js", err, "important");
   }
 }
 

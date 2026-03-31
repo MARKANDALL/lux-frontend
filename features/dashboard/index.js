@@ -39,24 +39,25 @@ function fmtMini(totals = {}) {
 function buildPracticeNextPracticeBlocks(attempts, aggregateModel) {
   const latest = pickLatestAttempt(attempts);
   const latestOnly = latest ? [latest] : [];
-  const currentPassageAttempts = pickAttemptsForLatestSession(attempts);
+  const sessionAttempts = pickAttemptsForLatestSession(attempts);
+
+  // Use session if multiple attempts exist, otherwise just the latest line
+  const recentAttempts = sessionAttempts.length > 1 ? sessionAttempts : latestOnly;
+  const recentLabel = sessionAttempts.length > 1
+    ? "Based on your current passage session."
+    : "Based on your latest recorded line.";
+  const recentSource = sessionAttempts.length > 1
+    ? "practice_current_session"
+    : "practice_latest_attempt";
 
   return [
     {
-      key: "practice-latest-line",
-      title: "✨ Next practice • What you just did: This line",
-      description: "Based only on your latest recorded line.",
-      model: computeImmediateScopeRollups(latestOnly),
+      key: "practice-recent",
+      title: "✨ Next practice • What you just did",
+      description: recentLabel,
+      model: computeImmediateScopeRollups(recentAttempts),
       behavior: "apply",
-      source: "practice_latest_attempt",
-    },
-    {
-      key: "practice-current-passage",
-      title: "✨ Next practice • What you just did: This passage",
-      description: "Based only on your current passage session.",
-      model: computeImmediateScopeRollups(currentPassageAttempts),
-      behavior: "apply",
-      source: "practice_current_session",
+      source: recentSource,
     },
     {
       key: "practice-total",

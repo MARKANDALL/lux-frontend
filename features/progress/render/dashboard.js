@@ -135,6 +135,12 @@ function wireNextPracticeButtons({ plan, behavior, model, scopeKey, source }) {
   const bH = document.getElementById(`luxNextPracticeStartHarvard-${scopeKey}`);
   const bP = document.getElementById(`luxNextPracticeStartPassage-${scopeKey}`);
 
+  // Extract trouble words from the model for highlighting
+  const troubleWords = (model?.trouble?.wordsAll || [])
+    .map((w) => w?.word || "")
+    .filter(Boolean)
+    .slice(0, 8);
+
   if (bH) {
     bH.addEventListener("click", () => {
       if (!plan.harvardN) return;
@@ -145,7 +151,7 @@ function wireNextPracticeButtons({ plan, behavior, model, scopeKey, source }) {
         return;
       }
 
-      applyNextPracticePlan({ ...plan, start: "harvard" });
+      applyNextPracticePlan({ ...plan, start: "harvard" }, { wordBank: troubleWords });
     });
   }
 
@@ -159,7 +165,7 @@ function wireNextPracticeButtons({ plan, behavior, model, scopeKey, source }) {
         return;
       }
 
-      applyNextPracticePlan({ ...plan, start: "passage" });
+      applyNextPracticePlan({ ...plan, start: "passage" }, { wordBank: troubleWords });
     });
   }
 

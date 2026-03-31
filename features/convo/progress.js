@@ -32,24 +32,25 @@ function fmtMini(totals = {}) {
 function buildConvoNextPracticeBlocks(attempts, aggregateModel) {
   const latest = pickLatestAttempt(attempts);
   const latestOnly = latest ? [latest] : [];
-  const currentConversationAttempts = pickAttemptsForLatestSession(attempts);
+  const sessionAttempts = pickAttemptsForLatestSession(attempts);
+
+  // Use session if multiple turns exist, otherwise just the latest exchange
+  const recentAttempts = sessionAttempts.length > 1 ? sessionAttempts : latestOnly;
+  const recentLabel = sessionAttempts.length > 1
+    ? "Based on your current conversation session."
+    : "Based on your latest conversation turn.";
+  const recentSource = sessionAttempts.length > 1
+    ? "convo_current_session"
+    : "convo_latest_attempt";
 
   return [
     {
-      key: "convo-latest-exchange",
-      title: "✨ Next practice • What you just did: This exchange",
-      description: "Based only on your latest conversation turn.",
-      model: computeImmediateScopeRollups(latestOnly),
+      key: "convo-recent",
+      title: "✨ Next practice • What you just did",
+      description: recentLabel,
+      model: computeImmediateScopeRollups(recentAttempts),
       behavior: "navigate",
-      source: "convo_latest_attempt",
-    },
-    {
-      key: "convo-current-conversation",
-      title: "✨ Next practice • What you just did: This conversation",
-      description: "Based only on your current conversation session.",
-      model: computeImmediateScopeRollups(currentConversationAttempts),
-      behavior: "navigate",
-      source: "convo_current_session",
+      source: recentSource,
     },
     {
       key: "convo-total",

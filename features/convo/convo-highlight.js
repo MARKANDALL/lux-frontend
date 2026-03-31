@@ -37,7 +37,19 @@ function makeFocusTester(ipa) {
     ɹ: /(?:r|wr)/i,
     r: /(?:r|wr)/i,
     l: /l/i,
-
+k: /(?:k|ck|c(?![eiy]))/i,    // cat, black, king, kick
+    g: /g(?!h)/i,                   // go, big, great (not ghost/sigh)
+    b: /b/i,                        // big, lab
+    d: /d/i,                        // dog, bad
+    p: /p/i,                        // pen, top
+    s: /(?:s|ss|ce|ci|cy)/i,        // see, miss, nice, city
+    z: /(?:z|zz|s(?=[aeiouy]))/i,   // zoo, fizz, rose
+    m: /m/i,                        // map, him
+    n: /n(?!g)/i,                   // no, ten (not "ng")
+    w: /w/i,                        // we, win
+    h: /^h/i,                       // he, hat (word-initial only)
+    j: /(?:y(?=[aeiouy]))/i,        // yes, you (IPA /j/ = English "y" sound)
+    
     // /t/ is tricky, but we need a practical rule so blue can exist.
     // Accept most “t” spellings; avoid very common t→sh/ch patterns + a tiny silent-t denylist.
     t: (word) => {
