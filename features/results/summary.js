@@ -10,6 +10,7 @@ import { isCorrupt } from "../../helpers/core.js";
 import { passages } from "../../src/data/passages.js";
 import { detailedPhonemeFeedback } from "./summary-feedback.js";
 import { scoreClass as scoreClassCore, fmtPctCefr } from "../../core/scoring/index.js";
+import { mountVoiceMirrorButton } from '../voice-mirror/voice-mirror.js';
 
 // --- Universal Color Helper (Inlined for safety) ---
 function getColorConfig(s) {
@@ -168,4 +169,15 @@ export function showSummary({ allPartsResults, currentParts }) {
   }
 
   $out.innerHTML = html;
+
+// ── Voice Mirror button ─────────────────────────────────────────────
+  const referenceText = Array.isArray(passageData?.parts)
+    ? passageData.parts.join(' ')
+    : '';
+
+  if (referenceText) {
+    requestAnimationFrame(() => {
+      mountVoiceMirrorButton($out, referenceText);
+    });
+  }
 }
