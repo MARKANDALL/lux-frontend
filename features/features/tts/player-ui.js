@@ -3,6 +3,7 @@
 // UPDATED: simplified Waveform handoff (passes Blob directly to WaveSurfer).
 
 import { luxBus } from '../../../app-core/lux-bus.js';
+import { currentPartIdx, currentParts } from '../../../app-core/state.js';
 
 import {
   VOICES,
@@ -20,6 +21,7 @@ import {
 
 // NEW IMPORT: simplified blob loader
 import { loadReferenceBlob } from "../selfpb/waveform-logic.js";
+import { mountVoiceMirrorButton } from '../../voice-mirror/voice-mirror.js';
 
 import { wireTtsProgress } from "./player-ui/progress.js";
 
@@ -31,6 +33,17 @@ import {
 
 const isPlaying = (audio) =>
   !audio.paused && !audio.ended && audio.currentTime > 0;
+
+function getCurrentPracticeReferenceText() {
+  const input =
+    document.querySelector('#referenceText') ||
+    document.querySelector('textarea');
+
+  const typed = String(input?.value || '').trim();
+  if (typed) return typed;
+
+  return String(currentParts?.[currentPartIdx] || '').trim();
+}
 
 function normalizeSourceMode(mode) {
   const m = String(mode || "").trim().toLowerCase();
@@ -66,6 +79,27 @@ export async function mountTTSPlayer(hostEl) {
 
   // 1. Render the HTML Template
   renderControls(host);
+
+  let voiceMirrorHost = host.querySelector('#tts-voice-mirror-slot');
+
+  if (!voiceMirrorHost) {
+    voiceMirrorHost = document.createElement('div');
+    voiceMirrorHost.id = 'tts-voice-mirror-slot';
+    voiceMirrorHost.style.marginTop = '12px';
+
+    const actionRow =
+      host.querySelector('.tts-actionRow') ||
+      host.querySelector('.tts-actions') ||
+      host.querySelector('#tts-controls');
+
+    if (actionRow) {
+      actionRow.insertAdjacentElement('afterend', voiceMirrorHost);
+    }
+  }
+
+  if (voiceMirrorHost && document.getElementById('referenceText')) {
+    await mountVoiceMirrorButton(voiceMirrorHost, getCurrentPracticeReferenceText);
+  }
 
   // 2. Select Elements
   const sourceSel = $(host, "#tts-source");

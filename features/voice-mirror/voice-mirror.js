@@ -6,6 +6,18 @@ import { getVoiceProfileStatus, synthesizeVoiceMirror } from '../../api/voice-mi
 // ── State ──────────────────────────────────────────────────────────────
 let _hasProfile = null; // null = unchecked, true/false after first check
 
+function resolveTargetText(targetTextOrGetter) {
+  if (typeof targetTextOrGetter === 'function') {
+    try {
+      return String(targetTextOrGetter() || '').trim();
+    } catch (err) {
+      console.warn('[voice-mirror] targetText getter failed', err);
+      return '';
+    }
+  }
+  return String(targetTextOrGetter || '').trim();
+}
+
 // ── Get UID (mirrors summary-shell.js pattern) ────────────────────────
 function getLuxUID() {
   return (
@@ -40,7 +52,7 @@ function base64ToAudioUrl(base64) {
 }
 
 // ── Build the Voice Mirror button ─────────────────────────────────────
-function createMirrorButton(targetText) {
+function createMirrorButton(targetTextOrGetter) {
   const btn = document.createElement('button');
   btn.className = 'lux-voice-mirror-btn';
   btn.type = 'button';
@@ -74,6 +86,12 @@ function createMirrorButton(targetText) {
   btn.addEventListener('click', async () => {
     const uid = getLuxUID();
     if (!uid) { alert('No user ID found.'); return; }
+
+    const targetText = resolveTargetText(targetTextOrGetter);
+    if (!targetText) {
+      alert('No practice text found yet.');
+      return;
+    }
 
     const spanEl = btn.querySelector('span');
     const origText = spanEl.textContent;
@@ -147,20 +165,35 @@ function showPlayer(anchorEl, audioUrl, text) {
 // ── Public: inject Voice Mirror button into a container ────────────────
 // Call this after results are rendered. Pass the target text (what the
 // user was supposed to say) and a DOM container to inject into.
-export async function mountVoiceMirrorButton(container, targetText) {
-  if (!container || !targetText) return;
+export async function mountVoiceMirrorButton(container, targetTextOrGetter) {
+  if (!container) return;
+
+  const targetText = resolveTargetText(targetTextOrGetter);
+  if (!targetText) return;
 
   // Remove any previous button in this container
-  const old = container.querySelector('.lux-voice-mirror-btn');
+  const old = container.querySelector('.lux-voice-mirror-shell');
   if (old) old.remove();
+  const oldBtn = container.querySelector('.lux-voice-mirror-btn');
+  if (oldBtn) oldBtn.remove();
   const oldPlayer = container.querySelector('.lux-voice-mirror-player');
   if (oldPlayer) oldPlayer.remove();
 
   const hasProfile = await ensureProfileChecked();
   if (!hasProfile) return; // Silently skip if no voice profile exists yet
 
-  const btn = createMirrorButton(targetText);
-  container.appendChild(btn);
+  const btn = createMirrorButton(targetTextOrGetter);
+
+  const shell = document.createElement('div');
+  shell.className = 'lux-voice-mirror-shell';
+  shell.innerHTML = `
+    <div style="margin:0 0 8px 0; font-weight:800; color:#4f46e5;">🪞 Voice Mirror</div>
+    <div style="margin:0 0 12px 0; color:#64748b; font-size:0.9rem; line-height:1.4;">
+      Hear this exact practice line in your own corrected voice.
+    </div>
+  `;
+  shell.appendChild(btn);
+  container.appendChild(shell);
 }
 
 // ── Public: reset cached profile status (call after creating a profile) ──
