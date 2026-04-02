@@ -1,24 +1,19 @@
 // features/voice-mirror/voice-mirror.js
-// One-line: "Hear it in my voice" button + dual playback UI for results views.
+// One-line: "Hear it in my voice" button + inline audio player for TTS drawer.
 
 import { getVoiceProfileStatus, synthesizeVoiceMirror } from '../../api/voice-mirror.js';
 
 // ── State ──────────────────────────────────────────────────────────────
-let _hasProfile = null; // null = unchecked, true/false after first check
+let _hasProfile = null;
 
 function resolveTargetText(targetTextOrGetter) {
   if (typeof targetTextOrGetter === 'function') {
-    try {
-      return String(targetTextOrGetter() || '').trim();
-    } catch (err) {
-      console.warn('[voice-mirror] targetText getter failed', err);
-      return '';
-    }
+    try { return String(targetTextOrGetter() || '').trim(); }
+    catch (err) { console.warn('[voice-mirror] targetText getter failed', err); return ''; }
   }
   return String(targetTextOrGetter || '').trim();
 }
 
-// ── Get UID (mirrors summary-shell.js pattern) ────────────────────────
 function getLuxUID() {
   return (
     (window && window.LUX_USER_ID) ||
@@ -27,7 +22,6 @@ function getLuxUID() {
   ).toString();
 }
 
-// ── Check profile status (cached per page load) ───────────────────────
 async function ensureProfileChecked() {
   if (_hasProfile !== null) return _hasProfile;
   const uid = getLuxUID();
@@ -42,7 +36,6 @@ async function ensureProfileChecked() {
   return _hasProfile;
 }
 
-// ── Create audio element from base64 MP3 ──────────────────────────────
 function base64ToAudioUrl(base64) {
   const bytes = atob(base64);
   const arr = new Uint8Array(bytes.length);
@@ -51,10 +44,48 @@ function base64ToAudioUrl(base64) {
   return URL.createObjectURL(blob);
 }
 
+// ── Glass shimmer keyframes (injected once) ───────────────────────────
+let _shimmerInjected = false;
+function ensureShimmerCSS() {
+  if (_shimmerInjected) return;
+  _shimmerInjected = true;
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes lux-glass-shimmer {
+      0%   { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    .lux-vm-shimmer {
+      position: relative;
+      overflow: hidden;
+    }
+    .lux-vm-shimmer::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        120deg,
+        transparent 25%,
+        rgba(255, 255, 255, 0.25) 40%,
+        rgba(255, 255, 255, 0.4) 50%,
+        rgba(255, 255, 255, 0.25) 60%,
+        transparent 75%
+      );
+      background-size: 200% 100%;
+      animation: lux-glass-shimmer 3s ease-in-out infinite;
+      pointer-events: none;
+      border-radius: inherit;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 // ── Build the Voice Mirror button ─────────────────────────────────────
 function createMirrorButton(targetTextOrGetter) {
+  ensureShimmerCSS();
+
   const btn = document.createElement('button');
-  btn.className = 'lux-voice-mirror-btn';
+  btn.className = 'lux-voice-mirror-btn lux-vm-shimmer';
   btn.type = 'button';
   btn.innerHTML = '🪞 <span>Hear it in my voice</span>';
   btn.style.cssText = [
@@ -62,16 +93,19 @@ function createMirrorButton(targetTextOrGetter) {
     'align-items: center',
     'gap: 8px',
     'padding: 10px 18px',
-    'margin: 16px 0',
+    'margin: 0',
+    'width: 100%',
+    'justify-content: center',
     'background: linear-gradient(135deg, #6366f1, #8b5cf6)',
     'color: #fff',
     'border: none',
-    'border-radius: 12px',
+    'border-radius: 10px',
     'font-size: 0.95rem',
     'font-weight: 600',
     'cursor: pointer',
     'transition: all 0.2s ease',
     'box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3)',
+    'position: relative',
   ].join(';');
 
   btn.addEventListener('mouseenter', () => {
@@ -98,6 +132,8 @@ function createMirrorButton(targetTextOrGetter) {
     spanEl.textContent = 'Generating...';
     btn.disabled = true;
     btn.style.opacity = '0.7';
+    // Pause shimmer while generating
+    btn.classList.remove('lux-vm-shimmer');
 
     try {
       const result = await synthesizeVoiceMirror({ uid, targetText });
@@ -107,7 +143,10 @@ function createMirrorButton(targetTextOrGetter) {
       }
 
       const audioUrl = base64ToAudioUrl(result.audioBase64);
-      showPlayer(btn, audioUrl, targetText);
+      showPlayer(btn, audioUrl);
+
+      // ── FIX: Reset button text after successful generation ──
+      spanEl.textContent = origText;
     } catch (err) {
       console.error('[voice-mirror] synthesis failed:', err);
       spanEl.textContent = 'Error — tap to retry';
@@ -115,6 +154,7 @@ function createMirrorButton(targetTextOrGetter) {
     } finally {
       btn.disabled = false;
       btn.style.opacity = '1';
+      btn.classList.add('lux-vm-shimmer');
     }
   });
 
@@ -122,56 +162,35 @@ function createMirrorButton(targetTextOrGetter) {
 }
 
 // ── Show the audio player after synthesis ──────────────────────────────
-function showPlayer(anchorEl, audioUrl, text) {
+function showPlayer(anchorEl, audioUrl) {
   // Remove any existing player
   const existing = anchorEl.parentElement?.querySelector('.lux-voice-mirror-player');
-  if (existing) existing.remove();
+  if (existing) {
+    const oldSrc = existing.querySelector('audio')?.src;
+    if (oldSrc) URL.revokeObjectURL(oldSrc);
+    existing.remove();
+  }
 
   const player = document.createElement('div');
   player.className = 'lux-voice-mirror-player';
   player.style.cssText = [
-    'margin: 12px 0',
-    'padding: 16px',
-    'background: #f8f7ff',
-    'border: 1px solid #e0dbff',
-    'border-radius: 12px',
+    'margin: 8px 0 0 0',
+    'width: 100%',
   ].join(';');
 
+  // Clean player: just the audio controls, no quote text, no close button
   player.innerHTML = `
-    <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
-      <span style="font-size:1.2em;">🪞</span>
-      <strong style="color:#4f46e5; font-size:0.95rem;">Voice Mirror</strong>
-    </div>
-    <div style="color:#64748b; font-size:0.85rem; margin-bottom:12px; font-style:italic;">
-      "${text.length > 80 ? text.slice(0, 80) + '…' : text}"
-    </div>
-    <audio controls autoplay style="width:100%; border-radius:8px;" src="${audioUrl}"></audio>
-    <div style="margin-top:8px; text-align:right;">
-      <button type="button" class="lux-vm-close" style="
-        background:none; border:none; color:#94a3b8; cursor:pointer;
-        font-size:0.8rem; text-decoration:underline;
-      ">Close</button>
-    </div>
+    <audio controls autoplay style="width:100%; border-radius:8px; height:36px;" src="${audioUrl}"></audio>
   `;
-
-  player.querySelector('.lux-vm-close').addEventListener('click', () => {
-    URL.revokeObjectURL(audioUrl);
-    player.remove();
-  });
 
   anchorEl.insertAdjacentElement('afterend', player);
 }
 
 // ── Public: inject Voice Mirror button into a container ────────────────
-// Call this after results are rendered. Pass the target text (what the
-// user was supposed to say) and a DOM container to inject into.
 export async function mountVoiceMirrorButton(container, targetTextOrGetter) {
   if (!container) return;
 
-  const targetText = resolveTargetText(targetTextOrGetter);
-  if (!targetText) return;
-
-  // Remove any previous button in this container
+  // Remove any previous elements
   const old = container.querySelector('.lux-voice-mirror-shell');
   if (old) old.remove();
   const oldBtn = container.querySelector('.lux-voice-mirror-btn');
@@ -180,23 +199,35 @@ export async function mountVoiceMirrorButton(container, targetTextOrGetter) {
   if (oldPlayer) oldPlayer.remove();
 
   const hasProfile = await ensureProfileChecked();
-  if (!hasProfile) return; // Silently skip if no voice profile exists yet
+  if (!hasProfile) return;
+
+  ensureShimmerCSS();
 
   const btn = createMirrorButton(targetTextOrGetter);
 
   const shell = document.createElement('div');
-  shell.className = 'lux-voice-mirror-shell';
+  shell.className = 'lux-voice-mirror-shell lux-vm-shimmer';
+  shell.style.cssText = [
+    'margin: 12px 0 0 0',
+    'padding: 12px',
+    'background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(139, 92, 246, 0.08))',
+    'border: 1px solid rgba(99, 102, 241, 0.15)',
+    'border-radius: 12px',
+    'width: 100%',
+    'box-sizing: border-box',
+    'position: relative',
+  ].join(';');
+
   shell.innerHTML = `
-    <div style="margin:0 0 8px 0; font-weight:800; color:#4f46e5;">🪞 Voice Mirror</div>
-    <div style="margin:0 0 12px 0; color:#64748b; font-size:0.9rem; line-height:1.4;">
-      Hear this exact practice line in your own corrected voice.
+    <div style="margin:0 0 8px 0; font-weight:700; color:#4f46e5; font-size:0.9rem;">🪞 Voice Mirror</div>
+    <div style="margin:0 0 10px 0; color:#64748b; font-size:0.8rem; line-height:1.4;">
+      Hear this practice line in your own corrected voice.
     </div>
   `;
   shell.appendChild(btn);
   container.appendChild(shell);
 }
 
-// ── Public: reset cached profile status (call after creating a profile) ──
 export function resetVoiceMirrorCache() {
   _hasProfile = null;
 }
