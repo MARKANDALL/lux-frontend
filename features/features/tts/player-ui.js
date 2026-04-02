@@ -98,7 +98,8 @@ export async function mountTTSPlayer(hostEl) {
   }
 
   if (voiceMirrorHost && document.getElementById('referenceText')) {
-    await mountVoiceMirrorButton(voiceMirrorHost, getCurrentPracticeReferenceText);
+    mountVoiceMirrorButton(voiceMirrorHost, getCurrentPracticeReferenceText)
+      .catch(err => console.warn('[voice-mirror] mount failed:', err));
   }
 
   // 2. Select Elements

@@ -14,7 +14,13 @@ export async function getVoiceProfileStatus(uid) {
   });
 }
 
-/** Create a voice clone from base64-encoded audio. */
+/**
+ * Create a voice clone from audio samples.
+ * @param {Object} opts
+ * @param {string} opts.uid
+ * @param {string|string[]} opts.audioBase64 - single base64 string OR array of base64 strings
+ * @param {string} opts.userName
+ */
 export async function createVoiceClone({ uid, audioBase64, userName }) {
   return apiFetch(CLONE_URL, {
     method: 'POST',
@@ -30,7 +36,7 @@ export async function deleteVoiceProfile(uid) {
   });
 }
 
-/** Synthesize corrected text in the user's cloned voice. Returns { ok, audioBase64, contentType }. */
+/** Synthesize corrected text in the user's cloned voice. */
 export async function synthesizeVoiceMirror({ uid, targetText }) {
   return apiFetch(MIRROR_URL, {
     method: 'POST',

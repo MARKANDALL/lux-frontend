@@ -58,7 +58,11 @@ function setTalkBtnIdle(talkBtn) {
 
 function setTalkBtnRecording(talkBtn) {
   if (!talkBtn) return;
-  talkBtn.classList.remove("record-stopflash", "record-sending", "record-waiting");
+  talkBtn.classList.remove(
+    "record-stopflash",
+    "record-sending",
+    "record-waiting"
+  );
   delete talkBtn.dataset.stopLabel;
   talkBtn.classList.add("record-glow");
   setTalkBtnLabel(talkBtn, "■ Stop & Send");
@@ -66,7 +70,11 @@ function setTalkBtnRecording(talkBtn) {
 
 function setTalkBtnSending(talkBtn, text = "Sending…") {
   if (!talkBtn) return;
-  talkBtn.classList.remove("record-glow", "record-stopflash", "record-waiting");
+  talkBtn.classList.remove(
+    "record-glow",
+    "record-stopflash",
+    "record-waiting"
+  );
   talkBtn.classList.add("record-sending");
   delete talkBtn.dataset.stopLabel;
   setTalkBtnLabel(talkBtn, text);
@@ -74,7 +82,11 @@ function setTalkBtnSending(talkBtn, text = "Sending…") {
 
 function setTalkBtnWaiting(talkBtn, text = "Waiting on AI…") {
   if (!talkBtn) return;
-  talkBtn.classList.remove("record-glow", "record-stopflash", "record-sending");
+  talkBtn.classList.remove(
+    "record-glow",
+    "record-stopflash",
+    "record-sending"
+  );
   talkBtn.classList.add("record-waiting");
   delete talkBtn.dataset.stopLabel;
   setTalkBtnLabel(talkBtn, text);
@@ -93,19 +105,28 @@ function flashTalkBtnStopping(talkBtn) {
   talkBtn.classList.add("record-stopflash");
 }
 
-function spawnCameraFlash(anchorEl) {
+function spawnLocalFlash(anchorEl) {
   if (!anchorEl) return;
 
   const rect = anchorEl.getBoundingClientRect();
   const fx = document.createElement("div");
-  fx.className = "lux-convoCamFlash";
-  fx.style.setProperty("--flash-x", `${rect.left + rect.width / 2}px`);
-  fx.style.setProperty("--flash-y", `${rect.top + rect.height / 2}px`);
+  fx.className = "lux-convoLocalBlast";
+
+  const blastSize = Math.max(
+    rect.width * 2.9,
+    rect.height * 12,
+    480
+  );
+
+  fx.style.setProperty("--blast-x", `${rect.left + rect.width / 2}px`);
+  fx.style.setProperty("--blast-y", `${rect.top + rect.height / 2}px`);
+  fx.style.setProperty("--blast-size", `${blastSize}px`);
+
   document.body.appendChild(fx);
 
   window.setTimeout(() => {
     fx.remove();
-  }, 520);
+  }, 700);
 }
 
 function waitMs(ms) {
@@ -154,7 +175,7 @@ export function attachConvoHandlers({
       talkBtn.disabled = true;
 
       clearTalkBtnTimers();
-      spawnCameraFlash(talkBtn);
+      spawnLocalFlash(talkBtn);
       flashTalkBtnStopping(talkBtn);
 
       try {
@@ -164,18 +185,22 @@ export function attachConvoHandlers({
         root.dataset.speakerState = "thinking";
         root.classList.remove("is-recording");
 
-        // Give the flash + materialize phase time to breathe.
-        await waitMs(260);
+        const sendPromise = blob
+          ? sendTurn({ audioBlob: blob })
+          : Promise.resolve();
 
-        // Brief truthful send phase.
+        // Let the white blast + label materialization breathe.
+        await waitMs(360);
+
+        // Then land on the truthful send state.
         setTalkBtnSending(talkBtn, "Sending…");
 
-        // If the response isn't back quickly, change the semantic state.
+        // If the model takes longer, switch to the real wait meaning.
         aiWaitTimer = window.setTimeout(() => {
           setTalkBtnWaiting(talkBtn, "Waiting on AI…");
-        }, 900);
+        }, 950);
 
-        if (blob) await sendTurn({ audioBlob: blob });
+        await sendPromise;
       } finally {
         clearTalkBtnTimers();
         setTalkBtnIdle(talkBtn);
