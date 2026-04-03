@@ -1,7 +1,9 @@
 // features/convo/scenarios.js
 // Source of truth for all 25 AI conversation scenarios.
-// Structure: title → desc → 3 bullet-point `more` → emotion-neutral roles.
-// Last overhauled: 2026-03-04 (alignment audit + constitution compliance).
+// Structure: title → desc → 3 bullet-point `more` → roles.
+// Last overhauled: 2026-04-03 (Step 2 stricter NPC pass — behavioral steering removal).
+// Axes: length-neutral · emotion-neutral · CEFR-neutral · perspective-neutral.
+// NPC principle: identity + scene function only — no conversational method scripting.
 
 export const SCENARIOS = [
   {
@@ -17,23 +19,27 @@ export const SCENARIOS = [
       {
         id: "learner",
         label: "Learner",
-        npc: "Someone doing a short, targeted speaking practice conversation. They are trying to speak naturally and clearly.",
+        npc: "Someone doing a focused speaking practice conversation. Trying to speak naturally and clearly.",
       },
       {
         id: "partner",
         label: "Conversation Partner",
-        npc: "A calm, friendly conversation partner who keeps the exchange open-ended, natural, and easy to follow.",
+        npc: "A conversation partner. No fixed role or agenda.",
       },
     ],
   },
   {
     id: "coffee",
     title: "Order Coffee",
-    desc: "Order quickly, make small talk, and stay friendly under mild time pressure.",
+    desc: "A morning rush, a café line that won't wait, and an order to get right the first time.",
     img: "/convo-img/coffee.webp",
     thumb: "/convo-img/thumbs/coffee.webp",
     video: "/convo-vid/coffee.mp4",
-    more: `• Busy morning café with a growing line — the barista needs your order clear the first time\n\n• Hurdles: noisy environment · mishearing size or milk options · rushed pace\n\n• Targets: polite correction · quick decisions · casual small talk · drink customization vocabulary`,
+    more: `• Busy morning café with a growing line — the order needs to be clear the first time
+
+• Hurdles: noisy environment · mishearing size or milk options · a growing line
+
+• Targets: polite correction · on-the-spot decisions · casual small talk · drink customization vocabulary`,
     roles: [
       {
         id: "customer",
@@ -43,29 +49,33 @@ export const SCENARIOS = [
       {
         id: "barista",
         label: "Barista",
-        npc: "A café worker in her 20s on a busy morning shift. Speaks quickly, repeats orders back, and keeps the line moving.",
+        npc: "A café worker in her 20s on a busy morning shift. Repeats orders back to confirm.",
       },
     ],
   },
   {
     id: "doctor",
     title: "Doctor Visit",
-    desc: "Describe how your body feels in words a doctor can act on.",
+    desc: "A clinic visit — symptoms to describe, questions to ask, and next steps to follow.",
     img: "/convo-img/doctor.webp",
     thumb: "/convo-img/thumbs/doctor.webp",
     video: "/convo-vid/doctor.mp4",
-    more: `• Clinic exam room — the doctor needs specific details (location, intensity, duration), not just "it hurts"\n\n• Hurdles: vague symptom descriptions · unfamiliar medical terms · nervousness about asking questions\n\n• Targets: precise body description · asking for clarification · understanding medical instructions`,
+    more: `• Clinic exam room — the doctor asks follow-up questions to understand what's going on
+
+• Hurdles: describing symptoms clearly · vocabulary gaps · hesitating to ask questions
+
+• Targets: describing symptoms · asking for clarification · understanding next steps`,
     roles: [
       {
         id: "patient",
         label: "Patient",
-        npc: "Someone in their 30s visiting for a new symptom. Tends to give vague answers and needs guided questions to get specific.",
+        npc: "Someone in their 30s visiting for a new symptom. Not sure how to describe what's going on.",
         ttsVoice: "en-US-ChristopherNeural",
       },
       {
         id: "doctor",
         label: "Doctor",
-        npc: "A thorough physician in her 40s. Asks targeted follow-ups and uses some medical terms but explains them when asked.",
+        npc: "A physician in her 40s.",
         ttsVoice: "en-US-NancyNeural",
       },
     ],
@@ -73,53 +83,65 @@ export const SCENARIOS = [
   {
     id: "job",
     title: "Job Interview",
-    desc: "Sell your story, handle tough questions, and project confidence while being evaluated.",
+    desc: "A formal job interview where experience meets tough questions and first impressions count.",
     img: "/convo-img/job.webp",
     thumb: "/convo-img/thumbs/job.webp",
     video: "/convo-vid/job.mp4",
-    more: `• Formal interview at a company office — the interviewer probes for genuine answers and spots rambling\n\n• Hurdles: underselling experience · wandering answers · awkward pauses after tough questions\n\n• Targets: concise self-presentation · thinking on your feet · professional register`,
+    more: `• Formal interview at a company office — the interviewer probes for genuine answers and values focus
+
+• Hurdles: underselling experience · losing focus mid-answer · pausing after tough questions
+
+• Targets: focused self-presentation · handling follow-up questions · professional register`,
     roles: [
       {
         id: "candidate",
         label: "Candidate",
-        npc: "A qualified professional in their late 20s with solid experience. Tends to give long, wandering answers when nervous.",
+        npc: "A qualified professional in their late 20s with solid experience. Can lose focus mid-answer when the question is tough.",
       },
       {
         id: "interviewer",
         label: "Interviewer",
-        npc: "A hiring manager in his 50s with hundreds of interviews behind him. Polite but direct — asks follow-ups that test depth.",
+        npc: "A hiring manager in his 50s with hundreds of interviews behind him.",
       },
     ],
   },
   {
     id: "airport",
     title: "Airport Problem",
-    desc: "Solve a sudden travel problem — rebook, redirect, and stay clear-headed under stress.",
+    desc: "A cancelled flight, a long rebooking line, and a connection to save.",
     img: "/convo-img/airport.webp",
     thumb: "/convo-img/thumbs/airport.webp",
     video: "/convo-vid/airport.mp4",
-    more: `• Your flight has been cancelled and the rebooking line is long — you need to give precise info fast\n\n• Hurdles: missing details under stress · unclear airline jargon · documents not ready\n\n• Targets: staying calm under pressure · giving factual details quickly · assertive requesting`,
+    more: `• A cancelled flight and a long rebooking line — the right information needs to be ready
+
+• Hurdles: missing details when it matters · unfamiliar airline procedures · documents not ready
+
+• Targets: giving factual details clearly · assertive requesting · navigating an unfamiliar process`,
     roles: [
       {
         id: "traveler",
         label: "Traveler",
-        npc: "A passenger whose connecting flight was cancelled. Tends to lose track of details under pressure and doesn't always have documents ready.",
+        npc: "A passenger whose connecting flight was cancelled. Tends to lose track of details and doesn't always have documents ready.",
       },
       {
         id: "agent",
         label: "Gate Agent",
-        npc: "An airline agent in her 30s. Professional and efficient — speaks in short, direct sentences and needs organized information fast.",
+        npc: "An airline agent in her 30s handling rebookings at the gate.",
       },
     ],
   },
   {
     id: "restaurant",
     title: "Restaurant Order",
-    desc: "Modify an order, flag a mistake politely, and navigate the meal with ease.",
+    desc: "A busy restaurant meal where dietary needs, wrong orders, and specials all come into play.",
     img: "/convo-img/restaurant.webp",
     thumb: "/convo-img/thumbs/restaurant.webp",
     video: "/convo-vid/restaurant.mp4",
-    more: `• Mid-range restaurant on a busy evening — you have dietary needs and the kitchen is backed up\n\n• Hurdles: allergy communication · politely flagging wrong orders · understanding specials described aloud\n\n• Targets: soft requesting · polite complaint · menu vocabulary · dietary restriction language`,
+    more: `• Mid-range restaurant on a busy evening — dietary needs on the table and the kitchen running behind
+
+• Hurdles: communicating allergies · flagging a wrong order · understanding specials described aloud
+
+• Targets: making requests · addressing mistakes · menu vocabulary · dietary restriction language`,
     roles: [
       {
         id: "diner",
@@ -129,81 +151,97 @@ export const SCENARIOS = [
       {
         id: "waiter",
         label: "Waiter",
-        npc: "An attentive server in his late 20s. Suggests dishes and handles special requests, but the kitchen is backed up tonight.",
+        npc: "A server in his late 20s. The kitchen is backed up tonight.",
       },
     ],
   },
   {
     id: "school",
     title: "School Meeting",
-    desc: "Sit across from a teacher and discuss your child's progress diplomatically.",
+    desc: "A parent-teacher conference where both sides discuss progress, expectations, and next steps.",
     img: "/convo-img/school.webp",
     thumb: "/convo-img/thumbs/school.webp",
     video: "/convo-vid/parents.mp4",
-    more: `• Parent-teacher conference after school — the teacher has concerns to raise alongside the positives\n\n• Hurdles: defensiveness about feedback · vague progress reports · agreeing on concrete next steps\n\n• Targets: diplomatic disagreement · asking specific questions · collaborative problem-solving`,
+    more: `• Parent-teacher conference after school — both sides have observations to share
+
+• Hurdles: hearing mixed feedback · vague progress reports · agreeing on concrete next steps
+
+• Targets: responding to feedback · asking specific questions · collaborative problem-solving`,
     roles: [
       {
         id: "parent",
         label: "Parent",
-        npc: "A parent in their 30s who wants the best for their child. Has strong opinions and needs honest, specific feedback.",
+        npc: "A parent in their 30s who wants the best for their child. Has strong opinions.",
       },
       {
         id: "teacher",
         label: "Teacher",
-        npc: "An experienced teacher in her 30s. Organized, with prepared observations — and some concerns to raise alongside the positives.",
+        npc: "An experienced teacher in her 30s with prepared observations.",
       },
     ],
   },
   {
     id: "banking",
     title: "Open a Bank Account",
-    desc: "Follow dense details about accounts, fees, and paperwork without getting lost.",
+    desc: "A bank branch visit — account options to sort through, fees to understand, and paperwork to complete.",
     img: "/convo-img/banking.webp",
     thumb: "/convo-img/thumbs/banking.webp",
     video: "/convo-vid/banking.mp4",
-    more: `• Bank branch office — the representative moves through options and paperwork using financial terms\n\n• Hurdles: unfamiliar financial terms · information overload · hesitation to ask "dumb" questions\n\n• Targets: requesting repetition · processing dense information · confirming understanding`,
+    more: `• Bank branch office — the account-opening process involves options, paperwork, and new terms
+
+• Hurdles: new vocabulary · lots of options to compare · hesitation to ask questions
+
+• Targets: requesting repetition · comparing options · confirming understanding`,
     roles: [
       {
         id: "customer",
         label: "Customer",
-        npc: "Someone in their 20s who just moved to the area. Has basic questions about accounts but is hesitant to ask too many.",
+        npc: "Someone in their 20s who just moved to the area. Has questions about accounts but tends to hold back rather than ask.",
       },
       {
         id: "teller",
         label: "Bank Rep",
-        npc: "A bank representative in his 40s. Thorough and clear, but uses financial terms and moves through the process at a steady pace.",
+        npc: "A bank representative in his 40s who walks customers through the account-opening process.",
       },
     ],
   },
   {
     id: "calling",
     title: "Make a Phone Call",
-    desc: "Handle a real phone call with no body language — just your voice, your words, and a clear goal.",
+    desc: "A phone call with no body language — just voices, words, and a clear goal.",
     img: "/convo-img/calling.webp",
     thumb: "/convo-img/thumbs/calling.webp",
     video: "/convo-vid/calling.mp4",
-    more: `• Phone call to a medical office — no visual cues, everything depends on voice alone\n\n• Hurdles: bad audio quality · spelling names over the phone · losing track of details mid-call\n\n• Targets: phone openings and closings · spelling and number dictation · requesting repetition`,
+    more: `• Phone call to a medical office — no visual cues, everything depends on voice alone
+
+• Hurdles: bad audio quality · spelling names over the phone · losing track of details mid-call
+
+• Targets: phone openings and closings · spelling and number dictation · requesting repetition`,
     roles: [
       {
         id: "caller",
         label: "Caller",
-        npc: "Someone in their 30s calling to schedule an appointment. Not comfortable on the phone — tends to forget details and sometimes needs things repeated.",
+        npc: "Someone in their 30s calling to schedule an appointment. Tends to forget details and sometimes needs things repeated.",
       },
       {
         id: "receiver",
         label: "Receptionist",
-        npc: "A medical office receptionist in her 40s. Polite but busy — needs name, date of birth, and reason for calling at a brisk pace.",
+        npc: "A medical office receptionist in her 40s scheduling appointments.",
       },
     ],
   },
   {
     id: "car",
     title: "Conversation in the Car",
-    desc: "Keep a relaxed conversation alive in a small space with nowhere to go.",
+    desc: "A relaxed conversation in a small space with nowhere to go and no agenda.",
     img: "/convo-img/car.jpg",
     thumb: "/convo-img/thumbs/car.webp",
     video: "/convo-vid/car.mp4",
-    more: `• Two friends in a car for a while — no agenda, just talk, opinions, and comfortable silence\n\n• Hurdles: running out of things to say · filling silence awkwardly · one-word answers\n\n• Targets: opinion sharing · turn-taking · comfortable pacing · keeping conversation alive without forcing it`,
+    more: `• Two friends in a car for a while — no agenda, just talk, opinions, and comfortable silence
+
+• Hurdles: running out of things to say · filling silence · one-word answers
+
+• Targets: opinion sharing · turn-taking · comfortable pacing · keeping conversation alive without forcing it`,
     roles: [
       {
         id: "passenger",
@@ -213,18 +251,22 @@ export const SCENARIOS = [
       {
         id: "driver",
         label: "Driver",
-        npc: "A relaxed, talkative friend in their 30s. Likes to ask opinions about music, weekend plans, and random hypothetical questions.",
+        npc: "A talkative friend in their 30s who likes asking opinions and bringing up random topics.",
       },
     ],
   },
   {
     id: "choosing",
     title: "Choose at the Grocery Store",
-    desc: "Compare options out loud, ask for help, and decide on the spot.",
+    desc: "A grocery store aisle, a missing ingredient, and a decision to make on the spot.",
     img: "/convo-img/choosing.webp",
     thumb: "/convo-img/thumbs/choosing.webp",
     video: "/convo-vid/choosing.mp4",
-    more: `• Grocery store aisle — you can't find what you need and a store worker is nearby stocking shelves\n\n• Hurdles: not knowing product names · understanding brief answers · deciding under mild pressure\n\n• Targets: quick questions · understanding directions · everyday vocabulary · on-the-spot decisions`,
+    more: `• Grocery store aisle — a missing ingredient and a store worker nearby stocking shelves
+
+• Hurdles: not knowing product names · catching what's said · deciding on the spot
+
+• Targets: asking for help · understanding directions · everyday vocabulary · on-the-spot decisions`,
     roles: [
       {
         id: "shopper",
@@ -234,123 +276,147 @@ export const SCENARIOS = [
       {
         id: "worker",
         label: "Store Worker",
-        npc: "A store employee in his 20s stocking shelves. Helpful but brief — knows the store well and gives quick directions.",
+        npc: "A store employee in his 20s stocking shelves. Knows the store well and can point people in the right direction.",
       },
     ],
   },
   {
     id: "concern",
     title: "Raise a Concern",
-    desc: "Bring up a real problem firmly and calmly without damaging the relationship.",
+    desc: "A real maintenance problem, a face-to-face meeting, and a resolution to negotiate.",
     img: "/convo-img/concern.webp",
     thumb: "/convo-img/thumbs/concern.webp",
     video: "/convo-vid/concern.mp4",
-    more: `• Meeting between a tenant and building manager about an ongoing issue — leak, noise, or broken appliance\n\n• Hurdles: vague complaints · emotional escalation · no clear ask · not knowing what's reasonable\n\n• Targets: factual description · firm but polite tone · proposing solutions · confirming next steps and timeline`,
+    more: `• Meeting between a tenant and building manager about an ongoing issue — leak, noise, or broken appliance
+
+• Hurdles: vague complaints · losing focus · no clear ask · not knowing what's reasonable
+
+• Targets: factual description · staying on point · proposing solutions · confirming next steps and timeline`,
     roles: [
       {
         id: "complainant",
         label: "Tenant",
-        npc: "A tenant in their 30s with a real maintenance problem. Needs acknowledgment and a clear timeline for resolution.",
+        npc: "A tenant in their 30s with a real maintenance problem that hasn't been fixed.",
       },
       {
         id: "manager",
         label: "Manager",
-        npc: "A building manager in his 50s who handles multiple properties. Won't act on vague complaints — needs the specific problem, location, and duration.",
+        npc: "A building manager in his 50s who handles multiple properties.",
       },
     ],
   },
   {
     id: "couple",
     title: "Chat with Strangers at a Party",
-    desc: "Join a conversation already happening between people you've just met.",
+    desc: "A house party where someone new joins a conversation already in progress.",
     img: "/convo-img/couple.jpg",
     thumb: "/convo-img/thumbs/couple.webp",
     video: "/convo-vid/couple.mp4",
-    more: `• House party — you approach a pair of people you don't know and need to break into their conversation\n\n• Hurdles: breaking into an existing conversation · keeping talk balanced · leaving gracefully\n\n• Targets: introductions · small talk · finding common ground · social exit phrases`,
+    more: `• House party — a newcomer approaches a pair already mid-conversation
+
+• Hurdles: breaking into an existing conversation · keeping talk balanced · leaving gracefully
+
+• Targets: introductions · small talk · finding common ground · social exit phrases`,
     roles: [
       {
         id: "newcomer",
         label: "Newcomer",
-        npc: "Someone in their late 20s who arrived at the party alone. On the quieter side, but friendly once a conversation gets going.",
+        npc: "Someone in their late 20s who arrived at the party alone. Takes a moment to warm up once a conversation gets going.",
       },
       {
         id: "host",
         label: "Party Regulars",
-        npc: "A friendly pair in their 30s who have been at the party a while. Happy to meet someone new and share stories about the host.",
+        npc: "A pair in their 30s who have been at the party a while.",
       },
     ],
   },
   {
     id: "dinner",
     title: "Catch Up over Dinner",
-    desc: "Tell stories, react to friends, and keep a long social conversation flowing naturally.",
+    desc: "Two old friends catching up over dinner — stories to tell, news to share, and a long evening ahead.",
     img: "/convo-img/dinner.webp",
     thumb: "/convo-img/thumbs/dinner.webp",
     video: "/convo-vid/dinner.mp4",
-    more: `• Two old friends having dinner after months apart — a lot to catch up on\n\n• Hurdles: holding attention during a long story · reacting naturally · navigating sensitive topics\n\n• Targets: narrative structure · active listening · emotional reactions · topic transitions`,
+    more: `• Two old friends having dinner after months apart — a lot to catch up on
+
+• Hurdles: holding attention during a long story · reacting naturally · topics that go deeper than small talk
+
+• Targets: narrative structure · active listening · emotional reactions · topic transitions`,
     roles: [
       {
         id: "friend",
         label: "Old Friend",
-        npc: "A friend in their 30s with a lot going on — new job, recent move, life changes. Has stories to tell and expects to hear yours.",
+        npc: "A friend in their 30s with a lot going on — new job, recent move, life changes.",
       },
       {
         id: "listener",
         label: "Listening Friend",
-        npc: "A warm, curious friend in their 30s. Asks follow-up questions naturally and shares their own news when the moment is right.",
+        npc: "A friend in their 30s catching up over dinner.",
       },
     ],
   },
   {
     id: "joke",
     title: "Tell a Joke",
-    desc: "Land something funny, read the room, and react to humor in real time.",
+    desc: "Jokes flying back and forth — some land, some don't, and the real skill is reacting in the moment.",
     img: "/convo-img/joke.jpg",
     thumb: "/convo-img/thumbs/joke.webp",
     video: "/convo-vid/joke.mp4",
-    more: `• Two coworkers on a lunch break — jokes going back and forth, some land, some don't\n\n• Hurdles: timing the punchline · recovering from a flat joke · understanding humor in a second language\n\n• Targets: comedic timing · natural reactions · playful language · recovery phrases`,
+    more: `• Two coworkers on a lunch break — jokes going back and forth, some land, some don't
+
+• Hurdles: timing the punchline · recovering from a flat joke · understanding humor in a second language
+
+• Targets: comedic timing · natural reactions · playful language · recovery phrases`,
     roles: [
       {
         id: "joker",
         label: "Joke-Teller",
-        npc: "A coworker in their 30s who always has a joke ready. Some land, some don't — keeps it low pressure either way.",
+        npc: "A coworker in their 30s who always has a joke ready. Some land, some don't.",
       },
       {
         id: "audience",
         label: "Audience",
-        npc: "A coworker in their 30s on lunch break. Reacts openly, plays along, and tells jokes back.",
+        npc: "A coworker in their 30s on lunch break.",
       },
     ],
   },
   {
     id: "lifeguard",
     title: "Beach Emergency",
-    desc: "Get a lifeguard's attention fast and communicate clearly when someone's safety is on the line.",
+    desc: "A beach emergency where a child has gone too far out and someone needs to act.",
     img: "/convo-img/lifeguard.webp",
     thumb: "/convo-img/thumbs/lifeguard.webp",
     video: "/convo-vid/lifeguard.mp4",
-    more: `• A child has swum out too far — you need the lifeguard's immediate attention\n\n• Hurdles: panic reducing clarity · not knowing safety vocabulary · hesitating to interrupt\n\n• Targets: clarity under pressure · imperative sentences · location description · following urgent directions`,
+    more: `• A child has swum out too far — the lifeguard's attention is needed now
+
+• Hurdles: losing clarity in the moment · not knowing safety vocabulary · hesitating to interrupt
+
+• Targets: giving clear information · describing a location · following directions · getting to the point`,
     roles: [
       {
         id: "visitor",
         label: "Beach Visitor",
-        npc: "A parent in their 30s whose child swam out too far. Needs to communicate the situation quickly and follow instructions.",
+        npc: "A parent in their 30s whose child swam out too far.",
       },
       {
         id: "lifeguard",
         label: "Lifeguard",
-        npc: "A lifeguard in his 20s. Gives clear, short instructions and expects them to be followed immediately.",
+        npc: "A lifeguard in his 20s on duty.",
       },
     ],
   },
   {
     id: "mail",
     title: "Ask about Mail",
-    desc: "Get a quick, specific answer from a stranger and move on — no small talk needed.",
+    desc: "A post office counter, a first-time package, and a transaction to get through.",
     img: "/convo-img/mail.jpg",
     thumb: "/convo-img/thumbs/mail.webp",
     video: "/convo-vid/mail.mp4",
-    more: `• Post office counter — you're mailing a package for the first time and there's a line behind you\n\n• Hurdles: not knowing which service to choose · missing a quick answer · holding up the line\n\n• Targets: concise questions · processing quick answers · transactional vocabulary`,
+    more: `• Post office counter — a first-time package to mail and a line that keeps growing
+
+• Hurdles: not knowing which service to choose · catching an answer the first time · keeping the interaction moving
+
+• Targets: focused questions · understanding answers on the first pass · transactional vocabulary`,
     roles: [
       {
         id: "sender",
@@ -360,39 +426,47 @@ export const SCENARIOS = [
       {
         id: "clerk",
         label: "Postal Worker",
-        npc: "An efficient postal worker in her 40s. Matter-of-fact — handles hundreds of people a day and gives quick, direct answers.",
+        npc: "A postal worker in her 40s who handles hundreds of people a day. Knows the services and options well.",
       },
     ],
   },
   {
     id: "networking",
     title: "Networking Event",
-    desc: "Make a strong first impression on someone who could matter to your future.",
+    desc: "An industry mixer where introductions that make an impression lead to real opportunities.",
     img: "/convo-img/networking.webp",
     thumb: "/convo-img/thumbs/networking.webp",
     video: "/convo-vid/networking.mp4",
-    more: `• Industry mixer — two minutes to introduce yourself, make an impression, and decide whether to exchange info\n\n• Hurdles: stumbling over self-introductions · awkward silences · not knowing when to wrap up\n\n• Targets: elevator pitch · professional small talk · graceful exit · follow-up language`,
+    more: `• Industry mixer — introductions, first impressions, and a decision about whether to exchange info
+
+• Hurdles: stumbling over self-introductions · gaps in the conversation · not knowing when to wrap up
+
+• Targets: elevator pitch · professional small talk · graceful exit · follow-up language`,
     roles: [
       {
         id: "newcomer",
         label: "Newcomer",
-        npc: "A young professional in their mid-20s at their first networking event. Smart but new to this setting — relies on the other person to keep things flowing.",
+        npc: "A young professional in their mid-20s at their first networking event.",
       },
       {
         id: "veteran",
         label: "Veteran",
-        npc: "A senior professional in her 40s with 15 years in the field. Asks direct questions and expects concise, interesting answers.",
+        npc: "A senior professional in her 40s with 15 years in the field.",
       },
     ],
   },
   {
     id: "parking",
     title: "Parking Ticket Situation",
-    desc: "Explain your side of the story to someone who may already think you're wrong.",
+    desc: "A parking ticket, an officer still nearby, and two sides of the story.",
     img: "/convo-img/parking.webp",
     thumb: "/convo-img/thumbs/parking.webp",
     video: "/convo-vid/parking.mp4",
-    more: `• Parking lot — you've found a ticket on your windshield and the enforcement officer is still nearby\n\n• Hurdles: emotional reaction clouding facts · making excuses instead of asking questions · not knowing appeal options\n\n• Targets: factual narration · staying credible · accepting outcomes gracefully · asking about process`,
+    more: `• Parking lot — a ticket on the windshield, the enforcement officer still nearby
+
+• Hurdles: staying factual · defaulting to excuses instead of questions · not knowing appeal options
+
+• Targets: factual narration · staying credible · accepting outcomes · asking about process`,
     roles: [
       {
         id: "driver",
@@ -402,18 +476,22 @@ export const SCENARIOS = [
       {
         id: "officer",
         label: "Enforcement Officer",
-        npc: "A parking enforcement officer in his 40s. Follows the rules — needs facts, not excuses. Not rude, not sympathetic, just procedural.",
+        npc: "A parking enforcement officer in his 40s.",
       },
     ],
   },
   {
     id: "police",
     title: "Ask an Officer for Help",
-    desc: "Stay composed and give clear, factual details to a person in authority.",
+    desc: "A street-corner interaction between a citizen and a police officer on foot patrol.",
     img: "/convo-img/police.webp",
     thumb: "/convo-img/thumbs/police.webp",
     video: "/convo-vid/police.mp4",
-    more: `• Street corner — you approach a police officer on foot patrol for directions, to report something, or to ask if an area is safe\n\n• Hurdles: nervousness around authority · vague location descriptions · cultural uncertainty about approaching police\n\n• Targets: factual reporting · location description · calm composure · brief, organized answers`,
+    more: `• Street corner — someone approaches a police officer on foot patrol for directions, a report, or a safety question
+
+• Hurdles: unfamiliarity with the interaction · vague location descriptions · cultural differences in approaching authority
+
+• Targets: factual reporting · location description · organized answers · appropriate register`,
     roles: [
       {
         id: "citizen",
@@ -423,39 +501,47 @@ export const SCENARIOS = [
       {
         id: "officer",
         label: "Officer",
-        npc: "A police officer in her 40s on foot patrol. Approachable but professional — asks direct questions and expects clear, factual answers.",
+        npc: "A police officer in her 40s on foot patrol.",
       },
     ],
   },
   {
     id: "shopping",
     title: "Shopping Assistance",
-    desc: "Ask about sizes, compare options, and say no to extras without feeling guilty.",
+    desc: "A clothing store visit where sizes, preferences, and add-on offers all come into play.",
     img: "/convo-img/shopping.jpg",
     thumb: "/convo-img/thumbs/shopping.webp",
     video: "/convo-vid/shopping.mp4",
-    more: `• Clothing store — you're looking for a gift and need help with sizes, but the associate likes to upsell\n\n• Hurdles: not knowing sizes in another system · being pressured into extras · describing preferences vaguely\n\n• Targets: polite refusal · describing preferences · retail vocabulary · making a confident decision`,
+    more: `• Clothing store — a gift to buy, sizes to figure out, and an associate with suggestions
+
+• Hurdles: not knowing sizes in another system · navigating add-on offers · describing preferences clearly
+
+• Targets: declining offers · describing preferences · retail vocabulary · making a decision`,
     roles: [
       {
         id: "shopper",
         label: "Shopper",
-        npc: "Someone in their 30s looking for a gift. Unsure about sizes and not sure what the recipient likes — needs honest guidance.",
+        npc: "Someone in their 30s looking for a gift. Unsure about sizes and not sure what the recipient likes.",
       },
       {
         id: "associate",
         label: "Sales Associate",
-        npc: "A clothing store associate in her 20s. Helpful and knowledgeable but a little pushy with add-ons and extras.",
+        npc: "A clothing store associate in her 20s who knows the product line well.",
       },
     ],
   },
   {
     id: "student",
     title: "Talk to Your Teacher",
-    desc: "Approach someone above you, ask for help, and show initiative without overstepping.",
+    desc: "A post-lecture conversation between a student who stayed behind and a professor with limited time.",
     img: "/convo-img/student.webp",
     thumb: "/convo-img/thumbs/student.webp",
     video: "/convo-vid/student.mp4",
-    more: `• College classroom after a lecture — the professor has another class soon and you stayed behind to ask something\n\n• Hurdles: embarrassment about not understanding · vague questions · running out of the teacher's time\n\n• Targets: admitting confusion clearly · asking focused questions · respectful register`,
+    more: `• College classroom after a lecture — the professor has another class soon and the student stayed behind to ask something
+
+• Hurdles: not knowing how to phrase a question · vague questions · limited time
+
+• Targets: admitting confusion clearly · asking focused questions · appropriate register`,
     roles: [
       {
         id: "student",
@@ -465,39 +551,47 @@ export const SCENARIOS = [
       {
         id: "teacher",
         label: "Teacher",
-        npc: "A college professor in his 50s wrapping up after class. Knowledgeable and willing to help, but has another class in 10 minutes.",
+        npc: "A college professor in his 50s wrapping up after class. Available for a few minutes between classes.",
       },
     ],
   },
   {
     id: "technology",
     title: "Tech Support Problem",
-    desc: "Describe a problem you can barely name and follow step-by-step instructions to fix it.",
+    desc: "A tech support call where a broken laptop meets step-by-step troubleshooting.",
     img: "/convo-img/technology.webp",
     thumb: "/convo-img/thumbs/technology.webp",
     video: "/convo-vid/technology.mp4",
-    more: `• Tech support call — your laptop is broken and you can't name the problem precisely\n\n• Hurdles: not knowing technical terms · describing visual errors vaguely · losing track mid-instruction\n\n• Targets: describing what you see · following sequential instructions · asking for simpler explanations`,
+    more: `• Tech support call — a broken laptop and a diagnosis to work through together
+
+• Hurdles: vocabulary gaps · describing what's on screen · losing track mid-instruction
+
+• Targets: describing what's happening · following sequential instructions · asking for clarification`,
     roles: [
       {
         id: "user",
         label: "User",
-        npc: "Someone in their 40s whose laptop keeps crashing. Not tech-savvy — describes things in everyday language and needs small, clear steps.",
+        npc: "Someone in their 40s whose laptop keeps crashing. Describes what's happening in their own words.",
       },
       {
         id: "support",
         label: "Support Agent",
-        npc: "A tech support agent in his 30s. Methodical and patient — walks through things step by step but uses some technical shorthand.",
+        npc: "A tech support agent in his 30s.",
       },
     ],
   },
   {
     id: "understanding",
     title: "Clear Up a Misunderstanding",
-    desc: "Catch a miscommunication mid-conversation and steer it back on track.",
+    desc: "A miscommunication mid-conversation — someone took something the wrong way and the conversation needs steering back.",
     img: "/convo-img/understanding.webp",
     thumb: "/convo-img/thumbs/understanding.webp",
     video: "/convo-vid/understanding.mp4",
-    more: `• Two coworkers talking — someone misread an email or took a comment the wrong way\n\n• Hurdles: not realizing a miscommunication happened · defensive reactions · unclear rephrasing\n\n• Targets: diplomatic correction · checking understanding · repair phrases ("What I meant was...")`,
+    more: `• Two coworkers talking — someone misread an email or took a comment the wrong way
+
+• Hurdles: not realizing a miscommunication happened · misreading intent · unclear rephrasing
+
+• Targets: diplomatic correction · checking understanding · repair phrases ("What I meant was...")`,
     roles: [
       {
         id: "clarifier",
@@ -514,42 +608,50 @@ export const SCENARIOS = [
   {
     id: "videocall",
     title: "Video Call with a Colleague",
-    desc: "Collaborate through a screen — share updates, stay on topic, and wrap up professionally.",
+    desc: "A scheduled video call between remote colleagues — updates to share, questions to answer, and next steps to lock down.",
     img: "/convo-img/videocall.webp",
     thumb: "/convo-img/thumbs/videocall.webp",
     video: "",
-    more: `• Scheduled video call between remote colleagues — updates to share, questions to answer, next steps to nail down\n\n• Hurdles: talking over each other · going off-topic · forgetting to confirm next steps\n\n• Targets: concise updates · interruption recovery · professional closings · video-call conventions`,
+    more: `• Scheduled video call between remote colleagues — updates to share, questions to answer, next steps to nail down
+
+• Hurdles: talking over each other · going off-topic · forgetting to confirm next steps
+
+• Targets: clear updates · interruption recovery · professional closings · video-call conventions`,
     roles: [
       {
         id: "presenter",
         label: "Presenter",
-        npc: "A colleague in their 30s who has a lot to report. Tends to go off-topic and needs the other person to keep things focused.",
+        npc: "A colleague in their 30s who has a lot to report and tends to go off-topic.",
       },
       {
         id: "listener",
         label: "Call Runner",
-        npc: "An organized remote colleague in her 40s. Asks for updates, shares hers concisely, and wants next steps nailed down before hanging up.",
+        npc: "A remote colleague in her 40s running the call.",
       },
     ],
   },
   {
     id: "hiking",
     title: "Chat on a Winter Hike",
-    desc: "Walk and talk — hold a winding, unhurried conversation with a friend outdoors.",
+    desc: "Walk and talk — a winding, unhurried conversation between friends on a winter trail.",
     img: "/convo-img/hiking.webp",
     thumb: "/convo-img/thumbs/hiking.webp",
     video: "",
-    more: `• Two friends walking a winter trail — no agenda, no rush, just whatever comes to mind\n\n• Hurdles: filling every silence · running out of casual topics · one-word responses\n\n• Targets: casual opinion sharing · reacting to surroundings · comfortable pacing · natural topic transitions`,
+    more: `• Two friends walking a winter trail — no agenda, no rush, just whatever comes to mind
+
+• Hurdles: filling silence · running out of casual topics · one-word responses
+
+• Targets: casual opinion sharing · reacting to surroundings · comfortable pacing · natural topic transitions`,
     roles: [
       {
         id: "hiker",
         label: "Hiker",
-        npc: "A friend in their 30s who's quieter on the trail. Responds when topics come up but needs the other person to carry more of the conversation.",
+        npc: "A friend in their 30s who's quieter on the trail.",
       },
       {
         id: "guide",
         label: "Trail Guide",
-        npc: "A close friend in their 30s. Shares trail observations, asks what's been on your mind, and is comfortable with stretches of silence.",
+        npc: "A close friend in their 30s on a familiar trail.",
       },
     ],
   },
