@@ -239,9 +239,7 @@ export function attachConvoHandlers({
       const report = await convoReport({
         uid: uid(),
         sessionId: state.sessionId,
-        scenarioId: SCENARIOS[state.scenarioIdx]?.id || "unknown",
-        messages: state.messages,
-        turns: state.turns,
+        passageKey: SCENARIOS[state.scenarioIdx]?.id || "unknown",
       });
 
       showConvoReportOverlay(report);
