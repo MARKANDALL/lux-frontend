@@ -45,6 +45,7 @@
     ========================================================================== */
   .lux-tts-panel {
     position: fixed;
+    color-scheme: light only;
     top: calc(env(safe-area-inset-top, 0) + var(--lux-tts-top-gap)) !important;
     right: env(safe-area-inset-right, 0) !important;
     left: auto !important;
