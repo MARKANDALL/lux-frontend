@@ -104,7 +104,7 @@ export async function mountTTSPlayer(hostEl) {
     if (document.getElementById('referenceText')) {
       vmTextGetter = getCurrentPracticeReferenceText;
     } else if (ctxApi && typeof ctxApi.getText === 'function') {
-      vmTextGetter = () => ctxApi.getText({ mode: 'me' });
+      vmTextGetter = () => ctxApi.getText();
     }
     if (vmTextGetter) {
       mountVoiceMirrorButton(voiceMirrorHost, vmTextGetter)
