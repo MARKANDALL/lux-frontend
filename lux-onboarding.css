@@ -5,7 +5,7 @@
   position: fixed;
   inset: 0;
   background: rgba(26, 26, 26, 0.65); /* deep charcoal @ 65% */
-  z-index: 999; /* adjust if you have a treaty; must sit over app */
+  z-index: 99999; /* must sit above TTS (9999) and SelfPB (12000) */
   display: grid;
   place-items: center;
   padding: 18px;
@@ -203,12 +203,9 @@
   transform: scaleX(0.10);
 }
 
-/* ── Hide TTS tab + My Words launcher + Self Playback during onboarding ── */
+/* ── Disable interaction on elements behind onboarding ── */
 body:has(.lux-onb-overlay) .lux-tts-tab,
 body:has(.lux-onb-overlay) .lux-mw-corner,
 body:has(.lux-onb-overlay) .lux-sp-tab {
-  opacity: 0;
   pointer-events: none;
-  visibility: hidden;
-  transition: opacity 0.3s ease;
 }
