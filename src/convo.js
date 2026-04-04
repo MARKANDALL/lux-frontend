@@ -1,5 +1,5 @@
 // src/convo.js
-import { ensureUID } from "../api/identity.js";
+import { ensureUID } from "../_api/identity.js";
 
 import { bootConvo } from "../features/convo/index.js";
 import { initAudioSink } from "../app-core/audio-sink.js";

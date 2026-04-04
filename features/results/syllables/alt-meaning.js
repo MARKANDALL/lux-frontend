@@ -1,7 +1,7 @@
 // features/results/syllables/alt-meaning.js
 // One-line: Alt pronunciation cycling + lazy meaning hover loader for syllable strips.
 
-import { fetchAltMeanings } from "../../../api/alt-meaning.js";
+import { fetchAltMeanings } from "../../../_api/alt-meaning.js";
 import {
   getCmuDictState,
   cleanWord,

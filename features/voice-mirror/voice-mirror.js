@@ -1,7 +1,7 @@
 // features/voice-mirror/voice-mirror.js
 // One-line: "Hear it in my voice" button + inline audio player for TTS drawer.
 
-import { getVoiceProfileStatus, synthesizeVoiceMirror } from '../../api/voice-mirror.js';
+import { getVoiceProfileStatus, synthesizeVoiceMirror } from '../../_api/voice-mirror.js';
 import { openVoiceOnboarding } from './voice-onboarding.js';
 
 // ── State ──────────────────────────────────────────────────────────────

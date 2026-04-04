@@ -1,5 +1,5 @@
 // features/convo/convo-api.js
-import { convoTurn } from "../../api/convo.js";
+import { convoTurn } from "../../_api/convo.js";
 
 // Convo turn with a UI-friendly fallback message (never throw).
 export async function convoTurnWithUi(payload, opts = {}) {

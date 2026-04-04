@@ -18,7 +18,7 @@ import { initUI } from "../ui/ui-shell-typing.js";
 import { initOnboarding } from "../ui/ui-shell-onboarding.js";
 import { showSummary } from "../ui/views/index.js";
 import { bootInteractions } from "../ui/interactions/boot.js"; 
-import { ensureUID } from "../api/identity.js";
+import { ensureUID } from "../_api/identity.js";
 import { initAudioSink } from "./audio-sink.js";
 import { initProsodyTooltips } from "../prosody/prosody-help-bars.js";
 

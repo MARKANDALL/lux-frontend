@@ -1,5 +1,5 @@
 // features/features/tts/player-core.js
-import { API_BASE, getAdminToken, apiFetch } from "../../../api/util.js";
+import { API_BASE, getAdminToken, apiFetch } from "../../../_api/util.js";
 
 // Core: networking, constants, voice caps (no DOM writes)
 export const TTS_URL = `${API_BASE}/api/tts`;

@@ -8,8 +8,8 @@ import { renderStreaming } from "./ui/render.js";
 
 import { createTransportController } from "./transport/transport-controller.js";
 import { createAudioController } from "./audio/audio-controller.js";
-import { ensureUID } from "../../api/identity.js";
-import { saveAttempt } from "../../api/attempts.js";
+import { ensureUID } from "../../_api/identity.js";
+import { saveAttempt } from "../../_api/attempts.js";
 import { buildStreamingInstructions } from "./prompt/contract.js";
 import { K_DEBUG_STREAM, getBool, setBool } from "../../app-core/lux-storage.js";
 

@@ -6,8 +6,8 @@
 // ui/auth-dom.js
 
 import { supabase } from "../src/supabase.js";
-import { API_BASE, apiFetch } from "../api/util.js";
-import { setUID } from "../api/index.js";
+import { API_BASE, apiFetch } from "../_api/util.js";
+import { setUID } from "../_api/index.js";
 import { K_IDENTITY_UID, getString } from "../app-core/lux-storage.js";
 import { luxBus } from "../app-core/lux-bus.js";
 

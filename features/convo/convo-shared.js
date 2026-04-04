@@ -2,7 +2,7 @@
 // Slim orchestrator — re-exports from split modules + owns tiny shared helpers.
 // Report overlay peeled to convo-report-ui.js (March 2026).
 
-import { ensureUID } from "../../api/index.js";
+import { ensureUID } from "../../_api/index.js";
 
 // --- Deck card sizing: make the CARD match the media's natural aspect ratio ---
 const _luxMediaMeta = new Map();

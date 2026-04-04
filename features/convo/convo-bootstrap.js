@@ -2,9 +2,9 @@
 // Boots the AI conversation UI: builds layout, wires drawers/nav/flow, and initializes picker + state.
 
 import { SCENARIOS } from "./scenarios.js";
-import { assessPronunciation } from "../../api/assess.js";
-import { convoReport } from "../../api/convo-report.js";
-import { saveAttempt } from "../../api/index.js";
+import { assessPronunciation } from "../../_api/assess.js";
+import { convoReport } from "../../_api/convo-report.js";
+import { saveAttempt } from "../../_api/index.js";
 import { warpSwap } from "../../ui/warp-core.js";
 
 import { convoTurnWithUi } from "./convo-api.js";

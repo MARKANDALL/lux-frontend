@@ -14,7 +14,7 @@ import {
   pushPartResult,
   beginPracticeRunIfNeeded,
 } from "../../app-core/state.js";
-import { assessPronunciation, saveAttempt, getUID, fetchHistory } from "../../api/index.js";
+import { assessPronunciation, saveAttempt, getUID, fetchHistory } from "../../_api/index.js";
 import { showPrettyResults } from "../results/index.js";
 import { markPartCompleted } from "../passages/index.js";
 import { bringInputToTop } from "../../helpers/index.js";

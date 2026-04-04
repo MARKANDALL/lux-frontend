@@ -2,7 +2,7 @@
 // One-line: Shared core helpers for user identity, friendly feedback text, markdown rendering, clamping, and in-place shuffling.
 
 
-import { getUID } from "../api/identity.js";
+import { getUID } from "../_api/identity.js";
 import { coachingPreface } from "../core/scoring/index.js";
 import { mdToHtml as renderMdToHtml } from "./md-to-html.js";
 

@@ -1,8 +1,8 @@
 // features/my-words/index.js
 // Mounts the My Words side panel, library modal, launcher, store wiring, and external API registration.
 
-import { fetchHistory } from "../../api/index.js";
-import { ensureUID } from "../../api/identity.js";
+import { fetchHistory } from "../../_api/index.js";
+import { ensureUID } from "../../_api/identity.js";
 import { luxBus } from "../../app-core/lux-bus.js";
 
 import { createMyWordsStore } from "./store.js";

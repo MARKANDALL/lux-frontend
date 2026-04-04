@@ -1,7 +1,7 @@
 // features/streaming/transport/session-bootstrap.js
 // WHAT: Bootstraps the Streaming WebRTC session by reading the admin token, building session params, and posting the SDP offer to the realtime backend.
 
-import { API_BASE } from "../../../api/util.js";
+import { API_BASE } from "../../../_api/util.js";
 import { K_ADMIN_TOKEN } from '../../../app-core/lux-storage.js';
 import { clampNumber, clampInt } from '../util.js';
 

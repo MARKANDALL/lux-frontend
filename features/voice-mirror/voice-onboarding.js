@@ -1,7 +1,7 @@
 // features/voice-mirror/voice-onboarding.js
 // One-line: Multi-step guided recording modal for creating a high-quality voice clone.
 
-import { createVoiceClone } from '../../api/voice-mirror.js';
+import { createVoiceClone } from '../../_api/voice-mirror.js';
 import { resetVoiceMirrorCache } from './voice-mirror.js';
 
 // ── Recording prompts (designed for natural, consistent speech) ───────

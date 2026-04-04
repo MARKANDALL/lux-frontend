@@ -1,4 +1,4 @@
-import { ensureUID } from "../api/identity.js";
+import { ensureUID } from "../_api/identity.js";
 import { initAuthUI } from "../ui/auth-dom.js";
 import { bootRippleButtons } from "../ui/ui-ripple-filter.js";
 

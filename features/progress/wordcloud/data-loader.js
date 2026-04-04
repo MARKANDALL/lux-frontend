@@ -9,8 +9,8 @@
  * - startAutoRefresh({ rootId, onRefresh, intervalMs }) -> periodically triggers redraw
  */
 
-import { fetchHistory } from "../../../api/index.js";
-import { ensureUID } from "../../../api/identity.js";
+import { fetchHistory } from "../../../_api/index.js";
+import { ensureUID } from "../../../_api/identity.js";
 
 export const DEFAULT_AUTO_REFRESH_MS = 10 * 60 * 1000;
 
