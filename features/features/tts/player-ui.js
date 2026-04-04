@@ -97,9 +97,19 @@ export async function mountTTSPlayer(hostEl) {
     }
   }
 
-  if (voiceMirrorHost && document.getElementById('referenceText')) {
-    mountVoiceMirrorButton(voiceMirrorHost, getCurrentPracticeReferenceText)
-      .catch(err => console.warn('[voice-mirror] mount failed:', err));
+  if (voiceMirrorHost) {
+    // Determine text getter: Practice Skills uses #referenceText, Convo uses ttsContextApi
+    const ctxApi = luxBus.get('ttsContextApi');
+    let vmTextGetter;
+    if (document.getElementById('referenceText')) {
+      vmTextGetter = getCurrentPracticeReferenceText;
+    } else if (ctxApi && typeof ctxApi.getText === 'function') {
+      vmTextGetter = () => ctxApi.getText({ mode: 'me' });
+    }
+    if (vmTextGetter) {
+      mountVoiceMirrorButton(voiceMirrorHost, vmTextGetter)
+        .catch(err => console.warn('[voice-mirror] mount failed:', err));
+    }
   }
 
   // 2. Select Elements
