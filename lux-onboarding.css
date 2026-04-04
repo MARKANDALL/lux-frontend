@@ -203,10 +203,12 @@
   transform: scaleX(0.10);
 }
 
-/* ── Hide TTS tab + My Words launcher during onboarding ── */
+/* ── Hide TTS tab + My Words launcher + Self Playback during onboarding ── */
 body:has(.lux-onb-overlay) .lux-tts-tab,
-body:has(.lux-onb-overlay) .lux-mw-corner {
-  opacity: 0.15;
+body:has(.lux-onb-overlay) .lux-mw-corner,
+body:has(.lux-onb-overlay) .lux-sp-tab {
+  opacity: 0;
   pointer-events: none;
+  visibility: hidden;
   transition: opacity 0.3s ease;
 }
