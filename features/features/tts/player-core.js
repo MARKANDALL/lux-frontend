@@ -38,7 +38,8 @@ export async function getVoiceCaps() {
       };
     }
     return out;
-  } catch {
+  } catch (err) {
+    globalThis.warnSwallow?.("features/features/tts/player-core.js", err, "important");
     return {};
   }
 }
