@@ -137,6 +137,27 @@ The audio mode switch *works*, but the whole **Streaming page** needs updating, 
 - ✅ Trouble chips render below results
 - ✅ Word-level results table shows (color-coded)
 - ⚠️ Syllable stress view renders correctly — *only partially working. It does split the syllables up, but...*
+- ❌ Passage summary / results summary path is currently unstable — *see console error below*
+
+### Bugs / Console Errors
+
+**Bug 1D.0 — Passage summary throws `mountVoiceMirrorButton is not defined`:**
+When trying to open the passage summary, the summary page throws a front-end reference error and stops rendering correctly:
+
+```
+main.js:49 [LUX] Uncaught error: Uncaught ReferenceError: mountVoiceMirrorButton is not defined http://localhost:3000/features/results/summary.js 179
+(anonymous) @ main.js:49
+requestAnimationFrame
+showSummary @ summary.js:178
+showSummaryWithTracking @ summary-shell.js:76
+showSummary @ index.js:126
+(anonymous) @ main.js:239
+
+summary.js:179 Uncaught ReferenceError: mountVoiceMirrorButton is not defined
+    at summary.js:179:7
+```
+
+This whole summary page is likely getting revamped anyway, but this specific error should be logged explicitly because it blocks the current passage-summary flow from rendering cleanly.
 
 ### Big Issue: Metric Modal Cards Need Major Improvement
 
@@ -236,12 +257,23 @@ The AI Coach is strategically placed in many different parts of the app:
 
 Each location needs to be **uniquely targeted to its area**, not just generic "give responses to stuff." From the drawing board up, I'd like to reanalyze and rethink the whole AI Coach category.
 
+**1F.1 — AI Coach should react to the selected L1, not stay generic/neutral:**
+This is a genuinely important refinement. If the user has selected a first language, the AI Coach should be aware of that and tailor its explanations, likely transfer issues, and wording accordingly. That does **not** mean drowning the user in linguistic jargon or turning every response into translation mode. It means the coach should be *smart in relation to the user's L1* when that's helpful.
+
+Examples of what this could mean:
+- anticipating likely sound confusions tied to the user's L1,
+- adjusting explanation style,
+- optionally giving short strategic comparisons when useful,
+- staying simple and supportive instead of neutral-to-the-point-of-vagueness.
+
 #### Open Question: Should The User Be Able To Type To The AI Coach?
 
 I've been toying with this for a while. We could build it in, but is it a good idea?
 
 Arguments for: huge interactivity and depth.
 Concerns: lots of work, and we'd have to be very careful with system-wide constraints / guardrails so it doesn't get used the wrong way (e.g., "what's the weather in Sydney today?"). It needs to stay focused on what it's supposed to do.
+
+Related principle: if the AI Coach becomes more interactive, it should stay anchored to **Lux content, Lux results, and pronunciation work happening inside the app**, not become a general-purpose chatbot.
 
 I do think we should think about making it interactive. **Want Claude's opinion on this.**
 
@@ -530,6 +562,17 @@ Very specific UX point: the X close button and the drawer title (e.g., "Scene Se
 
 The reason: currently the drawer opens *empty* and then populates. If the X and title are present from frame one, the human eye catches the motion better and the slide-in feels more solid and visually integrated.
 
+**2B.3 — Character / role cards should react when the user clicks outside them:**
+Right now, on the character-card overlays, the user basically has to hit the X to exit. That's acceptable, but not ideal. If the user clicks outside the card, the app should give a clear visual cue — specifically the same kind of **red animated X reaction** used elsewhere: flash / bulge / rotate / twist, as if saying "close me with the X." That keeps behavior consistent without silently doing nothing.
+
+**2B.4 — Character-card overlay should likely scroll-lock the background:**
+At the moment, background scroll lock does not appear to be reliably in effect behind these overlays. I probably **do** want scroll lock here. It makes the card feel like a focused modal state rather than a loose floating element.
+
+**2B.5 — Bring back the inner right-side drawer inside the actual conversation box:**
+Separate from the outer picker-page drawers, we had already built a really nice drawer concept for the AI conversation space itself: the drawer should appear to emerge from the **right edge of the inner conversation box**, almost as if it is sliding out from behind that box into the space on the right. That behavior appears to have been lost and needs to be reconnected.
+
+This same inner-drawer pattern is probably the right home for context-sensitive settings in Guided Practice, and later in Streaming too.
+
 ---
 
 ## 2C. Conversation Flow
@@ -581,6 +624,9 @@ With the trouble-phoneme highlighting on assessed words: I'm not entirely sure h
 
 **2C.8 — Important: Upgrade highlighting features for both Practice Skills AND AI Convo. And eventually for Streaming:**
 We need to upgrade the highlighting for both AI Convo and Practice Skills. Maybe later, for Streaming, it could do this *live* — catching the words and sounds in real-time as the conversation goes back and forth. (See also 1B and 1K notes.)
+
+**2C.9 — Re-expose the inner settings drawer inside the guided conversation space:**
+The guided conversation area should have its settings readily available from the inner conversation UI itself, not force the user back out into a separate setup mindset. This seems like a direct use case for the lost right-side drawer described in 2B.5.
 
 ---
 
@@ -638,7 +684,21 @@ Yes, when working, the AI coach does bring back something based on the conversat
 
 ### Observations
 
-I *believe* and think this is good to go, but it's not totally clear what was being audited here. Is the question about the TTS drawer and how it reacts in conversations? Most of the substantive observations on TTS-in-convo are already in section 1H.2 ("spaghetti mess" expanded view).
+I *believe* and think the core TTS function is good to go, but the convo-specific controls need much more deliberate UX treatment than this section originally captured.
+
+**2E.1 — The top controls are too crowded to read comfortably:**
+In AI Conversations, the TTS box is crowded enough that the top two dropdowns become hard to read and use. This is not just a small CSS annoyance; it actively hides functionality.
+
+**2E.2 — "Selection" mode is a genuinely cool feature and should be advertised more clearly:**
+A great capability is already here: if the user switches TTS to **Selection**, Lux can read aloud highlighted text — not just the conversation turns, but also things like AI Coach text below, as long as the text is selected inside the app. That's excellent and easy to miss right now. We should surface it more intentionally so users know it exists.
+
+**2E.3 — See whether Voice Mirror / "Hear it in my voice" can also support Selection mode:**
+Right now the cloned-voice behavior can jump between AI and Me, but apparently does **not** follow the same selection-based reading path that TTS does. If possible, it would be very valuable to connect that too.
+
+**2E.4 — Guardrail: selection-based audio should stay scoped to Lux app content:**
+If Selection mode gets stronger — especially if Voice Mirror joins it — we should make sure the feature is bounded to content **inside the app**. I do **not** want this turning into a way to jump to another monitor, another site, or some random long external document and have Lux read unrelated content. The feature should stay attached to Lux-owned UI/text surfaces.
+
+Most of the earlier structural/layout problems are still captured in section 1H.2 ("spaghetti mess" expanded view), but these additional notes are new and important.
 
 ---
 
@@ -768,7 +828,20 @@ Streaming is missing a lot of UI polish — it's very plain — but to my unders
 ### Bug Cross-Reference
 Also see Bug 1C-related: Auto mode won't initiate from cold start on the Streaming page. Has to start on Tap, then switch to Auto.
 
+More specifically: if Streaming enters on Auto, it often won't really respond until I manually toggle modes. I have to flip between **Tap** and **Auto** to "wake it up." So the issue is not just cold-start Auto in the abstract — it's that **mode switching / mode initialization is not reliably kicking the conversation into an active state**.
+
 Also: the Streaming service has **no assessment connected to it at all** — just back-and-forth conversation. Pulling over the existing pronunciation assessment pipeline would probably be relatively easy and would dramatically boost this page's usefulness.
+
+### Streaming UX / Layout Additions
+
+**6.1 — Streaming should also get the inner settings drawer pattern:**
+If we restore the right-side drawer that appears to slide out from behind the inner conversation box (see 2B.5), Streaming should get that too. The settings form should be readily available from inside the live conversation space, not tucked away as a separate setup-only concept.
+
+**6.2 — Bring the self-playback and TTS drawers into Streaming too:**
+Streaming should inherit the tool drawers we've already built elsewhere — especially **Self-Playback**, **TTS**, and the new **Voice Mirror** function. These should follow the same "never overwhelming, always expandable" rule, but the tools should be available where they meaningfully apply.
+
+**6.3 — Streaming is part of the broader "tool portability" question:**
+Big system-wide issue: we've already built some genuinely strong tools, but many of them are trapped in just one page. We need a deliberate pass on which tools should appear everywhere, which should appear only in certain spaces, and how to keep that access at the user's fingertips without shoving it in their face.
 
 ---
 
@@ -792,6 +865,8 @@ Ran through most of the app, no 400s, no 500s, no major status errors or warning
 
 > Caveat: `/api/convo-report` returns 404 — see Bug 2D.1.
 
+Also saw a browser performance warning about **non-passive scroll-blocking event listeners**. That's not necessarily catastrophic, but it is worth a cleanup pass because it can contribute to a less responsive feel during interaction-heavy UI.
+
 ## Storage & State
 
 ### Checklist
@@ -813,7 +888,15 @@ Ran through most of the app, no 400s, no 500s, no major status errors or warning
 **Visual.1 — Worst layout area: TTS+SPB expanded view on AI Conversation page.**
 Screenshot captured. The expanded view of the TTS and SPB drawers on the convo page is one of the few really badly laid-out spots in the app. (See 1H.2 for the deep dive on this — "spaghetti mess.")
 
-**Visual.2 — Mobile responsiveness: deferred overhaul.**
+**Visual.2 — Character / role card overlays need modal clarity:**
+On the AI conversation side, the character or role cards feel too loose right now:
+- they rely too much on the user explicitly hitting X,
+- the background should probably scroll-lock,
+- clicking outside should trigger a clear animated cue on the X instead of just feeling dead.
+
+This is a consistency / polish issue, but it matters because these cards are part of the "first impression" interaction.
+
+**Visual.3 — Mobile responsiveness: deferred overhaul.**
 The mobile layout is going to need a huge overhaul. (And this time I mean it.) **Excited to do that someday soon, but it will definitely be after the big career shift push into ID.**
 
 ## Warp Transitions
@@ -857,7 +940,22 @@ convo.html#intro:1 [Intervention] Images loaded lazily and replaced with placeho
 
 The double init of the TTS Peekaboo panel is suspicious — possibly an init guard issue. The forced reflow violation is a perf flag.
 
-## Issue 4 — *(empty in original)*
+## Issue 4 — Tool Portability / Availability Matrix
+
+**Where:** Across Practice Skills, Guided AI Convo, Streaming, and related report spaces.  
+**Problem:** We've built several genuinely useful tools, but availability is inconsistent across spaces. Some pages have strong tools that others don't, even when they would be useful there too.
+
+**Principle:** I'd rather users have **too much access than not enough**, provided that access is:
+- context-appropriate,
+- hidden behind expandable affordances when needed,
+- never shoved in the user's face.
+
+**Action:** Do a deliberate pass on which tools belong:
+- everywhere,
+- only in certain experiences,
+- or only after expansion.
+
+Core north star remains: **never overwhelming, always expandable.**
 
 ## Issue 5 — Buttons (Project-Wide UX Pass)
 
@@ -894,6 +992,18 @@ The double init of the TTS Peekaboo panel is suspicious — possibly an init gua
 - **On-demand translation buttons:** Buttons or hover features everywhere that let them click to see content in their first language.
 
 Whichever is better, or makes more sense — **possibly both**.
+
+## Issue 8A — AI Coach should be L1-aware, not just neutral
+
+**Where:** Anywhere AI Coach appears.  
+**Problem / Opportunity:** If the user has selected a first language, the coach should be able to tailor explanations and likely transfer notes accordingly. Right now the coach risks being too generic or too neutral to be maximally useful.
+
+This should stay simple and supportive, not become an academic linguistics lecture.
+
+## Issue 8B — Selection-based audio tools should be powerful but bounded
+
+**Where:** TTS / Voice Mirror / any future read-selection feature.  
+**Problem / Opportunity:** The existing **Selection** mode in TTS is excellent and should be surfaced more clearly. If we extend that behavior to cloned voice / "Hear it in my voice," we should make sure it remains scoped to Lux app content, not arbitrary outside text on another monitor or another site.
 
 ## Issue 9 — Phoneme & Word Highlighting Accuracy
 
@@ -938,6 +1048,18 @@ This may already be partially captured in existing project docs, but it's worth 
 
 (Connects to 2A.1 — same concern, surfaced specifically for the convo picker page.)
 
+## Issue 13 — Passage Summary / Results Summary Stability
+
+**Where:** Results summary flow on the Practice Skills side.  
+**Problem:** The current summary path is unstable due to `mountVoiceMirrorButton is not defined`, which blocks clean rendering of the summary page. Even though the whole summary experience may get redesigned, this should be explicitly tracked as a current break.
+
+## Issue 14 — Streaming mode initialization + shared drawer pattern
+
+**Where:** Streaming.  
+**Problem:** Auto mode does not reliably initialize the conversation on first entry, and the mode-toggle state appears to be part of the bug. At the same time, Streaming is a strong candidate for inheriting the same inner-drawer, self-playback, TTS, and Voice Mirror patterns used elsewhere.
+
+This is partly a bug issue and partly an architecture / portability issue.
+
 ---
 
 # Sign-off & Strategic Priorities
@@ -972,5 +1094,4 @@ These are not central to the core. They're not getting touched in the closing-up
 - **A few others that don't come to mind right now**, but the mode is **rapid wrapping up** — don't want stuff left half-dangling here or there. Don't want to enter new territory that's going to take a long time to build out.
 
 That's the mission moving forward.
-
-**However:** This audit is useful for **general project health** beyond the closing-up sprint. It's a goldmine — first time ever I've done a full audit, and it's a reference document we should treasure and keep coming back to.
+However: This audit is useful for general project health beyond the closing-up sprint. It's a goldmine — first time ever I've done a full audit, and it's a reference document we should treasure and keep coming back to.
