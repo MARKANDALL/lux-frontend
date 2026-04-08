@@ -21,3 +21,15 @@ Git tags: pre = simoishi-s2-pre, done = simoishi-s2-done
 Blast radius: LOW (feature-level file)
 Test result: ✅ PASSED
 Notes: Second successful single-file run for the silent-catches task type. Trust counter: 1/5 → 2/5. First LOW blast radius run under the ungraduated rules.
+
+## Stage 3 — Silent catch fix in features/features/tts/player-core.js
+Date: 2026-04-08 16:34 EDT
+Task type: silent-catches
+Files touched:
+ 1. features/features/tts/player-core.js (line 59)
+What changed: Added warnSwallow call to previously-silent catch in b64ToBlob() so malformed or invalid TTS base64 audio payloads now log visibly while preserving the empty-blob fallback.
+How to revert: git checkout simoishi-s3-pre
+Git tags: pre = simoishi-s3-pre, done = simoishi-s3-done
+Blast radius: LOW (feature-level file)
+Test result: ✅ PASSED
+Notes: Third successful single-file run for the silent-catches task type. Trust counter: 2/5 → 3/5.
