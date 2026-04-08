@@ -138,7 +138,10 @@ export function getSessionId() {
 
 export function nukeSWInDev() {
   if (!IS_PROD && typeof navigator !== "undefined" && "serviceWorker" in navigator) {
-    navigator.serviceWorker.getRegistrations?.().then((rs) => rs.forEach((r) => r.unregister())).catch(() => {});
+    navigator.serviceWorker
+      .getRegistrations?.()
+      .then((rs) => rs.forEach((r) => r.unregister()))
+      .catch((err) => { globalThis.warnSwallow?.("app-core/state.js", err, "important"); });
     dbg("state:nukeSWInDev", "Service workers unregistered");
   }
 }
