@@ -9,3 +9,15 @@ Git tags: pre = simoishi-s1-pre, done = simoishi-s1-done
 Blast radius: HIGH (app-core canary file)
 Test result: ✅ PASSED
 Notes: First successful single-file run for the silent-catches task type. Trust counter: 0/5 → 1/5.
+
+## Stage 2 — Silent catch fix in features/features/tts/player-core.js
+Date: 2026-04-08 16:17 EDT
+Task type: silent-catches
+Files touched:
+ 1. features/features/tts/player-core.js (line 41)
+What changed: Added warnSwallow call to previously-silent catch in getVoiceCaps() so TTS voice-capability lookup failures now log visibly while preserving the empty-object fallback.
+How to revert: git checkout simoishi-s2-pre
+Git tags: pre = simoishi-s2-pre, done = simoishi-s2-done
+Blast radius: LOW (feature-level file)
+Test result: ✅ PASSED
+Notes: Second successful single-file run for the silent-catches task type. Trust counter: 1/5 → 2/5. First LOW blast radius run under the ungraduated rules.
