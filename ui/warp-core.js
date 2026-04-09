@@ -1,5 +1,7 @@
 // ui/warp-core.js — core warp overlay helpers (tiny + reusable)
-const KEY = "luxWarpNext";
+import { K_UI_WARP_NEXT, sessionGet, sessionSet, sessionRemove } from "../app-core/lux-storage.js";
+
+const KEY = K_UI_WARP_NEXT;
 
 function reducedMotion(){
   return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -48,14 +50,14 @@ export async function warpSwap(fn, { outMs = 220, inMs = 260 } = {}){
 }
 
 export async function warpGo(url, { outMs = 220 } = {}){
-  sessionStorage.setItem(KEY, "1");
+  sessionSet(KEY, "1");
   await warpOut(outMs);
   window.location.href = url;
 }
 
 export function warpInIfNeeded({ inMs = 260 } = {}){
   ensureWarpOverlay();
-  const should = sessionStorage.getItem(KEY) === "1";
-  if (should) sessionStorage.removeItem(KEY);
+  const should = sessionGet(KEY) === "1";
+  if (should) sessionRemove(KEY);
   if (should) warpIn(inMs);
 }
