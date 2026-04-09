@@ -154,7 +154,8 @@ export async function ensureTTSPlayerMounted() {
       document.documentElement.classList.add("lux-tts-booted");
       return true;
     }
-  } catch (_) {
+  } catch (err) {
+    globalThis.warnSwallow?.("features/features/tts/boot-tts.js", err, "important");
     _playerBooted = false;
   }
   return false;
