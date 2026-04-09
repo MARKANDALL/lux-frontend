@@ -43,7 +43,8 @@ export function mountStreamingApp({ rootId = "lux-stream-root" } = {}) {
     try {
       if (/[?&]debug=1(?:&|$)/.test(window.location.search)) return true;
       return getBool(K_DEBUG_STREAM);
-    } catch {
+    } catch (err) {
+      globalThis.warnSwallow?.("features/streaming/app.js", err, "important");
       return false;
     }
   }
