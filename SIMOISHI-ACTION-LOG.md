@@ -57,3 +57,15 @@ Git tags: pre = simoishi-s5-pre, done = simoishi-s5-done
 Blast radius: LOW (feature-level file)
 Test result: ✅ PASSED
 Notes: Fifth successful single-file run for the silent-catches task type. Trust counter: 4/5 → 5/5. Graduation milestone reached.
+
+## Stage 1 — bare-localstorage fix in ui/warp-core.js
+Date: 2026-04-09 16:20 EDT
+Task type: bare-localstorage
+Files touched:
+ 1. ui/warp-core.js (lines 1, 44, 50)
+What changed: Replaced raw sessionStorage calls with canonical wrapper helpers (sessionSet, sessionGet, sessionRemove) and replaced the local raw key string with K_UI_WARP_NEXT from app-core/lux-storage.js.
+How to revert: git checkout simoishi-bl1-pre
+Git tags: pre = simoishi-bl1-pre, done = simoishi-bl1-done
+Blast radius: LOW (feature-level file)
+Test result: ✅ PASSED
+Notes: First successful single-file run for the bare-localstorage task type. Trust counter: 0/5 → 1/5. First stage of a new task type.
