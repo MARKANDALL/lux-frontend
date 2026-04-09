@@ -45,3 +45,15 @@ Git tags: pre = simoishi-s4-pre, done = simoishi-s4-done
 Blast radius: LOW (feature-level file)
 Test result: ✅ PASSED
 Notes: Fourth successful single-file run for the silent-catches task type. Trust counter: 3/5 → 4/5.
+
+## Stage 5 — Silent catch fix in features/streaming/app.js
+Date: 2026-04-09 15:59 EDT
+Task type: silent-catches
+Files touched:
+ 1. features/streaming/app.js (line 46)
+What changed: Added warnSwallow call to previously-silent catch in readDebugFlag() so streaming debug-flag read failures now log visibly while preserving the false fallback.
+How to revert: git checkout simoishi-s5-pre
+Git tags: pre = simoishi-s5-pre, done = simoishi-s5-done
+Blast radius: LOW (feature-level file)
+Test result: ✅ PASSED
+Notes: Fifth successful single-file run for the silent-catches task type. Trust counter: 4/5 → 5/5. Graduation milestone reached.
