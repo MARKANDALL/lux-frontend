@@ -33,3 +33,15 @@ Git tags: pre = simoishi-s3-pre, done = simoishi-s3-done
 Blast radius: LOW (feature-level file)
 Test result: ✅ PASSED
 Notes: Third successful single-file run for the silent-catches task type. Trust counter: 2/5 → 3/5.
+
+## Stage 4 — Silent catch fix in features/features/tts/boot-tts.js
+Date: 2026-04-09 15:25 EDT
+Task type: silent-catches
+Files touched:
+ 1. features/features/tts/boot-tts.js (line 157)
+What changed: Added warnSwallow call to previously-silent catch in ensureTTSPlayerMounted() so lazy TTS player boot failures now log visibly while preserving the retry/reset behavior.
+How to revert: git checkout simoishi-s4-pre
+Git tags: pre = simoishi-s4-pre, done = simoishi-s4-done
+Blast radius: LOW (feature-level file)
+Test result: ✅ PASSED
+Notes: Fourth successful single-file run for the silent-catches task type. Trust counter: 3/5 → 4/5.

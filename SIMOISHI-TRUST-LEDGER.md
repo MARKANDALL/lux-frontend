@@ -3,7 +3,7 @@
 **Rule:** A task type graduates after 5 successful single-file runs (Rule S1).
 
 ## Status
-- silent-catches: ungraduated (3/5)
+- silent-catches: ungraduated (4/5)
 - bare-localstorage: ungraduated (0/5)
 - dead-code: ungraduated (0/5)
 - file-size-monitoring: ungraduated (0/5)
@@ -17,3 +17,4 @@
 - 2026-04-08 15:47 EDT — Stage 1 PASSED — silent-catches advanced from 0/5 to 1/5.
 - 2026-04-08 16:17 EDT — Stage 2 PASSED — silent-catches advanced from 1/5 to 2/5.
 - 2026-04-08 16:34 EDT — Stage 3 PASSED — silent-catches advanced from 2/5 to 3/5.
+- 2026-04-09 15:25 EDT — Stage 4 PASSED — silent-catches advanced from 3/5 to 4/5.
