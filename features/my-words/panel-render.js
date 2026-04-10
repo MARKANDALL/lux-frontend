@@ -122,20 +122,20 @@ export function createMyWordsPanelRenderer({
       return;
     }
 
-    // Sidecar: show View Library only if there is anything archived
-    if (archivedTotal > 0) {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "lux-mw-viewAllBtn";
-      btn.textContent = `View Library (${archivedTotal})`;
+    // Sidecar: always show View Library button (badge shows archived count, "0" when empty).
+    // Resolves audit items 1J.3 and 1J.7 — previously this was gated on archivedTotal > 0,
+    // which created a navigation dead-end for empty-library users.
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "lux-mw-viewAllBtn";
+    btn.textContent = `View Library (${archivedTotal})`;
 
-      btn.addEventListener("click", () => {
-        onOpenLibrary?.();
-        luxBus.get('myWordsApi')?.openLibrary?.();
-      });
+    btn.addEventListener("click", () => {
+      onOpenLibrary?.();
+      luxBus.get('myWordsApi')?.openLibrary?.();
+    });
 
-      host.appendChild(btn);
-    }
+    host.appendChild(btn);
   }
 
   function render() {
@@ -180,7 +180,7 @@ export function createMyWordsPanelRenderer({
           .join("");
       }
 
-      // Show "View Library (N)" if anything is archived
+      // Always render the View Library button (count badge included)
       renderFooterButton(archivedTotal);
       return;
     }
