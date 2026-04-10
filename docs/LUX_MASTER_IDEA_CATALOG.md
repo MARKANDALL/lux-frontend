@@ -1,4 +1,4 @@
-# Lux Pronunciation Tool — Master Idea Catalog (v3)
+# Lux Pronunciation Tool — Master Idea Catalog (v4)
 
 > **Purpose:** Every idea, fix, feature, dream, and design note — organized by attack phase, prioritized within each phase. Nothing lost, everything findable.
 >
@@ -448,6 +448,53 @@
 - 🟠 **Quick download from My Progress overall data page.**
 - 🟠 **Periodic reports or assessments every X amount of time.**
 - 🟠 **Personalized Supabase email links.**
+
+## 7.7 Agentic AI Coaching Architecture
+
+> **Status:** Parking lot. NOT a current build target. Revisit after the August ID job push.
+> **Added:** 2026-04-10
+> **Why it's here:** "Agentic AI" is the direction the entire pronunciation/conversation category is converging on. Lux should be *architected toward* this even before any agent framework gets wired in, so the migration path is short when the time is right.
+> **Sibling doc:** Competitor moves on this front are tracked in `LUX_COMPETITIVE_LANDSCAPE.md`.
+
+### What "agentic AI" actually means in this context
+
+Not just "an LLM that talks back." It's an architecture where multiple specialized AI agents collaborate under an orchestrator to plan, execute, and adapt across multi-step tasks — with persistent memory, tool use, and self-correction loops. The four canonical design patterns (per DeepLearning.AI's curriculum):
+
+- **Reflection** — AI critiques and revises its own work.
+- **Tool Use** — AI calls external services and APIs.
+- **Planning** — AI breaks goals into steps.
+- **Multi-Agent** — specialized agents coordinated by an orchestrator.
+
+### What an agentic Lux would look like
+
+Instead of one LLM call giving feedback per utterance, the session would be run by a small team of cooperating agents:
+
+- ⚪ **Orchestrator agent** — receives session goal ("improve /θ/ in casual conversation") and routes work.
+- ⚪ **Listener agent** — runs the Azure Speech assessment, extracts phonemes and prosody.
+- ⚪ **Diagnostician agent** — looks at lifetime rollups + session results, decides what's worth flagging.
+- ⚪ **Coach agent** — generates the actual spoken/written feedback in the chosen persona.
+- ⚪ **Planner agent** — schedules the next practice session, picks the next passage from the phoneme library, queues an AI conversation around the user's trouble sounds.
+- ⚪ **Reflector agent** — after N sessions, critiques whether the plan is working and adjusts.
+
+This is essentially the existing locked roadmap items ("generate my next practice", phoneme-driven library, lifetime rollups) **executed as autonomous agents** rather than one-shot LLM calls.
+
+### Why it's parked, not built
+
+- Khanmigo (Khan Academy + Microsoft) is already running this pattern at scale with 400K+ educators in 50+ countries — proof the model works in education.
+- Microsoft is embedding Copilot agents directly into LMS environments starting Spring 2026. Funded competitors will all have agentic coaching within 12–18 months.
+- **But:** Building this properly requires LangGraph / CrewAI / OpenAI Agents SDK competency Mark doesn't have yet, plus a real eval harness, plus money for orchestration costs. This is a Q4 2026 / 2027 conversation, not an August launch conversation.
+
+### What to do *now* (cheap, no scope creep)
+
+1. **Tag existing roadmap items** ("generate my next practice", phoneme library, lifetime rollups) as "Phase 1 of agentic coaching" — so the ID portfolio narrative can claim Lux is *architected toward* agentic coaching even before any agent framework is wired in.
+2. **Watch BoldVoice and Langua release notes monthly** (tracked in `LUX_COMPETITIVE_LANDSCAPE.md`) — first incumbent to ship agentic coaching is the signal that the market window has opened.
+3. **Bookmark resources for later:** DeepLearning.AI "Agentic AI" course, IBM RAG and Agentic AI cert (Coursera), OpenAI Agents SDK docs. The OpenClaw / Simoishi work is already a real head start in the same conceptual family.
+
+### Talking point for ID interviews (use even without building it)
+
+> "Lux is currently a single-LLM-call architecture, but the roadmap is explicitly designed to migrate to a multi-agent orchestration pattern — Khanmigo-style — once the core feature set is locked. I can walk you through the agent decomposition I've sketched out."
+
+This positions Mark as someone who **thinks in systems and roadmaps**, which is exactly what senior ID and learning-engineering roles screen for.
 
 ---
 

@@ -30,7 +30,7 @@ Only after 5 successful single-file runs of a given task type (silent catches, l
 
 NEVER exceed batch size 5 even after graduation. Boring on purpose. The ceiling is non-negotiable.
 
-Track graduation status in `C:\dev\LUX_GEMINI\SIMOISHI-TRUST-LEDGER.md`, append-only. Increment a task type's count when a single-file run is approved as ✅ PASSED. When it hits 5, mark it as `graduated` and the batch size for that task type becomes ≤3 going forward.
+Track graduation status in `C:\dev\LUX_GEMINI\docs\simoishi\SIMOISHI-TRUST-LEDGER.md`, append-only. Increment a task type's count when a single-file run is approved as ✅ PASSED. When it hits 5, mark it as `graduated` and the batch size for that task type becomes ≤3 going forward.
 
 When you finish a stage, STOP. Do not proceed to the next stage on your own. Send Mark a Telegram message in this exact format:
 
@@ -50,7 +50,7 @@ Do NOT begin Stage N+1 without an explicit "GO" from Mark in reply. If Mark repl
 For every stage, append an entry to the Action Log. The log lives at:
 
 ```
-C:\dev\LUX_GEMINI\SIMOISHI-ACTION-LOG.md
+C:\dev\LUX_GEMINI\docs\simoishi\SIMOISHI-ACTION-LOG.md
 ```
 
 Entry format:
@@ -369,7 +369,7 @@ When performing any codebase sweep (full scan, single-rule scan, or targeted che
 
 The detailed report. Includes every finding with full context.
 
-**Location:** Save to `C:\dev\LUX_GEMINI\` with the filename `SWEEP-REPORT-FULL-[YYYY-MM-DD]-[sweep-name].md`
+**Location:** Save to `C:\dev\LUX_GEMINI\docs\simoishi\sweep-reports\` with the filename `SWEEP-REPORT-FULL-[YYYY-MM-DD]-[sweep-name].md`
 
 **Format:**
 
@@ -416,7 +416,7 @@ Continue for every finding. Findings are numbered globally across the whole swee
 
 The morning-glance report. Just enough to triage.
 
-**Location:** Save to `C:\dev\LUX_GEMINI\` with the filename `SWEEP-REPORT-SUMMARY-[YYYY-MM-DD]-[sweep-name].md`
+**Location:** Save to `C:\dev\LUX_GEMINI\docs\simoishi\sweep-reports\` with the filename `SWEEP-REPORT-SUMMARY-[YYYY-MM-DD]-[sweep-name].md`
 
 **Format:**
 
