@@ -236,11 +236,11 @@ export function attachConvoHandlers({
 
   endBtn.addEventListener("click", async () => {
     try {
-      const report = await convoReport({
-        uid: uid(),
-        sessionId: state.sessionId,
-        passageKey: SCENARIOS[state.scenarioIdx]?.id || "unknown",
-      });
+const report = await convoReport({
+  uid: uid(),
+  sessionId: state.sessionId,
+  passageKey: `convo:${SCENARIOS[state.scenarioIdx]?.id || "unknown"}`,
+});
 
       showConvoReportOverlay(report);
     } catch (err) {
