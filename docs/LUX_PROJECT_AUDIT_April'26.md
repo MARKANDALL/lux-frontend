@@ -6,6 +6,10 @@
 >
 > **Strategic context (read this first):** Mark is preparing to shift focus to a career transition into Instructional Design. The goal is to get Lux to a *safe-to-leave-for-a-while* state in **days, not weeks**. Priority is the **core practice loop** (Practice Skills page + Guided AI Conversations). Lower priority: Streaming (push if time allows), Word Cloud, Life Journey, admin data tracking. Future-priority: mobile responsiveness, full onboarding rebuild (which doubles as ID portfolio work).
 
+
+> **2026-04-10 session close:** 1J.3, 1J.7 shipped (View Library always visible). Convo passageKey namespacing shipped. Next up: 1K.1 (collapsible Progress squares in dashboard-template.js around lines 119–138) and 1B/1K.2 (highlighting investigation). See docs/LUX_COMPETITIVE_LANDSCAPE.md for competitor update loop.
+
+
 ---
 
 ## Table of Contents
