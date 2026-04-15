@@ -1,4 +1,4 @@
-# Lux Pronunciation Tool — Master Idea Catalog (v5)
+# Lux Pronunciation Tool — Master Idea Catalog (v6)
 
 > **Purpose:** Every idea, fix, feature, dream, and design note — organized by attack phase, prioritized within each phase. Nothing lost, everything findable.
 >
@@ -205,7 +205,46 @@
 - 🟡 **Clean up AI-generated practice passages:** Don't bend over backwards inserting unnatural words. Do absolutely nail the target phonemes and highlight relevant words if they appear naturally.
 - 🟡 **Conversation replay / re-practice mode:** Allow users to save and replay an entire AI conversation word-for-word — same prompts, same responses, same flow — so they can re-enter the exact same dialogue and practice it again. Every AI conversation is unique by nature, which is powerful, but if a user had a great conversation that pushed their weak spots, they should be able to return to it and drill it. Requires saving the full conversation state (transcript, scenario config, AI responses) and offering a "Practice this conversation again" option from history.
 
-## 3.5 Feedback Timing & Styles
+## 3.4.1 Dynamic Conversation Text — Visual Encoding & Click-to-Reveal
+
+> *Apply Bridge Mode's visual-encoding philosophy (Phase 2.8) to AI Conversations. Right now, conversation text is uniform: same font, same color, same size whether the AI is using a word the user has mastered or a word that's their #1 trouble pattern. The text itself can carry pedagogical information. And every word can be a doorway.*
+
+### Visual encoding on conversation text
+
+- 🟡 **Word size and color as data signals — applied to BOTH AI output and user input/selections:** Same encoding logic as Bridge Mode (2.8), but extended to live conversation. The conversation text becomes a real-time visualization of where the learner is, not just a transcript. Encoding factors to consider, in priority order:
+  - **User's personal trouble level for that word/phoneme** (highest signal — Lux uniquely knows this)
+  - **L1 similarity / distance** (predicted difficulty based on the learner's first language)
+  - **Frequency dictionary ranking** (high-frequency words = core vocabulary, low-frequency = stretch words)
+  - **User's own usage frequency** (have they said this word before? how recently? how successfully?)
+  - **CEFR level alignment** (is this word at, above, or below their current level?)
+  - **Mastery state** (red = struggled last time, yellow = shaky, green = mastered)
+  - Other factors TBD as the system learns
+
+- 🟡 **Constraint: no Christmas tree.** Pick 2–3 dimensions to encode at any one time, not all of them. Same discipline as Bridge Mode's color rule. Probably user-toggleable: "show me trouble phonemes" vs. "show me CEFR level" vs. "show me mastery state."
+
+- 🟡 **Reuse the existing colorblind-accessible palette and the app-wide scoring colors.** No new palette introduced.
+
+### Click-to-reveal on every word
+
+- 🟡 **Universal click-to-reveal on conversation text — both AI output and user-selected/typed words:** Click or tap any word in the conversation to open a small panel revealing:
+  - **Definition** (concise, learner-appropriate)
+  - **IPA transcription** (American English, in the same IPA font/color used elsewhere in the app per 3.7)
+  - **Audio pronunciation** (TTS playback button)
+  - **L1 translation** (when L1 is selected, per Phase 5.6)
+  - **The user's history with this word** (have I said this before? how did I do?)
+  - **Why this word is highlighted** (if it's encoded as trouble — link the visual signal to the explanation)
+
+- 🟡 **Non-intrusive interaction model:** Click reveals the panel inline or as a small floating tooltip, doesn't navigate away, doesn't interrupt the conversation. Same "user pulls feedback" philosophy as the nudge bump (Phase 3.5).
+
+### Why this matters
+
+Right now, AI Conversations show learners the *content* of a conversation but not the *pedagogical landscape* underneath it. Two learners reading the same AI message see the same flat text — even though for one of them three words are trouble phonemes and for the other none of them are. Dynamic encoding makes the text itself an instrument the learner can read. Click-to-reveal turns every word into a learning opportunity without forcing the learner to stop and look something up in a separate tool.
+
+### Architectural fit
+
+- Consumes the same rollup data as Bridge Mode (2.8), "Generate my next practice", phoneme-driven library, and diagnosis engine
+- Pairs naturally with the staggered intelligence concept (2.3) — encoding gets richer as the system learns more about the user
+- Click-to-reveal is the conversation-side equivalent of the phoneme tooltip work in Phase 3.7## 3.5 Feedback Timing & Styles
 
 - 🟡 **Live vs. later feedback toggle (AI Conversations):** This is actually quite important and nuanced. During a conversation, you often want to focus on the conversation, not be distracted by corrections. Options: live feedback, post-conversation feedback, or even weekly aggregated feedback. Each serves a different learning purpose.
 - 🟡 **"Nudge bump" passive feedback mode (middle ground):** A third option between live and delayed — a subtle, non-intrusive visual indicator (a small dot, glow, or badge) that signals feedback is available for that turn without interrupting flow. The user stays in the conversation but can tap/click the nudge at any time to expand the feedback on demand. Solves the tension between "don't break the flow" and "give me feedback if I want it right now." The key is that feedback exists and is accessible, but the user pulls it rather than having it pushed.
@@ -695,9 +734,12 @@ Instead of organizing by topic (Scoring, Personalization, Phonemes, etc.), v2 re
 - **Mark as Personal Coach** moved from a throwaway monetization bullet to a proper feature section with two access paths (staggered escalation + direct from the beginning) and pricing philosophy.
 - **Spanish Version** went from a single 🟠 bullet called "Spanish flip" to an entire phase with rationale and concrete build requirements.
 
-## What's New in v5 (added 2026-04-14)
+## What's new in v6 (added 2026-04-15)
+
+- **Dynamic Conversation Text (Phase 3.4.1)** — Apply Bridge Mode's visual encoding philosophy to AI Conversations. Word size and color carry pedagogical data (personal trouble level, L1 distance, frequency rank, personal usage, CEFR alignment, mastery state) on both AI output and user input/selections. Pick 2–3 dimensions at a time — no Christmas tree. Plus universal click-to-reveal on every word: definition, IPA, audio, L1 translation, personal history, "why is this highlighted." Architectural fit: same rollup data as Bridge Mode and the diagnosis engine; conversation-side equivalent of phoneme tooltip work.
 
 - **Bridge Mode (Phase 2.8)** — Progressive L1→L2 scaffolded reading as a new mode within Guided Practice. Sliding ratio (95/5 → 5/95) tied to mastery, English words chosen by existing rollup data, size = personalized pronunciation difficulty, color = mastery state, sentence-level alternation to avoid Spanglish artifacts. Pedagogically grounded in comprehensible input and translanguaging research.
+
 - **Life Mode (Phase 6.13)** — The serial third AI conversation pillar. Choose-your-own-adventure life simulation with overnight Kodama-style agent processing (narrative digest, branch generator, pronunciation rollup → narrative seeding). Entertainment-first design with pronunciation as byproduct. Parked pending agentic architecture (7.7).
 - **Cross-reference added in 7.7** — Life Mode is now flagged as the natural product expression of the agentic architecture.
 
