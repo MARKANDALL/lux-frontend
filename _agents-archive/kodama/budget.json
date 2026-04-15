@@ -1,0 +1,8 @@
+{
+  "weekly_bar_pct": 0,
+  "runs_today": 5,
+  "runs_this_week": 17,
+  "last_run_date": "2026-04-15",
+  "last_run_ts": "2026-04-15T13:36:29.5187843-04:00",
+  "notes": "Week 1 calibration. Floor 75% hardcoded in supervisor.ps1. Edit weekly_bar_pct manually before each run if desired."
+}
