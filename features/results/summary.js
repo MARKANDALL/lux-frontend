@@ -10,6 +10,7 @@ import { isCorrupt } from "../../helpers/core.js";
 import { passages } from "../../src/data/passages.js";
 import { detailedPhonemeFeedback } from "./summary-feedback.js";
 import { scoreClass as scoreClassCore, fmtPctCefr } from "../../core/scoring/index.js";
+import { mountVoiceMirrorButton } from "../voice-mirror/voice-mirror.js";
 
 // --- Universal Color Helper (Inlined for safety) ---
 function getColorConfig(s) {

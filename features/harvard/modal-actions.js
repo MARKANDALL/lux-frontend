@@ -3,8 +3,9 @@
    ONE-LINE: Shared Harvard modal action helpers for selection, hover preview, filter UI, and tab switching.
 ============================================================================= */
 
-// features/harvard/modal-actions.jsimport { K_HARVARD_LAST, K_PASSAGES_LAST, setString } from '../../app-core/lux-storage.js';
-
+// features/harvard/modal-actions.js
+   import { K_HARVARD_LAST, K_PASSAGES_LAST, setString } from '../../app-core/lux-storage.js';
+   
 export function ensurePhonemeOptions({
   focusSel,
   getAllTopPhonemes,
