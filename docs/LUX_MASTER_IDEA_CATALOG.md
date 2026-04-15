@@ -1,4 +1,4 @@
-# Lux Pronunciation Tool — Master Idea Catalog (v4)
+# Lux Pronunciation Tool — Master Idea Catalog (v5)
 
 > **Purpose:** Every idea, fix, feature, dream, and design note — organized by attack phase, prioritized within each phase. Nothing lost, everything findable.
 >
@@ -120,6 +120,47 @@
 - 🟡 **Clarify prosody & score breakdown into sub-scores:** Separate visual metrics for accuracy, prosody, fluency, and completeness, each with a one-line tooltip explanation.
 - 🟠 **Toggle between scoring frameworks:** Allow users to switch display between CEFR and other major testing standards (IELTS, TOEFL, etc.) — future build, CEFR first.
 
+## 2.8 Bridge Mode — Progressive L1→L2 Scaffolded Reading
+
+> *A new mode within Guided Practice. Progressive integration of English into texts that start mostly in the learner's L1. Pedagogically grounded in comprehensible input / i+1 / translanguaging research, and uniquely buildable by Lux because the trouble-phoneme/word rollup data already tells us which English words belong in the mix.*
+
+### Core mechanic
+
+- 🟡 **Sliding L1→L2 ratio tied to mastery:** Texts begin at ~95% L1 / 5% English for true beginners and progress through bands (95/5 → 80/20 → 50/50 → 20/80 → 5/95) as the learner demonstrates competence. Same sound system as everything else in Lux: the rollup data drives the progression, not a guess.
+- 🟡 **English words chosen by Lux's existing data:** The 5% (or 20%, or 50%) of English words inserted into a mostly-L1 passage are not random. They are weighted by:
+  - **High-frequency core vocabulary** (words the learner needs most).
+  - **Trouble-phoneme targeting** (words containing the phonemes the learner is failing on).
+  - **CEFR alignment** (level-appropriate).
+  - **Spaced recycling** (words seen recently but not yet mastered).
+  This is the same rollup engine that powers "Generate my next practice" and the phoneme-driven library — Bridge Mode just consumes it for a different output.
+
+### Visual encoding
+
+- 🟡 **Word size = pronunciation difficulty for THIS learner:** Not generic difficulty — personalized. Words containing the learner's specific trouble phonemes render larger. This is the variable Lux uniquely knows and the variable that matters most for what the learner actually has to *say*.
+- 🟡 **Color coding — pick 2–3 distinctions max, no Christmas tree:** Candidates, in priority order:
+  - **Mastery state (priority pick):** Red (struggled last time) → yellow (shaky) → green (mastered). Makes progress visible session-over-session and loops directly back into rollup data.
+  - **New vs. recycled:** New words in one color, returning words in another. Huge for tracking vocabulary growth.
+  - **Phoneme focus:** When a session targets specific phonemes (/θ/, /ɪ/ vs. /iː/), highlight every word containing them in a target color. Ties directly into the locked phoneme-driven passage library plan.
+  - **Part of speech:** Content words vs. function words. Helps learners see syntactic structure, especially when reading across two languages.
+- 🟡 **Reuse the existing colorblind-accessible palette:** Stay consistent with the 🔵/🟡/🟠/⚪ priority system and the app-wide scoring colors. No new palette introduced.
+
+### Scaffolding & interaction
+
+- 🟡 **Tap-to-reveal L1 gloss:** Any English word in the text reveals an L1 translation + phonetic hint on tap/hover. Learner controls the scaffolding rather than it being baked in.
+- 🟡 **Sentence-level alternation (cleaner than within-sentence mixing):** L1 and L2 alternate by sentence, not by word — L1 sentence sets up context, L2 sentence is the one the learner reads aloud. Avoids Spanglish syntactic artifacts that arise when L1 and L2 grammars don't align (Spanish noun-adjective order, German verb-final clauses, etc.). Within-sentence mixing remains an option for very low ratios (95/5) where it's just inserting key vocabulary.
+- 🟡 **Cloze progression within a session:** Same passage appears three times, escalating: 80/20 → 50/50 → 20/80. Familiarity reduces cognitive load so the learner can focus on pronunciation rather than comprehension. Spaced repetition applied to passages instead of flashcards.
+- 🟠 **Phoneme density heatmap:** Background tint on each word indicates density of the learner's trouble phonemes in that word. Reading becomes visually obvious where the hard parts are without the user having to be told.
+- 🟠 **"Earn your English" — gamified ratio progression:** Hit accuracy thresholds on the English portion of a session and the next passage auto-bumps to a higher L2%. Makes progression feel earned rather than imposed by the system.
+
+### Placement — keep it light, not rigorous
+
+- 🟡 **Short adaptive diagnostic, not a hard test:** A rigorous upfront placement is where adult ESL/GED learners get lost. Use a 5–7 item adaptive diagnostic to set initial ratio, then let the first 2–3 sessions calibrate dynamically based on actual performance. The rollup data converges on the right level faster than a test will.
+
+### Architectural fit
+
+- 🟡 **Bridge Mode is a new mode within Guided Practice, not a separate feature:** It consumes the same rollup data (trouble phonemes, trouble words, mastery state, CEFR) that already powers "Generate my next practice", the phoneme-driven passage library, and the diagnosis engine. Infrastructure investment compounds — building Bridge Mode strengthens those features and vice versa.
+- 🟡 **Reading-first, not back-and-forth:** Bridge Mode is closer to Practice Skills than to AI Conversations in interaction model — the learner reads aloud rather than dialogues. This is the reason it lives under Guided Practice and not under the AI Conversation pillars.
+
 ---
 
 ---
@@ -223,6 +264,7 @@
   - Starter set of Spanish conversation scenarios.
   - L1 profiling in reverse — English speakers learning Spanish have predictable patterns (vowel reduction where Spanish wants pure vowels, rhotic R issues, etc.).
   - Spanish-facing UI text (distinct from the L1 translation system — this is the *target language* being Spanish, not just translating the interface).
+  - Bridge Mode (2.8) for English speakers learning Spanish — Mark dogfoods the L1→L2 progression in his own direction.
 
 - 🟠 **Start minimal:** A stripped-down Spanish version with core Practice Skills and basic AI Conversations. Not every feature from English day one — just enough to be a real, usable pronunciation practice tool.
 
@@ -318,7 +360,7 @@
 - 🟠 **"Do this next" daily recommendations:** Lesson progressions and daily nudges based on where they are in the path.
 - 🟠 **Goal-based mode selection:** User picks "Interview clarity" or "Customer service calls" → GPT chooses prompts and vocabulary, Azure measures, dashboard reflects that goal's KPIs.
 - 🟠 **Visible content catalog:** A big, browseable catalog of everything available.
-- ⚪ **Life-game concept:** A "Game of Life"–style experience where learning unfolds through a career/life narrative.
+- ⚪ **Life-game concept:** A "Game of Life"–style experience where learning unfolds through a career/life narrative. (See full design in 6.13.5.)
 
 ## 6.4 Auto-Generated Practice (Advanced)
 
@@ -374,7 +416,59 @@
 
 - 🟠 **Add NATO phonetic alphabet reference.**
 
-## 6.13 "What Are We Missing?" Meta-Analysis
+## 6.13 Life Mode — The Third AI Conversation Pillar
+
+> *Status: Parking lot. NOT a current build target. Captured to preserve the design before details fade.*
+> *Added: 2026-04-14*
+> *Sibling features: Guided Practice (closed loop, scripted) and Streaming (open-ended, single session). Life is the serial, persistent third pillar.*
+
+### Core concept
+
+A choose-your-own-adventure life simulation where the user inhabits an evolving character across days, weeks, and months. **Primary goal: entertainment so compelling the user keeps talking.** Pronunciation data is the byproduct, not the pitch. Solve "get them to keep talking" and Lux's measurement engine does the rest.
+
+### Daytime (user-facing)
+
+- ⚪ **Time-boxed daily sessions:** User sets daily budget (30 min, 1 hour, etc.). Chapters designed to fit. Day ends at a natural cliffhanger or chapter break.
+- ⚪ **Choose-your-own-adventure forks:** Between scenes, user picks from 2–3 trajectory options ("Apologize / Stand firm / Skip the meeting"). Mid-scene is free dialogue; branching happens at the seams.
+- ⚪ **Recurring characters with memory:** The barista from chapter 2 remembers the tip. The roommate is still mad about the dishes. This is what makes the world feel alive vs. random.
+- ⚪ **Cliffhangers as a design pattern:** End every session mid-tension. Soap-opera structure — proven engagement model.
+- ⚪ **Stakes that compound:** Choices in week 1 affect week 4. Some decisions are irreversible. Real consequences, real continuity.
+
+### Nighttime (overnight agent — Kodama-style)
+
+While the user sleeps, an agent runs three jobs:
+
+- ⚪ **Narrative digest:** Reads day's transcripts, updates the canonical character sheet (job, relationships, location, unresolved threads, recent events).
+- ⚪ **Branch generator:** Drafts the next 2–3 fork options for tomorrow, seeded by what just happened.
+- ⚪ **Pronunciation rollup → narrative seeding:** Trouble-phoneme analysis feeds *narrative* decisions. User struggles with /θ/? Tomorrow's branch options include a character whose name has /θ/ in it, or a job that requires saying "thirty-three" a lot. Pronunciation targeting hides inside the story.
+
+User wakes up to: "Last night you turned down the promotion. This morning your boss wants to talk." That notification is one people actually open.
+
+### Why it's distinct from Guided and Streaming
+
+- **Guided** = closed loop, scripted, single session.
+- **Streaming** = open-ended, single session, no continuity.
+- **Life** = serial, persistent state, agent works between sessions. The "while you sleep" architecture is the hook.
+
+### Critical guardrails
+
+- ⚪ **Canonical fact store, not vibes:** Character sheet is structured data the agent reads from, not a rolling summary it regenerates. Same discipline as `lux-storage.js` key registry. Sister is a vet. Job is nurse. City is Chicago. These don't drift.
+- ⚪ **No dark spirals:** Hard rules — no self-harm storylines, no abusive relationships played for drama, no sexual content, no political flame wars. Life can have conflict and setbacks; it shouldn't have horror. Bias the agent toward narrative momentum and variety, not bleakness.
+- ⚪ **Reset / off-ramp:** User can rewind a chapter, kill a character off, or "start a new life" without losing pronunciation progress. The story is disposable; the language data isn't.
+- ⚪ **Pronunciation feedback waits for chapter breaks:** Never break the fourth wall mid-scene. The "nudge bump" passive feedback pattern (Phase 3.5) is the right model.
+- ⚪ **Time budget enforcement:** No "just one more turn" dark patterns. If user sets 1 hour/day, agent designs chapters that fit.
+- ⚪ **Surprise within constraint:** Agent can introduce new characters, plot twists, opportunities — but always grounded in the established world. No teleporting to Mars in chapter 9 unless chapter 8 set it up.
+
+### Why it's parked, not built
+
+This is the natural endpoint of the agentic AI architecture (Phase 7.7). Life mode isn't *like* a multi-agent system — it *is* one (Orchestrator + Listener + Diagnostician + Coach + Planner + Reflector). Building it requires the agentic foundation that's also parked. When 7.7 becomes a build target, Life mode is the product reason to do it.
+
+### What to capture now (cheap, no scope creep)
+
+- This section exists. Future-Mark won't have to re-derive the design.
+- Tag in ID portfolio narrative: "Lux's roadmap includes a serial life-simulation mode powered by overnight agentic processing — entertainment-first design with pronunciation as byproduct."
+
+## 6.14 "What Are We Missing?" Meta-Analysis
 
 - 🟡 **Every angle audit:** Every possible way to analyze pronunciation data — step back and look at it in the meta sense. There must be more dimensions.
 - 🟠 **Challenging words in a thought cloud:** Size and frequency of mistakes rendered visually.
@@ -475,6 +569,7 @@ Instead of one LLM call giving feedback per utterance, the session would be run 
 - ⚪ **Coach agent** — generates the actual spoken/written feedback in the chosen persona.
 - ⚪ **Planner agent** — schedules the next practice session, picks the next passage from the phoneme library, queues an AI conversation around the user's trouble sounds.
 - ⚪ **Reflector agent** — after N sessions, critiques whether the plan is working and adjusts.
+- ⚪ **Life mode (see 6.13)** — the serial choose-your-own-adventure third AI conversation pillar is the natural product expression of this architecture. Build the agents, get Life mode for free.
 
 This is essentially the existing locked roadmap items ("generate my next practice", phoneme-driven library, lifetime rollups) **executed as autonomous agents** rather than one-shot LLM calls.
 
@@ -548,19 +643,23 @@ This positions Mark as someone who **thinks in systems and roadmaps**, which is 
 
 5. **The voice cloning idea is genuinely novel.** No competitor does this. "Hear yourself but correct" is psychologically powerful. Worth prototyping even if it ships later.
 
+6. **Bridge Mode (2.8) is the cheapest big win in the catalog.** It uses infrastructure that already exists or is already planned (rollup data, CEFR, color system, phoneme-driven generation). The pedagogy is well-supported (comprehensible input, translanguaging). And it solves the single hardest problem in adult ESL — the all-English wall that loses learners in week one.
+
+7. **Life Mode (6.13) is the long bet that justifies the agentic architecture.** When 7.7 becomes a real build target, Life Mode is the product reason to do it. Until then, parking it preserves the design and keeps the door open.
+
 ### Gaps & Suggestions
 
-6. **The L1 profiling system (Phase 2.1) should be backed by a real data table.** Build a concrete L1 → expected error patterns matrix. This is researchable — there's extensive SLA (second language acquisition) literature on transfer errors by L1. A solid table for the top 10–15 L1s would cover the vast majority of users.
+8. **The L1 profiling system (Phase 2.1) should be backed by a real data table.** Build a concrete L1 → expected error patterns matrix. This is researchable — there's extensive SLA (second language acquisition) literature on transfer errors by L1. A solid table for the top 10–15 L1s would cover the vast majority of users.
 
-7. **Recording storage / privacy policy** needed — especially with voice cloning on the roadmap. Both a legal and trust issue.
+9. **Recording storage / privacy policy** needed — especially with voice cloning on the roadmap. Both a legal and trust issue.
 
-8. **Missing: offline/low-connectivity mode.** Many ESL learners practice in contexts with unreliable internet. Even a basic offline drill mode using cached phoneme data could be valuable.
+10. **Missing: offline/low-connectivity mode.** Many ESL learners practice in contexts with unreliable internet. Even a basic offline drill mode using cached phoneme data could be valuable.
 
-9. **Missing: social/community layer.** Study groups, practice partners, shared progress. May conflict with clinical aesthetic — worth thinking about.
+11. **Missing: social/community layer.** Study groups, practice partners, shared progress. May conflict with clinical aesthetic — worth thinking about.
 
-10. **The teacher-facing version could be a separate product line** rather than a toggle — distinct dashboard aggregating student data with teaching guidance. B2B potential to language schools.
+12. **The teacher-facing version could be a separate product line** rather than a toggle — distinct dashboard aggregating student data with teaching guidance. B2B potential to language schools.
 
-11. **The Mark-as-coach feature creates a natural feedback loop for product development.** Every 1-on-1 session is also a user research session. Consider keeping lightweight notes from coaching sessions that feed back into product priorities.
+13. **The Mark-as-coach feature creates a natural feedback loop for product development.** Every 1-on-1 session is also a user research session. Consider keeping lightweight notes from coaching sessions that feed back into product priorities.
 
 ---
 
@@ -576,7 +675,7 @@ Instead of organizing by topic (Scoring, Personalization, Phonemes, etc.), v2 re
 
 **Phase 1 — Fix What's Broken.** Foundation work. Save Progress, WaveSurfer TTS rendering, syllable stress functionality, uniform scoring and color-coding across the whole app. And critically, the data aggregation layer — pulling pronunciation data from both passages and AI conversations into one unified profile under one login. This is the backbone that everything else hangs on.
 
-**Phase 2 — Core Intelligence.** This is where Lux becomes genuinely different. The diagnosis engine (error signature detection, root-cause narration), phoneme-first targeting, the auto-reference loop for free speech. Intelligence escalates over time: simple immediate feedback for one attempt, then as patterns form, the system gets more serious — drills, phoneme coaching videos, targeted recommendations, and eventually offering Mark himself as a personal coach. That staggered escalation is the connective tissue of the whole product. Also here: L1 profiling as an upfront hypothesis (not a cage), feeding into everything downstream.
+**Phase 2 — Core Intelligence.** This is where Lux becomes genuinely different. The diagnosis engine (error signature detection, root-cause narration), phoneme-first targeting, the auto-reference loop for free speech. Intelligence escalates over time: simple immediate feedback for one attempt, then as patterns form, the system gets more serious — drills, phoneme coaching videos, targeted recommendations, and eventually offering Mark himself as a personal coach. That staggered escalation is the connective tissue of the whole product. Also here: L1 profiling as an upfront hypothesis (not a cage), feeding into everything downstream. Bridge Mode (2.8) extends the same infrastructure into scaffolded L1→L2 reading.
 
 **Phase 3 — Polish and UX.** Progressive disclosure, the "plain simple farmer grandma kindergarten" labeling pass, observable clicks and loads, the clinical diagnostic aesthetic baked in consistently. Hard-wall all the AIs to their missions. This is where Lux goes from powerful-but-confusing to powerful-and-intuitive.
 
@@ -584,7 +683,7 @@ Instead of organizing by topic (Scoring, Personalization, Phonemes, etc.), v2 re
 
 **Phase 5 — Onboarding, Education, Content.** Walkthrough video, expert demos, more passages, the Articulate 360 onboarding module for the ID portfolio. The product needs to be genuinely good before you teach people how to use it.
 
-**Phase 6 — Advanced Features.** Voice cloning (genuinely novel — no competitor does this), the emotional/psychological dimension, games, spaced repetition, the teacher-facing version as potentially its own product line.
+**Phase 6 — Advanced Features.** Voice cloning (genuinely novel — no competitor does this), the emotional/psychological dimension, games, spaced repetition, the teacher-facing version as potentially its own product line. Also: Life Mode (6.13) as the parked third AI conversation pillar.
 
 **Phase 7 — Mobile.** After the product is proven with real users, then tackle true mobile.
 
@@ -596,9 +695,15 @@ Instead of organizing by topic (Scoring, Personalization, Phonemes, etc.), v2 re
 - **Mark as Personal Coach** moved from a throwaway monetization bullet to a proper feature section with two access paths (staggered escalation + direct from the beginning) and pricing philosophy.
 - **Spanish Version** went from a single 🟠 bullet called "Spanish flip" to an entire phase with rationale and concrete build requirements.
 
+## What's New in v5 (added 2026-04-14)
+
+- **Bridge Mode (Phase 2.8)** — Progressive L1→L2 scaffolded reading as a new mode within Guided Practice. Sliding ratio (95/5 → 5/95) tied to mastery, English words chosen by existing rollup data, size = personalized pronunciation difficulty, color = mastery state, sentence-level alternation to avoid Spanglish artifacts. Pedagogically grounded in comprehensible input and translanguaging research.
+- **Life Mode (Phase 6.13)** — The serial third AI conversation pillar. Choose-your-own-adventure life simulation with overnight Kodama-style agent processing (narrative digest, branch generator, pronunciation rollup → narrative seeding). Entertainment-first design with pronunciation as byproduct. Parked pending agentic architecture (7.7).
+- **Cross-reference added in 7.7** — Life Mode is now flagged as the natural product expression of the agentic architecture.
+
 ## The Pattern
 
-About sixty percent of the ideas in this catalog plug directly into the three locked roadmap items — phoneme-driven passage library, generate next practice, and data aggregation. Build those well first and a lot of the rest becomes natural extensions.
+About sixty percent of the ideas in this catalog plug directly into the three locked roadmap items — phoneme-driven passage library, generate next practice, and data aggregation. Build those well first and a lot of the rest becomes natural extensions. Bridge Mode (2.8) is a fourth example of this pattern: it's a new feature, but it consumes infrastructure that's already on the build list.
 
 ---
 
@@ -616,7 +721,7 @@ The phoneme-first architecture is the real moat. Most tools treat pronunciation 
 
 ## The Honest Concern
 
-This is a really ambitious vision. Seven phases. Forty-seven coaching videos. L1 profiling. Voice cloning. Teacher dashboards. Spanish version. The locked roadmap alone is massive work. And Mark is solo on this, working full-time teaching ESL.
+This is a really ambitious vision. Seven phases. Forty-seven coaching videos. L1 profiling. Voice cloning. Teacher dashboards. Spanish version. Bridge Mode. Life Mode. The locked roadmap alone is massive work. And Mark is solo on this, working full-time teaching ESL.
 
 The question isn't whether this vision is good — it is. The question is: **what's the minimum viable version of Phase 1 and Phase 2 that gets a product real users will actually use and pay for?** Not stripped down to nothing, but focused. Trying to do all of Phase 1 perfectly before touching Phase 2 means months in the weeds.
 
@@ -625,6 +730,8 @@ The question isn't whether this vision is good — it is. The question is: **wha
 Fix the data aggregation (table-stakes), nail the diagnosis engine (differentiator), get the phoneme-coaching videos working, and get the one-fix feedback loop solid. Ship that. Get five real users. Watch what breaks. Iterate outward from there.
 
 The Spanish version as dogfooding is genius timing-wise — Mark will feel the friction immediately and iterate faster. But it might work as a Phase 4.5 (lighter, faster) rather than a full phase, until the English version is validated.
+
+Bridge Mode is a strong candidate for a small early prototype because it leverages infrastructure already being built. Life Mode is correctly parked — don't touch it until the agentic architecture is real.
 
 ## Gaps Worth Watching
 
