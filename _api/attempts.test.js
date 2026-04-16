@@ -14,7 +14,7 @@ beforeEach(() => {
 
 describe("api/attempts contract (frontend)", () => {
   it("saveAttempt POSTs JSON to /api/attempt", async () => {
-    const { saveAttempt } = await import("../api/attempts.js");
+    const { saveAttempt } = await import("../_api/attempts.js");
 
     await saveAttempt({
       uid: "u_test",

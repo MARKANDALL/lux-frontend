@@ -47,7 +47,7 @@ describe("apiFetch", () => {
   it("attaches x-admin-token header from storage", async () => {
     globalThis.fetch.mockResolvedValue(mockResponse({ ok: true }));
 
-    const { apiFetch } = await import("../api/util.js");
+    const { apiFetch } = await import("../_api/util.js");
     await apiFetch("/api/test");
 
     const [, opts] = globalThis.fetch.mock.calls[0];
@@ -57,7 +57,7 @@ describe("apiFetch", () => {
   it("auto-sets Content-Type for JSON string body", async () => {
     globalThis.fetch.mockResolvedValue(mockResponse({ ok: true }));
 
-    const { apiFetch } = await import("../api/util.js");
+    const { apiFetch } = await import("../_api/util.js");
     await apiFetch("/api/test", {
       method: "POST",
       body: JSON.stringify({ key: "val" }),
@@ -70,7 +70,7 @@ describe("apiFetch", () => {
   it("does NOT set Content-Type for FormData body", async () => {
     globalThis.fetch.mockResolvedValue(mockResponse({ ok: true }));
 
-    const { apiFetch } = await import("../api/util.js");
+    const { apiFetch } = await import("../_api/util.js");
     const fd = new FormData();
     fd.append("file", "data");
     await apiFetch("/api/upload", { method: "POST", body: fd });
@@ -82,7 +82,7 @@ describe("apiFetch", () => {
   it("returns parsed JSON by default (responseType json)", async () => {
     globalThis.fetch.mockResolvedValue(mockResponse({ rows: [1, 2, 3] }));
 
-    const { apiFetch } = await import("../api/util.js");
+    const { apiFetch } = await import("../_api/util.js");
     const data = await apiFetch("/api/data");
     expect(data).toEqual({ rows: [1, 2, 3] });
   });
@@ -92,14 +92,14 @@ describe("apiFetch", () => {
       mockResponse({ error: "Not found" }, { ok: false, status: 404 })
     );
 
-    const { apiFetch } = await import("../api/util.js");
+    const { apiFetch } = await import("../_api/util.js");
     await expect(apiFetch("/api/missing")).rejects.toThrow("Not found");
   });
 
   it("responseType 'text' returns raw text", async () => {
     globalThis.fetch.mockResolvedValue(mockResponse("hello plain text"));
 
-    const { apiFetch } = await import("../api/util.js");
+    const { apiFetch } = await import("../_api/util.js");
     const result = await apiFetch("/api/text", { responseType: "text" });
     expect(result).toBe("hello plain text");
   });
@@ -108,7 +108,7 @@ describe("apiFetch", () => {
     const resp = mockResponse("binary-data");
     globalThis.fetch.mockResolvedValue(resp);
 
-    const { apiFetch } = await import("../api/util.js");
+    const { apiFetch } = await import("../_api/util.js");
     const result = await apiFetch("/api/audio", { responseType: "blob" });
     expect(result).toBeInstanceOf(Blob);
   });
@@ -117,7 +117,7 @@ describe("apiFetch", () => {
     const resp = mockResponse({ ok: true });
     globalThis.fetch.mockResolvedValue(resp);
 
-    const { apiFetch } = await import("../api/util.js");
+    const { apiFetch } = await import("../_api/util.js");
     const result = await apiFetch("/api/raw", { responseType: "response" });
     expect(result).toBe(resp);
   });
@@ -126,7 +126,7 @@ describe("apiFetch", () => {
     globalThis.fetch.mockResolvedValue(mockResponse({ ok: true }));
     const ctrl = new AbortController();
 
-    const { apiFetch } = await import("../api/util.js");
+    const { apiFetch } = await import("../_api/util.js");
     await apiFetch("/api/cancel", { method: "DELETE", signal: ctrl.signal });
 
     const [, opts] = globalThis.fetch.mock.calls[0];
@@ -137,7 +137,7 @@ describe("apiFetch", () => {
   it("caller headers merge with (but don't override) token header", async () => {
     globalThis.fetch.mockResolvedValue(mockResponse({ ok: true }));
 
-    const { apiFetch } = await import("../api/util.js");
+    const { apiFetch } = await import("../_api/util.js");
     await apiFetch("/api/custom", {
       headers: { "X-Custom": "yes" },
     });
@@ -151,14 +151,14 @@ describe("apiFetch", () => {
 describe("jsonOrThrow", () => {
 
   it("parses valid JSON from ok response", async () => {
-    const { jsonOrThrow } = await import("../api/util.js");
+    const { jsonOrThrow } = await import("../_api/util.js");
     const resp = { ok: true, status: 200, text: async () => '{"a":1}' };
     const data = await jsonOrThrow(resp);
     expect(data).toEqual({ a: 1 });
   });
 
   it("throws with message from error body on non-ok", async () => {
-    const { jsonOrThrow } = await import("../api/util.js");
+    const { jsonOrThrow } = await import("../_api/util.js");
     const resp = {
       ok: false,
       status: 403,
@@ -169,7 +169,7 @@ describe("jsonOrThrow", () => {
   });
 
   it("throws on invalid JSON with snippet of response", async () => {
-    const { jsonOrThrow } = await import("../api/util.js");
+    const { jsonOrThrow } = await import("../_api/util.js");
     const resp = {
       ok: true,
       status: 200,
