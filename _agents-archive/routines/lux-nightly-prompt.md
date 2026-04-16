@@ -4,9 +4,9 @@ SCOPE: Scan all .js, .jsx, .html, and .css files under the repo root. Skip node_
 
 CHECKS (perform all, report only findings — silence on clean checks):
 
-1. RAW LOCALSTORAGE — Find any direct localStorage.getItem, localStorage.setItem, localStorage.removeItem, or localStorage.clear calls outside of helpers/lux-storage.js. All storage access must route through lux-storage.js named key constants.
+1. RAW LOCALSTORAGE — Find any direct localStorage.getItem, localStorage.setItem, localStorage.removeItem, or localStorage.clear calls outside of app-core/lux-storage.js. All storage access must route through lux-storage.js named key constants.
 
-2. SILENT CATCHES — Find catch blocks that swallow errors without calling warnSwallow(). A "silent catch" is any catch (e) {} or catch block whose body does not invoke warnSwallow or rethrow. helpers/warn-swallow.js is the canonical helper.
+2. SILENT CATCHES — Find catch blocks that swallow errors without calling warnSwallow(). A "silent catch" is any catch (e) {} or catch block whose body does not invoke warnSwallow or rethrow. ui/lux-warn.js is the canonical helper.
 
 3. BROKEN IMPORTS — Find commented-out import statements (lines starting with // import or /* import) AND any import that references a path that does not exist on disk. Flag both.
 
