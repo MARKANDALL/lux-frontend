@@ -10,7 +10,27 @@ CHECKS (perform all, report only findings — silence on clean checks):
 
 3. BROKEN IMPORTS — Find commented-out import statements (lines starting with // import or /* import) AND any import that references a path that does not exist on disk. Flag both.
 
-4. API PATH DRIFT — Find any fetch(), apiFetch(), or string literal referencing "/api/" that should be "/_api/" (the Vercel Hobby 12-function workaround renamed api/ to _api/ in March 2026).
+4. URL DRIFT — Find backend-calling URLs in helper files that do not follow the canonical pattern. The canonical pattern, used by every working backend helper in this repo, is:
+
+   import { API_BASE, apiFetch } from "./util.js";
+   const SOMETHING_URL = `${API_BASE}/api/route-path`;
+
+Flag a URL literal as drift ONLY if it meets one of these conditions:
+
+(a) Uses `/_api/` anywhere in a URL literal passed to fetch() or apiFetch() (e.g., `/_api/router?...`). The `_api/` prefix is a repo folder name ONLY — no server-side handler exists for `/_api/` URLs in dev (vite.config.js proxies only `/api`) or prod (vercel.json has no rewrite for `/_api/`). Any `/_api/` URL is broken.
+
+(b) Uses a bare `/api/...` path in an actual fetch() or apiFetch() call WITHOUT the `${API_BASE}` prefix. Bare `/api/` paths 404 in production because the frontend domain has no proxy to the backend — only the Vite dev proxy catches them, so it appears to work in dev but breaks when deployed.
+
+DO NOT FLAG (these are correct or not applicable):
+- `${API_BASE}/api/...` — this IS the correct canonical pattern for all 12+ backend helpers; flagging it is a false positive
+- `/api/` references inside comments (// or /* */), JSDoc blocks, markdown files, console.log strings, or test assertions
+- `/api/` in vite.config.js — that IS the proxy prefix and is correct there
+- `/api/` inside docs/, kodama-reports/, _agents-archive/, or any .md/.txt file
+- Anything inside _ARCHIVE/ or .GOLD/.GOLD.N files
+
+Before flagging, verify the file actually imports apiFetch or uses fetch() — if the `/api/` string is not inside an actual network-call construction, it is not drift.
+
+Self-check: for each finding you are about to report, answer "what would make this a false positive?" If the answer is "it is inside a comment" or "it already has ${API_BASE}", do not flag.
 
 5. MISSING MOUNTS — Find any feature module that defines a mount* function (e.g., mountVoiceMirrorButton) but is never imported by its expected consumer. Cross-reference features/results/summary.js, features/harvard/modal-actions.js, and features/convo/ entry points.
 
@@ -23,7 +43,7 @@ REPORT STRUCTURE (in the markdown file):
 # Nightly Health Scan — YYYY-MM-DD
 
 ## Summary
-[X] localStorage violations | [X] silent catches | [X] broken imports | [X] api path drift | [X] missing mounts
+[X] localStorage violations | [X] silent catches | [X] broken imports | [X] url drift | [X] missing mounts
 
 ## Findings
 ### 1. Raw localStorage outside lux-storage.js
@@ -33,7 +53,7 @@ REPORT STRUCTURE (in the markdown file):
 [Repeat structure for each check category]
 
 ## Notes
-[Any observations about repo state, e.g., "ARCHITECTURE.md still references api/ not _api/"]
+[Any observations about repo state worth knowing]
 
 RULES:
 - Do not fix anything. Report only.
