@@ -783,3 +783,9 @@ Bridge Mode is a strong candidate for a small early prototype because it leverag
 - **Teacher-facing version as its own product line** — separate dashboard, B2B potential to language schools, rather than a toggle in the same app.
 - **Voice cloning** — genuinely novel, no competitor does it. Worth prototyping early even if it ships later.
 - **Mark-as-coach sessions as user research** — every 1-on-1 is also a product feedback session. Keep lightweight notes that feed back into priorities.
+
+
+IN THE INTEREST OF TIME, I'M GOING TO START TO JUST DROP IN IDEAS AND THINGS AS THEY ARISE, AND ONLY LATER CATEGORIZE THEM IN TO THEIR PROPER DRAWER.
+_________________________________
+
+Alt-meaning tooltip polish (deferred 2026-04-16). Feature works as of fix-alt-meaning-proper-2026-04-16. Three UX improvements batched for later: remove ARPAbet phoneme line ("Alt 1/2: P R AH0 D UW1 S") — redundant with the pill itself; replace native title tooltip with custom HTML/CSS popover so font size can be controlled; pre-fetch on mount so first hover shows real content instead of "(Hover to load meaning + example)" placeholder. Scope: rewrite formatAltTitle → mountAltTooltip in features/results/syllables/alt-meaning.js, add lux-alt-tooltip.css. Est. 2-3 hours.
