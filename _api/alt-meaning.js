@@ -3,7 +3,7 @@
 
 import { apiFetch } from "./util.js";
 
-const ALT_MEANING_URL = `/api/router?route=alt-meaning`;
+const ALT_MEANING_URL = `/_api/router?route=alt-meaning`;
 
 export async function fetchAltMeanings(payload = {}) {
   return apiFetch(ALT_MEANING_URL, {
