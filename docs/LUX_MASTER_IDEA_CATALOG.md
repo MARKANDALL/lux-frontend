@@ -789,3 +789,17 @@ IN THE INTEREST OF TIME, I'M GOING TO START TO JUST DROP IN IDEAS AND THINGS AS 
 _________________________________
 
 Alt-meaning tooltip polish (deferred 2026-04-16). Feature works as of fix-alt-meaning-proper-2026-04-16. Three UX improvements batched for later: remove ARPAbet phoneme line ("Alt 1/2: P R AH0 D UW1 S") — redundant with the pill itself; replace native title tooltip with custom HTML/CSS popover so font size can be controlled; pre-fetch on mount so first hover shows real content instead of "(Hover to load meaning + example)" placeholder. Scope: rewrite formatAltTitle → mountAltTooltip in features/results/syllables/alt-meaning.js, add lux-alt-tooltip.css. Est. 2-3 hours.
+
+#N — Universal Custom Tooltip Replacement (Project-Wide Native title Audit)
+The problem: Several places in Lux still surface information via the browser's native title attribute or browser-default hover tooltip. These are the small, cramped, default-font boxes that appear on hover — unstylable, platform-inconsistent (Windows looks different from macOS), delayed by OS-level timing the user can't customize, and invisible to many accessibility tools. The most obvious current example is the alt-meaning tooltip in the syllables column, where stress-shift meanings like "record (noun)" vs. "record (verb)" appear in a native title attribute showing raw ARPAbet phoneme strings (P R AH0 D UW1 S) that users don't understand.
+The scope: This is suspected to exist in multiple places across the project — not just alt-meaning. Likely suspects include phoneme hover tooltips in results table, help icons on knobs drawers, info tooltips in the AI Coach panel, some admin page form hints, convo scenario descriptors. Full audit needed.
+The fix: Replace every native title="…" that's acting as a visible hover hint with the existing custom popover system (lux-popover.js / lux-popover.css — already used elsewhere in the project). Design tokens already exist. No new CSS architecture needed — just consistent adoption.
+Why it matters: These tiny default tooltips are visual papercuts. Users see a polished interface, hover over something, and get a 1998-era Windows hint box. It's jarring, breaks immersion, and undermines the quality signal the rest of the UI sends. For a pronunciation-learning app whose users often have low-confidence English, every moment of "what is this saying to me?" friction compounds.
+Effort: ~2-3 hours for a full audit + replacement. Could be phased.
+Priority: Not urgent. Queue for polish phase / pre-launch aesthetic pass.
+
+#N — Network Waterfall + 2G Throttle Audit (Per-Page)
+The idea: Run Chrome DevTools Network tab with "Slow 3G" and "2G" throttling simulated, for each major page (index / practice, convo, progress, wordcloud, life, stream). Record Time to First Contentful Paint, Time to Interactive, full waterfall identifying blocking requests, heaviest resources per page.
+Why: Heavy modules (WaveSurfer, d3) are correctly lazy-loaded (confirmed by performance budget routine #15). But the convo scenarios page specifically is suspected heavy — 25 scenarios, 50 character portraits, scene atmospheres, picker-deck system, knobs drawer, lots of DOM. If throttled to 2G it may be unusable. Real-world ESL users are often on unstable or low-bandwidth connections (phones in cafes, home internet in developing countries, classroom wifi).
+Likely outcome: 1-3 pages where additional lazy-loading or code-splitting would help. Convo page almost certainly one of them.
+Priority: Pre-launch perf pass. Catalog for later.
