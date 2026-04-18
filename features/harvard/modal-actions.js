@@ -93,7 +93,7 @@ export function selectHarvardList({
 
   try {
     setString(K_HARVARD_LAST, String(n));
-} catch (err) { globalThis.warnSwallow("features/harvard/modal-actions.js", err, "important"); }
+} catch (err) { globalThis.warnSwallow?.("features/harvard/modal-actions.js", err, "important"); }
 }
 
 export function selectPassage({
@@ -130,7 +130,7 @@ export function selectPassage({
 
   try {
     setString(K_PASSAGES_LAST, String(key));
-} catch (err) { globalThis.warnSwallow("features/harvard/modal-actions.js", err, "important"); }
+} catch (err) { globalThis.warnSwallow?.("features/harvard/modal-actions.js", err, "important"); }
 }
 
 export function showHoverHarvard({

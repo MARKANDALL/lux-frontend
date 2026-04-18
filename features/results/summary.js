@@ -11,6 +11,7 @@ import { passages } from "../../src/data/passages.js";
 import { detailedPhonemeFeedback } from "./summary-feedback.js";
 import { scoreClass as scoreClassCore, fmtPctCefr } from "../../core/scoring/index.js";
 import { mountVoiceMirrorButton } from "../voice-mirror/voice-mirror.js";
+import { escapeHtml } from "../../helpers/escape-html.js";
 
 // --- Universal Color Helper (Inlined for safety) ---
 function getColorConfig(s) {
@@ -155,7 +156,7 @@ export function showSummary({ allPartsResults, currentParts }) {
             align-items: center;
             gap: 6px;
         ">
-           ${err.word} 
+           ${escapeHtml(err.word)} 
            <span style="opacity:0.8; font-weight:400;" title="${fmtPctCefr(err.score)}">(${err.score}%)</span>
            <span style="font-size:0.75em; opacity:0.6; text-transform:uppercase; letter-spacing:0.5px;">Pt ${err.part}</span>
         </span>

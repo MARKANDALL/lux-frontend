@@ -171,7 +171,7 @@ Internal docs under `docs/`:
 - [`ARCHITECTURE.md`](docs/ARCHITECTURE.md) — canonical architecture reference (start here)
 - [`LUX_MASTER_IDEA_CATALOG.md`](docs/LUX_MASTER_IDEA_CATALOG.md) — prioritized feature backlog
 - [`LUX_COMPETITVE_LANDSCAPE.md`](docs/LUX_COMPETITVE_LANDSCAPE.md) — analysis vs ELSA, BoldVoice, SpeechAce
-- [`LUX_PROJECT_AUDIT_April'26.md`](docs/LUX_PROJECT_AUDIT_April'26.md) — recent full-codebase audit
+- [`LUX_PROJECT_AUDIT_2026-04-17.md`](docs/LUX_PROJECT_AUDIT_2026-04-17.md) — recent full-codebase audit
 - [`system-health-bill-of-rights.frontend.md`](docs/system-health-bill-of-rights.frontend.md) — engineering standards this codebase holds itself to
 
 ---
