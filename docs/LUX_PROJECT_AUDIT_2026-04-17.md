@@ -504,17 +504,19 @@ Nothing is broken here, but the email itself could be improved. We'll analyze an
 **1L.2 — Verify cross-session history persistence:**
 I'm not 100% sure on this one but I *think* it's good to go. Worth a deliberate test.
 
-**🚨 1L.3 — CRITICAL: `/api/migrate` endpoint called but does not exist** *(added 2026-04-19 from ARCHITECTURE extractions E8):*
-`ui/auth-dom.js:192` calls `apiFetch("/_api/migrate", ...)` as part of the guest → user history migration on magic-link login. Problems:
-1. The backend `luxury-language-api` has no `/api/migrate` route — this call 404s every time.
-2. The frontend path `"/_api/migrate"` is also malformed — should be `"/api/migrate"` (the `_api/` folder prefix is for frontend adapter files, not URL paths).
-3. **Practical impact:** guest users who later log in via magic link lose their pre-login practice history because the migration call silently fails. This is the root cause concern behind checklist item "⚠️ Practice history persists across sessions when logged in" above.
+**✅ 1L.3 — RESOLVED 2026-04-19: `/api/migrate` URL corrected** *(originally filed as critical missing-endpoint; re-diagnosed during backend investigation and fixed as one-line frontend change):*
 
-**Why it's been dormant:** the failure is silent — `apiFetch` catches the 404, `warnSwallow` logs it at `"important"` level, and the user sees a successful login with no indicator that their guest history was orphaned.
+**Original diagnosis (partially wrong):** The audit entry claimed the backend had no `/api/migrate` route. In fact, inspection of the backend repomix confirmed `routes/migrate.js` exists, is imported in `api/router.js`, is registered in the ROUTES table as `migrate`, and is reachable via `vercel.json`'s `/api/:route → /api/router?route=:route` rewrite. The backend handler correctly accepts `POST {guestUid, userUid}`, is admin-token-gated, and runs the expected `UPDATE lux_attempts SET uid = $1 WHERE uid = $2` SQL.
 
-**Fix scope:** this is Tier 3 #31 in the handover — requires backend JWT migration work plus frontend path correction. Not a simple one-liner.
+**Actual bug:** `ui/auth-dom.js:192` was calling `apiFetch("/_api/migrate", ...)` which hits the *frontend* origin. The frontend's `_api/` folder is a local JS module folder (renamed from `api/` to dodge Vercel's 12-function limit) — it is not an HTTP route. Every guest-to-user migration call was silently 404ing.
 
-**Cross-reference:** `docs/ARCHITECTURE.md` Backend Endpoints table still lists `/api/migrate` because that's what the code *tries* to call; the new ARCHITECTURE.md notes this is a known-missing endpoint.
+**Fix:** one-line change in `ui/auth-dom.js` — switched to `` apiFetch(`${API_BASE}/api/router?route=migrate`, ...) `` matching the `_api/voice-mirror.js` idiom. `API_BASE` was already imported at the top of the file. Committed 2026-04-19, tag `fix-migrate-call-2026-04-19`.
+
+**Downstream effect:** the related checklist item ⚠️ "Practice history persists across sessions when logged in" above should now be testable on next magic-link login. Guest attempts should migrate to the real user ID. Verify on next actual login test; if still broken, root cause is elsewhere.
+
+**Dormancy mechanism note (still worth cross-referencing):** the failure was silent because `apiFetch` catches the 404 and `warnSwallow` logs at `"important"` level. That's the same category of swallowed-error visibility gap tracked by Issue 18 — worth revisiting if similar silent-404 bugs surface in the future.
+
+**Cross-reference cleanup:** `docs/ARCHITECTURE.md`'s Backend Endpoints table now accurately describes `/api/migrate` as a working endpoint (was previously annotated as known-missing).
 
 ---
 
@@ -1249,6 +1251,24 @@ The Bill of Rights Part C (original March 2026) flagged 7 locations where `inner
 The Bill of Rights defines the *rule* (thresholds, split protocol, exemptions). The audit tracks *current reality* (which files are currently violating). This separation keeps both docs stable: the Bill of Rights doesn't need to be re-edited every time a file grows; the audit is the snapshot that gets refreshed when we revisit.
 
 Next refresh recommended: whenever the next major repomix snapshot happens, or when a Voice Mirror / Convo split lands (whichever comes first).
+
+---
+
+## Issue 20 — Latent markdown helper quirks (polish)
+
+*Added 2026-04-19 during #15 vitest migration. Parking lot for small latent behaviors in `helpers/md-to-html.js` that don't bite production but are worth documenting.*
+
+### 20.1 — `mdToHtmlFull` splits single-line multi-word headings
+
+**Trigger:** `mdToHtmlFull("## Section Title")` (no trailing newline, multi-word heading) returns `<h3>Section</h3>\n<p>Title</p>` instead of `<h3>Section Title</h3>`.
+
+**Root cause:** the pre-heading regex in `mdToHtml` uses `^(#{2,3} .+?)\s+(?=[^\n])` with a non-greedy `.+?`, which captures only the first word when the heading body lives on the same line with no newline after. The first word becomes the `<h3>`, the rest becomes paragraph text.
+
+**Production impact:** none observed. All real caller sites (AI coach sections, full AI feedback render) feed multi-line markdown with proper `\n` separators — the heading always ends at a newline and the regex never trips on it. The quirk only shows up with synthetic single-line inputs, which is why it was caught only in the vitest test for the helper.
+
+**Where documented:** `tests/md-to-html.test.js` uses a single-word heading for the `mdToHtmlFull renders ## headings` test and includes an inline comment pointing at this audit entry.
+
+**Fix scope when addressed:** one-line regex change (swap `.+?` for `.+` or anchor to end-of-line). Low risk, low priority.
 
 ---
 

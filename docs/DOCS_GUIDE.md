@@ -149,7 +149,7 @@ These files track the surgical changes made during the April 19 docs overhaul. T
 
 **Archive policy:** keep until the next major doc revision, then move to a `docs/archive/` folder or delete once their content is fully resolved into the audit.
 
-### `docs/LUX_COMPETITVE_LANDSCAPE.md`
+### `docs/LUX_COMPETITIVE_LANDSCAPE.md`
 
 Living document tracking competitors (ELSA, BoldVoice, Langua, etc.). Not a pillar, but referenced from the Master Idea Catalog when competitive differentiation is at stake. Update monthly, quarterly full refresh.
 
