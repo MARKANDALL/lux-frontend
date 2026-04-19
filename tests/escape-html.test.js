@@ -1,76 +1,58 @@
 // tests/escape-html.test.js
 // Smoke + edge-case tests for helpers/escape-html.js (17 inbound imports — XSS prevention).
-// Run: node tests/escape-html.test.js
 
-import assert from "node:assert/strict";
+import { describe, it, expect } from "vitest";
 import { escapeHtml } from "../helpers/escape-html.js";
 
-let passed = 0;
-let failed = 0;
-function t(name, fn) {
-  try {
-    fn();
-    passed++;
-    console.log(`  ok  ${name}`);
-  } catch (e) {
-    failed++;
-    console.error(`  FAIL ${name}: ${e.message}`);
-  }
-}
+describe("helpers/escape-html.js", () => {
+  it("module exports escapeHtml function", () => {
+    expect(typeof escapeHtml).toBe("function");
+  });
 
-console.log("helpers/escape-html.js");
+  it("escapes the five HTML-sensitive characters", () => {
+    expect(escapeHtml(`<script>alert("x&y")</script>`)).toBe(
+      "&lt;script&gt;alert(&quot;x&amp;y&quot;)&lt;/script&gt;"
+    );
+  });
 
-t("module exports escapeHtml function", () => {
-  assert.equal(typeof escapeHtml, "function");
+  it("escapes single quotes as &#39;", () => {
+    expect(escapeHtml("it's")).toBe("it&#39;s");
+  });
+
+  it("ampersand-first ordering avoids double-escape", () => {
+    // If < were replaced before &, the resulting &lt; would become &amp;lt;
+    expect(escapeHtml("<")).toBe("&lt;");
+    expect(escapeHtml("&lt;")).toBe("&amp;lt;");
+  });
+
+  it("null and undefined become empty string", () => {
+    expect(escapeHtml(null)).toBe("");
+    expect(escapeHtml(undefined)).toBe("");
+  });
+
+  it("numbers coerce to string", () => {
+    expect(escapeHtml(42)).toBe("42");
+    expect(escapeHtml(0)).toBe("0");
+  });
+
+  it("empty string stays empty", () => {
+    expect(escapeHtml("")).toBe("");
+  });
+
+  it("plain text passes through unchanged", () => {
+    expect(escapeHtml("hello world")).toBe("hello world");
+  });
+
+  it("non-ASCII / unicode passes through (not escaped)", () => {
+    expect(escapeHtml("café — ɚ")).toBe("café — ɚ");
+  });
+
+  it("escapes all instances, not just the first", () => {
+    expect(escapeHtml("<<>>")).toBe("&lt;&lt;&gt;&gt;");
+  });
+
+  it("handles object coercion safely (toString)", () => {
+    // Falls through to String(s ?? "") — objects become "[object Object]"
+    expect(escapeHtml({})).toBe("[object Object]");
+  });
 });
-
-t("escapes the five HTML-sensitive characters", () => {
-  assert.equal(
-    escapeHtml(`<script>alert("x&y")</script>`),
-    "&lt;script&gt;alert(&quot;x&amp;y&quot;)&lt;/script&gt;"
-  );
-});
-
-t("escapes single quotes as &#39;", () => {
-  assert.equal(escapeHtml("it's"), "it&#39;s");
-});
-
-t("ampersand-first ordering avoids double-escape", () => {
-  // If < were replaced before &, the resulting &lt; would become &amp;lt;
-  assert.equal(escapeHtml("<"), "&lt;");
-  assert.equal(escapeHtml("&lt;"), "&amp;lt;");
-});
-
-t("null and undefined become empty string", () => {
-  assert.equal(escapeHtml(null), "");
-  assert.equal(escapeHtml(undefined), "");
-});
-
-t("numbers coerce to string", () => {
-  assert.equal(escapeHtml(42), "42");
-  assert.equal(escapeHtml(0), "0");
-});
-
-t("empty string stays empty", () => {
-  assert.equal(escapeHtml(""), "");
-});
-
-t("plain text passes through unchanged", () => {
-  assert.equal(escapeHtml("hello world"), "hello world");
-});
-
-t("non-ASCII / unicode passes through (not escaped)", () => {
-  assert.equal(escapeHtml("café — ɚ"), "café — ɚ");
-});
-
-t("escapes all instances, not just the first", () => {
-  assert.equal(escapeHtml("<<>>"), "&lt;&lt;&gt;&gt;");
-});
-
-t("handles object coercion safely (toString)", () => {
-  // Falls through to String(s ?? "") — objects become "[object Object]"
-  assert.equal(escapeHtml({}), "[object Object]");
-});
-
-console.log(`\n${passed} passed, ${failed} failed`);
-if (failed) process.exit(1);
