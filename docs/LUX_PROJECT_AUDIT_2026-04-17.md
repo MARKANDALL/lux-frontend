@@ -10,13 +10,13 @@
 >
 > **Strategic context (read this first):** Mark is preparing to shift focus to a career transition into Instructional Design. The goal is to get Lux to a *safe-to-leave-for-a-while* state in **days, not weeks**. Priority is the **core practice loop** (Practice Skills page + Guided AI Conversations). Lower priority: Streaming (push if time allows), Word Cloud, Life Journey, admin data tracking. Future-priority: mobile responsiveness, full onboarding rebuild (which doubles as ID portfolio work).
 
-> **2026-04-19 update pass (Tranches 1–2 of 3 complete):**
+> **2026-04-19 update pass (all 3 tranches complete):**
 > This audit received a systematic pass on 2026-04-19 to mark resolved items and integrate findings from the scaffolding-doc rewrites. Changes:
 > - **Tranche 1 (DONE):** ✅ RESOLVED markers added with grep evidence to 10 items: Bug 1A.1 (setString), Bug 1D.0 (mountVoiceMirrorButton), Part 10 B.1 (LuxLastRecordingBlob), B.2 (Karaoke globals), B.3 (body-scroll-lock), B.4 ⚠️ PARTIAL, B.5 (was already marked), B.12 (convo-bootstrap setInterval+MutationObserver), Fix #1, Fix #4, Fix #6.
-> - **Tranche 2 (DONE):** New items inserted from the 3 extractions docs. Page-level: 🚨 1L.3 (`/api/migrate` endpoint missing — critical), 🐛 1D.9 (character encoding garbled symbols), 🐛 1H.new (tooltip video/audio desync). Cross-cutting (new section at end of Project-Wide Issues Log): Issue 15 (3 parked convo issues), Issue 16 (project-wide z-index audit — upgraded from single-modal scope), Issue 17 (capture-handler docs outstanding), Issue 18 (R2–R7 innerHTML verification pass needed).
-> - **Tranche 3 (pending):** Add current red/yellow zone file lists from Bill of Rights extractions B5/B6 as a new appendix.
+> - **Tranche 2 (DONE):** 9 new items inserted from the 3 extractions docs. Page-level: 🚨 1L.3 (`/api/migrate` endpoint missing — critical), 🐛 1D.9 (character encoding garbled symbols), 🐛 1H.new (tooltip video/audio desync). Cross-cutting (new section at end of Project-Wide Issues Log): Issue 15 (3 parked convo issues), Issue 16 (project-wide z-index audit — 29 distinct values scanned), Issue 17 (capture-handler docs outstanding), Issue 18 (R2–R7 innerHTML verification pass needed).
+> - **Tranche 3 (DONE):** Issue 19 added to Cross-Cutting Findings — current red zone (7 files >400 lines, non-data) and yellow zone top 10 (of 43 files 250–400 lines). Thresholds themselves live in Bill of Rights Right 10 + Part A.4; current violators live here.
 > - Original content preserved verbatim throughout. All additions tagged with source citations.
-> - Companion ledger: `docs/AUDIT_UPDATES_2026-04-19.md` tracks every change with grep evidence per item.
+> - Companion ledgers: `docs/AUDIT_UPDATES_2026-04-19.md` (Tranche 1), `docs/AUDIT_UPDATES_TRANCHE_2_2026-04-19.md` (Tranche 2), `docs/AUDIT_UPDATES_TRANCHE_3_2026-04-19.md` (Tranche 3) track every change with grep evidence per item.
 
 > **2026-04-10 session close:** 1J.3, 1J.7 shipped (View Library always visible). Convo passageKey namespacing shipped. Next up: 1K.1 (collapsible Progress squares in dashboard-template.js around lines 119–138) and 1B/1K.2 (highlighting investigation). See docs/LUX_COMPETITIVE_LANDSCAPE.md for competitor update loop.
 
@@ -1183,6 +1183,72 @@ The Bill of Rights Part C (original March 2026) flagged 7 locations where `inner
 | R7 | `features/progress/attempt-detail/ai-coach-section.js:59,69,73` (`mdToHtml(content)`) | LOW | LIKELY RESOLVED — `mdToHtml` in `helpers/md-to-html.js` calls `escapeHtml` internally, assuming no regression |
 
 **Fix scope:** a single verification pass — for each R2–R7, re-locate the current call site (grep the filename + pattern), verify whether escaping is now in place, and close or re-flag each one. ~30–60 min. Not urgent unless a regression is observed in the wild.
+
+## Issue 19 — Current red/yellow zone files (module size budget violations)
+
+*Source: `docs/BILL_OF_RIGHTS_EXTRACTIONS_2026-04-19.md` B5 and B6. Extracted from old Bill of Rights Part A.4. The thresholds themselves are charter (stays in the new Bill of Rights); the current list of violators is audit data (lives here).*
+
+**Threshold reminder** (from Bill of Rights Right 10 + Part A.4):
+- 1–250 lines: Green — no action
+- 251–400 lines: Yellow — split if adding new logic; document intent if keeping
+- 401+ lines: Red — must split before adding ANY new functionality
+
+**Exemptions** (apply to both zones): generated data files (e.g., `harvard-phoneme-meta.js` at 4,362 lines), scenario/content configuration files (`scenarios.js`), vendor files (`d3.v7.min.js`), admin pages (low-trust zone per Right 17).
+
+### Red Zone (>400 lines, non-data, non-test) — 7 files
+
+*Scan conducted 2026-04-19 against current repomix.*
+
+| File | Lines | Notes |
+|---|---|---|
+| `features/voice-mirror/voice-mirror.js` | 480 | NEW file (didn't exist at prior audit) |
+| `features/voice-mirror/voice-onboarding.js` | 459 | NEW file |
+| `features/features/tts/player-ui.js` | 459 | Grew from ~388 at prior audit |
+| `features/convo/convo-bootstrap.js` | 427 | Grew significantly since prior audit |
+| `features/recorder/audio-inspector.js` | 422 | Grew from 404 at prior audit |
+| `features/convo/convo-report-ui.js` | 405 | NEW file since prior audit |
+| `features/convo/convo-layout.js` | 405 | Grew into red zone |
+
+**Observations:**
+
+- **Voice Mirror** is now the biggest red-zone cluster (the two feature files at 480 and 459 lines). Both were built recently without splitting. Probably the first candidates for the split protocol when work resumes on Voice Mirror.
+- **Convo family** has 3 red-zone files (bootstrap, report-ui, layout). These three together represent the majority of growth since the March 2026 audit.
+- `audio-inspector.js` was already in the red zone and grew a bit more.
+
+**Recommended action:** none of these are blocking launch. But before adding *any new functionality* to any of these files, the Safe Split Protocol (Bill of Rights Part A.4) requires a split first. Voice Mirror is the most likely near-term target.
+
+### Yellow Zone (250–400 lines, non-data, non-test) — 43 files total, top 10 by size
+
+*Full list available via repo scan (`Get-ChildItem -Filter *.js -Recurse | Where-Object { ... }` or via the hygiene script). Only the top 10 reproduced here to keep the audit readable.*
+
+| File | Lines |
+|---|---|
+| `src/data/phonemes/details.js` | 394 |
+| `features/convo/scene-atmo.js` | 394 |
+| `features/results/syllables/cmu-stress.js` | 393 |
+| `features/features/selfpb/dom.js` | 390 |
+| `features/convo/picker-deck/cefr-hint-badge.js` | 382 |
+| `features/streaming/app.js` | 382 |
+| `src/main.js` | 377 |
+| `features/convo/characters-drawer.js` | 373 |
+| `features/interactions/ph-hover/tooltip-modal.js` | 368 |
+| `features/results/header.js` | 356 |
+
+**Observations:**
+
+- Yellow zone grew from ~10 files at the prior (March 2026) audit to **43 files** at 2026-04-19. Expected given overall repo growth (326 JS files vs ~280 at prior audit), but worth noting — the top of yellow zone (394 lines in two files) is one refactor-session away from red.
+- Several files here are natural pairs with red-zone files above:
+  - `features/features/selfpb/dom.js` (390) pairs with the SelfPB ecosystem that includes red-zone files
+  - `features/convo/characters-drawer.js` (373), `features/convo/scene-atmo.js` (394) pair with the red-zone convo cluster
+- Data files in `src/data/phonemes/` show up but are borderline — they're part data, part logic. Could argue for exemption or for splitting logic out from pure data.
+
+**Recommended action:** yellow zone monitoring only. No forced splits required, but adding new logic to any of these requires a judgment call per the protocol. Top-10 are the closest to red — watch those.
+
+### Why this lives in the audit (not the Bill of Rights)
+
+The Bill of Rights defines the *rule* (thresholds, split protocol, exemptions). The audit tracks *current reality* (which files are currently violating). This separation keeps both docs stable: the Bill of Rights doesn't need to be re-edited every time a file grows; the audit is the snapshot that gets refreshed when we revisit.
+
+Next refresh recommended: whenever the next major repomix snapshot happens, or when a Voice Mirror / Convo split lands (whichever comes first).
 
 ---
 
