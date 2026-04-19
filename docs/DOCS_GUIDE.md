@@ -17,7 +17,7 @@ Every piece of durable Lux documentation belongs in one of these four files. If 
 | Pillar | File | Role |
 |---|---|---|
 | 1. Architecture | `docs/ARCHITECTURE.md` | How the frontend is actually built — scaffolding only |
-| 2. Bill of Rights | `docs/system-health-bill-of-rights.frontend.md` | The rules — what's allowed, what's banned, what protocols to follow |
+| 2. Bill of Rights | `docs/SYSTEM_HEALTH_BILL_OF_RIGHTS.frontend.md` | The rules — what's allowed, what's banned, what protocols to follow |
 | 3. Master Idea Catalog | `docs/LUX_MASTER_IDEA_CATALOG.md` | The vision — every feature idea, phased roadmap |
 | 4. Audit | `docs/LUX_PROJECT_AUDIT_2026-04-17.md` | Open work — bugs, findings, red/yellow zones, resolution status |
 
@@ -44,7 +44,7 @@ Every piece of durable Lux documentation belongs in one of these four files. If 
 
 **Typical question it answers:** *"How does [part of the frontend] actually work right now?"*
 
-### 2. Bill of Rights (`system-health-bill-of-rights.frontend.md`)
+### 2. Bill of Rights (`SYSTEM_HEALTH_BILL_OF_RIGHTS.frontend.md`)
 
 **IS:**
 - The 20 Rights — non-negotiable rules for the codebase

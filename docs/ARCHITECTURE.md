@@ -613,7 +613,7 @@ Archived predecessors (Simoishi/OpenClaw autonomous agent systems, Kodama superv
 ## Related Documentation
 
 - **`docs/LUX_PROJECT_AUDIT_2026-04-17.md`** — full page-by-page product audit + code-level findings
-- **`docs/system-health-bill-of-rights.frontend.md`** — the 20 rules, ownership charter, allowed/banned patterns, refactor size budgets
+- **`docs/SYSTEM_HEALTH_BILL_OF_RIGHTS.frontend.md`** — the 20 rules, ownership charter, allowed/banned patterns, refactor size budgets
 - **`docs/LUX_MASTER_IDEA_CATALOG.md`** — vision, phases, feature roadmap
 - **`docs/LUX_COMPETITVE_LANDSCAPE.md`** — competitor matrix and differentiation tracking
 - **`docs/routines/`** — three-file Claude Code Routines system (backlog, playbook, Lux-specific)
