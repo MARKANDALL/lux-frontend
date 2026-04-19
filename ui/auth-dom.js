@@ -188,7 +188,7 @@ function handleAuthStateChange() {
 // 4. Migration API Call
 async function migrateHistory(guestUid, userUid) {
     try {
-        const data = await apiFetch("/_api/migrate", {
+        const data = await apiFetch(`${API_BASE}/api/router?route=migrate`, {
             method: "POST",
             body: JSON.stringify({ guestUid, userUid }),
         });
