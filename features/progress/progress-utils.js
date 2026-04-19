@@ -4,7 +4,6 @@
 import { scoreClass as scoreClassCore } from "../../core/scoring/index.js";
 
 import { escapeHtml } from "../../helpers/escape-html.js";
-import { mdToHtml as renderMdToHtml } from "../../helpers/md-to-html.js";
 export const esc = escapeHtml;
 
 export function getColorConfig(s) {
@@ -13,13 +12,6 @@ export function getColorConfig(s) {
   if (cls === "score-good") return { color: "#2563eb", bg: "#dbeafe" }; // Blue
   if (cls === "score-warn") return { color: "#d97706", bg: "#fef3c7" }; // Yellow
   return { color: "#dc2626", bg: "#fee2e2" }; // Red
-}
-
-export function mdToHtml(md = "") {
-  return renderMdToHtml(md, {
-    lists: true,
-    preserveLineBreaks: true,
-  });
 }
 
 export function mean(nums) {

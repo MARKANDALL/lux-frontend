@@ -1,10 +1,9 @@
 // helpers/core.js
-// One-line: Shared core helpers for user identity, friendly feedback text, markdown rendering, clamping, and in-place shuffling.
+// One-line: Shared core helpers for user identity, friendly feedback text, clamping, and in-place shuffling.
 
 
 import { getUID } from "../_api/identity.js";
 import { coachingPreface } from "../core/scoring/index.js";
-import { mdToHtml as renderMdToHtml } from "./md-to-html.js";
 
 // Single source of truth for UID:
 // - api/identity.js owns generation + persistence + migration
@@ -32,18 +31,6 @@ export function encouragingLine(score) {
     "Keep practicing—you're making real progress!",
   ];
   return msgs[Math.floor(Math.random() * msgs.length)];
-}
-
-/** Tiny MD → HTML tailored for the AI feedback */
-
-export function mdToHtml(md = "") {
-  return renderMdToHtml(md, {
-    headings: true,
-    specialHeadings: true,
-    lists: true,
-    paragraphs: true,
-    preserveLineBreaks: false,
-  });
 }
 
 /** Clamp a number between lo and hi (inclusive). */

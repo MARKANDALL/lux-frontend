@@ -6,7 +6,7 @@
 //   - helpers/core.js calls getUID() at module eval, which is guarded by
 //     `typeof window !== "undefined"`. In Node this no-ops and LUX_USER_ID
 //     is set to null — so import is safe.
-//   - Transitive imports: _api/identity.js, core/scoring/index.js, md-to-html.js.
+//   - Transitive imports: _api/identity.js, core/scoring/index.js.
 //     None of these perform network or DOM work when `window` is undefined.
 
 import assert from "node:assert/strict";
@@ -15,7 +15,6 @@ import {
   buildYouglishUrl,
   isCorrupt,
   encouragingLine,
-  mdToHtml,
   clamp,
   shuffleInPlace,
 } from "../helpers/core.js";
@@ -40,7 +39,6 @@ t("module exports expected members", () => {
   assert.equal(typeof buildYouglishUrl, "function");
   assert.equal(typeof isCorrupt, "function");
   assert.equal(typeof encouragingLine, "function");
-  assert.equal(typeof mdToHtml, "function");
   assert.equal(typeof clamp, "function");
   assert.equal(typeof shuffleInPlace, "function");
 });
@@ -107,19 +105,6 @@ t("encouragingLine for a green score mentions 'green'", () => {
   // 80–84 branch must explicitly acknowledge "green" (product requirement).
   const s = encouragingLine(82);
   assert.ok(s.includes("green"), `expected 'green' acknowledgement, got: ${s}`);
-});
-
-// ---- mdToHtml ----
-t("mdToHtml returns a string for empty input", () => {
-  assert.equal(typeof mdToHtml(""), "string");
-  assert.equal(typeof mdToHtml(), "string");
-});
-
-// TODO: verify this test — behavior depends on md-to-html.js internals.
-t("mdToHtml renders a heading to HTML", () => {
-  const out = mdToHtml("# Hello");
-  assert.equal(typeof out, "string");
-  assert.ok(out.length > 0);
 });
 
 // ---- clamp ----

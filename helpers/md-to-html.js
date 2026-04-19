@@ -72,3 +72,32 @@ export function mdToHtml(md = "", options = {}) {
     .join("")
     .replace(/(?:<br>)+$/, "");
 }
+
+/**
+ * Section/inline preset.
+ * Equivalent to canonical defaults — inline markers (bold, italic),
+ * unordered lists, preserve line breaks as <br>.
+ * Use for multi-line inline content (e.g. AI Coach Memory section bodies).
+ */
+export function mdToHtmlSection(md = "") {
+  return mdToHtml(md, {
+    lists: true,
+    preserveLineBreaks: true,
+  });
+}
+
+/**
+ * Full document preset.
+ * Renders headings (## / ###), special emoji H3s, lists, and paragraph blocks.
+ * Does NOT preserve single-line breaks — paragraphs handle structure.
+ * Use for full AI feedback render with multi-section structure.
+ */
+export function mdToHtmlFull(md = "") {
+  return mdToHtml(md, {
+    headings: true,
+    specialHeadings: true,
+    lists: true,
+    paragraphs: true,
+    preserveLineBreaks: false,
+  });
+}

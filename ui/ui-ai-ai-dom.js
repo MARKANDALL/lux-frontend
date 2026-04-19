@@ -3,24 +3,7 @@
 // UPDATED: Implements persistent Sidebar and SCROLLABLE content area.
 
 import { escapeHtml } from "../helpers/escape-html.js";
-import { mdToHtml as renderMdToHtml } from "../helpers/md-to-html.js";
-
-function mdToHtmlSection(md = "") {
-  return renderMdToHtml(md, {
-    lists: true,
-    preserveLineBreaks: true,
-  });
-}
-
-function mdToHtmlFull(md = "") {
-  return renderMdToHtml(md, {
-    headings: true,
-    specialHeadings: true,
-    lists: true,
-    paragraphs: true,
-    preserveLineBreaks: false,
-  });
-}
+import { mdToHtmlSection, mdToHtmlFull } from "../helpers/md-to-html.js";
 
 function getSectionAndBox() {
   const section = document.getElementById("aiFeedbackSection");

@@ -2,7 +2,7 @@
 // Builds the "AI Coach Memory" section for the Attempt Details modal.
 
 import { pickTS, pickSummary } from "../attempt-pickers.js";
-import { mdToHtml } from "../progress-utils.js";
+import { mdToHtmlSection as mdToHtml } from "../../../helpers/md-to-html.js";
 import { fmtDateTime } from "./format.js";
 
 export function buildAiCoachMemorySection(list) {

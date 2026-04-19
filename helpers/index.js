@@ -4,8 +4,10 @@ export {
   buildYouglishUrl,
   isCorrupt,
   encouragingLine,
-  mdToHtml,
+  clamp,
+  shuffleInPlace,
 } from "./core.js";
+export { mdToHtmlFull as mdToHtml } from "./md-to-html.js";
 export { speechDetected } from "./assess.js";
 export {
   bringInputToTop,

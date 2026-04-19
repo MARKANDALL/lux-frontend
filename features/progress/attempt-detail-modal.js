@@ -13,7 +13,7 @@ import { createAttemptDetailModalShell } from "./attempt-detail/modal-shell.js";
 import { wireAttemptDetailChipExplainers } from "./attempt-detail/chip-explainers.js";
 import { buildAttemptDetailHeader } from "./attempt-detail/header.js";
 import { buildTroubleSoundsSection, buildTroubleWordsSection } from "./attempt-detail/trouble-sections.js";
-import { esc, getColorConfig, mdToHtml, mean } from "./progress-utils.js";
+import { esc, getColorConfig, mean } from "./progress-utils.js";
 import { pickTS, pickPassageKey, pickSessionId, pickSummary, pickAzure } from "./attempt-pickers.js";
 
 import {
