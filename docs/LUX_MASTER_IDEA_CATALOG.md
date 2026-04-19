@@ -1,10 +1,12 @@
-# Lux Pronunciation Tool — Master Idea Catalog (v6)
+# Lux Pronunciation Tool — Master Idea Catalog (v6.1)
 
 > **Purpose:** Every idea, fix, feature, dream, and design note — organized by attack phase, prioritized within each phase. Nothing lost, everything findable.
 >
 > **Priority Key:** 🔵 Critical / Now · 🟡 High / Soon · 🟠 Medium / Next · ⚪ Long-term / Dream
 >
 > **Phase Logic:** Fix → Differentiate → Polish → Dogfood (Spanish) → Teach → Expand → Platform. Each phase makes the next one more effective.
+>
+> **v6.1 (2026-04-19):** Parking lot sorted into proper phases. Inbound sync from audit §1D (Metric Modal reactivity) and §1F (AI Coach UI + interaction ideas). Obsolete OpenClaw reference updated to reflect Claude Code Routines migration. See `docs/MASTER_IDEA_CATALOG_EXTRACTIONS_2026-04-19.md` for full change log and source citations.
 
 ---
 
@@ -89,6 +91,20 @@
 - 🟡 **Custom responses always:** AIs should never repeat the exact same response anywhere. Every interaction should feel fresh and tailored.
 - 🟡 **Make AIs aware of themselves:** Each AI should understand its own role, context, and what it knows about the user. Introduce RAG system for truly smart, useful, interactive AI.
 - 🟠 **Conversational AI Coach:** Should the AI Coach be conversable — a back-and-forth dialogue rather than one-way feedback?
+
+### AI Coach UI & interaction (from audit §1F review)
+
+- 🟡 **Reanalyze the 6-categories-in-chunks-of-2 format:** AI Coach currently renders 6 possible response categories in chunks of 2. Are these the right 6 questions? Is the chunks-of-2 presentation optimal? Worth a ground-up rethink of what the coach actually needs to tell users and how. *(Synced from audit §1F 2026-04-19.)*
+- 🟡 **Adjustable knobs for AI Coach responses (like convo picker):** Particularly a **length-of-response** knob. Other candidates: depth, tone, technicality. *(Synced from audit §1F 2026-04-19.)*
+- 🟡 **Expand coaching styles beyond Tutor/Sergeant/Expert:** Possibly more styles, possibly a "directed at a teacher" style for ID/teacher use. The current three are a good start but may be too narrow. *(Synced from audit §1F 2026-04-19.)*
+- 🟡 **Upgrade the AI Coach model:** Not sure the current model is accurate enough. Users won't be calling on the coach constantly, so when they do, it needs to be really good. Worth making sure the coach uses a smart-enough model even at the cost of latency. *(Synced from audit §1F 2026-04-19.)*
+- 🟡 **Complete AI Coach coverage across all placements:** The AI Coach is strategically placed in many parts of the app but not uniformly wired up:
+  - Practice Skills area — **present**
+  - AI Conversations (guided practice) — **present but basic**
+  - All Data / shared aggregated page — **present but not hooked up yet**
+  - AI Conversation space (deeper integration) — **probably not hooked up either**
+  Each location needs to be **uniquely targeted to its area**, not just generic feedback. From the drawing board up, reanalyze and rethink the whole AI Coach category. *(Synced from audit §1F 2026-04-19.)*
+- 🟠 **Type-to-AI-Coach interactivity:** Should users be able to type questions to the AI Coach? Arguments for: huge interactivity and depth. Concerns: significant work, and strict guardrails needed so it stays focused on pronunciation/Lux content rather than becoming a general chatbot ("what's the weather in Sydney?"). Related principle: any interactive AI Coach must stay anchored to Lux content, Lux results, and pronunciation work happening inside the app. *(Synced from audit §1F Open Question 2026-04-19.)*
 
 ## 2.5 Mark as Personal Coach — Booking & Revenue
 
@@ -194,6 +210,8 @@
 - 🟡 **Click anywhere within phoneme box or TTS/SPB drawers to open/close them.**
 - 🟡 **Differentiate Summary vs. My Progress History:** Avoid redundancy between post-passage summary, modal cards, and progress history. Each should serve a distinct purpose.
 - 🟡 **Make "My Progress" items clearly understandable:** What does each element do? Obvious wording, clear purpose.
+- 🔵 **Metric Modal cards should be smart and reactive, not static:** Current interpretation copy is generic boilerplate. Example: the Completeness card says "if completeness is low, slow down and prioritize saying every word" — but it shows that even when the user's completeness is 100%. Fluency card says "a few long pauses hurt more than many tiny pauses" even when fluency is 99%. The cards need to react to the **actual score** being displayed. Additional issues: CSS cleanup needed (no hover/darkening on buttons), too wordy (show less upfront with drawers to expand), and repetition across cards ("lowest driver is prosody" appears in every single card — maybe intentional for cross-comparison, but re-examine). **Bottom line: clean it up, make it smarter, more reactive, friendlier, and more useful.** We've built the infrastructure — now wire the intelligence in. *(Synced from audit §1D 2026-04-19.)*
+- 🟡 **Trouble Chips & Word-Level Table — same smart-reactive pattern:** Trouble chips and the word-level results table render correctly, but they're still generic. Same upgrade path as the Metric Modal cards: make them intelligent and actually useful based on the user's actual data. Shouldn't be a huge task. *(Synced from audit §1D 2026-04-19.)*
 
 ## 3.4 AI Conversations UX
 
@@ -269,10 +287,13 @@ Right now, AI Conversations show learners the *content* of a conversation but no
 - 🟡 **Grouping minimal pairs or similar sounds into lessons:** Before-and-after walkthrough showing how to make the sound.
 - 🟡 **Faster individual word scoring system:** A lighter-weight pipeline for single words — faster to load, maybe auto-formatted with its grading system.
 - 🟠 **Phoneme tooltips with L1 translations:** Toggle/hover to see translated terms when L1 is selected.
+- 🟡 **Alt-meaning tooltip polish (deferred 2026-04-16):** Feature works as of tag `fix-alt-meaning-proper-2026-04-16`. Three UX improvements batched for later: (1) remove the ARPAbet phoneme line (e.g. "Alt 1/2: P R AH0 D UW1 S") — redundant with the pill itself; (2) replace native `title` tooltip with a custom HTML/CSS popover so font size can be controlled; (3) pre-fetch on mount so first hover shows real content instead of "(Hover to load meaning + example)" placeholder. Scope: rewrite `formatAltTitle` → `mountAltTooltip` in `features/results/syllables/alt-meaning.js`, add `lux-alt-tooltip.css`. Est. 2-3 hours. *(Sorted from parking lot 2026-04-19.)*
+- 🟡 **Universal custom tooltip replacement (project-wide native `title` audit):** Several places in Lux still surface information via the browser's native `title` attribute or browser-default hover tooltip — small, cramped, default-font boxes that are unstylable, platform-inconsistent (Windows vs macOS), delayed by OS-level timing, and invisible to many accessibility tools. Likely locations include phoneme hover tooltips in results table, help icons on knobs drawers, info tooltips in the AI Coach panel, some admin page form hints, convo scenario descriptors. Full audit needed. Fix: replace every native `title="…"` that's acting as a visible hover hint with the existing custom popover system (`lux-popover.js` / `lux-popover.css` — already used elsewhere). Design tokens already exist. Est. 2-3 hours for full audit + replacement. Priority: polish phase / pre-launch aesthetic pass. *(Sorted from parking lot 2026-04-19.Companion routine: "Native-Title Audit" in `docs/routines/LUX_ROUTINES_FROM_CATALOG.md` can do the grep pass.)*
 
 ## 3.8 Mobile — Responsive First Pass
 
 - 🟡 **Responsive mobile version (first pass):** Core functionality preserved on phones/tablets. Start with simple/easy mobile-friendly fixes. Not a full mobile app yet — that's Phase 7 — but make it usable on a phone.
+- 🟡 **Network waterfall + 2G/Slow-3G throttle audit (per-page):** Run Chrome DevTools Network tab (or Playwright) with "Slow 3G" and "2G" throttling simulated for each major page (index / practice, convo, progress, wordcloud, life, stream). Record LCP, TTI, TBT, and full waterfall identifying blocking requests and heaviest resources per page. Heavy modules (WaveSurfer, d3) are correctly lazy-loaded (confirmed by performance budget routine #15), but the convo scenarios page specifically is suspected heavy — 25 scenarios, 50 character portraits, scene atmospheres, picker-deck system, knobs drawer. If throttled to 2G it may be unusable. Real-world ESL users are often on unstable or low-bandwidth connections (phones in cafes, home internet in developing countries, classroom wifi). Likely outcome: 1-3 pages where additional lazy-loading or code-splitting would help. *(Already planned as a weekly routine — see "2G/Slow-3G Waterfall Routine" in `docs/routines/LUX_ROUTINES_FROM_CATALOG.md`. This catalog entry is the feature-side counterpart: what the routine output actually drives in the product.)*
 
 ## 3.9 Cool Buttons & UI Flourishes
 
@@ -646,7 +667,7 @@ This positions Mark as someone who **thinks in systems and roadmaps**, which is 
 ## Code Quality
 
 - 🟡 **Continuous hygiene / modularize / refactor:** Ongoing discipline.
-- 🟡 **Set up OpenClaw agent for nightly codebase cleaning:** Automated nightly agent that scans for dead code, unused imports, orphaned files, and other hygiene issues — catches drift before it accumulates. Keeps the codebase lean without relying on manual sweeps.
+- ✅ **Nightly codebase hygiene automation** *(superseded by Claude Code Routines — April 2026)*: The original OpenClaw/Simoishi/Kodama agent systems have been archived in `_agents-archive/`. Claude Code Routines now handle this via routines #1 (nightly health scan → issue #22), #2 (weekly architecture audit → issue #23), #3 (monthly hygiene → issue #24), and #5 (deep code review). See `docs/routines/CLAUDE_ROUTINES_BACKLOG.md` and `docs/routines/LUX_ROUTINES_FROM_CATALOG.md`.
 - 🟠 **Codex for finding incongruencies and fixes?**
 
 ## Security
@@ -785,21 +806,9 @@ Bridge Mode is a strong candidate for a small early prototype because it leverag
 - **Mark-as-coach sessions as user research** — every 1-on-1 is also a product feedback session. Keep lightweight notes that feed back into priorities.
 
 
-IN THE INTEREST OF TIME, I'M GOING TO START TO JUST DROP IN IDEAS AND THINGS AS THEY ARISE, AND ONLY LATER CATEGORIZE THEM IN TO THEIR PROPER DRAWER.
-_________________________________
+**Parking lot cleared 2026-04-19.** Items previously in this section have been sorted into their proper phases:
+- Alt-meaning tooltip polish → Phase 3.7 (Phoneme & Word Display Polish)
+- Universal Custom Tooltip Replacement (project-wide native `title` audit) → Phase 3.7 (Phoneme & Word Display Polish)
+- Network Waterfall + 2G Throttle Audit → already tracked as a routine in `docs/routines/LUX_ROUTINES_FROM_CATALOG.md` ("2G/Slow-3G Waterfall Routine"), referenced from Phase 3.8 (Mobile — Responsive First Pass)
 
-Alt-meaning tooltip polish (deferred 2026-04-16). Feature works as of fix-alt-meaning-proper-2026-04-16. Three UX improvements batched for later: remove ARPAbet phoneme line ("Alt 1/2: P R AH0 D UW1 S") — redundant with the pill itself; replace native title tooltip with custom HTML/CSS popover so font size can be controlled; pre-fetch on mount so first hover shows real content instead of "(Hover to load meaning + example)" placeholder. Scope: rewrite formatAltTitle → mountAltTooltip in features/results/syllables/alt-meaning.js, add lux-alt-tooltip.css. Est. 2-3 hours.
-
-#N — Universal Custom Tooltip Replacement (Project-Wide Native title Audit)
-The problem: Several places in Lux still surface information via the browser's native title attribute or browser-default hover tooltip. These are the small, cramped, default-font boxes that appear on hover — unstylable, platform-inconsistent (Windows looks different from macOS), delayed by OS-level timing the user can't customize, and invisible to many accessibility tools. The most obvious current example is the alt-meaning tooltip in the syllables column, where stress-shift meanings like "record (noun)" vs. "record (verb)" appear in a native title attribute showing raw ARPAbet phoneme strings (P R AH0 D UW1 S) that users don't understand.
-The scope: This is suspected to exist in multiple places across the project — not just alt-meaning. Likely suspects include phoneme hover tooltips in results table, help icons on knobs drawers, info tooltips in the AI Coach panel, some admin page form hints, convo scenario descriptors. Full audit needed.
-The fix: Replace every native title="…" that's acting as a visible hover hint with the existing custom popover system (lux-popover.js / lux-popover.css — already used elsewhere in the project). Design tokens already exist. No new CSS architecture needed — just consistent adoption.
-Why it matters: These tiny default tooltips are visual papercuts. Users see a polished interface, hover over something, and get a 1998-era Windows hint box. It's jarring, breaks immersion, and undermines the quality signal the rest of the UI sends. For a pronunciation-learning app whose users often have low-confidence English, every moment of "what is this saying to me?" friction compounds.
-Effort: ~2-3 hours for a full audit + replacement. Could be phased.
-Priority: Not urgent. Queue for polish phase / pre-launch aesthetic pass.
-
-#N — Network Waterfall + 2G Throttle Audit (Per-Page)
-The idea: Run Chrome DevTools Network tab with "Slow 3G" and "2G" throttling simulated, for each major page (index / practice, convo, progress, wordcloud, life, stream). Record Time to First Contentful Paint, Time to Interactive, full waterfall identifying blocking requests, heaviest resources per page.
-Why: Heavy modules (WaveSurfer, d3) are correctly lazy-loaded (confirmed by performance budget routine #15). But the convo scenarios page specifically is suspected heavy — 25 scenarios, 50 character portraits, scene atmospheres, picker-deck system, knobs drawer, lots of DOM. If throttled to 2G it may be unusable. Real-world ESL users are often on unstable or low-bandwidth connections (phones in cafes, home internet in developing countries, classroom wifi).
-Likely outcome: 1-3 pages where additional lazy-loading or code-splitting would help. Convo page almost certainly one of them.
-Priority: Pre-launch perf pass. Catalog for later.
+Future ideas: drop them in the Parking Lot inside the relevant phase, or use `docs/routines/CLAUDE_ROUTINES_BACKLOG.md` Parking Lot if the idea is routine-shaped.
