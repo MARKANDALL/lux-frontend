@@ -10,13 +10,13 @@
 >
 > **Strategic context (read this first):** Mark is preparing to shift focus to a career transition into Instructional Design. The goal is to get Lux to a *safe-to-leave-for-a-while* state in **days, not weeks**. Priority is the **core practice loop** (Practice Skills page + Guided AI Conversations). Lower priority: Streaming (push if time allows), Word Cloud, Life Journey, admin data tracking. Future-priority: mobile responsiveness, full onboarding rebuild (which doubles as ID portfolio work).
 
-> **2026-04-19 update pass (this is Tranche 1 of 3):**
-> This audit received a systematic pass on 2026-04-19 to mark items that have been verified as resolved since the April 17 audit. Changes in this tranche:
-> - ✅ RESOLVED markers added with evidence (grep against current repomix) to: Bug 1A.1 (setString), Bug 1D.0 (mountVoiceMirrorButton), Part 10 B.1 (LuxLastRecordingBlob), B.2 (Karaoke globals), B.3 (body-scroll-lock), B.5 (luxTTS dual-init — was already marked), B.12 (convo-bootstrap setInterval+MutationObserver), Fix #1, Fix #4, Fix #6
-> - ⚠️ PARTIAL status noted on: B.4 (capture handlers — code safe, documentation still missing)
-> - Original content preserved verbatim. Resolution markers appended, nothing removed.
-> - Tranches 2 and 3 will add: MERGE INTO AUDIT items from the 3 extractions docs (Tranche 2), and current red/yellow zone file lists (Tranche 3).
-> - Companion ledger: `docs/AUDIT_UPDATES_2026-04-19.md` tracks every marker added, with grep evidence per item.
+> **2026-04-19 update pass (Tranches 1–2 of 3 complete):**
+> This audit received a systematic pass on 2026-04-19 to mark resolved items and integrate findings from the scaffolding-doc rewrites. Changes:
+> - **Tranche 1 (DONE):** ✅ RESOLVED markers added with grep evidence to 10 items: Bug 1A.1 (setString), Bug 1D.0 (mountVoiceMirrorButton), Part 10 B.1 (LuxLastRecordingBlob), B.2 (Karaoke globals), B.3 (body-scroll-lock), B.4 ⚠️ PARTIAL, B.5 (was already marked), B.12 (convo-bootstrap setInterval+MutationObserver), Fix #1, Fix #4, Fix #6.
+> - **Tranche 2 (DONE):** New items inserted from the 3 extractions docs. Page-level: 🚨 1L.3 (`/api/migrate` endpoint missing — critical), 🐛 1D.9 (character encoding garbled symbols), 🐛 1H.new (tooltip video/audio desync). Cross-cutting (new section at end of Project-Wide Issues Log): Issue 15 (3 parked convo issues), Issue 16 (project-wide z-index audit — upgraded from single-modal scope), Issue 17 (capture-handler docs outstanding), Issue 18 (R2–R7 innerHTML verification pass needed).
+> - **Tranche 3 (pending):** Add current red/yellow zone file lists from Bill of Rights extractions B5/B6 as a new appendix.
+> - Original content preserved verbatim throughout. All additions tagged with source citations.
+> - Companion ledger: `docs/AUDIT_UPDATES_2026-04-19.md` tracks every change with grep evidence per item.
 
 > **2026-04-10 session close:** 1J.3, 1J.7 shipped (View Library always visible). Convo passageKey namespacing shipped. Next up: 1K.1 (collapsible Progress squares in dashboard-template.js around lines 119–138) and 1B/1K.2 (highlighting investigation). See docs/LUX_COMPETITIVE_LANDSCAPE.md for competitor update loop.
 
@@ -205,6 +205,11 @@ Looking at the metric modal cards (e.g. for Pronunciation):
 
 It does split the syllables up, but the rest of the rendering is incomplete. Needs investigation.
 
+### New audit items added 2026-04-19
+
+**🐛 1D.9 — Character encoding garbled symbols in some results displays** *(added 2026-04-19 from ARCHITECTURE extractions E2 item 2):*
+Certain results displays occasionally render garbled characters (mojibake / replacement glyphs / unexpected punctuation). The pattern isn't fully characterized yet. Likely source: a mismatch in character encoding somewhere between Azure assessment output → API response → frontend render. Could also be a transliteration issue with IPA symbols (which often look garbled if the font fallback chain doesn't include an IPA-capable font). **Scope needed:** identify where it happens (specific widgets/tiles), what triggers it, and whether it's a UTF-8 handling issue vs a font rendering issue. Low-frequency but undermines polish. Priority: medium (unclear rep steps, but visually jarring when it occurs).
+
 ---
 
 ## 1E. Phoneme Hover System
@@ -382,6 +387,11 @@ This is the most significant idea in this section. Currently the Voice Mirror li
 
 **Action item:** Make a note to consider moving Voice Mirror to the Self-Playback drawer (under the existing controls in the expanded view). This is probably the best positioning.
 
+### New audit items added 2026-04-19
+
+**🐛 1H.new — Expanded tooltip video/audio desync** *(added 2026-04-19 from ARCHITECTURE extractions E2 item 3):*
+The expanded tooltip (when clicking into a phoneme or word for a more detailed view) has an audio/video desync issue — the visible content and the audio playback don't line up correctly. Exact repro steps not yet characterized. May be related to the broader karaoke-highlight synchronization patterns across TTS / SelfPB / Convo, but this specific case is in the expanded tooltip modal. **Scope needed:** identify which tooltip modal (there are several — phoneme hover in 1E, syllable in 1D, attempt-detail in progress), pin down whether it's timing drift or a specific frame mismatch. May overlap with 1E phoneme-hover observations.
+
 ---
 
 ## 1I. Voice Mirror ("Hear it in my voice")
@@ -493,6 +503,18 @@ Nothing is broken here, but the email itself could be improved. We'll analyze an
 
 **1L.2 — Verify cross-session history persistence:**
 I'm not 100% sure on this one but I *think* it's good to go. Worth a deliberate test.
+
+**🚨 1L.3 — CRITICAL: `/api/migrate` endpoint called but does not exist** *(added 2026-04-19 from ARCHITECTURE extractions E8):*
+`ui/auth-dom.js:192` calls `apiFetch("/_api/migrate", ...)` as part of the guest → user history migration on magic-link login. Problems:
+1. The backend `luxury-language-api` has no `/api/migrate` route — this call 404s every time.
+2. The frontend path `"/_api/migrate"` is also malformed — should be `"/api/migrate"` (the `_api/` folder prefix is for frontend adapter files, not URL paths).
+3. **Practical impact:** guest users who later log in via magic link lose their pre-login practice history because the migration call silently fails. This is the root cause concern behind checklist item "⚠️ Practice history persists across sessions when logged in" above.
+
+**Why it's been dormant:** the failure is silent — `apiFetch` catches the 404, `warnSwallow` logs it at `"important"` level, and the user sees a successful login with no indicator that their guest history was orphaned.
+
+**Fix scope:** this is Tier 3 #31 in the handover — requires backend JWT migration work plus frontend path correction. Not a simple one-liner.
+
+**Cross-reference:** `docs/ARCHITECTURE.md` Backend Endpoints table still lists `/api/migrate` because that's what the code *tries* to call; the new ARCHITECTURE.md notes this is a known-missing endpoint.
 
 ---
 
@@ -1084,6 +1106,83 @@ This may already be partially captured in existing project docs, but it's worth 
 **Problem:** Auto mode does not reliably initialize the conversation on first entry, and the mode-toggle state appears to be part of the bug. At the same time, Streaming is a strong candidate for inheriting the same inner-drawer, self-playback, TTS, and Voice Mirror patterns used elsewhere.
 
 This is partly a bug issue and partly an architecture / portability issue.
+
+---
+
+# Cross-Cutting Findings (2026-04-19)
+
+> *Items added during the 2026-04-19 update pass — Tranche 2. These are findings that either don't have a single page-level home (cross-cutting), or were extracted from the scaffolding-doc rewrites (ARCHITECTURE.md, Bill of Rights, Master Idea Catalog) and are tracked here with source citations. See `docs/AUDIT_UPDATES_2026-04-19.md` for the full change ledger.*
+
+## Issue 15 — Parked convo issues (carried over from ARCHITECTURE.md Current Hardening Status)
+
+*Source: `docs/ARCHITECTURE_EXTRACTIONS_2026-04-19.md` E1. Originally recorded in the old ARCHITECTURE.md under "Current Hardening Status (March 2026) → Parked side issues" — narrative text extracted out of the scaffolding doc and landed here for tracking.*
+
+**15a — Convo SelfPB learner karaoke words in AI Conversations:**
+Learner karaoke word-sync in the AI Conversations flow is not working correctly in at least some cases. Parked as "not an active hardening target" in the March 2026 stabilization campaign. Unconfirmed whether the issue is the same root cause as the known karaoke ownership work (now resolved per Part 10 B.2) or a separate convo-specific wiring issue. Needs a fresh repro attempt.
+
+**15b — End Session / overlay contract issue in AI Conversations:**
+The End Session button in AI Conversations doesn't reliably show the report overlay. Sign-off Checklist also flags this ("All are good with the exception of: Life, AI Convo (the report 404 specifically)"). Likely same root cause — dedup candidate. Needs an investigation pass to confirm they're the same issue before fixing.
+
+**15c — Picker drawer carry-over bug:**
+Previously observed: the scenario picker's drawer state could "carry over" between sessions in unexpected ways. March 2026 note said "appears improved / likely resolved, but is not an active hardening target." Needs a final confirmation pass before closing.
+
+## Issue 16 — Project-wide z-index audit needed *(upgraded from single-modal to project-wide per 2026-04-19 scope expansion)*
+
+*Source: `docs/BILL_OF_RIGHTS_EXTRACTIONS_2026-04-19.md` Fix 7, upgraded in scope during Tranche 2 planning.*
+
+**Original scope (Fix 7):** Align attempt-detail modal's z-index (`9999`) to match metric-modal's (`10050`) so they layer correctly when both are open.
+
+**Expanded scope (2026-04-19):** Full project z-index audit + alignment to the Bill of Rights Right 8 budget.
+
+**Evidence from z-index scan 2026-04-19 (29 distinct values found):**
+
+| z-index | Occurrences | Files | BoR Budget Tier |
+|---|---|---|---|
+| `999999` | 2 | `ui/warp.css:13`, `features/recorder/audio-inspector.js:118` | Dev tools tier — but 2 different systems claiming "highest ever" |
+| `200000` | 1 | `features/features/selfpb/styles/float.js:9` | Expanded float tier — intentional |
+| `99999` | 2 | `features/convo/convo-report-ui.js:288`, `lux-onboarding.css:9` | Overlays tier — likely correct |
+| `12001` / `12000` | 2 | `features/features/selfpb-peekaboo.css:171, :39` | **NOT IN BOR BUDGET** — new tier between overlays and modals. Comment says "Treaty Compliant" — unclear which treaty. |
+| `10050` | 1 | `lux-widgets.metric-modal.css:11` | Modals tier — correct per BoR (9999–10050 range) |
+| `10000` | 2 | `features/my-words/my-words.css:393`, `lux-layout.harvard.css:100` | Modals tier — inside range |
+| `9999` | 18 | many | Modals tier floor — but flooded with 18 usages; risk of collision |
+| `9998` | 2 | `ui/ui-click-ripple.js:71`, `lux-widgets.record-viz.css:310` | Just-below-modals — unintentional? |
+| `1000` | 1 | `ui/auth-dom.js:54` | Auth tier — correct |
+| `999` | 1 | `lux-audio-mode.css:252` | **NOT IN BOR BUDGET** — just below auth |
+| `900` | 1 | `ui/auth-dom.js:31` | Drawers tier |
+| lower (200, 80, 60, 50, 30, 20, 10, 9, 6, 5, 4, 3, 2, 1, 0, -1, -2) | many | various | Local stacking — probably fine |
+
+**Findings:**
+
+1. **Two `999999` writers** (warp.css and audio-inspector.js) both claim "highest ever." This is a Right 1 violation (one writer per tier). Decide: which system genuinely needs topmost?
+2. **`12000` / `12001` tier is undocumented in BoR Right 8.** The "Treaty Compliant" comment suggests an intentional decision but the rationale is lost. Either document this tier in BoR or collapse it into existing overlays (99999) or drawers (900).
+3. **Two `99999` writers** (convo report overlay and onboarding) — likely fine at same tier, but worth confirming no race condition if both could be open simultaneously.
+4. **`9999` is flooded** with 18 occurrences. The original Fix 7 concern (attempt-detail at 9999 vs metric-modal at 10050) is one instance of a bigger pattern — modals at different sub-tiers within the modal range causes stacking confusion.
+5. **`999` and `9998`** are probably off-by-one errors (someone wanted "just below 1000" or "just below 10000") rather than intentional tier choices.
+
+**Recommended action:** full project z-index alignment pass. Not urgent, but is a pre-launch polish item. The BoR Right 8 budget table in the new Bill of Rights (Part A) is the authoritative target.
+
+## Issue 17 — Capture-handler interaction matrix documentation (outstanding polish)
+
+*Source: `docs/BILL_OF_RIGHTS_EXTRACTIONS_2026-04-19.md` Fix 4 + Part 10 B.4 ⚠️ PARTIAL marker.*
+
+Code is safe — verified 2026-04-19 that `chip-events.js`, `metric-modal/events.js`, and `panel-events.js` all use the correct `if (!element) return; e.stopPropagation()` guard pattern. But there's no documentation explaining how the three document-level capture handlers interact. Fix: add a comment block at the top of each handler listing the three capture handlers in the app and their guard logic. Zero-risk polish item. Priority: low, but easy if someone's in the files anyway.
+
+## Issue 18 — innerHTML with dynamic content — verification pass needed (R2–R7 from Bill of Rights Part C)
+
+*Source: `docs/BILL_OF_RIGHTS_EXTRACTIONS_2026-04-19.md` B2, verification status of R2–R7.*
+
+The Bill of Rights Part C (original March 2026) flagged 7 locations where `innerHTML` interpolated dynamic content. **R1 (auth-dom.js:107 email XSS) is fully RESOLVED** — verified at `auth-dom.js:119` now using `${escHtml(email)}`. **R2–R7 need re-verification** — line numbers in the original flags have likely drifted since March, and some of these may have been fixed as side effects of other work. Per-item status:
+
+| # | Original location | Risk | Status (2026-04-19) |
+|---|---|---|---|
+| R2 | `features/results/render-helpers.js:58` (`${data?.error}`) | MED | NEEDS VERIFICATION — line may have shifted |
+| R3 | `features/results/render-helpers.js:116` (`${err.word}`) | MED | **RELATED FIX SHIPPED** — XSS fix on `summary.js:158` for `err.word` (handover Phase B). Unclear if render-helpers.js:116 is the same call site or a different one. Check. |
+| R4 | `features/passages/dom.js:66` (`ui.tipText.innerHTML = textHTML`) | LOW-MED | NEEDS VERIFICATION |
+| R5 | `features/results/syllables.js:138` (`renderSyllableStrip`) | LOW | NEEDS VERIFICATION |
+| R6 | `features/interactions/ph-hover/tooltip-render.js:212` (`state.tooltipContent.innerHTML = html`) | LOW | NEEDS VERIFICATION |
+| R7 | `features/progress/attempt-detail/ai-coach-section.js:59,69,73` (`mdToHtml(content)`) | LOW | LIKELY RESOLVED — `mdToHtml` in `helpers/md-to-html.js` calls `escapeHtml` internally, assuming no regression |
+
+**Fix scope:** a single verification pass — for each R2–R7, re-locate the current call site (grep the filename + pattern), verify whether escaping is now in place, and close or re-flag each one. ~30–60 min. Not urgent unless a regression is observed in the wild.
 
 ---
 
