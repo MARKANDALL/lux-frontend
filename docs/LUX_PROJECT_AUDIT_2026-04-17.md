@@ -1,4 +1,4 @@
-# Lux Project Audit — Merged (2026-04-17)
+# Lux Project Audit — Merged (2026-04-17, updated 2026-04-19)
 
 > **About this document:** This is a merge of two prior audits into a single reference:
 > 1. **Lux Project Audit (April 2026)** — the page-by-page product/UX audit conceived as a baseline before handing the project to OpenClaw/Simoishi. The most thorough end-to-end product review the project has had.
@@ -9,6 +9,14 @@
 > **How to read this:** Each section in the product audit keeps the original checklist (✅ working / ❌ broken / ⚠️ partial), followed by observations, bug notes, polish ideas, and feature thoughts. Console errors are preserved verbatim. The code audit retains its original finding-by-finding structure.
 >
 > **Strategic context (read this first):** Mark is preparing to shift focus to a career transition into Instructional Design. The goal is to get Lux to a *safe-to-leave-for-a-while* state in **days, not weeks**. Priority is the **core practice loop** (Practice Skills page + Guided AI Conversations). Lower priority: Streaming (push if time allows), Word Cloud, Life Journey, admin data tracking. Future-priority: mobile responsiveness, full onboarding rebuild (which doubles as ID portfolio work).
+
+> **2026-04-19 update pass (this is Tranche 1 of 3):**
+> This audit received a systematic pass on 2026-04-19 to mark items that have been verified as resolved since the April 17 audit. Changes in this tranche:
+> - ✅ RESOLVED markers added with evidence (grep against current repomix) to: Bug 1A.1 (setString), Bug 1D.0 (mountVoiceMirrorButton), Part 10 B.1 (LuxLastRecordingBlob), B.2 (Karaoke globals), B.3 (body-scroll-lock), B.5 (luxTTS dual-init — was already marked), B.12 (convo-bootstrap setInterval+MutationObserver), Fix #1, Fix #4, Fix #6
+> - ⚠️ PARTIAL status noted on: B.4 (capture handlers — code safe, documentation still missing)
+> - Original content preserved verbatim. Resolution markers appended, nothing removed.
+> - Tranches 2 and 3 will add: MERGE INTO AUDIT items from the 3 extractions docs (Tranche 2), and current red/yellow zone file lists (Tranche 3).
+> - Companion ledger: `docs/AUDIT_UPDATES_2026-04-19.md` tracks every marker added, with grep evidence per item.
 
 > **2026-04-10 session close:** 1J.3, 1J.7 shipped (View Library always visible). Convo passageKey namespacing shipped. Next up: 1K.1 (collapsible Progress squares in dashboard-template.js around lines 119–138) and 1B/1K.2 (highlighting investigation). See docs/LUX_COMPETITIVE_LANDSCAPE.md for competitor update loop.
 
@@ -60,6 +68,8 @@ ReferenceError: setString is not defined
   at renderHarvardModalList (modal-render-list.js:297:35)
 ```
 Stack trace continues through `renderList`, `open`, `openBrowse` (index.js:242). This is a real reference error that should be fixed — looks like a missing import in `modal-actions.js`.
+
+**✅ RESOLVED 2026-04-19:** `setString` is now properly imported at `features/harvard/modal-actions.js:8` from `app-core/lux-storage.js` (alongside `K_HARVARD_LAST` and `K_PASSAGES_LAST`). Call sites at lines 96 and 133 now work correctly. Resolution tied to the broader lux-storage `K_` constant migration. Verified against repomix 2026-04-19.
 
 **Bug 1A.2 — Phoneme Hover re-init warning** (observed when rolling the dice for a Harvard passage):
 ```
@@ -171,6 +181,8 @@ summary.js:179 Uncaught ReferenceError: mountVoiceMirrorButton is not defined
 ```
 
 This whole summary page is likely getting revamped anyway, but this specific error should be logged explicitly because it blocks the current passage-summary flow from rendering cleanly.
+
+**✅ RESOLVED 2026-04-19:** `mountVoiceMirrorButton` is now properly imported at `features/results/summary.js:14` from `../voice-mirror/voice-mirror.js`. Call site at line 182 works correctly. Also note: XSS hardening was applied at `summary.js:158` (handover Phase B) using `escapeHtml` on `err.word`, and `escapeHtml` is now imported at line 15 from `../../helpers/escape-html.js`. Verified against repomix 2026-04-19.
 
 ### Big Issue: Metric Modal Cards Need Major Improvement
 
@@ -1173,6 +1185,8 @@ Use this document to understand historical fault lines and ownership decisions, 
 ### B.1 — Fighting Code: `window.LuxLastRecordingBlob` dual-write
 
 > **Historical note:** this finding was accurate at audit time, but the remaining migration family around runtime / learner-blob handoff was later re-checked and verified as complete for the requested cleanup set. Keep this section as provenance, not as an instruction to re-do the migration.
+>
+> **✅ RESOLVED 2026-04-19:** Verified against repomix. `window.LuxLastRecordingBlob` has exactly ONE writer: `app-core/runtime.js:49` (via `setLastRecording()`). `features/convo/convo-turn.js` no longer assigns to the window global directly — it calls `setLastRecording()`. The Bill of Rights Global Ownership Map (Part A.2) now tracks this as the canonical owner. Commit `c89c937`.
 
 | Field | Detail |
 |-------|--------|
@@ -1188,6 +1202,8 @@ Use this document to understand historical fault lines and ownership decisions, 
 ### B.2 — Fighting Code: Karaoke globals written by 3 modules
 
 > **Historical note:** this section documents the original ownership conflict that motivated the karaoke cleanup work. Treat it as background/provenance unless a fresh regression is observed in current behavior.
+>
+> **✅ RESOLVED 2026-04-19:** Verified against repomix. `publishKaraoke()` at `features/features/tts/player-ui/karaoke.js:93-96` is now the sole writer of `window.LuxKaraokeSource`, `window.LuxKaraokeTimings`, and `window.LuxTTSWordTimings`. SelfPB modules (`selfpb/controls.js`, `selfpb/karaoke.js`) no longer assign to these globals directly — they call `publishKaraoke()`. Commit `aaa3832`.
 
 | Field | Detail |
 |-------|--------|
@@ -1202,6 +1218,8 @@ Use this document to understand historical fault lines and ownership decisions, 
 
 ### B.3 — Fighting Code: `document.body.style.overflow` toggled by 2 modals
 
+> **✅ RESOLVED 2026-04-19:** Verified against repomix. `helpers/body-scroll-lock.js` exists and is the sole writer of `document.body.style.overflow` (lines 8, 16). Both modal files now import and use the helper: `features/interactions/metric-modal/events.js:6` imports `lockBodyScroll`/`unlockBodyScroll`, calls at lines 75 and 119; `features/progress/attempt-detail/modal-shell.js:5` imports them, calls at lines 57 and 73. Ref-counted lock prevents the race described below. Commit `2f3292b`.
+
 | Field | Detail |
 |-------|--------|
 | **Category** | Fighting code / CSS conflict |
@@ -1214,6 +1232,8 @@ Use this document to understand historical fault lines and ownership decisions, 
 | **Risk & rollback** | Very low. The utility is 6 lines. Rollback: delete file, revert 2 call sites. |
 
 ### B.4 — Fighting Code: 3 capture-phase document click handlers
+
+> **⚠️ PARTIAL 2026-04-19:** Code is safe — verified the guard pattern (`if (!chip) return` before `stopPropagation()`) is correctly in place in `chip-events.js`, `metric-modal/events.js`, and `panel-events.js`. No unsafe capture handlers remain. However, **documentation of the interaction matrix between these 3 handlers still has not been added** (Fix 4 from Bill of Rights Part D is outstanding). Low priority polish item.
 
 | Field | Detail |
 |-------|--------|
@@ -1314,6 +1334,8 @@ Use this document to understand historical fault lines and ownership decisions, 
 
 ### B.12 — Double-init guard: `convo-bootstrap.js` uses BOTH MutationObserver AND setInterval
 
+> **✅ RESOLVED 2026-04-19:** Verified against repomix. `features/convo/convo-bootstrap.js` contains ZERO `setInterval`, `clearInterval`, or `MutationObserver` references. The forever-poll AND the dead MutationObserver have both been removed entirely. Commit `6285941` removed the MutationObserver; the setInterval was removed in subsequent work.
+
 | Field | Detail |
 |-------|--------|
 | **Category** | Double-init |
@@ -1411,6 +1433,8 @@ Use this document to understand historical fault lines and ownership decisions, 
 
 ### Fix #1: `convo-turn.js` → use `setLastRecording()`
 
+**✅ RESOLVED 2026-04-19:** Fix has shipped. `window.LuxLastRecordingBlob` has a single writer at `app-core/runtime.js:49` via `setLastRecording()`. `convo-turn.js` no longer assigns directly. See Part 10 B.1 for full verification.
+
 - [ ] Open AI Conversations page (`convo.html`)
 - [ ] Record a turn (speak into mic, wait for AI response)
 - [ ] Open Self Playback drawer (bottom panel)
@@ -1434,6 +1458,8 @@ Use this document to understand historical fault lines and ownership decisions, 
 
 ### Fix #4: Body scroll lock utility
 
+**✅ RESOLVED 2026-04-19:** `helpers/body-scroll-lock.js` exists with ref-counted `lockBodyScroll()` / `unlockBodyScroll()`. Both modal files import and use the helper. See Part 10 B.3 for full verification.
+
 - [ ] Open Practice Skills page (`index.html`)
 - [ ] Click a score tile → metric modal opens → verify no scroll behind modal
 - [ ] While metric modal is open, if possible trigger attempt detail modal
@@ -1449,6 +1475,8 @@ Use this document to understand historical fault lines and ownership decisions, 
 - [ ] Network tab: verify `Access-Control-Allow-Origin` is the specific origin, not `*`
 
 ### Fix #6: Karaoke globals centralization
+
+**✅ RESOLVED 2026-04-19:** `publishKaraoke()` at `features/features/tts/player-ui/karaoke.js:93-96` is the sole writer of karaoke window globals. See Part 10 B.2 for full verification.
 
 - [ ] Open Practice Skills page
 - [ ] Record a passage → open Self Playback expanded view
