@@ -45,7 +45,9 @@ Design choice worth preserving on any reactivation: **no framework assumed — u
 
 The `// TODO: verify this test` escape hatch for uncertain cases is a nice humility guard — prevents the routine from committing tests it's not sure about.
 
-**⚠️ No activity gate.** Same pattern as R11 — every Wednesday fires the "find top 5 untested files" scan regardless of whether anything's changed. Add a gate before unpause.
+**✅ Utility Gate v2 applied 2026-04-20.** SHA-pinned, scope-filtered, scan-only-what-changed. Input globs: `'**/*.js'` (excluding `.test.js` via grep — test-file changes shouldn't re-trigger scaffolding). State file: `.routine-state/lux-test-scaffold.sha`. Force-override: `[force-scan]` commit trailer OR `.routine-state/lux-test-scaffold.force` sentinel. Safe to reactivate.
+
+**✅ Utility Gate v2 applied 2026-04-20.** SHA-pinned, scope-filtered, scan-only-what-changed. Input globs: `'**/*.js'` (excluding `.test.js` via grep — test-file changes shouldn't re-trigger scaffolding). State file: `.routine-state/lux-test-scaffold.sha`. Force-override: `[force-scan]` commit trailer OR `.routine-state/lux-test-scaffold.force` sentinel. Safe to reactivate.
 
 Pivot candidate: "lowest-coverage file → test PR generator" pattern (Backlog 🔵 Testing) — now that Vitest coverage is wired up, this routine could walk coverage up one file per week autonomously rather than generating scaffolds once.
 

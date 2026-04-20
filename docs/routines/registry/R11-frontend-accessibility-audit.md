@@ -74,6 +74,6 @@ Per-category cap: 10 findings.
 
 Explicit **"positive reinforcement matters"** line in the report Notes section — unusual for an audit prompt, worth keeping.
 
-**⚠️ No activity gate.** If reactivated as-is, R11 would run a full HTML/JS scan every Thursday regardless of whether any accessibility-relevant files changed. Recommend adding a gate before unpause — something like `git log --since="7 days ago" --name-only | grep -E '\.(html|js|jsx)$' | grep -v '_ARCHIVE\|_agents-archive'` — no HTML/JS changes in 7 days ⇒ skip stub.
+**✅ Utility Gate v2 applied 2026-04-20.** SHA-pinned, scope-filtered, scan-only-what-changed. Input globs: `'**/*.html' '**/*.js' '**/*.jsx'`. State file: `.routine-state/lux-frontend-accessibility-audit.sha`. Force-override: `[force-scan]` commit trailer OR `.routine-state/lux-frontend-accessibility-audit.force` sentinel. Safe to reactivate — the gate will prevent wasteful full-HTML-scans on quiet weeks.
 
 `kodama-reports/accessibility/` output path is vestigial.
