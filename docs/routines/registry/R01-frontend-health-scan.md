@@ -129,6 +129,6 @@ Highest-frequency cadence in the fleet alongside R02 — together they anchor th
 
 Explicit exclusions worth preserving: `_api/identity.js` and `_api/util.js` are legacy key-owner files whose `localStorage` calls are intentional. Findings cap 10 with overflow to `## Additional Findings` (file:line only).
 
-**Run-status anomaly worth investigating:** the Apr 18 03:34 SCHEDULED run icon is visually distinct from the surrounding green-check successes — likely failed, cancelled, or stream-timeout. Worth a dashboard click-through during Schedule Calibration to confirm status and see whether this was an isolated incident or points at a repeat failure mode.
+**~~Run-status anomaly Apr 18 03:34.~~ ✅ RESOLVED 2026-04-20.** Investigated during Tier B Schedule Calibration. Run was stuck in "Pondering..." state since Apr 18 (never reached tool-call phase, no error output, Cancel button unresponsive — zombie session). Surrounding runs all succeeded (Apr 17, 19, 20). Diagnosis: Anthropic-side infrastructure hang, not a prompt issue. No prompt changes required. If similar zombie runs appear and become recurring, escalate as a capacity/infra complaint rather than a prompt fix.
 
 `kodama-reports/nightly/` output path is vestigial.

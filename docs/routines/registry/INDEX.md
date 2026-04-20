@@ -80,12 +80,12 @@ Headroom: ~12 runs/day unused
 Path to closing the gap (Schedule Calibration queue)
 
 Decide R07's cadence. Run history confirms the routine was flipped daily → weekly between Apr 19 and now. ~~Name drift (lux-backend-nightly-health vs weekly cron)~~ ✅ RESOLVED 2026-04-20 via R## rename pass — dashboard name is now "R07 · Backend Health Scan" (cadence-neutral). Still pending: decide whether to keep weekly or flip back to daily (there's headroom). Single highest-ROI cadence decision in the fleet.
-Stagger Sunday. Six routines currently land on Sunday (R03 04:00, R07 04:15, R08 near-daily via cron bug, R13 03:00, R14 02:00, R15 09:00) — several paused but will stack if reactivated. Spread across weekdays when possible.
+~~Stagger Sunday.~~ ✅ NO ACTION 2026-04-20. Only 3 of 6 Sunday routines are active (R03, R07, R08); R08's apparent bunching is actually its cron bug (tracked separately). R03 + R07 are paired-by-design (15-min offset). Revisit if active Sunday count exceeds 4.
 Add new daily routines from the Backlog. Morning Briefing 🔵, Secret Scanner 🔵, Bundle Size Tracker 🔵, Vercel Function Count Watch 🔵 are the obvious first picks.
 Activate R10 once deployment lands. Cleanest unpause — but only after Vercel goes public, and ideally converted to a webhook trigger (deployment.succeeded) rather than daily cron.
-Fix R08's cron. Current cron 0 5 1-7,15-21 * 0 fires ~14–18×/month via cron's OR-logic, not biweekly. Two fix paths in the R08 file.
-Resolve R14's model mystery. Only routine on Legacy Model; both manual runs failed. Upgrade to Opus 4.7 1M and run once to diagnose. Outcome determines retire-vs-keep-parked.
-Investigate R01's Apr 18 03:34 run-icon anomaly. Icon visually distinct from surrounding green-checks — likely failed/cancelled/timed-out. R03 documented a prior stream-idle-timeout on Apr 15; worth tracking across R01 runs.
+Fix R08's cron. Current cron 0 5 1-7,15-21 * 0 fires ~14–18×/month via cron's OR-logic, not biweekly. Two fix paths in the R08 file. **⏳ In progress 2026-04-20 afternoon.**
+~~Resolve R14's model mystery.~~ ✅ DIAGNOSED 2026-04-20. Model bump to Opus 4.7 1M was correct; new failure mode is prompt-level (stream timeout on verbose exploration). Prompt-fix list captured in R14 Notes. R14 stays paused (one-shot, non-blocking).
+~~Investigate R01's Apr 18 03:34 run-icon anomaly.~~ ✅ RESOLVED 2026-04-20. Zombie "Pondering..." session on Anthropic-side infra, not a prompt bug. Surrounding runs all green. No action required. Details in R01 Notes.
 ~~Add activity gate to R11.~~ ✅ DONE 2026-04-20. Utility Gate v2 applied (SHA-pinned, scope-filtered: HTML/JS/JSX globs). Safe to reactivate.
 ~~Resolve issue-number collisions.~~ ✅ DONE 2026-04-20. #22 stays shared by design (R01 + R02 paired tracker). #23 → R12 moved to new issue #58 (Test Scaffold Tracker). #24 → R04 moved to new issue #57 (Security Tracker).
 

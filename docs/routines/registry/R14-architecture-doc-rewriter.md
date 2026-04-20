@@ -44,6 +44,16 @@ Almost certainly model-capacity: the prompt asks for whole-repo directory enumer
 
 **Before retiring or reactivating, upgrade the model to Opus 4.7 1M and run once** to confirm whether failures were model-capacity or prompt-correctness. If the upgrade-and-rerun produces a clean ARCHITECTURE.md, the prompt is preserved as a valid "rewrite any doc" template for future use. If it still fails, the prompt itself needs work. Either way, resolve the model mystery before the failure signal rots into folklore.
 
+**Diagnostic run 2026-04-20 — model bump confirmed correct, prompt-level fix now needed.** Upgraded from Legacy Model to Opus 4.7 1M and triggered a manual run. Session completed 32 bash commands, read 8 files, advanced 5 of 6 todo items — then hit `API Error: Stream idle timeout - partial response received` right as it began synthesizing the ARCHITECTURE.md output. Diagnosis: the prompt's exploration-then-write structure is too verbose. Session budget is consumed before any document content is written, and the first synthesis token tips past the timeout.
+
+**Prompt fixes required before next run (deferred — R14 is one-shot, not blocking):**
+1. Batch exploration into one `find`/`tree` pass instead of ~30 sequential `ls`/`head`/`cat` calls
+2. Write incrementally: start emitting ARCHITECTURE.md sections as exploration completes, not after
+3. Cap read budget: "Do not exceed 15 file reads. If you feel you need more, start writing with what you have."
+4. Remove any remaining big-bang-write framing in the prompt
+
+**Status:** keep paused. Current `docs/ARCHITECTURE.md` is functional and not blocking anything. Model-choice question resolved.
+
 Note: `ARCHITECTURE.md` was manually rewritten 2026-04-19, so this routine's one-shot purpose is already served on paper — the value of a rerun is **diagnostic, not productive**. The point of upgrading the model and running once is to verify the prompt shape works, so we can lift it as a template for future "rewrite any doc" routines (Bill of Rights rewriter, Master Idea Catalog rewriter, etc.) — all of which could follow R14's pattern.
 
 One line worth preserving for any future "rewrite from actual state" routine: Step 1's **"read the files inside to understand, don't guess"** — a strong anti-hallucination hedge that keeps the LLM honest about source-of-truth.
