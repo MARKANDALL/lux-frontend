@@ -42,7 +42,7 @@ Rough cost-per-run (a typical routine scanning ~30k tokens of context, producing
 | Sonnet 4.6 | ~$0.12–$0.60 | ~40% |
 | Haiku 4.5 | ~$0.05–$0.25 | ~15% |
 
-**What this means for you:** running all 9 current routines on Opus 4.6 is overkill on at least 5 of them, and that overkill is what's quietly draining the $100 credit before May 1.
+**What this means for you:** of the current 15 configured routines, at least 5 could be downgraded to Sonnet with no loss of quality (the candidates are enumerated in Section 3). **Current strategy: stay on Opus across the board.** Lux is pre-production, daily fires are well below the 15/day ceiling, and full-Opus reasoning beats saved dollars while you're still tuning. The Section 3 table is parked intelligence — pull it off the shelf when either (a) you hit subscription limits, (b) a specific routine's cost becomes visible on the billing dashboard, or (c) you want to double the fleet and need to make room in the budget.
 
 **The rule:**
 - **Opus** — when reasoning has to span many files, when the output shape is unknown, when a wrong answer is expensive.
@@ -51,9 +51,11 @@ Rough cost-per-run (a typical routine scanning ~30k tokens of context, producing
 
 ---
 
-## 3. The Opus → Sonnet Downgrade Table
+## 3. The Opus → Sonnet Downgrade Table (PARKED — do not execute)
 
-Do this before adding a single new routine. ~20 minutes of UI work, saves ~60% of your budget.
+> **⏸️ Status (as of 2026-04-20): PARKED.** This table is preserved as a reserve strategy, not an active recommendation. **Do not execute until one of the trigger conditions in Section 2 is met.** Rationale: at current scale, full-Opus quality is worth more than the budget savings, and the 5 candidate routines below are doing real work in dev mode that benefits from Opus-grade reasoning. When limits tighten, come back here — the analysis is already done.
+
+~20 minutes of UI work; saves ~60% of budget when executed.
 
 | # | Routine | Current | Recommended | Rationale |
 |---|---|---|---|---|
@@ -165,7 +167,7 @@ Routines are **bad at:**
 
 ### Week 1
 
-**Day 1 (20 min):** Run the Opus→Sonnet downgrade table above. This is ~60% of your remaining budget recovered before you add anything.
+**Day 1 (PARKED — skip intentionally):** The Opus→Sonnet downgrade table (Section 3) is reserve strategy, not an active Day 1 action. Current approach: keep all routines on Opus. Return here if/when subscription limits tighten — the 5 candidates are pre-identified and the downgrade is ~20 min of UI work when needed.
 
 **Day 2 (30 min):** Add the **Morning Briefing routine** (see Backlog → Personal Ops). Touches everything else — once you have the morning brief reading your other routines' overnight output, the system starts feeling like a system.
 
