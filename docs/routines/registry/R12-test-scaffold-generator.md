@@ -5,7 +5,7 @@
 - **Rename →** Test Scaffold Generator
 - 🟡 Paused · `lux-frontend` · testing · reactivation-candidate
 - Wednesdays 4:00 AM EDT (`0 4 * * 3`) · Opus 4.7 (standard, not 1M) · cron
-- **Output:** test files at `tests/[module-name].test.js` + draft PR "test: scaffold tests for top 5 critical modules — Week WW" + comment on **issue #23**
+- **Output:** test files at `tests/[module-name].test.js` + draft PR "test: scaffold tests for top 5 critical modules — Week WW" + comment on **issue #58**
 - **Active:** — → — · **Edited:** — · **Last run:** 2026-04-16 17:00 (manual — only run; paused before first scheduled fire)
 - **Depends on:** —
 
@@ -26,7 +26,7 @@ PROCESS:
 OUTPUT:
 - Create test files at tests/[module-name].test.js
 - Open a draft PR titled "test: scaffold tests for top 5 critical modules — Week WW"
-- Comment on issue #23 listing which modules got tests and why they were selected
+- Comment on issue #58 listing which modules got tests and why they were selected
 
 RULES:
 - Do not modify source files
@@ -37,7 +37,7 @@ RULES:
 
 ## Notes
 
-Posts to **issue #23** — which per the INDEX Quick Index is R03's Frontend Architecture Audit tracker. Another issue-number collision to resolve during Schedule Calibration (either give this routine its own issue, or confirm #23 is actually a shared multi-routine tracker).
+Posts to **issue #58 (Test Scaffold Tracker)**. Split from issue #23 (Architecture Audit) on 2026-04-20 during Schedule Calibration.
 
 Scaffolded 79 tests on initial manual run per handover.
 

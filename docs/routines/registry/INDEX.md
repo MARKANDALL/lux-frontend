@@ -71,7 +71,7 @@ Fix R08's cron. Current cron 0 5 1-7,15-21 * 0 fires ~14–18×/month via cron's
 Resolve R14's model mystery. Only routine on Legacy Model; both manual runs failed. Upgrade to Opus 4.7 1M and run once to diagnose. Outcome determines retire-vs-keep-parked.
 Investigate R01's Apr 18 03:34 run-icon anomaly. Icon visually distinct from surrounding green-checks — likely failed/cancelled/timed-out. R03 documented a prior stream-idle-timeout on Apr 15; worth tracking across R01 runs.
 Add activity gate to R11. Currently no pre-check — would run full HTML/JS scan every Thursday regardless of changes. Gate on HTML/JS changes in last 7 days before unpause.
-Resolve issue-number collisions. #22 (R01 + R02 — by design, paired tracker). #23 (R03 + R12 — collision). #24 (R04 + R06 — collision). Security signal deserves its own tracker; test-scaffold output probably belongs in its own.
+~~Resolve issue-number collisions.~~ ✅ DONE 2026-04-20. #22 stays shared by design (R01 + R02 paired tracker). #23 → R12 moved to new issue #58 (Test Scaffold Tracker). #24 → R04 moved to new issue #57 (Security Tracker).
 
 
 Navigation
