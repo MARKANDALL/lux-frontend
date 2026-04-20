@@ -1,8 +1,8 @@
-# R08 — `lux-backend-weekly-architecture`
+# R08 · Backend Architecture Audit
 
 <!-- Path: docs/routines/registry/R08-backend-architecture-audit.md — Live registry entry for the backend architecture audit (⚠️ "biweekly" is misleading — see Notes). Index at docs/routines/registry/INDEX.md. -->
 
-- **Rename →** Backend Architecture Audit
+- **Dashboard name:** R08 · Backend Architecture Audit *(renamed 2026-04-20; was `lux-backend-weekly-architecture`)*
 - 🟢 Active · `luxury-language-api` · code-quality · rotating-weekly
 - `0 5 1-7,15-21 * 0` · 5:00 AM UTC (= 1:00 AM EDT / 12:00 AM EST) · Opus 4.7 (1M) · cron
   - *⚠️ Prompt says "Runs every other Sunday." Cron OR-logic means it actually fires on days 1–7, days 15–21, OR every Sunday — roughly 14–18 runs/month, not 2. See Notes for calibration options.*

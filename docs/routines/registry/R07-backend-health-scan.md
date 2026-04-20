@@ -1,8 +1,8 @@
-# R07 — `lux-backend-nightly-health`
+# R07 · Backend Health Scan
 
 <!-- Path: docs/routines/registry/R07-backend-health-scan.md — Live registry entry for the weekly backend health scan. Index at docs/routines/registry/INDEX.md. -->
 
-- **Rename →** Backend Health Scan
+- **Dashboard name:** R07 · Backend Health Scan *(renamed 2026-04-20; was `lux-backend-nightly-health`)*
 - 🟢 Active · `luxury-language-api` · code-quality · rotating-weekly
 - Sundays 4:15 AM EDT (`15 4 * * 0`) · Opus 4.7 (1M) · cron *(name says "nightly" — run history shows a recent flip from daily to weekly; see Notes)*
 - **Output:** `kodama-reports/backend-nightly/YYYY-MM-DD.md` ⚠️ vestigial path + draft PR "Backend health scan — YYYY-MM-DD" + comment on issue "Backend Nightly Health Tracker" (creates if missing)

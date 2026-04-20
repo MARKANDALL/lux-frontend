@@ -1,8 +1,8 @@
-# R09 — `lux-backend-monthly-hygiene`
+# R09 · Backend Hygiene Sweep
 
 <!-- Path: docs/routines/registry/R09-backend-hygiene-sweep.md — Live registry entry for the monthly backend hygiene sweep. Index at docs/routines/registry/INDEX.md. -->
 
-- **Rename →** Backend Hygiene Sweep
+- **Dashboard name:** R09 · Backend Hygiene Sweep *(renamed 2026-04-20; was `lux-backend-monthly-hygiene`)*
 - 🟢 Active · `luxury-language-api` · code-quality · rotating-weekly (monthly slot)
 - Day 1 of month 9:00 AM UTC (`0 9 1 * *`) = 5:00 AM EDT / 4:00 AM EST · Opus 4.7 (1M) · cron
 - **Output:** `kodama-reports/backend-monthly/YYYY-MM.md` + draft PR "Backend monthly hygiene sweep — Month YYYY" + comment on issue "Backend Monthly Hygiene Tracker" (creates if missing)

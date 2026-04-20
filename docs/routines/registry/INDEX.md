@@ -17,7 +17,23 @@ Rotation: core-every-night · rotating-weekly · one-shot · seasonal · reactiv
 
 
 Quick Index
-IDCurrent NameProposed Clean NameStatusCadenceRepoCategoryFileR01lux-nightly-health-scanFrontend Health Scan🟢Daily 3:33 AM EDTlux-frontendcode-qualityR01R02lux-deep-code-reviewDeep Code Review🟢Daily 4:00 AM EDTlux-frontendcode-qualityR02R03lux-weekly-architecture-auditFrontend Architecture Audit🟢Sundays 4:00 AM EDTlux-frontendcode-qualityR03R04lux-dependency-vulnerability-scanDependency Vulnerability Scan🟢Tuesdays 4:00 AM EDTlux-frontendsecurityR04R05lux-frontend-performance-budgetFrontend Performance Budget🟢Saturdays 4:00 AM EDTlux-frontendperfR05R06lux-monthly-hygieneFrontend Hygiene Sweep🟢Day 1 · 8:00 UTClux-frontendcode-qualityR06R07lux-backend-nightly-healthBackend Health Scan🟢Sundays 4:15 AM EDTluxury-language-apicode-qualityR07R08lux-backend-weekly-architectureBackend Architecture Audit🟢"Biweekly" Sundays 5:00 UTC ⚠️ (cron fires ~14–18×/month — see R08)luxury-language-apicode-qualityR08R09lux-backend-monthly-hygieneBackend Hygiene Sweep🟢Day 1 · 9:00 UTCluxury-language-apicode-qualityR09R10lux-deploy-smoke-testDeploy Smoke Test🟡Daily 5:00 AM EDTlux-frontendinfraR10R11lux-frontend-accessibility-auditFrontend Accessibility Audit🟡Thursdays 4:00 AM EDTlux-frontendlux-specificR11R12lux-test-scaffoldTest Scaffold Generator🟡Wednesdays 4:00 AM EDTlux-frontendtestingR12R13lux-generate-env-exampleEnv Example Generator🟡Sundays 3:00 AM EDTlux-frontendinfraR13R14lux-rewrite-architectureArchitecture Doc Rewriter🟡Sundays 2:00 AM EDTlux-frontenddocsR14R15lux-test-imports-autofixTest Import Autofix🟡Sundays 9:00 AM EDTlux-frontendtestingR15
+| ID  | Dashboard Name                       | Status | Cadence                                                         | Repo                 | Category      | File |
+|-----|--------------------------------------|--------|-----------------------------------------------------------------|----------------------|---------------|------|
+| R01 | R01 · Frontend Health Scan           | 🟢     | Daily 3:33 AM EDT                                               | lux-frontend         | code-quality  | R01  |
+| R02 | R02 · Deep Code Review               | 🟢     | Daily 4:00 AM EDT                                               | lux-frontend         | code-quality  | R02  |
+| R03 | R03 · Frontend Architecture Audit    | 🟢     | Sundays 4:00 AM EDT                                             | lux-frontend         | code-quality  | R03  |
+| R04 | R04 · Dependency Vulnerability Scan  | 🟢     | Tuesdays 4:00 AM EDT                                            | lux-frontend         | security      | R04  |
+| R05 | R05 · Frontend Performance Budget    | 🟢     | Saturdays 4:00 AM EDT                                           | lux-frontend         | perf          | R05  |
+| R06 | R06 · Frontend Hygiene Sweep         | 🟢     | Day 1 · 8:00 UTC                                                | lux-frontend         | code-quality  | R06  |
+| R07 | R07 · Backend Health Scan            | 🟢     | Sundays 4:15 AM EDT                                             | luxury-language-api  | code-quality  | R07  |
+| R08 | R08 · Backend Architecture Audit     | 🟢     | "Biweekly" Sundays 5:00 UTC ⚠️ (cron fires ~14–18×/month — see R08) | luxury-language-api  | code-quality  | R08  |
+| R09 | R09 · Backend Hygiene Sweep          | 🟢     | Day 1 · 9:00 UTC                                                | luxury-language-api  | code-quality  | R09  |
+| R10 | R10 · Deploy Smoke Test              | 🟡     | Daily 5:00 AM EDT                                               | lux-frontend         | infra         | R10  |
+| R11 | R11 · Frontend Accessibility Audit   | 🟡     | Thursdays 4:00 AM EDT                                           | lux-frontend         | lux-specific  | R11  |
+| R12 | R12 · Test Scaffold Generator        | 🟡     | Wednesdays 4:00 AM EDT                                          | lux-frontend         | testing       | R12  |
+| R13 | R13 · Env Example Generator          | 🟡     | Sundays 3:00 AM EDT                                             | lux-frontend         | infra         | R13  |
+| R14 | R14 · Architecture Doc Rewriter      | 🟡     | Sundays 2:00 AM EDT                                             | lux-frontend         | docs          | R14  |
+| R15 | R15 · Test Import Autofix            | 🟡     | Sundays 9:00 AM EDT                                             | lux-frontend         | testing       | R15  |
 Active: 9 · Paused: 6 · Retired: 0 · Total configured: 15
 
 Per-Routine Entry Format (template for every R??-*.md file)
@@ -43,11 +59,11 @@ Model varies across the fleet. Final tally (all 15 cards confirmed):
 
 Opus 4.7 1M → 9 routines (R01, R05, R06, R07, R08, R09, R11, R13, R15) — whole-repo scans, multi-check sweeps, filesystem enumeration, paired audits
 Opus 4.7 standard → 5 routines (R02, R03, R04, R10, R12) — all bounded scope: ≤5-file review, 3-check sweep, npm-audit output, fixed-string no-op, top-5 inbound-import analysis
-Legacy Model → 1 routine (R14 lux-rewrite-architecture) — both manual runs failed; see R14 Notes
+Legacy Model → 1 routine (R14 · Architecture Doc Rewriter) — both manual runs failed; see R14 Notes
 Clear pattern: 1M for anything that enumerates the whole repo; standard for anything with an explicit file-count cap or bounded-output scope. R14 is an outlier on Legacy Model and almost certainly needs the model bumped before retire/reactivate is decided. All 15 cards use "Default" permissions and have no connectors attached.
 
 
-Dashboard names are just display labels. Rename freely — nothing is bound to them. The Proposed Clean Name column tracks a planned rename pass; not yet applied.
+Dashboard names now include the R## prefix (applied 2026-04-20) — e.g., `R01 · Frontend Health Scan`. The Proposed Clean Name column is now historical; new routines should be created with the `R## · Descriptive Name` format from the start.
 kodama-reports/* output paths are vestigial. Flag but don't fix during registry build; clean up during a later prompt-sharpening pass.
 Cron timezone is not uniform. The built-in trigger picker (e.g., "every Saturday at 4:00 AM EDT") is stored in local time with an EDT label. The Custom cron picker (e.g., 0 9 1 * *) is stored in UTC. Card headers in the individual files note the timezone explicitly whenever it matters.
 Morning Review window: Mark's free time on teaching days is roughly 1–5 PM and Fridays. Target routine finish time: by 6:00 AM so reports are ready for afternoon review. Morning Briefing routine (planned) will consolidate overnight output for one-screen reading.
@@ -63,14 +79,14 @@ Headroom: ~12 runs/day unused
 
 Path to closing the gap (Schedule Calibration queue)
 
-Decide R07's cadence. Run history confirms the routine was flipped daily → weekly between Apr 19 and now (three consecutive SCHEDULED fires Apr 17/18/19, then "Next run: Apr 26" = weekly). The name lux-backend-nightly-health is now stale. Either rename to lux-backend-weekly-health and keep weekly, or flip back to daily (there's headroom). Single highest-ROI cadence decision in the fleet.
+Decide R07's cadence. Run history confirms the routine was flipped daily → weekly between Apr 19 and now. ~~Name drift (lux-backend-nightly-health vs weekly cron)~~ ✅ RESOLVED 2026-04-20 via R## rename pass — dashboard name is now "R07 · Backend Health Scan" (cadence-neutral). Still pending: decide whether to keep weekly or flip back to daily (there's headroom). Single highest-ROI cadence decision in the fleet.
 Stagger Sunday. Six routines currently land on Sunday (R03 04:00, R07 04:15, R08 near-daily via cron bug, R13 03:00, R14 02:00, R15 09:00) — several paused but will stack if reactivated. Spread across weekdays when possible.
 Add new daily routines from the Backlog. Morning Briefing 🔵, Secret Scanner 🔵, Bundle Size Tracker 🔵, Vercel Function Count Watch 🔵 are the obvious first picks.
 Activate R10 once deployment lands. Cleanest unpause — but only after Vercel goes public, and ideally converted to a webhook trigger (deployment.succeeded) rather than daily cron.
 Fix R08's cron. Current cron 0 5 1-7,15-21 * 0 fires ~14–18×/month via cron's OR-logic, not biweekly. Two fix paths in the R08 file.
 Resolve R14's model mystery. Only routine on Legacy Model; both manual runs failed. Upgrade to Opus 4.7 1M and run once to diagnose. Outcome determines retire-vs-keep-parked.
 Investigate R01's Apr 18 03:34 run-icon anomaly. Icon visually distinct from surrounding green-checks — likely failed/cancelled/timed-out. R03 documented a prior stream-idle-timeout on Apr 15; worth tracking across R01 runs.
-Add activity gate to R11. Currently no pre-check — would run full HTML/JS scan every Thursday regardless of changes. Gate on HTML/JS changes in last 7 days before unpause.
+~~Add activity gate to R11.~~ ✅ DONE 2026-04-20. Utility Gate v2 applied (SHA-pinned, scope-filtered: HTML/JS/JSX globs). Safe to reactivate.
 ~~Resolve issue-number collisions.~~ ✅ DONE 2026-04-20. #22 stays shared by design (R01 + R02 paired tracker). #23 → R12 moved to new issue #58 (Test Scaffold Tracker). #24 → R04 moved to new issue #57 (Security Tracker).
 
 

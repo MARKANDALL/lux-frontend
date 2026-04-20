@@ -1,8 +1,8 @@
-# R03 — `lux-weekly-architecture-audit`
+# R03 · Frontend Architecture Audit
 
 <!-- Path: docs/routines/registry/R03-frontend-architecture-audit.md — Live registry entry for the weekly frontend architecture audit. Index at docs/routines/registry/INDEX.md. -->
 
-- **Rename →** Frontend Architecture Audit
+- **Dashboard name:** R03 · Frontend Architecture Audit *(renamed 2026-04-20; was `lux-weekly-architecture-audit`)*
 - 🟢 Active · `lux-frontend` · code-quality · rotating-weekly
 - Sundays 4:00 AM EDT (`0 4 * * 0`) · Opus 4.7 (standard, not 1M) · cron
 - **Output:** `kodama-reports/weekly/YYYY-WW.md` (ISO week) ⚠️ vestigial path + draft PR "Weekly architecture audit — YYYY week WW" + comment on **issue #23**

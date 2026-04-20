@@ -1,8 +1,8 @@
-# R02 — `lux-deep-code-review`
+# R02 · Deep Code Review
 
 <!-- Path: docs/routines/registry/R02-deep-code-review.md — Live registry entry for the daily deep code review. Index at docs/routines/registry/INDEX.md. -->
 
-- **Rename →** Deep Code Review
+- **Dashboard name:** R02 · Deep Code Review *(renamed 2026-04-20; was `lux-deep-code-review`)*
 - 🟢 Active · `lux-frontend` · code-quality · core-every-night
 - Daily 4:00 AM EDT (`0 4 * * *`) · Opus 4.7 (standard, not 1M) · cron
 - **Output:** `kodama-reports/reviews/YYYY-MM-DD.md` ⚠️ vestigial path + draft PR "Deep code review — YYYY-MM-DD" + comment on **issue #22** (shared with R01)

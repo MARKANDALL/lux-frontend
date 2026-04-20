@@ -1,8 +1,8 @@
-# R06 — `lux-monthly-hygiene`
+# R06 · Frontend Hygiene Sweep
 
 <!-- Path: docs/routines/registry/R06-frontend-hygiene-sweep.md — Live registry entry for the monthly frontend hygiene sweep. Index at docs/routines/registry/INDEX.md. -->
 
-- **Rename →** Frontend Hygiene Sweep
+- **Dashboard name:** R06 · Frontend Hygiene Sweep *(renamed 2026-04-20; was `lux-monthly-hygiene`)*
 - 🟢 Active · `lux-frontend` · code-quality · rotating-weekly (monthly slot)
 - Custom cron `0 8 1 * *` · 8:00 AM UTC = 4:00 AM EDT / 3:00 AM EST · Opus 4.7 (1M) · cron
 - **Output:** `kodama-reports/monthly/YYYY-MM.md` ⚠️ vestigial path + draft PR "Monthly hygiene sweep — Month YYYY" + comment on **issue #24**

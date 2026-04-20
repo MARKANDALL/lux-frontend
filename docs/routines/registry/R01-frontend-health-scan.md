@@ -1,8 +1,8 @@
-# R01 — `lux-nightly-health-scan`
+# R01 · Frontend Health Scan
 
 <!-- Path: docs/routines/registry/R01-frontend-health-scan.md — Live registry entry for the frontend nightly health scan. Index at docs/routines/registry/INDEX.md. -->
 
-- **Rename →** Frontend Health Scan
+- **Dashboard name:** R01 · Frontend Health Scan *(renamed 2026-04-20; was `lux-nightly-health-scan`)*
 - 🟢 Active · `lux-frontend` · code-quality · core-every-night
 - Daily 3:33 AM EDT (`33 3 * * *`) · Opus 4.7 (1M) · cron
 - **Output:** `kodama-reports/nightly/YYYY-MM-DD.md` ⚠️ vestigial path + draft PR "Nightly health scan — YYYY-MM-DD" + comment on **issue #22** (top 3 findings inline + PR link + Top Priority line)

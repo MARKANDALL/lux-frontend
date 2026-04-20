@@ -1,8 +1,8 @@
-# R05 — `lux-frontend-performance-budget`
+# R05 · Frontend Performance Budget
 
 <!-- Path: docs/routines/registry/R05-frontend-performance-budget.md — Live registry entry for the weekly frontend performance budget check. Index at docs/routines/registry/INDEX.md. -->
 
-- **Rename →** Frontend Performance Budget
+- **Dashboard name:** R05 · Frontend Performance Budget *(renamed 2026-04-20; was `lux-frontend-performance-budget`)*
 - 🟢 Active · `lux-frontend` · perf · rotating-weekly
 - Saturdays 4:00 AM EDT (`0 4 * * 6`) · Opus 4.7 (1M) · cron
 - **Output:** `kodama-reports/performance/YYYY-MM-DD.md` + draft PR "Performance budget check — YYYY-MM-DD" + comment on issue "Performance Budget Tracker" (creates if missing)

@@ -1,8 +1,8 @@
-# R10 — `lux-deploy-smoke-test`
+# R10 · Deploy Smoke Test
 
 <!-- Path: docs/routines/registry/R10-deploy-smoke-test.md — Live registry entry for the deploy smoke test (paused, intentional no-op until deployment). Index at docs/routines/registry/INDEX.md. -->
 
-- **Rename →** Deploy Smoke Test
+- **Dashboard name:** R10 · Deploy Smoke Test *(renamed 2026-04-20; was `lux-deploy-smoke-test`)*
 - 🟡 Paused · `lux-frontend` · infra · reactivation-candidate (pending public deployment)
 - Daily 5:00 AM EDT (`0 5 * * *`) · Opus 4.7 (standard, not 1M) · cron *(ideal webhook candidate once Lux is deployed — Vercel `deployment.succeeded` event)*
 - **Output:** **intentional no-op** — no file, no PR, no issue comment. Emits one fixed message and exits.

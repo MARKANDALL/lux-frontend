@@ -1,8 +1,8 @@
-# R11 — `lux-frontend-accessibility-audit`
+# R11 · Frontend Accessibility Audit
 
 <!-- Path: docs/routines/registry/R11-frontend-accessibility-audit.md — Live registry entry for the weekly frontend accessibility audit (paused). Index at docs/routines/registry/INDEX.md. -->
 
-- **Rename →** Frontend Accessibility Audit
+- **Dashboard name:** R11 · Frontend Accessibility Audit *(renamed 2026-04-20; was `lux-frontend-accessibility-audit`)*
 - 🟡 Paused · `lux-frontend` · lux-specific · reactivation-candidate
 - Thursdays 4:00 AM EDT (`0 4 * * 4`) · Opus 4.7 (1M) · cron
 - **Output:** `kodama-reports/accessibility/YYYY-MM-DD.md` + draft PR "Accessibility audit — YYYY-MM-DD" + comment on issue "Accessibility Tracker" (creates if missing)

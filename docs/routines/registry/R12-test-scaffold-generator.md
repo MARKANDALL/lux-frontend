@@ -1,8 +1,8 @@
-# R12 — `lux-test-scaffold`
+# R12 · Test Scaffold Generator
 
 <!-- Path: docs/routines/registry/R12-test-scaffold-generator.md — Live registry entry for the test scaffold generator (paused). Index at docs/routines/registry/INDEX.md. -->
 
-- **Rename →** Test Scaffold Generator
+- **Dashboard name:** R12 · Test Scaffold Generator *(renamed 2026-04-20; was `lux-test-scaffold`)*
 - 🟡 Paused · `lux-frontend` · testing · reactivation-candidate
 - Wednesdays 4:00 AM EDT (`0 4 * * 3`) · Opus 4.7 (standard, not 1M) · cron
 - **Output:** test files at `tests/[module-name].test.js` + draft PR "test: scaffold tests for top 5 critical modules — Week WW" + comment on **issue #58**

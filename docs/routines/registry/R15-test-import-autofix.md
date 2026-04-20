@@ -1,8 +1,8 @@
-# R15 — `lux-test-imports-autofix`
+# R15 · Test Import Autofix
 
 <!-- Path: docs/routines/registry/R15-test-import-autofix.md — Live registry entry for the test import autofix (paused, one-shot purpose fulfilled; fails-closed surgical-autofix template worth preserving). Index at docs/routines/registry/INDEX.md. -->
 
-- **Rename →** Test Import Autofix
+- **Dashboard name:** R15 · Test Import Autofix *(renamed 2026-04-20; was `lux-test-imports-autofix`)*
 - 🟡 Paused · `lux-frontend` · testing · one-shot (purpose fulfilled — keep parked for reference)
 - Sundays 9:00 AM EDT (`0 9 * * 0`) · Opus 4.7 (1M) · cron
 - **Output:** `kodama-reports/autofix/test-imports-2026-04-16.md` + PR titled "chore: fix broken test imports after api→_api rename (27 lines, 3 files)"

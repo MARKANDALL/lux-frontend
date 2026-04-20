@@ -1,8 +1,8 @@
-# R14 — `lux-rewrite-architecture`
+# R14 · Architecture Doc Rewriter
 
 <!-- Path: docs/routines/registry/R14-architecture-doc-rewriter.md — Live registry entry for the architecture doc rewriter (paused, ⚠️ Legacy Model — both runs failed, needs diagnostic rerun). Index at docs/routines/registry/INDEX.md. -->
 
-- **Rename →** Architecture Doc Rewriter
+- **Dashboard name:** R14 · Architecture Doc Rewriter *(renamed 2026-04-20; was `lux-rewrite-architecture`)*
 - 🟡 Paused · `lux-frontend` · docs · one-shot (purpose fulfilled — keep parked for reference)
 - Sundays 2:00 AM EDT (`0 2 * * 0`) · **Legacy Model** ⚠️ (NOT Opus 4.7 — likely root cause of both run failures; see Notes) · cron
 - **Output:** overwrites `docs/ARCHITECTURE.md` + draft PR "docs: rewrite ARCHITECTURE.md from actual repo state"

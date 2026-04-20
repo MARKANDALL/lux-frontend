@@ -1,8 +1,8 @@
-# R13 — `lux-generate-env-example`
+# R13 · Env Example Generator
 
 <!-- Path: docs/routines/registry/R13-env-example-generator.md — Live registry entry for the env example generator (paused, one-shot purpose fulfilled). Index at docs/routines/registry/INDEX.md. -->
 
-- **Rename →** Env Example Generator
+- **Dashboard name:** R13 · Env Example Generator *(renamed 2026-04-20; was `lux-generate-env-example`)*
 - 🟡 Paused · `lux-frontend` · infra · one-shot (purpose fulfilled — keep parked for reference)
 - Sundays 3:00 AM EDT (`0 3 * * 0`) · Opus 4.7 (1M) · cron
 - **Output:** `.env.example` at repo root + draft PR "chore: add .env.example with all 13+ referenced env vars"
