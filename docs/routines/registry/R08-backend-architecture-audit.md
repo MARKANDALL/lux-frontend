@@ -1,11 +1,11 @@
 # R08 · Backend Architecture Audit
 
-<!-- Path: docs/routines/registry/R08-backend-architecture-audit.md — Live registry entry for the backend architecture audit (⚠️ "biweekly" is misleading — see Notes). Index at docs/routines/registry/INDEX.md. -->
+<!-- Path: docs/routines/registry/R08-backend-architecture-audit.md — Live registry entry for the backend architecture audit. Index at docs/routines/registry/INDEX.md. -->
 
 - **Dashboard name:** R08 · Backend Architecture Audit *(renamed 2026-04-20; was `lux-backend-weekly-architecture`)*
 - 🟢 Active · `luxury-language-api` · code-quality · rotating-weekly
-- `0 5 1-7,15-21 * 0` · 5:00 AM UTC (= 1:00 AM EDT / 12:00 AM EST) · Opus 4.7 (1M) · cron
-  - *⚠️ Prompt says "Runs every other Sunday." Cron OR-logic means it actually fires on days 1–7, days 15–21, OR every Sunday — roughly 14–18 runs/month, not 2. See Notes for calibration options.*
+- `0 5 1-7,15-21 * *` · 5:00 AM UTC (= 1:00 AM EDT / 12:00 AM EST) · Opus 4.7 (1M) · cron
+  - *Cron fires 14×/month (days 1–7, 15–21); in-prompt Sunday-only gate collapses non-Sunday fires to a skip stub so effective cadence is 2 runs/month. See Notes.*
 - **Output:** `kodama-reports/backend-weekly/YYYY-WW.md` (ISO week) + draft PR "Backend architecture audit — YYYY week WW" + comment on issue "Backend Weekly Architecture Tracker" (creates if missing)
 - **Active:** — → — · **Edited:** — · **Last run:** 2026-04-19 01:04 (scheduled) — also 2026-04-18 21:39 (manual), 2026-04-16 17:03 (manual)
 - **Depends on:** —
@@ -13,6 +13,14 @@
 ## Prompt
 
 ```
+SUNDAY-ONLY GATE (run FIRST — BEFORE the activity gate):
+Run `date -u +%u`
+If the output is NOT "7" (i.e., today is not Sunday UTC), write:
+# Backend Architecture Audit — YYYY-MM-DD
+## Summary
+⏭️ Scheduled but not Sunday — biweekly routine only runs on Sundays. Skipping.
+Open the draft PR so the skip is visible. Exit here.
+
 You are performing a biweekly architecture audit on the Lux Pronunciation Tool BACKEND (luxury-language-api). Runs every other Sunday.
 
 ACTIVITY GATE (run FIRST):
@@ -88,14 +96,9 @@ RULES:
 
 ## Notes
 
-⚠️ **Cron does not match prompt intent — top calibration candidate.** Cron `0 5 1-7,15-21 * 0` combined with cron's OR-logic-when-both-DOM-and-DOW-are-restricted fires on **any of**: day-of-month in 1–7, day-of-month in 15–21, OR weekday is Sunday. Effective frequency: ~14–18 runs/month, not 2.
+✅ **Cron fixed 2026-04-20 via Option A (truly biweekly Sunday).** Changed cron from `0 5 1-7,15-21 * 0` to `0 5 1-7,15-21 * *` (dropped the DOW restriction that was triggering cron's OR-gotcha). Added a `SUNDAY-ONLY GATE` at the top of the prompt that uses `date -u +%u` to skip with a stub if today is not Sunday UTC. Effective cadence: 2 runs/month on the 1st-or-2nd Sunday and 3rd-or-4th Sunday. Non-Sunday fires produce trivially cheap skip stubs (~1-2 tool calls).
 
-**Confirmed empirically:** today (Sun 2026-04-19, day 19) ran as scheduled AND tomorrow (Mon 2026-04-20, day 20, not a Sunday) is also scheduled per the dashboard — only OR-logic produces that pattern.
-
-### Fix options
-
-- **(a) If intent is truly "every other Sunday"** — change cron to `0 5 1-7,15-21 * *` and add a top-of-prompt gate: "If today is not Sunday, write a short skip stub and exit." Restores 2 runs/month.
-- **(b) If intent is "more frequent than weekly"** — drop "biweekly" from the prompt intro, rename routine, and keep the cron. In this case the stated "Runs every other Sunday" sentence in the prompt is actively misleading and should go.
+**Historical context (preserved for future cron archaeology):** original cron was `0 5 1-7,15-21 * 0`. Cron's OR-logic-when-both-DOM-and-DOW-are-restricted meant it fired on **any of**: day-of-month in 1–7, day-of-month in 15–21, OR weekday is Sunday — roughly 14–18 runs/month instead of 2. Confirmed empirically when Apr 20 (Monday, day 20) was showing as scheduled. The `* *` fix is the canonical workaround for this gotcha: restrict by one axis only, gate the other axis in code.
 
 ### Design
 

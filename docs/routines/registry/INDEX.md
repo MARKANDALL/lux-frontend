@@ -83,7 +83,7 @@ Decide R07's cadence. Run history confirms the routine was flipped daily → wee
 ~~Stagger Sunday.~~ ✅ NO ACTION 2026-04-20. Only 3 of 6 Sunday routines are active (R03, R07, R08); R08's apparent bunching is actually its cron bug (tracked separately). R03 + R07 are paired-by-design (15-min offset). Revisit if active Sunday count exceeds 4.
 Add new daily routines from the Backlog. Morning Briefing 🔵, Secret Scanner 🔵, Bundle Size Tracker 🔵, Vercel Function Count Watch 🔵 are the obvious first picks.
 Activate R10 once deployment lands. Cleanest unpause — but only after Vercel goes public, and ideally converted to a webhook trigger (deployment.succeeded) rather than daily cron.
-Fix R08's cron. Current cron 0 5 1-7,15-21 * 0 fires ~14–18×/month via cron's OR-logic, not biweekly. Two fix paths in the R08 file. **⏳ In progress 2026-04-20 afternoon.**
+~~Fix R08's cron.~~ ✅ DONE 2026-04-20. Cron changed from `0 5 1-7,15-21 * 0` to `0 5 1-7,15-21 * *` to avoid cron's OR-gotcha. Added SUNDAY-ONLY GATE at top of prompt (`date -u +%u`). Effective cadence now 2 runs/month. Details in R08 Notes.
 ~~Resolve R14's model mystery.~~ ✅ DIAGNOSED 2026-04-20. Model bump to Opus 4.7 1M was correct; new failure mode is prompt-level (stream timeout on verbose exploration). Prompt-fix list captured in R14 Notes. R14 stays paused (one-shot, non-blocking).
 ~~Investigate R01's Apr 18 03:34 run-icon anomaly.~~ ✅ RESOLVED 2026-04-20. Zombie "Pondering..." session on Anthropic-side infra, not a prompt bug. Surrounding runs all green. No action required. Details in R01 Notes.
 ~~Add activity gate to R11.~~ ✅ DONE 2026-04-20. Utility Gate v2 applied (SHA-pinned, scope-filtered: HTML/JS/JSX globs). Safe to reactivate.
