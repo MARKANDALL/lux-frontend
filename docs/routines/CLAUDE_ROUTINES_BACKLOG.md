@@ -256,3 +256,33 @@ Lux-from-catalog routines (see separate file) + experimental tier.
 - If a routine hasn't produced an actionable finding in 60 days, **kill it and promote a queued idea.**
 - **15 active cap.** Pick ruthlessly. The queue is where ambition lives.
 - When in doubt about model choice → see PLAYBOOK's cost table. Default is Sonnet; Opus only for genuinely reasoning-heavy work.
+
+### 🔴 Orchestrator Routine (Morning Brief synthesizer)
+
+**Concept:** A single dedicated routine that oversees the rest of the fleet. Reads overnight output from all other routines (via issue comments, report files, or both), synthesizes into ONE morning-brief document, delivers to a single surface (issue, file, or both).
+
+**User-facing value:** Mark opens one document in the morning. Sees fleet-wide signal at a glance. Drills down into any sub-routine only when a specific finding warrants it. Replaces 9+ separate reports with one synthesized read.
+
+**Why it's the highest-leverage routine on the backlog:**
+- Scales non-linearly with fleet size — the more routines you add, the more valuable the orchestrator becomes
+- Directly enables the "15 routines a day" target without cognitive overwhelm
+- Natural extension of the existing "Morning Briefing 🔵" backlog entry — this is Morning Briefing v2 with synthesis
+- Matches Playbook §4.1 "Orchestrator → Specialist" pattern
+
+**Design questions to resolve before building (dedicated session):**
+1. **Input surface:** does it read issue comments, report files on disk, or both?
+2. **Output surface:** single rolling issue (one comment per morning), daily file in `/briefings/`, both?
+3. **Scope:** synthesis only (read-only, summarize), or synthesis + prioritization (rank findings by urgency across routines)?
+4. **Failure handling:** if one sub-routine failed overnight, does the orchestrator flag it, skip it, or retry it?
+5. **Relationship to existing "Morning Briefing 🔵" entry:** replace it, extend it, or both coexist?
+6. **Scheduling:** single daily fire at ~7 AM local (after all overnight routines complete), or webhook-triggered by the last routine's completion?
+7. **Model:** almost certainly Opus 4.7 1M (synthesizes a lot of text); confirm during build
+
+**Prerequisites before building:**
+- Phase 3 V2 gate retrofit complete (all 8 remaining routines on SHA-pinned gates — clean inputs)
+- Registry R## rename fully settled (so orchestrator references are stable)
+- At least 2 weeks of real overnight output accumulated (so we're designing against real data, not theory)
+
+**Priority:** 🔴 — single highest-impact routine on the roadmap once prerequisites are met. Not urgent, but inevitable.
+
+**Captured:** 2026-04-20 during R14 diagnostic run, while Tier B of the Schedule Calibration pass was ongoing. Do NOT cram into current session — dedicated design session required.
