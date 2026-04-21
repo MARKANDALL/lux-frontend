@@ -1,4 +1,4 @@
-Routines Registry — INDEX
+# Routines Registry — INDEX
 <!-- Path: docs/routines/registry/INDEX.md — Bird's-eye view of the live fleet. Full per-routine details live in sibling `R??-*.md` files. -->
 
 Part of a 4-file system:
@@ -34,7 +34,12 @@ Quick Index
 | R13 | R13 · Env Example Generator          | 🟡     | Sundays 3:00 AM EDT                                             | lux-frontend         | infra         | R13  |
 | R14 | R14 · Architecture Doc Rewriter      | 🟡     | Sundays 2:00 AM EDT                                             | lux-frontend         | docs          | R14  |
 | R15 | R15 · Test Import Autofix            | 🟡     | Sundays 9:00 AM EDT                                             | lux-frontend         | testing       | R15  |
-Active: 9 · Paused: 6 · Retired: 0 · Total configured: 15
+| R16 | R16 · Daily Job-Prospect Digest      | 🟢     | Daily 8:00 AM EDT                                               | lux-frontend         | career        | R16  |
+| R17 | R17 · Portfolio-Narrative Scribe     | 🟢     | Mondays 9:00 AM EDT                                             | lux-frontend         | career        | R17  |
+| R18 | R18 · Secret Scanner                 | 🟢     | Daily 3:15 AM EDT                                               | lux-frontend         | security      | R18  |
+| R19 | R19 · Morning Briefing               | 🟢     | Daily 9:30 AM EDT                                               | lux-frontend         | personal-ops  | R19  |
+| R20 | R20 · Subfolder README Generator     | 🟢     | Daily 7:00 PM EDT (parked — manual trigger)                     | lux-frontend         | docs          | R20  |
+Active: 14 · Paused: 6 · Retired: 0 · Total configured: 20
 
 Per-Routine Entry Format (template for every R??-*.md file)
 ### R?? — `dashboard-name`
@@ -55,33 +60,33 @@ Operating Notes
 Registry beats dashboard. When they disagree, fix the dashboard to match the registry and commit.
 Paused ≠ retired. Paused routines are parked indefinitely; they cost nothing to keep configured and retain reference value. Retirement is explicit and rare.
 Runs-per-day is the real ceiling, not routine count. The dashboard's 15/day is a daily-run budget; routine count on standby is effectively unbounded. Closing the 2.5 → 15 daily-runs gap is a scheduling question, not a new-routines question.
-Model varies across the fleet. Final tally (all 15 cards confirmed):
+Model varies across the fleet. Final tally (all 20 cards confirmed):
 
-Opus 4.7 1M → 9 routines (R01, R05, R06, R07, R08, R09, R11, R13, R15) — whole-repo scans, multi-check sweeps, filesystem enumeration, paired audits
-Opus 4.7 standard → 5 routines (R02, R03, R04, R10, R12) — all bounded scope: ≤5-file review, 3-check sweep, npm-audit output, fixed-string no-op, top-5 inbound-import analysis
-Legacy Model → 1 routine (R14 · Architecture Doc Rewriter) — both manual runs failed; see R14 Notes
-Clear pattern: 1M for anything that enumerates the whole repo; standard for anything with an explicit file-count cap or bounded-output scope. R14 is an outlier on Legacy Model and almost certainly needs the model bumped before retire/reactivate is decided. All 15 cards use "Default" permissions and have no connectors attached.
+Opus 4.7 1M → 13 routines (R01, R05, R06, R07, R08, R09, R11, R13, R15, R16, R17, R19, R20) — whole-repo scans, multi-check sweeps, filesystem enumeration, paired audits, synthesis across sources
+Opus 4.7 standard → 6 routines (R02, R03, R04, R10, R12, R18) — all bounded scope: ≤5-file review, 3-check sweep, npm-audit output, fixed-string no-op, top-5 inbound-import analysis, regex-based secret grep
+Legacy Model → 1 routine (R14 · Architecture Doc Rewriter) — tested 2026-04-20, Opus 4.7 1M is correct model; failure mode is now prompt-level (see R14 Notes)
+Clear pattern: 1M for anything that enumerates the whole repo; standard for anything with an explicit file-count cap or bounded-output scope. R14 is an outlier on Legacy Model and almost certainly needs the model bumped before retire/reactivate is decided. All 20 cards use "Default" permissions and have no connectors attached.
 
 
 Dashboard names now include the R## prefix (applied 2026-04-20) — e.g., `R01 · Frontend Health Scan`. The Proposed Clean Name column is now historical; new routines should be created with the `R## · Descriptive Name` format from the start.
 kodama-reports/* output paths are vestigial. Flag but don't fix during registry build; clean up during a later prompt-sharpening pass.
 Cron timezone is not uniform. The built-in trigger picker (e.g., "every Saturday at 4:00 AM EDT") is stored in local time with an EDT label. The Custom cron picker (e.g., 0 9 1 * *) is stored in UTC. Card headers in the individual files note the timezone explicitly whenever it matters.
-Morning Review window: Mark's free time on teaching days is roughly 1–5 PM and Fridays. Target routine finish time: by 6:00 AM so reports are ready for afternoon review. Morning Briefing routine (planned) will consolidate overnight output for one-screen reading.
+Morning Review window: Mark's free time on teaching days is roughly 1–5 PM and Fridays. Target routine finish time: by 6:00 AM so reports are ready for afternoon review. Morning Briefing routine (R19) consolidates overnight output for one-screen reading.
 Effectiveness tracking: not done by hand. A future meta-routine reads issues/PRs from the last 30 days across all routines and writes docs/routines/EFFECTIVENESS_LOG.md. See Backlog → Meta section.
 
 
 Daily-Run Accounting
 
-Configured routines: 15 (standby capacity is effectively unbounded; only the runs-per-day ceiling matters)
+Configured routines: 20 (standby capacity is effectively unbounded; only the runs-per-day ceiling matters)
 Daily-runs budget: 15/day included
-Average daily scheduled runs now observed: ~3/day baseline (R01 + R02 fire every weekday, plus one of R03/R04/R05/R07/R11/R12/R13/R15 depending on day-of-week), with R06 and R09 adding one run each on the first of the month, R08 producing a near-daily load until its cron is fixed, and R10/R14 dark (paused)
-Headroom: ~12 runs/day unused
+Average daily scheduled runs now observed: ~7/day baseline after 2026-04-20 Stage 3 additions (R01 + R02 + R18 + R16 + R19 every weekday, plus one of R03/R04/R05/R07/R11/R12/R13/R15/R17 depending on day-of-week), with R06 and R09 adding one run each on the first of the month, R08 now producing 2 substantive runs/month plus 12 cheap skip-stubs (cron fixed 2026-04-20), and R10/R14/R20 dark (paused or parked for manual trigger)
+Headroom: ~8 runs/day unused
 
 Path to closing the gap (Schedule Calibration queue)
 
 Decide R07's cadence. Run history confirms the routine was flipped daily → weekly between Apr 19 and now. ~~Name drift (lux-backend-nightly-health vs weekly cron)~~ ✅ RESOLVED 2026-04-20 via R## rename pass — dashboard name is now "R07 · Backend Health Scan" (cadence-neutral). Still pending: decide whether to keep weekly or flip back to daily (there's headroom). Single highest-ROI cadence decision in the fleet.
 ~~Stagger Sunday.~~ ✅ NO ACTION 2026-04-20. Only 3 of 6 Sunday routines are active (R03, R07, R08); R08's apparent bunching is actually its cron bug (tracked separately). R03 + R07 are paired-by-design (15-min offset). Revisit if active Sunday count exceeds 4.
-Add new daily routines from the Backlog. Morning Briefing 🔵, Secret Scanner 🔵, Bundle Size Tracker 🔵, Vercel Function Count Watch 🔵 are the obvious first picks.
+~~Add new daily routines from the Backlog.~~ ✅ PARTIAL 2026-04-20. Morning Briefing (R19), Secret Scanner (R18), Daily Job-Prospect Digest (R16), Portfolio-Narrative Scribe (R17), Subfolder README Generator (R20) all created. Bundle Size Tracker and Vercel Function Count Watch intentionally deferred (not daily-fit per Mark).
 Activate R10 once deployment lands. Cleanest unpause — but only after Vercel goes public, and ideally converted to a webhook trigger (deployment.succeeded) rather than daily cron.
 ~~Fix R08's cron.~~ ✅ DONE 2026-04-20. Cron changed from `0 5 1-7,15-21 * 0` to `0 5 1-7,15-21 * *` to avoid cron's OR-gotcha. Added SUNDAY-ONLY GATE at top of prompt (`date -u +%u`). Effective cadence now 2 runs/month. Details in R08 Notes.
 ~~Resolve R14's model mystery.~~ ✅ DIAGNOSED 2026-04-20. Model bump to Opus 4.7 1M was correct; new failure mode is prompt-level (stream timeout on verbose exploration). Prompt-fix list captured in R14 Notes. R14 stays paused (one-shot, non-blocking).
@@ -92,6 +97,6 @@ Activate R10 once deployment lands. Cleanest unpause — but only after Vercel g
 
 Navigation
 
-Per-routine files: R01-*.md through R15-*.md in this folder
+Per-routine files: R01-*.md through R20-*.md in this folder
 Sibling docs: ../CLAUDE_ROUTINES_BACKLOG.md, ../CLAUDE_ROUTINES_PLAYBOOK.md, ../LUX_ROUTINES_FROM_CATALOG.md
 Planned sibling: ../EFFECTIVENESS_LOG.md (auto-generated by a future meta-routine)
