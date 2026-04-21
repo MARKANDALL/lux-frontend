@@ -11,7 +11,7 @@
 
 ## Prompt
 
-```
+~~~
 UTILITY GATE — run FIRST. If any skip condition is true,
 stop and do not proceed. Do NOT read any source file,
 do NOT grep, do NOT scan until this gate clears.
@@ -92,7 +92,50 @@ PROCESS:
 1. List the target folders from the SCOPE above that actually exist in the repo.
 2. For each folder, read between 2 and 8 representative files inside it (prioritize index.js, the main module, and any file with "core" or "main" in its name).
 3. Write a README.md with this structure:
-```
+
+    # <Folder Name>
+
+    <One-paragraph purpose — what role this folder plays in the Lux architecture.>
+
+    ## Key Files
+
+    - `filename.js` — one-line description
+    - `filename2.js` — one-line description
+    - (etc., 3-5 most important files only)
+
+    ## Conventions
+
+    <Any folder-specific patterns: naming rules, import rules, test patterns, etc. Skip this section if there are no notable conventions.>
+
+    ## See Also
+
+    - [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md) for how this fits in the broader system
+    - (other relevant cross-references)
+
+4. If a folder already has a README.md:
+   - Read it first.
+   - If the existing README is accurate and complete, SKIP that folder (do not overwrite).
+   - If the existing README is stale or incomplete, write a new one and note in the PR description: "Updated stale README for <folder>."
+
+RULES:
+- Write in clear, professional prose. No marketing language. No fluff.
+- Reference ACTUAL filenames you read — do not invent files.
+- Keep each README under 60 lines. Density beats completeness.
+- Do NOT modify any code files. READMEs only.
+- Do NOT touch existing README.md files unless they are clearly stale.
+
+OUTPUT:
+- One draft PR titled "docs: generate README.md for every meaningful subfolder"
+- PR description should list every folder that got a new or updated README, grouped by top-level and features/*
+- Comment on GitHub issue "Subfolder README Tracker" — create issue if missing, title exactly "Subfolder README Tracker (R20)"
+- Comment body: count of READMEs added, count of READMEs updated, count of folders skipped (existing README was fine), and the PR link.
+
+FAILURE MODES TO AVOID:
+- Do not generate a README for a folder you couldn't read at least 2 files from.
+- Do not reference files that don't exist.
+- Do not claim conventions that aren't actually followed in the folder.
+- If unsure about what a folder does, write: "Purpose: unclear from file contents — author review requested." That's more honest than a confident wrong answer.
+~~~
 
 ## Notes
 
