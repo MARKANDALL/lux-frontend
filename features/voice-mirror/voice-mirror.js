@@ -1,5 +1,5 @@
 // features/voice-mirror/voice-mirror.js
-// One-line: "Hear it in my voice" button + inline audio player for TTS drawer.
+// "Hear it in my voice" tile + custom audio player (Play / speed / ±2s) for the TTS drawer.
 
 import { getVoiceProfileStatus, synthesizeVoiceMirror } from '../../_api/voice-mirror.js';
 import { openVoiceOnboarding } from './voice-onboarding.js';
@@ -49,39 +49,47 @@ function rand(min, max) {
   return min + Math.random() * (max - min);
 }
 
+function formatTime(sec) {
+  if (!isFinite(sec) || sec < 0) sec = 0;
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
 function applyShimmerTiming(el, {
-  minDuration = 11,
-  maxDuration = 18,
-  minDelay = 0.8,
-  maxDelay = 4.5,
+  minDuration = 8,
+  maxDuration = 10,
+  minDelay = 0.5,
+  maxDelay = 2.5,
 } = {}) {
   if (!el) return;
   el.style.setProperty('--lux-vm-shimmer-duration', `${rand(minDuration, maxDuration).toFixed(2)}s`);
   el.style.setProperty('--lux-vm-shimmer-delay', `${rand(minDelay, maxDelay).toFixed(2)}s`);
 }
 
-// ── Glass shimmer keyframes (injected once) ───────────────────────────
-let _shimmerInjected = false;
-function ensureShimmerCSS() {
-  if (_shimmerInjected) return;
-  _shimmerInjected = true;
+// ── Injected CSS (mount anim + shimmer + player) ──────────────────────
+let _stylesInjected = false;
+function ensureStyles() {
+  if (_stylesInjected) return;
+  _stylesInjected = true;
 
   const style = document.createElement('style');
   style.textContent = `
+    @keyframes lux-vm-mount {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
     @keyframes lux-glass-shimmer {
-      0%, 64% {
+      0%, 55% {
         transform: translateX(-170%);
         opacity: 0;
       }
-      69% {
-        opacity: 0.16;
-      }
-      75% {
-        opacity: 0.34;
-      }
-      83% {
+      62% { opacity: 0.10; }
+      72% { opacity: 0.22; }
+      82% {
         transform: translateX(260%);
-        opacity: 0.06;
+        opacity: 0.04;
       }
       100% {
         transform: translateX(260%);
@@ -106,18 +114,24 @@ function ensureShimmerCSS() {
         115deg,
         transparent 0%,
         rgba(255, 255, 255, 0) 18%,
-        rgba(255, 255, 255, 0.08) 38%,
-        rgba(255, 255, 255, 0.24) 50%,
-        rgba(255, 255, 255, 0.08) 62%,
+        rgba(255, 255, 255, 0.06) 38%,
+        rgba(255, 255, 255, 0.20) 50%,
+        rgba(255, 255, 255, 0.06) 62%,
         rgba(255, 255, 255, 0) 82%,
         transparent 100%
       );
       transform: translateX(-170%);
-      animation: lux-glass-shimmer var(--lux-vm-shimmer-duration, 13s) cubic-bezier(.22,.61,.36,1) infinite;
+      animation: lux-glass-shimmer var(--lux-vm-shimmer-duration, 9s) cubic-bezier(.22,.61,.36,1) infinite;
       animation-delay: var(--lux-vm-shimmer-delay, 0s);
       pointer-events: none;
       border-radius: inherit;
       will-change: transform, opacity;
+      transition: filter 0.3s ease;
+    }
+
+    .lux-vm-shell:hover::after {
+      animation-duration: 2.6s;
+      filter: brightness(1.9) saturate(1.05);
     }
 
     .lux-vm-shell {
@@ -126,6 +140,7 @@ function ensureShimmerCSS() {
         box-shadow 0.18s ease,
         transform 0.18s ease,
         background 0.18s ease;
+      animation: lux-vm-mount 400ms cubic-bezier(.22,.61,.36,1) 480ms both;
     }
 
     .lux-vm-shell:hover {
@@ -168,10 +183,91 @@ function ensureShimmerCSS() {
     }
 
     .lux-vm-shell.is-open .lux-vm-details {
-      max-height: 96px;
+      max-height: 140px;
       opacity: 1;
       transform: translateY(0);
       margin: 6px 0 10px 0;
+    }
+
+    /* ── Post-generation player (matches TTS drawer controls) ── */
+    .lux-voice-mirror-player {
+      margin: 10px 0 0 0;
+      width: 100%;
+      box-sizing: border-box;
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .lux-vm-play-btn {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #d1d5db;
+      background: #0078d7;
+      color: #fff;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+      transition: filter 0.15s ease, box-shadow 0.15s ease;
+    }
+    .lux-vm-play-btn:hover  { filter: brightness(0.92); }
+    .lux-vm-play-btn:active { transform: translateY(1px); }
+
+    .lux-vm-mini-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .lux-vm-skip-btn {
+      padding: 7px 12px;
+      font-size: 0.95rem;
+      border-radius: 9px;
+      border: 1px solid #d1d5db;
+      background: #0078d7;
+      color: #fff;
+      font: inherit;
+      cursor: pointer;
+      transition: filter 0.15s ease;
+    }
+    .lux-vm-skip-btn:hover  { filter: brightness(0.92); }
+    .lux-vm-skip-btn:active { transform: translateY(1px); }
+
+    .lux-vm-time {
+      flex: 1;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+      font-size: 0.9rem;
+      color: #475569;
+    }
+
+    .lux-vm-speed-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .lux-vm-speed-label {
+      font-size: 0.85rem;
+      color: #475569;
+      font-weight: 600;
+    }
+
+    .lux-vm-speed {
+      flex: 1;
+      min-width: 0;
+      accent-color: #6366f1;
+    }
+
+    .lux-vm-speed-out {
+      font-variant-numeric: tabular-nums;
+      font-size: 0.85rem;
+      color: #475569;
+      min-width: 3.4em;
+      text-align: right;
     }
   `;
 
@@ -193,14 +289,14 @@ function attachShellToggle(shell, detailsEl, hintEl) {
   setShellOpen(shell, detailsEl, hintEl, false);
 
   shell.addEventListener('click', (event) => {
-    if (event.target.closest('.lux-voice-mirror-btn, .lux-voice-mirror-player, audio, button')) {
+    if (event.target.closest('.lux-voice-mirror-btn, .lux-voice-mirror-player, audio, button, input')) {
       return;
     }
     setShellOpen(shell, detailsEl, hintEl, !shell.classList.contains('is-open'));
   });
 
   shell.addEventListener('keydown', (event) => {
-    if (event.target.closest('.lux-voice-mirror-btn, .lux-voice-mirror-player, audio, button')) {
+    if (event.target.closest('.lux-voice-mirror-btn, .lux-voice-mirror-player, audio, button, input')) {
       return;
     }
     if (event.key !== 'Enter' && event.key !== ' ') return;
@@ -210,7 +306,7 @@ function attachShellToggle(shell, detailsEl, hintEl) {
 }
 
 function createShell({ detailsText, buttonEl }) {
-  ensureShimmerCSS();
+  ensureStyles();
 
   const shell = document.createElement('div');
   shell.className = 'lux-voice-mirror-shell lux-vm-shell lux-vm-shimmer';
@@ -286,7 +382,7 @@ function createMirrorButton(targetTextOrGetter) {
   const btn = document.createElement('button');
   btn.className = 'lux-voice-mirror-btn';
   btn.type = 'button';
-  btn.innerHTML = '🪞 <span>Hear it in my voice</span>';
+  btn.innerHTML = '<span>Hear it in my voice</span>';
   btn.style.cssText = [
     'display: inline-flex',
     'align-items: center',
@@ -405,33 +501,86 @@ function createSetupButton(container, targetTextOrGetter) {
   return setupBtn;
 }
 
-// ── Show the audio player after synthesis ──────────────────────────────
+// ── Custom audio player shown after synthesis ─────────────────────────
 function showPlayer(anchorEl, audioUrl) {
   const existing = anchorEl.parentElement?.querySelector('.lux-voice-mirror-player');
   if (existing) {
-    const oldSrc = existing.querySelector('audio')?.src;
-    if (oldSrc) URL.revokeObjectURL(oldSrc);
+    const oldAudio = existing.querySelector('audio');
+    if (oldAudio?.src) URL.revokeObjectURL(oldAudio.src);
     existing.remove();
   }
 
   const player = document.createElement('div');
   player.className = 'lux-voice-mirror-player';
-  player.style.cssText = [
-    'margin: 8px 0 0 0',
-    'width: 100%',
-    'position: relative',
-    'z-index: 1',
-  ].join(';');
 
   player.addEventListener('click', (event) => {
     event.stopPropagation();
   });
 
   player.innerHTML = `
-    <audio controls autoplay style="width:100%; border-radius:8px; height:36px;" src="${audioUrl}"></audio>
+    <button type="button" class="lux-vm-play-btn" title="Click: play/pause • Double-click: restart & play">🔊 Play</button>
+    <div class="lux-vm-mini-actions">
+      <button type="button" class="lux-vm-skip-btn" data-skip="-2" title="Back 2 seconds">↺ 2s</button>
+      <span class="lux-vm-time">0:00 / 0:00</span>
+      <button type="button" class="lux-vm-skip-btn" data-skip="2" title="Forward 2 seconds">↻ 2s</button>
+    </div>
+    <div class="lux-vm-speed-row">
+      <span class="lux-vm-speed-label">Speed</span>
+      <input type="range" min="0.5" max="1.5" step="0.05" value="1" class="lux-vm-speed" aria-label="Playback speed">
+      <span class="lux-vm-speed-out">1.00×</span>
+    </div>
   `;
 
+  const audio = new Audio(audioUrl);
+  audio.preload = 'auto';
+  audio.style.display = 'none';
+  player.appendChild(audio);
+
+  const playBtn   = player.querySelector('.lux-vm-play-btn');
+  const timeEl    = player.querySelector('.lux-vm-time');
+  const speedIn   = player.querySelector('.lux-vm-speed');
+  const speedOut  = player.querySelector('.lux-vm-speed-out');
+  const skipBtns  = player.querySelectorAll('.lux-vm-skip-btn');
+
+  function updateTime() {
+    timeEl.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
+  }
+  function syncPlayLabel() {
+    playBtn.textContent = audio.paused ? '🔊 Play' : '⏸ Pause';
+  }
+
+  audio.addEventListener('loadedmetadata', updateTime);
+  audio.addEventListener('timeupdate', updateTime);
+  audio.addEventListener('play', syncPlayLabel);
+  audio.addEventListener('pause', syncPlayLabel);
+  audio.addEventListener('ended', syncPlayLabel);
+
+  playBtn.addEventListener('click', () => {
+    if (audio.paused) audio.play().catch(() => {});
+    else audio.pause();
+  });
+  playBtn.addEventListener('dblclick', () => {
+    audio.currentTime = 0;
+    audio.play().catch(() => {});
+  });
+
+  skipBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const delta = parseFloat(btn.dataset.skip) || 0;
+      const dur = audio.duration || Infinity;
+      audio.currentTime = Math.max(0, Math.min(dur, audio.currentTime + delta));
+    });
+  });
+
+  speedIn.addEventListener('input', () => {
+    const v = parseFloat(speedIn.value) || 1;
+    audio.playbackRate = v;
+    speedOut.textContent = `${v.toFixed(2)}×`;
+  });
+
   anchorEl.insertAdjacentElement('afterend', player);
+
+  audio.play().catch(() => {});
 }
 
 // ── Public: inject Voice Mirror button into a container ────────────────
@@ -458,7 +607,7 @@ export async function mountVoiceMirrorButton(container, targetTextOrGetter) {
   if (!hasProfile) {
     const setupBtn = createSetupButton(container, targetTextOrGetter);
     const shell = createShell({
-      detailsText: 'Hear practice lines in your own corrected voice. Record 5 short samples to get started.',
+      detailsText: 'Powered by ElevenLabs Instant Voice Cloning. Hear practice lines in your own corrected voice. Record 5 short samples to get started.',
       buttonEl: setupBtn,
     });
     container.appendChild(shell);
@@ -467,7 +616,7 @@ export async function mountVoiceMirrorButton(container, targetTextOrGetter) {
 
   const btn = createMirrorButton(targetTextOrGetter);
   const shell = createShell({
-    detailsText: 'Hear this practice line in your own corrected voice.',
+    detailsText: 'Powered by ElevenLabs Instant Voice Cloning. Hear this practice line in your own corrected voice.',
     buttonEl: btn,
   });
 
