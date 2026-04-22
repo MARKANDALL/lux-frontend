@@ -86,6 +86,10 @@ export async function mountTTSPlayer(hostEl) {
     voiceMirrorHost = document.createElement('div');
     voiceMirrorHost.id = 'tts-voice-mirror-slot';
     voiceMirrorHost.style.marginTop = '12px';
+    voiceMirrorHost.style.width = '100%';
+    voiceMirrorHost.style.boxSizing = 'border-box';
+    // Span full width whether parent is grid (.tts-box) or flex/block
+    voiceMirrorHost.style.gridColumn = '1 / -1';
 
     const actionRow =
       host.querySelector('.tts-actionRow') ||
