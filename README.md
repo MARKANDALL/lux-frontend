@@ -2,10 +2,12 @@
 
 **Lux is a browser-based pronunciation and conversation training platform for English learners.** It connects phoneme-level speech assessment, AI-guided speaking practice, longitudinal progress tracking, and targeted next-step guidance into a single learner experience.
 
-Built solo over roughly 18 months by a full-time ESL instructor as a self-taught engineering project. The pedagogy drove the product from the beginning — it was not added afterward.
+Built solo over nearly two years by a full-time ESL instructor as a self-taught engineering project. The pedagogy drove the product from the beginning — it was not added afterward.
 
-> **Status:** Local-only development. Not yet publicly deployed. Actively being built, refactored, and hardened.
+> **Status:** Production-level and deployed. Actively being built, refactored, and hardened. Paid API routes (voice cloning, Realtime session tokens) are admin-token gated for cost control and abuse prevention — demo token available on request at markhuguley@outlook.com.
 > **Backend:** This is the frontend repo. The API lives in [luxury-language-api](https://github.com/MARKANDALL/luxury-language-api).
+
+![Lux — Practice Skills with Azure phoneme assessment, Self Playback, Text-to-Speech, and Voice Mirror](hero.png)
 
 ---
 
@@ -20,7 +22,7 @@ Most speaking tools either give learners vague conversation practice with little
 - **Wordcloud** — Visual surface for recurring problem words and patterns across practice history.
 - **Next Practice** — Suggests what to work on next based on the learner's current trouble sounds and trouble words.
 - **My Words** — Personal vocabulary tracker that hands off cleanly into practice surfaces.
-- **Voice Mirror** — Optional voice-cloning feature that lets learners hear target text spoken in their own voice — a pedagogically strong technique for self-modeling.
+- **Voice Mirror** — The distinctive feature. After a 5-recording consent flow, Lux clones the learner's voice via ElevenLabs Instant Voice Cloning, then plays target sentences back in the learner's *own voice* using `eleven_multilingual_v2`. Pronunciation practice becomes self-comparison rather than chasing a native-speaker reference the learner can never match. Voice profiles are persisted with RLS in Supabase, and the clone lifecycle is managed end-to-end.
 - **Life Journey** — A more game-like, mission-driven practice surface for learners who want structured progression.
 - **Harvard Sentences Library** — Standardized phonetically-balanced practice material, filterable by phoneme content.
 
@@ -99,9 +101,11 @@ Page entry points:
 
 **Centralized storage.** `app-core/lux-storage.js` registers every localStorage key as a named constant. Every bare `localStorage.getItem` has been replaced with a named helper.
 
-**Protection-ring testing.** Contract tests cover the shared primitives the rest of the app depends on: bus, storage, identity, runtime, and API client.
+**Protection-ring testing.** A 59-test Vitest contract suite covers the shared primitives the rest of the app depends on: bus, storage, identity, runtime, and API client.
 
 **Mechanical refactoring over clever rewrites.** The bias is toward careful modularization, explicit ownership, and safe migrations rather than flashy rewrites that risk behavior drift.
+
+**Automation fleet.** 21 Claude Code Routines run against this repo on scheduled crons: nightly health scans, weekly architecture audits, monthly hygiene reports, deep code reviews, dependency vulnerability scans, a secret scanner, deploy smoke tests, and more. Findings file as GitHub issues, with SHA-pinned idempotency gates so skips are visible and no-op runs don't produce noise. The routines maintain the codebase's standards on a cadence I couldn't hit manually.
 
 For deeper architecture detail, see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
@@ -180,7 +184,7 @@ Internal docs under `docs/`:
 
 Lux was built by one person: Mark Huguley, a full-time ESL and GED-in-Spanish instructor with an MA in Bilingual and Multicultural Education from La Universidad de Alcalá de Henares (Madrid), TESOL certification, C1 Spanish, and roughly 13 years of classroom teaching experience. Named Savannah Technical College Teacher of the Year, and a top-four finalist for the state of Georgia.
 
-He started the project with no prior coding background and used AI pair-programming tools as the learning vehicle. Eighteen months later, the codebase is a real multi-page Vite application with contract-tested runtime primitives, a custom pub/sub architecture, integrations with four external services, and pedagogy that came out of actual classroom experience rather than being retrofitted to a product idea.
+He started the project with no prior coding background and used AI pair-programming tools as the learning vehicle. Nearly two years later, the codebase is a real multi-page Vite application with contract-tested runtime primitives, a custom pub/sub architecture, integrations with four external services, and pedagogy that came out of actual classroom experience rather than being retrofitted to a product idea.
 
 This is not a generic AI wrapper. It is not a classroom worksheet dressed up as software. It is a long-running attempt to build a more intelligent and more humane speaking platform — one that treats pronunciation, conversation, learner history, and next-step guidance as parts of the same connected system.
 
