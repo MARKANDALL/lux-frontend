@@ -92,6 +92,11 @@ export function buildUI() {
     <div id="spb-ttsMount"></div>
   </div>
 
+  <!-- ✅ BOTTOM FAR-RIGHT (Voice Mirror mount) — hidden in drawer, shown in expanded via CSS -->
+  <div class="spb-controls spb-controls--vm">
+    <div id="spb-vmMount"></div>
+  </div>
+
     </div>
 
     <!-- blank mini placeholder shown only while expanded is open -->
@@ -146,6 +151,8 @@ export function buildUI() {
   let ttsShell = null;
   let ttsSourceHome = null;
   let ttsSourceNext = null;
+  let vmSlotHome = null;
+  let vmSlotNext = null;
 
   const setTtsShellEmpty = (on) => {
     try {
@@ -230,6 +237,20 @@ export function buildUI() {
       globalThis.warnSwallow("features/features/selfpb/dom.js", err, "important");
     }
 
+    // move Voice Mirror slot out of the TTS box into its own expanded column
+    try {
+      const vmSlot = document.getElementById("tts-voice-mirror-slot");
+      const vmMount = document.getElementById("spb-vmMount");
+      if (vmSlot && vmMount && vmSlot.parentElement !== vmMount) {
+        vmSlotHome = vmSlot.parentElement;
+        vmSlotNext = vmSlot.nextSibling;
+        vmMount.appendChild(vmSlot);
+        vmSlot.dataset.luxInVmMount = "1";
+      }
+    } catch (err) {
+      globalThis.warnSwallow("features/features/selfpb/dom.js", err, "important");
+    }
+
     // show placeholder in the TTS drawer while controls are moved out
     setTtsShellEmpty(true);
 
@@ -261,6 +282,17 @@ export function buildUI() {
       if (ttsSourceHome && sourceRow) {
         ttsSourceHome.insertBefore(sourceRow, ttsSourceNext || null);
         delete sourceRow.dataset.luxInFloatHead;
+      }
+    } catch (err) {
+      globalThis.warnSwallow("features/features/selfpb/dom.js", err, "important");
+    }
+
+    // restore Voice Mirror slot back into its TTS-box home
+    try {
+      const vmSlot = document.getElementById("tts-voice-mirror-slot");
+      if (vmSlotHome && vmSlot) {
+        vmSlotHome.insertBefore(vmSlot, vmSlotNext || null);
+        delete vmSlot.dataset.luxInVmMount;
       }
     } catch (err) {
       globalThis.warnSwallow("features/features/selfpb/dom.js", err, "important");

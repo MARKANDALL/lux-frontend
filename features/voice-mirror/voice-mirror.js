@@ -59,7 +59,7 @@ function formatTime(sec) {
 function applyShimmerTiming(el, {
   minDuration = 8,
   maxDuration = 10,
-  minDelay = 0.5,
+  minDelay = 0.2,
   maxDelay = 2.5,
 } = {}) {
   if (!el) return;
@@ -76,20 +76,24 @@ function ensureStyles() {
   const style = document.createElement('style');
   style.textContent = `
     @keyframes lux-vm-mount {
-      from { opacity: 0; transform: translateY(-8px); }
+      from { opacity: 0; transform: translateY(6px); }
       to   { opacity: 1; transform: translateY(0); }
     }
 
     @keyframes lux-glass-shimmer {
-      0%, 55% {
+      0%, 60% {
         transform: translateX(-170%);
         opacity: 0;
       }
-      62% { opacity: 0.10; }
-      72% { opacity: 0.22; }
-      82% {
+      68% {
+        opacity: calc(var(--lux-vm-shimmer-peak, 0.22) * 0.55);
+      }
+      76% {
+        opacity: var(--lux-vm-shimmer-peak, 0.22);
+      }
+      86% {
         transform: translateX(260%);
-        opacity: 0.04;
+        opacity: calc(var(--lux-vm-shimmer-peak, 0.22) * 0.2);
       }
       100% {
         transform: translateX(260%);
@@ -101,23 +105,28 @@ function ensureStyles() {
       position: relative;
       overflow: hidden;
       isolation: isolate;
+      --lux-vm-shimmer-peak: 0.22;
+    }
+
+    .lux-vm-shimmer:hover {
+      --lux-vm-shimmer-peak: 0.5;
     }
 
     .lux-vm-shimmer::after {
       content: '';
       position: absolute;
-      top: -8%;
-      bottom: -8%;
-      left: -44%;
-      width: 42%;
+      top: -10%;
+      bottom: -10%;
+      left: -50%;
+      width: 55%;
       background: linear-gradient(
         115deg,
         transparent 0%,
-        rgba(255, 255, 255, 0) 18%,
-        rgba(255, 255, 255, 0.06) 38%,
-        rgba(255, 255, 255, 0.20) 50%,
-        rgba(255, 255, 255, 0.06) 62%,
-        rgba(255, 255, 255, 0) 82%,
+        rgba(255, 255, 255, 0) 15%,
+        rgba(255, 255, 255, 0.35) 38%,
+        rgba(255, 255, 255, 0.9) 50%,
+        rgba(255, 255, 255, 0.35) 62%,
+        rgba(255, 255, 255, 0) 85%,
         transparent 100%
       );
       transform: translateX(-170%);
@@ -126,12 +135,12 @@ function ensureStyles() {
       pointer-events: none;
       border-radius: inherit;
       will-change: transform, opacity;
-      transition: filter 0.3s ease;
+      z-index: 3;
+      mix-blend-mode: screen;
     }
 
-    .lux-vm-shell:hover::after {
-      animation-duration: 2.6s;
-      filter: brightness(1.9) saturate(1.05);
+    .lux-vm-shimmer:hover::after {
+      animation-duration: 4.5s;
     }
 
     .lux-vm-shell {
@@ -140,7 +149,7 @@ function ensureStyles() {
         box-shadow 0.18s ease,
         transform 0.18s ease,
         background 0.18s ease;
-      animation: lux-vm-mount 400ms cubic-bezier(.22,.61,.36,1) 480ms both;
+      animation: lux-vm-mount 0.28s ease-out 0.15s both;
     }
 
     .lux-vm-shell:hover {
@@ -607,7 +616,7 @@ export async function mountVoiceMirrorButton(container, targetTextOrGetter) {
   if (!hasProfile) {
     const setupBtn = createSetupButton(container, targetTextOrGetter);
     const shell = createShell({
-      detailsText: 'Powered by ElevenLabs Instant Voice Cloning. Hear practice lines in your own corrected voice. Record 5 short samples to get started.',
+      detailsText: 'Hear this practice line in your own corrected voice.',
       buttonEl: setupBtn,
     });
     container.appendChild(shell);
@@ -616,7 +625,7 @@ export async function mountVoiceMirrorButton(container, targetTextOrGetter) {
 
   const btn = createMirrorButton(targetTextOrGetter);
   const shell = createShell({
-    detailsText: 'Powered by ElevenLabs Instant Voice Cloning. Hear this practice line in your own corrected voice.',
+    detailsText: 'Hear this practice line in your own corrected voice.',
     buttonEl: btn,
   });
 
