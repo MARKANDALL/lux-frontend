@@ -309,9 +309,9 @@ export const SCENARIOS = [
     id: "party",
     title: "Chat with Strangers at a Party",
     desc: "A house party where someone new joins a conversation already in progress.",
-    img: "/convo-img/couple.jpg",
-    thumb: "/convo-img/thumbs/couple.webp",
-    video: "/convo-vid/couple.mp4",
+    img: "/convo-img/party.jpg",
+    thumb: "/convo-img/thumbs/party.webp",
+    video: "/convo-vid/party.mp4",
     more: `• House party — a newcomer approaches a pair already mid-conversation
 
 • Hurdles: breaking into an existing conversation · keeping talk balanced · leaving gracefully
