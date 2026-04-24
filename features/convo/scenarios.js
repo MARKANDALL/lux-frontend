@@ -306,7 +306,7 @@ export const SCENARIOS = [
     ],
   },
   {
-    id: "couple",
+    id: "party",
     title: "Chat with Strangers at a Party",
     desc: "A house party where someone new joins a conversation already in progress.",
     img: "/convo-img/couple.jpg",
